@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  plan        String   @default("starter")
+  createdAt   DateTime @default(now())
+  users       User[]
+  connections ErpConnection[]
+  chatSessions ChatSession[]
+  alerts      Alert[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("viewer")
+  createdAt    DateTime @default(now())
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  sessions     ChatSession[]
+}
+
+model ErpConnection {
+  id          String    @id @default(cuid())
+  tenantId    String
+  erpType     String
+  host        String
+  port        Int       @default(1433)
+  dbName      String
+  username    String
+  passwordEnc String
+  status      String    @default("pending")
+  lastSync    DateTime?
+  createdAt   DateTime  @default(now())
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  schemaCache SchemaCache?
+}
+
+model SchemaCache {
+  id           String        @id @default(cuid())
+  connectionId String        @unique
+  schemaText   String
+  tableCount   Int
+  builtAt      DateTime      @default(now())
+  connection   ErpConnection @relation(fields: [connectionId], references: [id])
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  tenantId  String
+  userId    String
+  title     String?
+  createdAt DateTime      @default(now())
+  tenant    Tenant        @relation(fields: [tenantId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  role      String
+  content   String
+  sqlQuery  String?
+  rowCount  Int?
+  latencyMs Int?
+  success   Boolean     @default(true)
+  feedback  Int?
+  createdAt DateTime    @default(now())
+  session   ChatSession @relation(fields: [sessionId], references: [id])
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  tenantId    String
+  type        String
+  severity    String   @default("medium")
+  title       String
+  description String?
+  module      String?
+  evidence    Json?
+  status      String   @default("open")
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+}
