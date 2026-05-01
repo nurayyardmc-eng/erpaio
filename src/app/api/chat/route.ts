@@ -48,10 +48,8 @@ ${schema}`,
       messages: [{ role: "user", content: question }],
     });
 
-    sql = msg.content[0]?.text?.trim() ?? "";
-    if (!/^(SELECT|WITH)/i.test(sql)) {
-      throw Object.assign(new Error("SQL üretilemedi."), { name: "AIError" });
-    }
+    const block = msg.content.find((b) => b.type === "text");
+sql = (block && "text" in block ? block.text : "")?.trim() ?? "";
 
     validateSQL(sql);
 
