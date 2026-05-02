@@ -21,6 +21,7 @@ export default async function DashboardPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 600 }}>
         {[
+          { href: "/dashboard/overview", label: "Anlık Metrikler", desc: "Pre-computed dashboard", color: "#FFD740" },
           { href: "/dashboard/connections", label: "ERP Bağlantıları", desc: "Nebim V3 bağlantısı ekle", color: "#00E5FF" },
           { href: "/dashboard/chat", label: "Soru Sor", desc: "Türkçe soru → SQL → Cevap", color: "#B388FF" },
           { href: "/dashboard/alerts", label: "Bildirimler", desc: "Anomali ve uyarılar", color: "#FF6B6B" },
