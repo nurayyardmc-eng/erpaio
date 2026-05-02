@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   ScrollView,
   StyleSheet,
   Switch,
@@ -189,6 +190,18 @@ export default function SettingsScreen({ onLogout }: Props) {
         )}
       </Section>
 
+      <Section title="Yasal">
+        <TouchableOpacity onPress={() => Linking.openURL("https://erpaio.vercel.app/privacy")}>
+          <Text style={styles.link}>Gizlilik Politikası →</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => Linking.openURL("https://erpaio.vercel.app/terms")}>
+          <Text style={styles.link}>Kullanım Koşulları →</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => Linking.openURL("mailto:support@erpaio.com")}>
+          <Text style={styles.link}>support@erpaio.com →</Text>
+        </TouchableOpacity>
+      </Section>
+
       <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
         <Text style={styles.logoutBtnText}>Çıkış Yap</Text>
       </TouchableOpacity>
@@ -283,6 +296,7 @@ const styles = StyleSheet.create({
   connHost: { color: colors.textDim, fontFamily: font, fontSize: 10 },
   connStatus: { borderRadius: radius.sm, paddingHorizontal: spacing(2), paddingVertical: 2 },
   muted: { color: colors.textDim, fontFamily: font, fontSize: 11 },
+  link: { color: colors.accent, fontFamily: font, fontSize: 12, paddingVertical: 6 },
   logoutBtn: {
     marginTop: spacing(4),
     backgroundColor: "rgba(255,107,107,0.1)",

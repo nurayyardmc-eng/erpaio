@@ -1,11 +1,14 @@
 import { auth } from "@/lib/auth";
 
+const PUBLIC_PATHS = ["/login", "/privacy", "/terms"];
+
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login");
-  const isApiRoute = req.nextUrl.pathname.startsWith("/api");
+  const path = req.nextUrl.pathname;
+  const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
+  const isApi = path.startsWith("/api");
 
-  if (!isLoggedIn && !isAuthPage && !isApiRoute) {
+  if (!isLoggedIn && !isPublic && !isApi) {
     return Response.redirect(new URL("/login", req.url));
   }
 });
