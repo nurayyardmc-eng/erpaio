@@ -9,42 +9,43 @@ datasource db {
 }
 
 model Tenant {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  plan        String   @default("starter")
-  createdAt   DateTime @default(now())
-  users       User[]
-  connections ErpConnection[]
+  id           String            @id @default(cuid())
+  name         String
+  slug         String            @unique
+  plan         String            @default("starter")
+  createdAt    DateTime          @default(now())
+  users        User[]
+  connections  ErpConnection[]
   chatSessions ChatSession[]
-  alerts      Alert[]
+  alerts       Alert[]
+  baselines    AnomalyBaseline[]
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String        @id @default(cuid())
   tenantId     String
-  email        String   @unique
+  email        String        @unique
   passwordHash String
   name         String?
-  role         String   @default("viewer")
-  createdAt    DateTime @default(now())
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  role         String        @default("viewer")
+  createdAt    DateTime      @default(now())
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
   sessions     ChatSession[]
 }
 
 model ErpConnection {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   tenantId    String
   erpType     String
   host        String
-  port        Int       @default(1433)
+  port        Int          @default(1433)
   dbName      String
   username    String
   passwordEnc String
-  status      String    @default("pending")
+  status      String       @default("pending")
   lastSync    DateTime?
-  createdAt   DateTime  @default(now())
-  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime     @default(now())
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
   schemaCache SchemaCache?
 }
 
@@ -94,4 +95,44 @@ model Alert {
   status      String   @default("open")
   createdAt   DateTime @default(now())
   tenant      Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model AnomalyBaseline {
+  id          String   @id @default(cuid())
+  tenantId    String
+  metricKey   String
+  value       Float
+  capturedAt  DateTime @default(now())
+  periodStart DateTime
+  periodEnd   DateTime
+  metadata    Json?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, metricKey, capturedAt(sort: Desc)])
+  @@index([tenantId, capturedAt])
+}
+
+model CronRun {
+  id            String     @id @default(cuid())
+  jobName       String
+  startedAt     DateTime   @default(now())
+  finishedAt    DateTime?
+  status        CronStatus @default(RUNNING)
+  tenantsTotal  Int        @default(0)
+  tenantsOk     Int        @default(0)
+  tenantsFail   Int        @default(0)
+  alertsCreated Int        @default(0)
+  errorMessage  String?
+  metadata      Json?
+
+  @@index([jobName, startedAt(sort: Desc)])
+  @@index([status])
+}
+
+enum CronStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL_FAILURE
+  FAILED
 }

@@ -42,3 +42,10 @@ next-env.d.ts
 
 /src/generated/prisma
 .env*.local
+
+# claude code worktrees
+.claude/
+
+# faza 5 setup artifacts
+erpaio-faza5.zip
+faza5-setup.py
