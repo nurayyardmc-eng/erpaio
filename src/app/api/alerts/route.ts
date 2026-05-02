@@ -1,11 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
 import { childLogger } from "@/lib/observability/logger";
 
 export async function GET(req: Request) {
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const body = await req.json();
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const { id, status } = await req.json();

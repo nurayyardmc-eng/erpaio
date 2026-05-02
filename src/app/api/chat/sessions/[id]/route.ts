@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 
-export async function GET(_req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
-  const session = await auth();
+export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const { id } = await ctx.params;
@@ -34,8 +34,8 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/chat/sessions/[
   });
 }
 
-export async function DELETE(_req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
-  const session = await auth();
+export async function DELETE(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const { id } = await ctx.params;

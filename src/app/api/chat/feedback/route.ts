@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { applyFeedback, hashQuestion } from "@/lib/cache/queryCache";
 import { childLogger } from "@/lib/observability/logger";
@@ -17,7 +17,7 @@ export async function PATCH(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   setSentryUser({

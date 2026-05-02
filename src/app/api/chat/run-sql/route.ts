@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { validateSQL } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   setSentryUser({

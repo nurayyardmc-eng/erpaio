@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
 import { z } from "zod";
@@ -13,7 +13,7 @@ const Schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) {
     return Response.json({ error: "Yetkisiz." }, { status: 401 });
   }
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) {
     return Response.json({ error: "Yetkisiz." }, { status: 401 });
   }

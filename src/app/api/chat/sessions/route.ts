@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 
-export async function GET() {
-  const session = await auth();
+export async function GET(req: Request) {
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const sessions = await prisma.chatSession.findMany({

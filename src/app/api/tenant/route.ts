@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 
@@ -11,8 +11,8 @@ const PatchSchema = z.object({
   alertMinSeverity: z.enum(["low", "medium", "high", "critical"]).optional(),
 });
 
-export async function GET() {
-  const session = await auth();
+export async function GET(req: Request) {
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const tenant = await prisma.tenant.findUnique({
@@ -36,7 +36,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-  const session = await auth();
+  const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
   if (session.user.role !== "admin" && session.user.role !== "owner") {
     return Response.json({ error: "Yalnızca yönetici düzenleyebilir." }, { status: 403 });

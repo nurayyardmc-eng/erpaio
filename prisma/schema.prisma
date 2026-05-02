@@ -37,6 +37,8 @@ model User {
   createdAt    DateTime      @default(now())
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions     ChatSession[]
+  apiTokens    ApiToken[]
+  pushTokens   PushToken[]
 }
 
 model ErpConnection {
@@ -141,6 +143,39 @@ enum CronStatus {
   SUCCESS
   PARTIAL_FAILURE
   FAILED
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tenantId   String
+  name       String?
+  tokenHash  String    @unique
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revoked    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model PushToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tenantId   String
+  token      String   @unique
+  platform   String
+  deviceName String?
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tenantId])
 }
 
 model QueryCache {
