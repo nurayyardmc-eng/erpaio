@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
+import { invalidateForTenant } from "./queryCache";
+import { childLogger } from "@/lib/observability/logger";
 
 const memCache = new Map<string, { data: string; ts: number }>();
 const TTL_MS = 60 * 60 * 1000;
@@ -18,12 +20,26 @@ export async function getSchema(connectionId: string): Promise<string> {
   }
 
   const schema = await buildSchema(connectionId);
+  const schemaChanged = !snapshot || snapshot.schemaText !== schema;
+
   memCache.set(connectionId, { data: schema, ts: Date.now() });
   await prisma.schemaCache.upsert({
     where: { connectionId },
     create: { connectionId, schemaText: schema, tableCount: schema.split("\n").length },
     update: { schemaText: schema, tableCount: schema.split("\n").length, builtAt: new Date() },
   });
+
+  if (schemaChanged) {
+    const conn = await prisma.erpConnection.findUnique({
+      where: { id: connectionId },
+      select: { tenantId: true },
+    });
+    if (conn) {
+      const deleted = await invalidateForTenant(conn.tenantId);
+      childLogger({ component: "schema-cache", connectionId, tenantId: conn.tenantId })
+        .info({ event: "schema_changed", invalidatedQueries: deleted }, "Schema changed, query cache invalidated");
+    }
+  }
 
   return schema;
 }

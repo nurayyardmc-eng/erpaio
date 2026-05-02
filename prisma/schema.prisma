@@ -19,6 +19,7 @@ model Tenant {
   chatSessions ChatSession[]
   alerts       Alert[]
   baselines    AnomalyBaseline[]
+  queryCache   QueryCache[]
 }
 
 model User {
@@ -135,4 +136,21 @@ enum CronStatus {
   SUCCESS
   PARTIAL_FAILURE
   FAILED
+}
+
+model QueryCache {
+  id           String   @id @default(cuid())
+  tenantId     String
+  questionHash String
+  question     String
+  sqlQuery     String
+  successCount Int      @default(0)
+  failCount    Int      @default(0)
+  lastUsedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, questionHash])
+  @@index([tenantId, lastUsedAt(sort: Desc)])
 }
