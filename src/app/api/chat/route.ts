@@ -9,6 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { loadProfile, profileToPromptContext } from "@/lib/erpProfiles";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
@@ -59,8 +60,12 @@ export async function POST(req: Request) {
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: connectionId, tenantId, status: "active" },
+    select: { id: true, erpType: true, erpProfile: true },
   });
   if (!conn) return Response.json({ error: "Aktif bağlantı bulunamadı." }, { status: 404 });
+
+  const profileSlug = conn.erpProfile ?? (conn.erpType === "nebim_v3" ? "nebim_v3" : null);
+  const erpProfile = profileSlug ? loadProfile(profileSlug) : null;
 
   const log = childLogger({ component: "chat", tenantId, userId: session.user.id });
   const t0 = Date.now();
@@ -82,7 +87,26 @@ export async function POST(req: Request) {
       );
     } else {
       Sentry.setTag("chat.cache_hit", false);
+      Sentry.setTag("chat.erp_profile", profileSlug ?? "none");
       const schema = await getSchema(connectionId);
+
+      const profileContext = erpProfile ? profileToPromptContext(erpProfile) : "";
+      const erpName = erpProfile?.name ?? "ERP";
+
+      const systemText = `Sen bir SQL Server uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL SELECT sorgusuna çeviriyorsun.
+
+KESİN KURALLAR:
+- Sadece SQL döndür, açıklama yazma, markdown ekleme.
+- DROP/DELETE/UPDATE/INSERT/ALTER/EXEC/MERGE yasak — sadece SELECT veya WITH.
+- Türkçe karakterler için NVARCHAR + N'...' prefix kullan.
+- IptalDurumu = 0 her zaman filtre et (varsa).
+- Tarih: GETDATE(), DATEADD(), CAST(... AS DATE) kullan.
+- Aşağıdaki ERP profiline ÖNCELİK VER — şema listesi referans, profile semantic.
+
+${profileContext}
+
+## CANLI ŞEMA (INFORMATION_SCHEMA çıktısı)
+${schema}`;
 
       const msg = await client.messages.create({
         model: "claude-sonnet-4-20250514",
@@ -90,12 +114,7 @@ export async function POST(req: Request) {
         system: [
           {
             type: "text",
-            text: `Sen bir SQL Server uzmanısın. Nebim V3 ERP veritabanı şemasına göre kullanıcının sorusunu SQL SELECT sorgusuna çevir.
-KURAL: Sadece SQL döndür. Açıklama yazma. DROP/DELETE/UPDATE/INSERT yasak.
-Türkçe karakterler için NVARCHAR ve N prefix kullan.
-
-ŞEMA:
-${schema}`,
+            text: systemText,
             cache_control: { type: "ephemeral" },
           },
         ],

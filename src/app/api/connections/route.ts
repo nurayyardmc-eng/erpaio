@@ -21,10 +21,15 @@ export async function POST(req: Request) {
   const body = await req.json();
   const data = Schema.parse(body);
 
+  const profileMap: Record<string, string> = {
+    nebim_v3: "nebim_v3",
+  };
+
   const connection = await prisma.erpConnection.create({
     data: {
       tenantId: session.user.tenantId,
       erpType: data.erpType,
+      erpProfile: profileMap[data.erpType] ?? null,
       host: data.host,
       port: data.port,
       dbName: data.dbName,

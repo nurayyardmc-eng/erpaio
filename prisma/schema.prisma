@@ -45,6 +45,7 @@ model ErpConnection {
   id          String       @id @default(cuid())
   tenantId    String
   erpType     String
+  erpProfile  String?
   host        String
   port        Int          @default(1433)
   dbName      String
