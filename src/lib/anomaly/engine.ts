@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
 import { getPool } from "@/lib/db/connector";
 import {
@@ -6,6 +7,7 @@ import {
 } from "./detectors";
 import { getHourlyQueries, getDailyQueries, type MetricQuery } from "./queries";
 import { sendWhatsApp, formatAlert } from "@/lib/notifications/whatsapp";
+import { childLogger } from "@/lib/observability/logger";
 
 export interface TenantRunResult {
   tenantId: string;
@@ -19,6 +21,7 @@ export async function runAnomalyDetectionForTenant(
   tenantId: string,
   mode: "hourly" | "daily",
 ): Promise<TenantRunResult> {
+  const log = childLogger({ component: "anomaly-engine", tenantId, mode });
   const result: TenantRunResult = {
     tenantId, metricsRun: 0, anomaliesFound: 0, alertsCreated: 0, errors: [],
   };
@@ -92,14 +95,22 @@ export async function runAnomalyDetectionForTenant(
             });
             await sendWhatsApp(text);
           } catch (waErr) {
-            console.error(`[anomaly][${tenantId}] WhatsApp send failed:`, waErr);
+            log.error({ err: waErr, severity: anomaly.severity }, "WhatsApp send failed");
+            Sentry.captureException(waErr, {
+              tags: { component: "anomaly-engine", subsystem: "whatsapp" },
+              extra: { tenantId, metricKey: query.key, severity: anomaly.severity },
+            });
           }
         }
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       result.errors.push({ metric: query.key, error: errorMsg });
-      console.error(`[anomaly][${tenantId}][${query.key}]`, err);
+      log.error({ err, metricKey: query.key }, "Metric execution failed");
+      Sentry.captureException(err, {
+        tags: { component: "anomaly-engine", metricKey: query.key },
+        extra: { tenantId, mode },
+      });
     }
   }
 

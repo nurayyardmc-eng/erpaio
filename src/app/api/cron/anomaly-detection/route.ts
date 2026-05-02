@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { verifyCronAuth } from "@/lib/cron/auth";
 import { runAnomalyDetectionForTenant } from "@/lib/anomaly/engine";
+import { childLogger } from "@/lib/observability/logger";
+import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/observability/requestId";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -11,15 +14,25 @@ const TENANT_CONCURRENCY = 3;
 
 export async function GET(req: NextRequest) {
   const startedAt = Date.now();
+  const requestId = getOrCreateRequestId(req);
 
   const auth = verifyCronAuth(req);
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.reason }, { status: 401 });
+    return NextResponse.json(
+      { error: auth.reason },
+      { status: 401, headers: { [REQUEST_ID_HEADER]: requestId } },
+    );
   }
 
   const url = new URL(req.url);
   const mode = url.searchParams.get("mode") === "daily" ? "daily" : "hourly";
   const jobName = `anomaly-detection-${mode}`;
+  const log = childLogger({ component: "cron", jobName, requestId });
+
+  Sentry.setTag("cron.job", jobName);
+  Sentry.setTag("cron.requestId", requestId);
+
+  log.info({ event: "cron_start" }, "Cron run started");
 
   const cronRun = await prisma.cronRun.create({
     data: { jobName, status: "RUNNING" },
@@ -36,11 +49,15 @@ export async function GET(req: NextRequest) {
         where: { id: cronRun.id },
         data: { status: "SUCCESS", finishedAt: new Date(), tenantsTotal: 0 },
       });
-      return NextResponse.json({
-        ok: true,
-        message: "İşlenecek aktif tenant yok",
-        durationMs: Date.now() - startedAt,
-      });
+      log.info({ event: "cron_no_tenants" }, "No active tenants to process");
+      return NextResponse.json(
+        {
+          ok: true,
+          message: "İşlenecek aktif tenant yok",
+          durationMs: Date.now() - startedAt,
+        },
+        { headers: { [REQUEST_ID_HEADER]: requestId } },
+      );
     }
 
     const results = await runWithConcurrency(
@@ -99,16 +116,44 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      ok: true, mode,
-      tenantsTotal: tenants.length,
-      tenantsOk, tenantsFail, alertsCreated,
-      durationMs: Date.now() - startedAt,
-      status: finalStatus,
-    });
+    log.info(
+      {
+        event: "cron_done",
+        tenantsTotal: tenants.length,
+        tenantsOk,
+        tenantsFail,
+        alertsCreated,
+        finalStatus,
+        durationMs: Date.now() - startedAt,
+      },
+      "Cron run completed",
+    );
+
+    if (finalStatus !== "SUCCESS") {
+      Sentry.captureMessage(`Cron ${jobName} ${finalStatus}`, {
+        level: finalStatus === "FAILED" ? "error" : "warning",
+        tags: { component: "cron", jobName, finalStatus },
+        extra: { tenantsOk, tenantsFail, alertsCreated, failedTenants },
+      });
+    }
+
+    return NextResponse.json(
+      {
+        ok: true, mode,
+        tenantsTotal: tenants.length,
+        tenantsOk, tenantsFail, alertsCreated,
+        durationMs: Date.now() - startedAt,
+        status: finalStatus,
+      },
+      { headers: { [REQUEST_ID_HEADER]: requestId } },
+    );
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    console.error(`[cron][${jobName}] Fatal error:`, err);
+    log.error({ err, event: "cron_fatal" }, "Cron fatal error");
+    Sentry.captureException(err, {
+      tags: { component: "cron", jobName },
+      extra: { requestId },
+    });
 
     await prisma.cronRun.update({
       where: { id: cronRun.id },
@@ -119,7 +164,10 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: false, error: errorMsg }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: errorMsg },
+      { status: 500, headers: { [REQUEST_ID_HEADER]: requestId } },
+    );
   }
 }
 

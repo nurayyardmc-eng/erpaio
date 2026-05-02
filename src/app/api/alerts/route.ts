@@ -1,6 +1,8 @@
+import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { sendWhatsApp, formatAlert } from "@/lib/notifications/whatsapp";
+import { childLogger } from "@/lib/observability/logger";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -37,7 +39,14 @@ export async function POST(req: Request) {
 
   // Yüksek öncelikli ise WhatsApp gönder
   if (["high", "critical"].includes(alert.severity)) {
-    await sendWhatsApp(formatAlert(alert)).catch(console.error);
+    sendWhatsApp(formatAlert(alert)).catch((err) => {
+      const log = childLogger({ component: "alerts", alertId: alert.id });
+      log.error({ err, severity: alert.severity }, "WhatsApp send failed");
+      Sentry.captureException(err, {
+        tags: { component: "alerts", subsystem: "whatsapp" },
+        extra: { alertId: alert.id, severity: alert.severity },
+      });
+    });
   }
 
   return Response.json(alert);
