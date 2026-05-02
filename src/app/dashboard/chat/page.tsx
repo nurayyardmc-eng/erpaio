@@ -32,8 +32,17 @@ interface AssistantSuccessMsg {
 
 interface AssistantLoadingMsg { role: "assistant"; status: "loading" }
 interface AssistantErrorMsg { role: "assistant"; status: "error"; content: string }
+interface AssistantConfirmMsg {
+  role: "assistant";
+  status: "confirm";
+  question: string;
+  sql: string;
+  confidence: number;
+  explanation: string;
+  ambiguity: string | null;
+}
 interface UserMsg { role: "user"; content: string }
-type Msg = UserMsg | AssistantLoadingMsg | AssistantErrorMsg | AssistantSuccessMsg;
+type Msg = UserMsg | AssistantLoadingMsg | AssistantErrorMsg | AssistantSuccessMsg | AssistantConfirmMsg;
 
 export default function ChatPage() {
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -201,24 +210,35 @@ export default function ChatPage() {
     }
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading || !selectedConn) return;
-    const question = input;
-    setInput("");
+  const runQuestion = async (question: string, forceRun = false) => {
     setLoading(true);
-
-    setMessages((prev) => [...prev, { role: "user", content: question }]);
     setMessages((prev) => [...prev, { role: "assistant", status: "loading" }]);
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, connectionId: selectedConn, sessionId }),
+        body: JSON.stringify({ question, connectionId: selectedConn, sessionId, forceRun }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       if (data.sessionId) setSessionId(data.sessionId);
+
+      if (data.needsConfirmation) {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          {
+            role: "assistant",
+            status: "confirm",
+            question,
+            sql: data.sql,
+            confidence: data.confidence,
+            explanation: data.explanation,
+            ambiguity: data.ambiguity,
+          },
+        ]);
+        return;
+      }
 
       setMessages((prev) => [
         ...prev.slice(0, -1),
@@ -244,6 +264,23 @@ export default function ChatPage() {
       setLoading(false);
       refreshHistory();
     }
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() || loading || !selectedConn) return;
+    const question = input;
+    setInput("");
+    setMessages((prev) => [...prev, { role: "user", content: question }]);
+    await runQuestion(question);
+  };
+
+  const confirmAndRun = async (idx: number, question: string) => {
+    setMessages((prev) => prev.filter((_, i) => i !== idx));
+    await runQuestion(question, true);
+  };
+
+  const cancelConfirm = (idx: number) => {
+    setMessages((prev) => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -338,6 +375,38 @@ export default function ChatPage() {
                   {msg.status === "error" && (
                     <div style={{ background: "#FF6B6B18", border: "1px solid #FF6B6B30", borderRadius: 8, padding: "10px 14px", color: "#FF6B6B", fontSize: 12 }}>
                       ❌ {msg.content}
+                    </div>
+                  )}
+                  {msg.status === "confirm" && (
+                    <div style={{ background: "#FF950018", border: "1px solid #FF950040", borderRadius: 8, padding: 14 }}>
+                      <div style={{ fontSize: 9, color: "#FF9500", letterSpacing: 2, marginBottom: 8 }}>
+                        ⚠ ONAY GEREKİYOR · CONFIDENCE %{Math.round(msg.confidence * 100)}
+                      </div>
+                      {msg.ambiguity && (
+                        <div style={{ color: "#FFD740", fontSize: 12, marginBottom: 10 }}>
+                          {msg.ambiguity}
+                        </div>
+                      )}
+                      {msg.explanation && (
+                        <div style={{ color: "#9AA5B4", fontSize: 11, marginBottom: 10, fontStyle: "italic" }}>
+                          {msg.explanation}
+                        </div>
+                      )}
+                      <pre style={{ margin: 0, fontSize: 11, color: "#8EC8E8", whiteSpace: "pre-wrap", background: "#060A12", padding: 10, borderRadius: 6 }}>{msg.sql}</pre>
+                      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                        <button
+                          onClick={() => confirmAndRun(i, msg.question)}
+                          style={{ background: "#69FF4720", border: "1px solid #69FF47", borderRadius: 4, padding: "6px 14px", color: "#69FF47", fontSize: 11, cursor: "pointer", fontFamily: "monospace" }}
+                        >
+                          Çalıştır
+                        </button>
+                        <button
+                          onClick={() => cancelConfirm(i)}
+                          style={{ background: "transparent", border: "1px solid #131A26", borderRadius: 4, padding: "6px 14px", color: "#9AA5B4", fontSize: 11, cursor: "pointer", fontFamily: "monospace" }}
+                        >
+                          İptal
+                        </button>
+                      </div>
                     </div>
                   )}
                   {msg.status === "success" && (

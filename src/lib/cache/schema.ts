@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { invalidateForTenant } from "./queryCache";
+import { invalidateSampleRows } from "./sampleRows";
 import { childLogger } from "@/lib/observability/logger";
 
 const memCache = new Map<string, { data: string; ts: number }>();
@@ -30,6 +31,7 @@ export async function getSchema(connectionId: string): Promise<string> {
   });
 
   if (schemaChanged) {
+    invalidateSampleRows(connectionId);
     const conn = await prisma.erpConnection.findUnique({
       where: { id: connectionId },
       select: { tenantId: true },
@@ -37,7 +39,7 @@ export async function getSchema(connectionId: string): Promise<string> {
     if (conn) {
       const deleted = await invalidateForTenant(conn.tenantId);
       childLogger({ component: "schema-cache", connectionId, tenantId: conn.tenantId })
-        .info({ event: "schema_changed", invalidatedQueries: deleted }, "Schema changed, query cache invalidated");
+        .info({ event: "schema_changed", invalidatedQueries: deleted }, "Schema changed, query cache + sample rows invalidated");
     }
   }
 

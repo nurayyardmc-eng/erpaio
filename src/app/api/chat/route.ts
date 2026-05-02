@@ -10,16 +10,54 @@ import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { loadProfile, profileToPromptContext } from "@/lib/erpProfiles";
+import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
 const client = new Anthropic();
 
+const CONFIDENCE_THRESHOLD = 0.5;
+
 const BodySchema = z.object({
   question: z.string().min(1).max(500),
   connectionId: z.string(),
   sessionId: z.string().optional(),
+  forceRun: z.boolean().optional(),
 });
+
+interface AiResponse {
+  sql: string;
+  confidence: number;
+  explanation: string;
+  ambiguity: string | null;
+}
+
+function parseAiResponse(raw: string): AiResponse {
+  const cleaned = raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+
+  try {
+    const parsed = JSON.parse(cleaned) as Partial<AiResponse>;
+    return {
+      sql: typeof parsed.sql === "string" ? parsed.sql.trim() : "",
+      confidence:
+        typeof parsed.confidence === "number" && parsed.confidence >= 0 && parsed.confidence <= 1
+          ? parsed.confidence
+          : 0.5,
+      explanation: typeof parsed.explanation === "string" ? parsed.explanation : "",
+      ambiguity: typeof parsed.ambiguity === "string" ? parsed.ambiguity : null,
+    };
+  } catch {
+    return {
+      sql: cleaned,
+      confidence: 0.7,
+      explanation: "",
+      ambiguity: null,
+    };
+  }
+}
 
 export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
@@ -38,7 +76,7 @@ export async function POST(req: Request) {
   const body = BodySchema.safeParse(await req.json());
   if (!body.success) return Response.json({ error: body.error.issues[0].message }, { status: 400 });
 
-  const { question, connectionId, sessionId } = body.data;
+  const { question, connectionId, sessionId, forceRun } = body.data;
   const tenantId = session.user.tenantId;
 
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
@@ -72,6 +110,9 @@ export async function POST(req: Request) {
   let sql = "";
   let cacheId: string | undefined;
   let cacheHit = false;
+  let confidence = 1;
+  let explanation = "";
+  let ambiguity: string | null = null;
 
   try {
     const cached = await lookupCache(tenantId, question);
@@ -91,19 +132,37 @@ export async function POST(req: Request) {
       const schema = await getSchema(connectionId);
 
       const profileContext = erpProfile ? profileToPromptContext(erpProfile) : "";
+      const sampleContext = erpProfile
+        ? sampleRowsToPromptContext(await getSampleRows(connectionId, erpProfile))
+        : "";
       const erpName = erpProfile?.name ?? "ERP";
 
       const systemText = `Sen bir SQL Server uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL SELECT sorgusuna çeviriyorsun.
 
+YANIT FORMATI (zorunlu, sadece JSON, başka hiçbir şey yazma):
+{
+  "sql": "SELECT ...",
+  "confidence": 0.85,
+  "explanation": "tek cümle, hangi tablo+kolonu neden seçtin",
+  "ambiguity": null veya "soru belirsizse 1 cümle açıkla, alternatif yorumlar"
+}
+
+CONFIDENCE REHBERİ:
+- 0.95-1.0: profile glossary'de açık karşılığı var, belirsizlik yok
+- 0.7-0.94: profile/şema yeterli, makul varsayım gerekti
+- 0.4-0.69: sorgu belirsiz, birden fazla yorum olası — ambiguity DOLDUR
+- <0.4: yetersiz bilgi, SQL üretme — confidence düşür, ambiguity ile sebep
+
 KESİN KURALLAR:
-- Sadece SQL döndür, açıklama yazma, markdown ekleme.
-- DROP/DELETE/UPDATE/INSERT/ALTER/EXEC/MERGE yasak — sadece SELECT veya WITH.
-- Türkçe karakterler için NVARCHAR + N'...' prefix kullan.
-- IptalDurumu = 0 her zaman filtre et (varsa).
-- Tarih: GETDATE(), DATEADD(), CAST(... AS DATE) kullan.
-- Aşağıdaki ERP profiline ÖNCELİK VER — şema listesi referans, profile semantic.
+- Sadece SELECT veya WITH — DROP/DELETE/UPDATE/INSERT/ALTER/EXEC/MERGE YASAK.
+- Türkçe karakterler için NVARCHAR + N'...' prefix.
+- IptalDurumu = 0 her zaman filtrele (varsa).
+- Tarih: GETDATE(), DATEADD(), CAST(... AS DATE).
+- ERP profiline ÖNCELİK VER — şema listesi referans, profile semantic.
 
 ${profileContext}
+
+${sampleContext}
 
 ## CANLI ŞEMA (INFORMATION_SCHEMA çıktısı)
 ${schema}`;
@@ -122,7 +181,13 @@ ${schema}`;
       });
 
       const block = msg.content.find((b) => b.type === "text");
-      sql = (block && "text" in block ? block.text : "")?.trim() ?? "";
+      const rawText = (block && "text" in block ? block.text : "")?.trim() ?? "";
+
+      const parsed = parseAiResponse(rawText);
+      sql = parsed.sql;
+      confidence = parsed.confidence;
+      explanation = parsed.explanation;
+      ambiguity = parsed.ambiguity;
 
       const usage = msg.usage as typeof msg.usage & {
         cache_creation_input_tokens?: number;
@@ -135,12 +200,28 @@ ${schema}`;
           outputTokens: usage.output_tokens,
           cacheCreated: usage.cache_creation_input_tokens ?? 0,
           cacheRead: usage.cache_read_input_tokens ?? 0,
+          confidence,
+          hasAmbiguity: !!ambiguity,
         },
         "Claude generated SQL",
       );
       if (typeof usage.cache_read_input_tokens === "number" && usage.cache_read_input_tokens > 0) {
         Sentry.setTag("chat.prompt_cache_hit", true);
       }
+      Sentry.setTag("chat.confidence_bucket",
+        confidence >= 0.95 ? "high" : confidence >= 0.7 ? "med" : confidence >= 0.4 ? "low" : "very_low");
+    }
+
+    if (!cacheHit && confidence < CONFIDENCE_THRESHOLD && !forceRun) {
+      log.info({ event: "low_confidence", confidence, ambiguity }, "Asking user to confirm");
+      return Response.json({
+        needsConfirmation: true,
+        sql,
+        confidence,
+        explanation,
+        ambiguity,
+        sessionId,
+      }, { status: 200 });
     }
 
     validateSQL(sql);
