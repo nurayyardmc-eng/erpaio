@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import PlaceholderScreen from "./src/screens/PlaceholderScreen";
+import ChatStackNav from "./src/screens/ChatStackNav";
 import { getToken, clearToken } from "./src/lib/api";
 import { logout as authLogout } from "./src/lib/auth";
 import { colors, font } from "./src/lib/theme";
@@ -47,7 +48,8 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
     >
       <Tabs.Screen
         name="Chat"
-        children={() => <PlaceholderScreen title="Chat" />}
+        component={ChatStackNav}
+        options={{ headerShown: false }}
       />
       <Tabs.Screen
         name="Alerts"
