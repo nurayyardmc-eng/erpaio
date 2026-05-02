@@ -36,9 +36,9 @@ jobs:
       - run: npx prisma generate
       - run: npx next build
         env:
-          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-          DIRECT_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-          NEXTAUTH_SECRET: ci-placeholder-secret-not-real-only-for-build
-          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
-          ANTHROPIC_API_KEY: sk-ant-ci-placeholder
-          CRON_SECRET: ci-placeholder-cron-secret
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          DIRECT_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          NEXTAUTH_SECRET: "ci-placeholder-secret-not-real-only-for-build"
+          ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          ANTHROPIC_API_KEY: "sk-ant-ci-placeholder"
+          CRON_SECRET: "ci-placeholder-cron-secret"
