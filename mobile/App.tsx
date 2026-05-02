@@ -9,8 +9,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LoginScreen from "./src/screens/LoginScreen";
 import PlaceholderScreen from "./src/screens/PlaceholderScreen";
 import ChatStackNav from "./src/screens/ChatStackNav";
+import AlertsScreen from "./src/screens/AlertsScreen";
 import { getToken, clearToken } from "./src/lib/api";
 import { logout as authLogout } from "./src/lib/auth";
+import { registerForPush } from "./src/lib/push";
 import { colors, font } from "./src/lib/theme";
 
 const queryClient = new QueryClient({
@@ -53,7 +55,8 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
       />
       <Tabs.Screen
         name="Alerts"
-        children={() => <PlaceholderScreen title="Bildirimler" />}
+        component={AlertsScreen}
+        options={{ headerShown: false }}
       />
       <Tabs.Screen
         name="Ayarlar"
@@ -72,6 +75,11 @@ export default function App() {
       setAuthState(t ? "authed" : "guest");
     })();
   }, []);
+
+  useEffect(() => {
+    if (authState !== "authed") return;
+    void registerForPush().catch(() => {});
+  }, [authState]);
 
   const handleLogout = async () => {
     await authLogout().catch(async () => {

@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
+import { sendPushToTenant } from "@/lib/notifications/push";
 import { childLogger } from "@/lib/observability/logger";
 
 export async function GET(req: Request) {
@@ -42,18 +43,23 @@ export async function POST(req: Request) {
     select: { whatsappTo: true, whatsappEnabled: true, alertMinSeverity: true },
   });
 
-  if (
-    tenant?.whatsappEnabled &&
-    shouldNotify(alert.severity, tenant.alertMinSeverity)
-  ) {
-    sendWhatsApp(formatAlert(alert), { to: tenant.whatsappTo ?? undefined }).catch((err) => {
-      const log = childLogger({ component: "alerts", alertId: alert.id });
-      log.error({ err, severity: alert.severity }, "WhatsApp send failed");
-      Sentry.captureException(err, {
-        tags: { component: "alerts", subsystem: "whatsapp" },
-        extra: { alertId: alert.id, severity: alert.severity },
+  if (tenant && shouldNotify(alert.severity, tenant.alertMinSeverity)) {
+    if (tenant.whatsappEnabled) {
+      sendWhatsApp(formatAlert(alert), { to: tenant.whatsappTo ?? undefined }).catch((err) => {
+        const log = childLogger({ component: "alerts", alertId: alert.id });
+        log.error({ err, severity: alert.severity }, "WhatsApp send failed");
+        Sentry.captureException(err, {
+          tags: { component: "alerts", subsystem: "whatsapp" },
+          extra: { alertId: alert.id, severity: alert.severity },
+        });
       });
-    });
+    }
+
+    sendPushToTenant(session.user.tenantId, {
+      title: `${alert.severity.toUpperCase()} · ${alert.title}`,
+      body: alert.description ?? alert.title,
+      data: { alertId: alert.id, severity: alert.severity, type: alert.type },
+    }).catch(() => {});
   }
 
   return Response.json(alert);

@@ -7,6 +7,7 @@ import {
 } from "./detectors";
 import { getHourlyQueries, getDailyQueries, type MetricQuery } from "./queries";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
+import { sendPushToTenant } from "@/lib/notifications/push";
 import { childLogger } from "@/lib/observability/logger";
 
 export interface TenantRunResult {
@@ -94,24 +95,29 @@ export async function runAnomalyDetectionForTenant(
         });
         result.alertsCreated++;
 
-        if (
-          tenant?.whatsappEnabled &&
-          shouldNotify(anomaly.severity, tenant.alertMinSeverity)
-        ) {
-          try {
-            const text = formatAlert({
-              severity: alert.severity,
-              title: alert.title,
-              description: alert.description,
-            });
-            await sendWhatsApp(text, { to: tenant.whatsappTo ?? undefined });
-          } catch (waErr) {
-            log.error({ err: waErr, severity: anomaly.severity }, "WhatsApp send failed");
-            Sentry.captureException(waErr, {
-              tags: { component: "anomaly-engine", subsystem: "whatsapp" },
-              extra: { tenantId, metricKey: query.key, severity: anomaly.severity },
-            });
+        if (tenant && shouldNotify(anomaly.severity, tenant.alertMinSeverity)) {
+          if (tenant.whatsappEnabled) {
+            try {
+              const text = formatAlert({
+                severity: alert.severity,
+                title: alert.title,
+                description: alert.description,
+              });
+              await sendWhatsApp(text, { to: tenant.whatsappTo ?? undefined });
+            } catch (waErr) {
+              log.error({ err: waErr, severity: anomaly.severity }, "WhatsApp send failed");
+              Sentry.captureException(waErr, {
+                tags: { component: "anomaly-engine", subsystem: "whatsapp" },
+                extra: { tenantId, metricKey: query.key, severity: anomaly.severity },
+              });
+            }
           }
+
+          sendPushToTenant(tenantId, {
+            title: `${anomaly.severity.toUpperCase()} · ${alert.title}`,
+            body: alert.description ?? alert.title,
+            data: { alertId: alert.id, severity: alert.severity, type: "anomaly" },
+          }).catch(() => {});
         }
       }
     } catch (err) {
