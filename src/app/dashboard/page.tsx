@@ -26,6 +26,7 @@ export default async function DashboardPage() {
           { href: "/dashboard/chat", label: "Soru Sor", desc: "Türkçe soru → SQL → Cevap", color: "#B388FF" },
           { href: "/dashboard/alerts", label: "Bildirimler", desc: "Anomali ve uyarılar", color: "#FF6B6B" },
           { href: "/dashboard/annotations", label: "Şema Açıklamaları", desc: "Tablo/kolon notları (admin)", color: "#FF9500" },
+          { href: "/dashboard/insights", label: "Şema Analizi", desc: "FK çıkarımı + custom alanlar", color: "#FFD740" },
           { href: "/dashboard/saved", label: "Kayıtlı Sorgular", desc: "Sık kullanılanlar (👍'lı)", color: "#9C8AFF" },
           { href: "/dashboard/audit", label: "Aktivite Logu", desc: "KVKK audit trail", color: "#9C8AFF" },
           { href: "/dashboard/security", label: "Güvenlik (MFA)", desc: "İki faktörlü doğrulama", color: "#FFD740" },
