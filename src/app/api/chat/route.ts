@@ -11,6 +11,7 @@ import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { loadProfile, profileToPromptContext } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
+import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
@@ -135,6 +136,7 @@ export async function POST(req: Request) {
       const sampleContext = erpProfile
         ? sampleRowsToPromptContext(await getSampleRows(connectionId, erpProfile))
         : "";
+      const annotationsContext = annotationsToPromptContext(await getAnnotations(tenantId));
       const erpName = erpProfile?.name ?? "ERP";
 
       const systemText = `Sen bir SQL Server uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL SELECT sorgusuna çeviriyorsun.
@@ -161,6 +163,8 @@ KESİN KURALLAR:
 - ERP profiline ÖNCELİK VER — şema listesi referans, profile semantic.
 
 ${profileContext}
+
+${annotationsContext}
 
 ${sampleContext}
 

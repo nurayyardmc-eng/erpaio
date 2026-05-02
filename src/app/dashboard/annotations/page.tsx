@@ -1,0 +1,203 @@
+"use client";
+import { useEffect, useState } from "react";
+
+interface Annotation {
+  id: string;
+  tableName: string;
+  columnName: string | null;
+  description: string | null;
+  hidden: boolean;
+  updatedAt: string;
+}
+
+export default function AnnotationsPage() {
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ tableName: "", columnName: "", description: "", hidden: false });
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  const refresh = () => {
+    fetch("/api/annotations")
+      .then((r) => r.json())
+      .then((d) => {
+        setAnnotations(d.annotations ?? []);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  useEffect(() => {
+    if (!status) return;
+    const t = setTimeout(() => setStatus(null), 3000);
+    return () => clearTimeout(t);
+  }, [status]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.tableName.trim()) return;
+    setSaving(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/annotations", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tableName: form.tableName.trim(),
+          columnName: form.columnName.trim() || null,
+          description: form.description.trim() || null,
+          hidden: form.hidden,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setStatus({ kind: "err", msg: d.error || "Kayıt başarısız" });
+      } else {
+        setStatus({ kind: "ok", msg: "Kaydedildi." });
+        setForm({ tableName: "", columnName: "", description: "", hidden: false });
+        refresh();
+      }
+    } catch (e) {
+      setStatus({ kind: "err", msg: e instanceof Error ? e.message : "Hata" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (a: Annotation) => {
+    const params = new URLSearchParams({ tableName: a.tableName });
+    if (a.columnName) params.set("columnName", a.columnName);
+    await fetch(`/api/annotations?${params}`, { method: "DELETE" });
+    refresh();
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
+      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANNOTATIONS</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Şema Açıklamaları</h1>
+      <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
+        Müşteri-özgü tablo/kolon açıklamaları ekleyin — Claude AI bu bilgilere
+        profile'dan da, canlı şemadan da ÖNCELİKLE bakar. ERP&apos;niz kirli/özelleşmiş
+        ise, &quot;trFatura aslında bizde sadece Online satışlar tutar&quot; gibi notlar
+        hallucination&apos;u önler.
+      </p>
+
+      <form onSubmit={submit} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 24, maxWidth: 600, marginBottom: 32 }}>
+        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#00E5FF" }}>Yeni Açıklama</h2>
+
+        <Field label="Tablo adı (örn: trFatura)">
+          <input
+            value={form.tableName}
+            onChange={(e) => setForm({ ...form, tableName: e.target.value })}
+            placeholder="trFatura"
+            style={inputStyle}
+            required
+          />
+        </Field>
+
+        <Field label="Kolon adı (opsiyonel — sadece bu kolon için açıklama)">
+          <input
+            value={form.columnName}
+            onChange={(e) => setForm({ ...form, columnName: e.target.value })}
+            placeholder="(boş bırak = tablo seviyesi)"
+            style={inputStyle}
+          />
+        </Field>
+
+        <Field label="Açıklama">
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="Örn: Bu tabloda sadece e-ticaret faturaları var, mağaza satışları için trFaturaMagaza kullan."
+            rows={3}
+            style={{ ...inputStyle, resize: "vertical" }}
+          />
+        </Field>
+
+        <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, cursor: "pointer", fontSize: 12 }}>
+          <input
+            type="checkbox"
+            checked={form.hidden}
+            onChange={(e) => setForm({ ...form, hidden: e.target.checked })}
+          />
+          <span>Bu tabloyu/kolonu Claude&apos;a gizle (kullanma)</span>
+        </label>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button
+            type="submit"
+            disabled={saving}
+            style={{ background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 6, padding: "10px 20px", color: "#00E5FF", fontSize: 12, cursor: "pointer", fontFamily: "monospace" }}
+          >
+            {saving ? "Kaydediliyor..." : "Kaydet"}
+          </button>
+          {status && (
+            <span style={{ color: status.kind === "ok" ? "#69FF47" : "#FF6B6B", fontSize: 11 }}>
+              {status.msg}
+            </span>
+          )}
+        </div>
+      </form>
+
+      <h2 style={{ fontSize: 14, color: "#3A4558", marginBottom: 12 }}>Mevcut Açıklamalar ({annotations.length})</h2>
+
+      {loading && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
+
+      {!loading && annotations.length === 0 && (
+        <div style={{ color: "#3A4558", fontSize: 12 }}>Henüz açıklama yok.</div>
+      )}
+
+      {annotations.map((a) => (
+        <div key={a.id} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, padding: 14, marginBottom: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: "#00E5FF", marginBottom: 4 }}>
+                {a.tableName}{a.columnName ? `.${a.columnName}` : ""}
+                {a.hidden && <span style={{ color: "#FF6B6B", marginLeft: 8 }}>⊘ gizli</span>}
+              </div>
+              {a.description && (
+                <div style={{ fontSize: 12, color: "#9AA5B4" }}>{a.description}</div>
+              )}
+              <div style={{ fontSize: 9, color: "#3A4558", marginTop: 4 }}>
+                {new Date(a.updatedAt).toLocaleString("tr-TR")}
+              </div>
+            </div>
+            <button
+              onClick={() => remove(a)}
+              style={{ background: "transparent", border: "1px solid #FF6B6B40", borderRadius: 4, padding: "4px 10px", color: "#FF6B6B", fontSize: 10, cursor: "pointer", fontFamily: "monospace" }}
+            >
+              Sil
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <label style={{ color: "#3A4558", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4, textTransform: "uppercase" }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "#07090F",
+  border: "1px solid #131A26",
+  borderRadius: 6,
+  padding: "8px 12px",
+  color: "#E8EDF5",
+  fontSize: 12,
+  fontFamily: "monospace",
+  boxSizing: "border-box",
+  outline: "none",
+};
