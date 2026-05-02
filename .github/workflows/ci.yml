@@ -19,6 +19,8 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm test
+      - name: Generate Next.js route types
+        run: npx next typegen
       - run: npx tsc --noEmit
 
   build:
