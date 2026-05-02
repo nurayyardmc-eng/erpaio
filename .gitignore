@@ -62,3 +62,8 @@ desktop/node_modules
 desktop/src-tauri/target
 desktop/src-tauri/Cargo.lock
 desktop/dist
+
+# agent (Go) artifacts
+agent/erpaio-agent
+agent/dist
+agent/go.sum

@@ -9,26 +9,29 @@ datasource db {
 }
 
 model Tenant {
-  id                 String            @id @default(cuid())
-  name               String
-  slug               String            @unique
-  plan               String            @default("starter")
-  whatsappTo         String?
-  whatsappEnabled    Boolean           @default(true)
-  emailTo            String?
-  emailEnabled       Boolean           @default(false)
-  alertMinSeverity   String            @default("high")
-  monthlyTokenBudget Int               @default(2000000)
-  monthlyTokensUsed  Int               @default(0)
-  budgetResetAt      DateTime          @default(now())
-  trialEndsAt        DateTime?
-  createdAt          DateTime          @default(now())
-  users              User[]
-  connections        ErpConnection[]
-  chatSessions       ChatSession[]
-  alerts             Alert[]
-  baselines          AnomalyBaseline[]
-  queryCache         QueryCache[]
+  id                   String            @id @default(cuid())
+  name                 String
+  slug                 String            @unique
+  plan                 String            @default("starter")
+  whatsappTo           String?
+  whatsappEnabled      Boolean           @default(true)
+  emailTo              String?
+  emailEnabled         Boolean           @default(false)
+  alertMinSeverity     String            @default("high")
+  monthlyTokenBudget   Int               @default(2000000)
+  monthlyTokensUsed    Int               @default(0)
+  budgetResetAt        DateTime          @default(now())
+  trialEndsAt          DateTime?
+  stripeCustomerId     String?           @unique
+  stripeSubscriptionId String?           @unique
+  subscriptionStatus   String?
+  createdAt            DateTime          @default(now())
+  users                User[]
+  connections          ErpConnection[]
+  chatSessions         ChatSession[]
+  alerts               Alert[]
+  baselines            AnomalyBaseline[]
+  queryCache           QueryCache[]
 }
 
 model User {
