@@ -75,19 +75,41 @@ export async function POST(req: Request) {
       const msg = await client.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
-        system: `Sen bir SQL Server uzmanısın. Nebim V3 ERP veritabanı şemasına göre kullanıcının sorusunu SQL SELECT sorgusuna çevir.
+        system: [
+          {
+            type: "text",
+            text: `Sen bir SQL Server uzmanısın. Nebim V3 ERP veritabanı şemasına göre kullanıcının sorusunu SQL SELECT sorgusuna çevir.
 KURAL: Sadece SQL döndür. Açıklama yazma. DROP/DELETE/UPDATE/INSERT yasak.
 Türkçe karakterler için NVARCHAR ve N prefix kullan.
 
 ŞEMA:
 ${schema}`,
+            cache_control: { type: "ephemeral" },
+          },
+        ],
         messages: [{ role: "user", content: question }],
       });
 
       const block = msg.content.find((b) => b.type === "text");
       sql = (block && "text" in block ? block.text : "")?.trim() ?? "";
 
-      log.info({ event: "ai_generated", inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens }, "Claude generated SQL");
+      const usage = msg.usage as typeof msg.usage & {
+        cache_creation_input_tokens?: number;
+        cache_read_input_tokens?: number;
+      };
+      log.info(
+        {
+          event: "ai_generated",
+          inputTokens: usage.input_tokens,
+          outputTokens: usage.output_tokens,
+          cacheCreated: usage.cache_creation_input_tokens ?? 0,
+          cacheRead: usage.cache_read_input_tokens ?? 0,
+        },
+        "Claude generated SQL",
+      );
+      if (typeof usage.cache_read_input_tokens === "number" && usage.cache_read_input_tokens > 0) {
+        Sentry.setTag("chat.prompt_cache_hit", true);
+      }
     }
 
     validateSQL(sql);
