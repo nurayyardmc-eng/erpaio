@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
+import { verifyCode } from "@/lib/auth/totp";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
@@ -10,6 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { type: "email" },
         password: { type: "password" },
+        totpCode: { type: "text" },
       },
       async authorize(credentials) {
         const user = await prisma.user.findUnique({
@@ -23,6 +25,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.passwordHash,
         );
         if (!valid) return null;
+
+        if (user.totpEnabled && user.totpSecretEnc) {
+          const code = (credentials.totpCode as string | undefined) ?? "";
+          if (!verifyCode(user.totpSecretEnc, code)) {
+            throw new Error("MFA_REQUIRED");
+          }
+        }
 
         return {
           id: user.id,
