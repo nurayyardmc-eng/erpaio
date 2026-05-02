@@ -4,7 +4,9 @@ import { prisma } from "@/lib/db/prisma";
 import { validateSQL } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
+import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -14,8 +16,18 @@ const BodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await auth();
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+
+  setSentryUser({
+    id: session.user.id,
+    email: session.user.email,
+    tenantId: session.user.tenantId,
+    role: session.user.role,
+  });
 
   const tenantId = session.user.tenantId;
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);

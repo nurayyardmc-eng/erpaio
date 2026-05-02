@@ -3,7 +3,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { applyFeedback, hashQuestion } from "@/lib/cache/queryCache";
 import { childLogger } from "@/lib/observability/logger";
+import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -12,8 +14,18 @@ const BodySchema = z.object({
 });
 
 export async function PATCH(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await auth();
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+
+  setSentryUser({
+    id: session.user.id,
+    email: session.user.email,
+    tenantId: session.user.tenantId,
+    role: session.user.role,
+  });
 
   const limit = await rateLimit(session.user.id, RATE_LIMITS.CHAT_FEEDBACK);
   if (!limit.success) {
