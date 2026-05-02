@@ -93,6 +93,10 @@ export default function LoginPage() {
 
           {error && <div style={{ color: "#FF6B6B", fontSize: 12, marginBottom: 16 }}>{error}</div>}
 
+          <div style={{ marginBottom: 16, fontSize: 11, textAlign: "right" }}>
+            <a href="/forgot-password" style={{ color: "#9AA5B4", textDecoration: "none" }}>Şifremi unuttum?</a>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -110,6 +114,10 @@ export default function LoginPage() {
           >
             {loading ? "Giriş yapılıyor..." : "Giriş Yap →"}
           </button>
+
+          <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#3A4558" }}>
+            Hesabın yok mu? <a href="/signup" style={{ color: "#00E5FF", textDecoration: "none" }}>Kayıt Ol</a>
+          </div>
         </form>
       </div>
     </div>

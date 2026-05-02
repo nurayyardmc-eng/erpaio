@@ -184,6 +184,33 @@ model PushToken {
   @@index([tenantId])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+  @@index([userId])
+}
+
+model Invitation {
+  id         String    @id @default(cuid())
+  tenantId   String
+  email      String
+  role       String    @default("viewer")
+  invitedBy  String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([tenantId, email])
+  @@index([tokenHash])
+}
+
 model SchemaAnnotation {
   id          String   @id @default(cuid())
   tenantId    String

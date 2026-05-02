@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
 import { sendPushToTenant } from "@/lib/notifications/push";
+import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 
 export async function GET(req: Request) {
@@ -40,7 +41,11 @@ export async function POST(req: Request) {
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: session.user.tenantId },
-    select: { whatsappTo: true, whatsappEnabled: true, alertMinSeverity: true },
+    select: {
+      whatsappTo: true, whatsappEnabled: true,
+      emailTo: true, emailEnabled: true,
+      alertMinSeverity: true,
+    },
   });
 
   if (tenant && shouldNotify(alert.severity, tenant.alertMinSeverity)) {
@@ -60,6 +65,14 @@ export async function POST(req: Request) {
       body: alert.description ?? alert.title,
       data: { alertId: alert.id, severity: alert.severity, type: alert.type },
     }).catch(() => {});
+
+    if (tenant.emailEnabled && tenant.emailTo) {
+      sendEmail({
+        to: tenant.emailTo,
+        subject: `[ERPAIO ${alert.severity.toUpperCase()}] ${alert.title}`,
+        html: alertEmailHtml({ severity: alert.severity, title: alert.title, description: alert.description }),
+      }).catch(() => {});
+    }
   }
 
   return Response.json(alert);
