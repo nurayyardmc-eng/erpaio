@@ -49,3 +49,10 @@ next-env.d.ts
 # faza 5 setup artifacts
 erpaio-faza5.zip
 faza5-setup.py
+
+# mobile app artifacts
+mobile/node_modules
+mobile/.expo
+mobile/dist
+mobile/web-build
+mobile/.env*.local
