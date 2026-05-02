@@ -2,10 +2,43 @@ import sql from "mssql";
 import { decrypt } from "@/lib/crypto/encrypt";
 import { prisma } from "@/lib/db/prisma";
 
-const pools = new Map<string, sql.ConnectionPool>();
+interface PoolEntry {
+  pool: sql.ConnectionPool;
+  lastUsedAt: number;
+}
+
+const pools = new Map<string, PoolEntry>();
+const POOL_IDLE_MS = 10 * 60 * 1000;
+const MAX_POOLS = 50;
+
+async function evictIdle() {
+  const now = Date.now();
+  for (const [id, entry] of pools) {
+    if (now - entry.lastUsedAt > POOL_IDLE_MS) {
+      pools.delete(id);
+      try { await entry.pool.close(); } catch {}
+    }
+  }
+  if (pools.size > MAX_POOLS) {
+    const sorted = Array.from(pools.entries()).sort(
+      (a, b) => a[1].lastUsedAt - b[1].lastUsedAt,
+    );
+    const toEvict = sorted.slice(0, pools.size - MAX_POOLS);
+    for (const [id, entry] of toEvict) {
+      pools.delete(id);
+      try { await entry.pool.close(); } catch {}
+    }
+  }
+}
 
 export async function getPool(connectionId: string): Promise<sql.ConnectionPool> {
-  if (pools.has(connectionId)) return pools.get(connectionId)!;
+  await evictIdle();
+
+  const cached = pools.get(connectionId);
+  if (cached) {
+    cached.lastUsedAt = Date.now();
+    return cached.pool;
+  }
 
   const conn = await prisma.erpConnection.findUnique({
     where: { id: connectionId },
@@ -28,7 +61,7 @@ export async function getPool(connectionId: string): Promise<sql.ConnectionPool>
   };
 
   const pool = await new sql.ConnectionPool(config).connect();
-  pools.set(connectionId, pool);
+  pools.set(connectionId, { pool, lastUsedAt: Date.now() });
   pool.on("error", () => pools.delete(connectionId));
   return pool;
 }

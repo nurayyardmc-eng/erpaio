@@ -1,7 +1,19 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const ALGO = "aes-256-gcm";
-const KEY = Buffer.from(process.env.ENCRYPTION_KEY!, "hex");
+
+function loadKey(): Buffer {
+  const raw = process.env.ENCRYPTION_KEY;
+  if (!raw) {
+    throw new Error("ENCRYPTION_KEY environment değişkeni tanımlı değil.");
+  }
+  if (!/^[0-9a-fA-F]{64}$/.test(raw)) {
+    throw new Error("ENCRYPTION_KEY 64-char hex (32 byte) formatında olmalı.");
+  }
+  return Buffer.from(raw, "hex");
+}
+
+const KEY = loadKey();
 
 export function encrypt(text: string): string {
   const iv = randomBytes(16);
