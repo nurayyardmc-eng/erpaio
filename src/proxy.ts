@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 
-const PUBLIC_PATHS = ["/login", "/privacy", "/terms", "/signup", "/forgot-password", "/reset-password"];
+const PUBLIC_PATHS = ["/login", "/privacy", "/terms", "/signup", "/forgot-password", "/reset-password", "/pricing", "/docs", "/status"];
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
