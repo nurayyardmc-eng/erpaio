@@ -1,9 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
 
+interface Connection {
+  id: string;
+  erpType: string;
+  host: string;
+  dbName: string;
+  status: string;
+  lastSync?: string;
+  createdAt: string;
+}
+
+type Toast = { kind: "ok" | "err" | "info"; msg: string } | null;
+
 export default function ConnectionsPage() {
-  const [connections, setConnections] = useState([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<Toast>(null);
   const [form, setForm] = useState({
     erpType: "nebim_v3",
     host: "",
@@ -14,33 +27,46 @@ export default function ConnectionsPage() {
   });
 
   useEffect(() => {
-    fetch("/api/connections")
-      .then((r) => r.json())
-      .then(setConnections);
+    fetch("/api/connections").then((r) => r.json()).then(setConnections);
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("/api/connections", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
-    if (data.id) {
-      alert("Bağlantı eklendi! Test ediliyor...");
+    setToast(null);
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.id) {
+        setToast({ kind: "err", msg: data.error || "Bağlantı eklenemedi." });
+        return;
+      }
+      setToast({ kind: "info", msg: "Bağlantı eklendi, test ediliyor..." });
       const test = await fetch(`/api/connections/${data.id}/test`);
       const testData = await test.json();
       if (testData.ok) {
-        alert(`✅ Bağlantı başarılı! ${testData.tableCount} tablo bulundu.`);
+        setToast({ kind: "ok", msg: `Bağlantı başarılı! ${testData.tableCount} tablo bulundu.` });
+        setForm({ erpType: "nebim_v3", host: "", port: 1433, dbName: "", username: "", password: "" });
       } else {
-        alert("❌ Bağlantı başarısız. Bilgileri kontrol edin.");
+        setToast({ kind: "err", msg: "Bağlantı başarısız. Bilgileri kontrol edin." });
       }
       const updated = await fetch("/api/connections").then((r) => r.json());
       setConnections(updated);
+    } catch (err) {
+      setToast({ kind: "err", msg: err instanceof Error ? err.message : "Ağ hatası." });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -53,6 +79,23 @@ export default function ConnectionsPage() {
     }}>
       <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>ERP Bağlantıları</h1>
+
+      {toast && (
+        <div
+          role="status"
+          style={{
+            marginBottom: 16,
+            padding: "10px 14px",
+            borderRadius: 6,
+            fontSize: 12,
+            border: `1px solid ${toast.kind === "ok" ? "#69FF4740" : toast.kind === "err" ? "#FF6B6B40" : "#00E5FF40"}`,
+            background: toast.kind === "ok" ? "#69FF4715" : toast.kind === "err" ? "#FF6B6B15" : "#00E5FF15",
+            color: toast.kind === "ok" ? "#69FF47" : toast.kind === "err" ? "#FF6B6B" : "#00E5FF",
+          }}
+        >
+          {toast.msg}
+        </div>
+      )}
 
       {/* Form */}
       <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 24, maxWidth: 500, marginBottom: 32 }}>

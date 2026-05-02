@@ -3,7 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({session: { strategy: "jwt" },
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
   providers: [
     CredentialsProvider({
       credentials: {
@@ -19,7 +20,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({session: { strategy
 
         const valid = await bcrypt.compare(
           credentials.password as string,
-          user.passwordHash
+          user.passwordHash,
         );
         if (!valid) return null;
 
@@ -36,14 +37,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({session: { strategy
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.tenantId = (user as any).tenantId;
-        token.role = (user as any).role;
+        token.tenantId = user.tenantId;
+        token.role = user.role;
       }
       return token;
     },
     session({ session, token }) {
-      session.user.tenantId = token.tenantId as string;
-      session.user.role = token.role as string;
+      if (typeof token.tenantId === "string") session.user.tenantId = token.tenantId;
+      if (typeof token.role === "string") session.user.role = token.role;
       return session;
     },
   },
