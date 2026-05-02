@@ -1,0 +1,24 @@
+name: Hourly Anomaly Detection
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Call anomaly-detection endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET secret is not set in repo settings"
+            exit 1
+          fi
+          curl -fsS -X GET \
+            --max-time 310 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://erpaio.vercel.app/api/cron/anomaly-detection
