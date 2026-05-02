@@ -9,17 +9,22 @@ datasource db {
 }
 
 model Tenant {
-  id           String            @id @default(cuid())
-  name         String
-  slug         String            @unique
-  plan         String            @default("starter")
-  createdAt    DateTime          @default(now())
-  users        User[]
-  connections  ErpConnection[]
-  chatSessions ChatSession[]
-  alerts       Alert[]
-  baselines    AnomalyBaseline[]
-  queryCache   QueryCache[]
+  id               String            @id @default(cuid())
+  name             String
+  slug             String            @unique
+  plan             String            @default("starter")
+  whatsappTo       String?
+  whatsappEnabled  Boolean           @default(true)
+  emailTo          String?
+  emailEnabled     Boolean           @default(false)
+  alertMinSeverity String            @default("high")
+  createdAt        DateTime          @default(now())
+  users            User[]
+  connections      ErpConnection[]
+  chatSessions     ChatSession[]
+  alerts           Alert[]
+  baselines        AnomalyBaseline[]
+  queryCache       QueryCache[]
 }
 
 model User {
@@ -30,7 +35,7 @@ model User {
   name         String?
   role         String        @default("viewer")
   createdAt    DateTime      @default(now())
-  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions     ChatSession[]
 }
 
@@ -46,7 +51,7 @@ model ErpConnection {
   status      String       @default("pending")
   lastSync    DateTime?
   createdAt   DateTime     @default(now())
-  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   schemaCache SchemaCache?
 }
 
@@ -56,7 +61,7 @@ model SchemaCache {
   schemaText   String
   tableCount   Int
   builtAt      DateTime      @default(now())
-  connection   ErpConnection @relation(fields: [connectionId], references: [id])
+  connection   ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 }
 
 model ChatSession {
@@ -65,8 +70,8 @@ model ChatSession {
   userId    String
   title     String?
   createdAt DateTime      @default(now())
-  tenant    Tenant        @relation(fields: [tenantId], references: [id])
-  user      User          @relation(fields: [userId], references: [id])
+  tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  ChatMessage[]
 }
 
@@ -81,7 +86,7 @@ model ChatMessage {
   success   Boolean     @default(true)
   feedback  Int?
   createdAt DateTime    @default(now())
-  session   ChatSession @relation(fields: [sessionId], references: [id])
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model Alert {
@@ -95,7 +100,7 @@ model Alert {
   evidence    Json?
   status      String   @default("open")
   createdAt   DateTime @default(now())
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
 model AnomalyBaseline {

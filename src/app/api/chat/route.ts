@@ -6,6 +6,7 @@ import { lookupCache, writeCache, recordOutcome } from "@/lib/cache/queryCache";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
@@ -26,6 +27,21 @@ export async function POST(req: Request) {
 
   const { question, connectionId, sessionId } = body.data;
   const tenantId = session.user.tenantId;
+
+  const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
+  if (!limit.success) {
+    return Response.json(
+      { error: "Çok fazla istek. Biraz sonra tekrar deneyin." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)),
+          "X-RateLimit-Remaining": String(limit.remaining),
+          "X-RateLimit-Reset": String(limit.reset),
+        },
+      },
+    );
+  }
 
   if (detectInjection(question)) return Response.json({ error: "Geçersiz soru." }, { status: 400 });
 

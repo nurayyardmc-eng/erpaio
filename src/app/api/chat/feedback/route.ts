@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { applyFeedback, hashQuestion } from "@/lib/cache/queryCache";
 import { childLogger } from "@/lib/observability/logger";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -13,6 +14,14 @@ const BodySchema = z.object({
 export async function PATCH(req: Request) {
   const session = await auth();
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+
+  const limit = await rateLimit(session.user.id, RATE_LIMITS.CHAT_FEEDBACK);
+  if (!limit.success) {
+    return Response.json(
+      { error: "Çok fazla feedback." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)) } },
+    );
+  }
 
   const body = BodySchema.safeParse(await req.json());
   if (!body.success) return Response.json({ error: body.error.issues[0].message }, { status: 400 });

@@ -6,7 +6,7 @@ import {
   type AnomalyResult,
 } from "./detectors";
 import { getHourlyQueries, getDailyQueries, type MetricQuery } from "./queries";
-import { sendWhatsApp, formatAlert } from "@/lib/notifications/whatsapp";
+import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
 import { childLogger } from "@/lib/observability/logger";
 
 export interface TenantRunResult {
@@ -28,9 +28,17 @@ export async function runAnomalyDetectionForTenant(
 
   const queries = mode === "hourly" ? getHourlyQueries() : getDailyQueries();
 
-  const erpConnection = await prisma.erpConnection.findFirst({
-    where: { tenantId, status: "active" },
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: {
+      whatsappTo: true,
+      whatsappEnabled: true,
+      alertMinSeverity: true,
+      connections: { where: { status: "active" }, take: 1, select: { id: true } },
+    },
   });
+
+  const erpConnection = tenant?.connections[0];
 
   if (!erpConnection) {
     result.errors.push({ metric: "_setup", error: "Aktif ERP bağlantısı yok" });
@@ -86,14 +94,17 @@ export async function runAnomalyDetectionForTenant(
         });
         result.alertsCreated++;
 
-        if (anomaly.severity === "high" || anomaly.severity === "critical") {
+        if (
+          tenant?.whatsappEnabled &&
+          shouldNotify(anomaly.severity, tenant.alertMinSeverity)
+        ) {
           try {
             const text = formatAlert({
               severity: alert.severity,
               title: alert.title,
               description: alert.description,
             });
-            await sendWhatsApp(text);
+            await sendWhatsApp(text, { to: tenant.whatsappTo ?? undefined });
           } catch (waErr) {
             log.error({ err: waErr, severity: anomaly.severity }, "WhatsApp send failed");
             Sentry.captureException(waErr, {
