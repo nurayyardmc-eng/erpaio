@@ -26,6 +26,7 @@ export default async function DashboardPage() {
           { href: "/dashboard/chat", label: "Soru Sor", desc: "Türkçe soru → SQL → Cevap", color: "#B388FF" },
           { href: "/dashboard/alerts", label: "Bildirimler", desc: "Anomali ve uyarılar", color: "#FF6B6B" },
           { href: "/dashboard/annotations", label: "Şema Açıklamaları", desc: "Tablo/kolon notları (admin)", color: "#FF9500" },
+          { href: "/dashboard/audit", label: "Aktivite Logu", desc: "KVKK audit trail", color: "#9C8AFF" },
           { href: "/dashboard/settings", label: "Ayarlar", desc: "Hesap ve tercihler", color: "#69FF47" },
         ].map((item) => (
           <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>

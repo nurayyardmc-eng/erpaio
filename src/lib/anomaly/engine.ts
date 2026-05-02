@@ -8,6 +8,7 @@ import {
 import { getHourlyQueries, getDailyQueries, type MetricQuery } from "./queries";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
 import { sendPushToTenant } from "@/lib/notifications/push";
+import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 
 export interface TenantRunResult {
@@ -34,6 +35,8 @@ export async function runAnomalyDetectionForTenant(
     select: {
       whatsappTo: true,
       whatsappEnabled: true,
+      emailTo: true,
+      emailEnabled: true,
       alertMinSeverity: true,
       connections: { where: { status: "active" }, take: 1, select: { id: true } },
     },
@@ -118,6 +121,14 @@ export async function runAnomalyDetectionForTenant(
             body: alert.description ?? alert.title,
             data: { alertId: alert.id, severity: alert.severity, type: "anomaly" },
           }).catch(() => {});
+
+          if (tenant.emailEnabled && tenant.emailTo) {
+            sendEmail({
+              to: tenant.emailTo,
+              subject: `[ERPAIO ${anomaly.severity.toUpperCase()}] ${alert.title}`,
+              html: alertEmailHtml({ severity: anomaly.severity, title: alert.title, description: alert.description }),
+            }).catch(() => {});
+          }
         }
       }
     } catch (err) {

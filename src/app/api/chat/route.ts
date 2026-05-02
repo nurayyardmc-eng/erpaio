@@ -9,6 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { loadProfile, profileToPromptContext } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
@@ -92,6 +93,14 @@ export async function POST(req: Request) {
           "X-RateLimit-Reset": String(limit.reset),
         },
       },
+    );
+  }
+
+  const budget = await checkAndConsume(tenantId, 5000);
+  if (!budget.ok) {
+    return Response.json(
+      { error: budget.reason, remainingTokens: budget.remaining },
+      { status: 402 },
     );
   }
 
@@ -197,6 +206,11 @@ ${schema}`;
         cache_creation_input_tokens?: number;
         cache_read_input_tokens?: number;
       };
+      const totalTokens =
+        usage.input_tokens +
+        usage.output_tokens +
+        (usage.cache_creation_input_tokens ?? 0);
+      void recordUsage(tenantId, totalTokens);
       log.info(
         {
           event: "ai_generated",
@@ -204,6 +218,7 @@ ${schema}`;
           outputTokens: usage.output_tokens,
           cacheCreated: usage.cache_creation_input_tokens ?? 0,
           cacheRead: usage.cache_read_input_tokens ?? 0,
+          totalTokens,
           confidence,
           hasAmbiguity: !!ambiguity,
         },
@@ -266,11 +281,16 @@ ${schema}`;
       "Chat query succeeded",
     );
 
+    const ROW_LIMIT = 500;
+    const truncated = rows.length > ROW_LIMIT;
+
     return Response.json({
       sql,
-      results: rows.slice(0, 500),
+      results: rows.slice(0, ROW_LIMIT),
       columns,
       total: rows.length,
+      truncated,
+      rowLimit: ROW_LIMIT,
       latencyMs,
       sessionId: sid,
       messageId: assistantMsg?.id,
