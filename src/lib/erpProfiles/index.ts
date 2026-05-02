@@ -1,8 +1,12 @@
 import { parse as parseYaml } from "yaml";
 import { NEBIM_V3_YAML } from "./profiles/nebim_v3";
+import { SAP_ECC_YAML } from "./profiles/sap_ecc";
+import { ORACLE_EBS_YAML } from "./profiles/oracle_ebs";
 
 const PROFILE_YAMLS: Record<string, string> = {
   nebim_v3: NEBIM_V3_YAML,
+  sap_ecc: SAP_ECC_YAML,
+  oracle_ebs: ORACLE_EBS_YAML,
 };
 
 export interface ErpColumnDef {
