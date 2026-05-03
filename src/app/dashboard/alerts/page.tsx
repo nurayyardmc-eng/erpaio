@@ -11,15 +11,25 @@ const SEVERITY_COLOR: Record<string, string> = {
   low: "#0A0A0A",
 };
 
+type SeverityFilter = "all" | "critical" | "high" | "medium" | "low";
+type StatusFilter = "all" | "open" | "acknowledged";
+
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   useEffect(() => {
     fetch("/api/alerts")
       .then((r) => r.json())
       .then((data) => { setAlerts(data); setLoading(false); });
   }, []);
+
+  const filtered = alerts.filter((a) =>
+    (severityFilter === "all" || a.severity === severityFilter) &&
+    (statusFilter === "all" || a.status === statusFilter)
+  );
 
   const acknowledge = async (id: string) => {
     await fetch("/api/alerts", {
@@ -37,6 +47,20 @@ export default function AlertsPage() {
 
       {loading && <SkeletonList count={3} height={72} gap={10} />}
 
+      {!loading && alerts.length > 0 && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+          <FilterPill label="Tümü" active={severityFilter === "all"} onClick={() => setSeverityFilter("all")} />
+          <FilterPill label="Kritik" active={severityFilter === "critical"} onClick={() => setSeverityFilter("critical")} />
+          <FilterPill label="Yüksek" active={severityFilter === "high"} onClick={() => setSeverityFilter("high")} />
+          <FilterPill label="Orta" active={severityFilter === "medium"} onClick={() => setSeverityFilter("medium")} />
+          <FilterPill label="Düşük" active={severityFilter === "low"} onClick={() => setSeverityFilter("low")} />
+          <span style={{ width: 1, background: "rgba(10,10,10,0.08)", margin: "0 4px" }} />
+          <FilterPill label="Hepsi" active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
+          <FilterPill label="Açık" active={statusFilter === "open"} onClick={() => setStatusFilter("open")} />
+          <FilterPill label="Okunmuş" active={statusFilter === "acknowledged"} onClick={() => setStatusFilter("acknowledged")} />
+        </div>
+      )}
+
       {!loading && alerts.length === 0 && (
         <EmptyState
           icon={<Bell size={28} />}
@@ -45,7 +69,15 @@ export default function AlertsPage() {
         />
       )}
 
-      {alerts.map((alert) => (
+      {!loading && filtered.length === 0 && alerts.length > 0 && (
+        <EmptyState
+          icon={<Bell size={28} />}
+          title="Filtreye uyan bildirim yok"
+          description="Filtreyi değiştirerek tekrar deneyin."
+        />
+      )}
+
+      {filtered.map((alert) => (
         <div key={alert.id} className="elevated" style={{
           background: "#FFFFFF",
           border: `1px solid ${SEVERITY_COLOR[alert.severity] ?? "#E5E7EB"}30`,
@@ -108,5 +140,26 @@ export default function AlertsPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "6px 14px",
+        borderRadius: 100,
+        border: `1px solid ${active ? "#0A0A0A" : "rgba(10,10,10,0.12)"}`,
+        background: active ? "#0A0A0A" : "transparent",
+        color: active ? "#FAFAF8" : "#525252",
+        fontSize: 12,
+        fontWeight: 500,
+        cursor: "pointer",
+        fontFamily: "inherit",
+      }}
+    >
+      {label}
+    </button>
   );
 }
