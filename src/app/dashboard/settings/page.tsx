@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { showToast } from "@/components/Toaster";
 import { colors } from "@/lib/theme";
 
 interface TenantSettings {
@@ -23,11 +24,42 @@ export default function SettingsPage() {
   const [pwdSaving, setPwdSaving] = useState(false);
   const [pwdStatus, setPwdStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
+  // Profile (kişisel bilgi)
+  const [profile, setProfile] = useState({ name: "", email: "" });
+  const [profileSaving, setProfileSaving] = useState(false);
+
   useEffect(() => {
     fetch("/api/tenant").then(async (r) => {
       if (r.ok) setTenant(await r.json());
     });
+    fetch("/api/me").then(async (r) => {
+      if (r.ok) {
+        const d = await r.json();
+        setProfile({ name: d.user?.name ?? "", email: d.user?.email ?? "" });
+      }
+    });
   }, []);
+
+  const saveProfile = async () => {
+    setProfileSaving(true);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: profile.name || null }),
+      });
+      if (res.ok) {
+        showToast("Profil güncellendi", "success");
+      } else {
+        const data = await res.json();
+        showToast(data.error || "Hata", "error");
+      }
+    } catch {
+      showToast("Ağ hatası", "error");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const save = async () => {
     if (!tenant) return;
@@ -122,7 +154,32 @@ export default function SettingsPage() {
         </h1>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <Section title="Hesap">
+          <Section title="Profilim">
+            <Field label="İsim">
+              <input
+                value={profile.name}
+                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                placeholder="Ali Yılmaz"
+                style={inputStyle}
+              />
+            </Field>
+            <Field label="Email">
+              <div style={{ ...inputStyle, color: colors.textMuted, background: colors.bgSubtle }}>
+                {profile.email}
+              </div>
+            </Field>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <button
+                onClick={saveProfile}
+                disabled={profileSaving}
+                style={primaryBtn}
+              >
+                {profileSaving ? "Kaydediliyor..." : "Profilimi Kaydet"}
+              </button>
+            </div>
+          </Section>
+
+          <Section title="Şirket">
             <Field label="Tenant Adı">
               <input
                 value={tenant.name}
