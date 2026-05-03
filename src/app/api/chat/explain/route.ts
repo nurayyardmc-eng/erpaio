@@ -1,0 +1,63 @@
+import * as Sentry from "@sentry/nextjs";
+import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod";
+import { getAuth } from "@/lib/auth/dual";
+import { rateLimit } from "@/lib/rateLimit";
+import { checkBodySize } from "@/lib/http/bodyLimit";
+import { checkAndConsume, recordUsage } from "@/lib/budget";
+import { childLogger } from "@/lib/observability/logger";
+
+const client = new Anthropic();
+
+const BodySchema = z.object({
+  question: z.string().min(1).max(500),
+  sql: z.string().min(1).max(5000),
+  topRows: z.array(z.record(z.string(), z.unknown())).max(20),
+  totalRows: z.number().int().min(0).max(10_000_000),
+});
+
+export async function POST(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
+  const session = await getAuth(req);
+  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+
+  const limit = await rateLimit(session.user.tenantId, {
+    prefix: "explain",
+    max: 20,
+    windowMs: 60_000,
+  });
+  if (!limit.success) return Response.json({ error: "Rate limit." }, { status: 429 });
+
+  const budget = await checkAndConsume(session.user.tenantId, 2000);
+  if (!budget.ok) return Response.json({ error: budget.reason }, { status: 402 });
+
+  const body = BodySchema.safeParse(await req.json());
+  if (!body.success) return Response.json({ error: body.error.issues[0].message }, { status: 400 });
+
+  const { question, sql, topRows, totalRows } = body.data;
+  const log = childLogger({ component: "explain", tenantId: session.user.tenantId });
+
+  try {
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 350,
+      system: "Türkçe iş zekası uzmanısın. SQL sorusunu, üretilen SQL'i ve dönen ilk satırları gör. Türkçe, 2-4 cümlelik kısa bir özet yaz: ne sorgulandı, sonuç ne anlama geliyor, dikkat çekici nokta varsa belirt. Sadece düz metin, başka hiçbir şey yazma. Sayıları yorumla, '%X artış' gibi.",
+      messages: [{
+        role: "user",
+        content: `Soru: "${question}"\nSQL: ${sql.slice(0, 800)}\nToplam satır: ${totalRows}\nİlk satırlar:\n${JSON.stringify(topRows.slice(0, 10))}\n\nKısa Türkçe yorumun:`,
+      }],
+    });
+
+    const block = msg.content.find((b) => b.type === "text");
+    const explanation = (block && "text" in block ? block.text : "")?.trim() ?? "";
+
+    void recordUsage(session.user.tenantId, msg.usage.input_tokens + msg.usage.output_tokens);
+    log.info({ length: explanation.length }, "Result explanation generated");
+    return Response.json({ explanation });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { component: "explain" } });
+    return Response.json({ explanation: "" });
+  }
+}

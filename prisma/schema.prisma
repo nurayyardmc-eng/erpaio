@@ -280,6 +280,26 @@ model TenantIpAllowlist {
   @@unique([tenantId, cidr])
 }
 
+model CustomMetric {
+  id           String    @id @default(cuid())
+  tenantId     String
+  connectionId String
+  key          String
+  label        String
+  description  String?
+  schedule     String    @default("hourly")
+  algorithm    String    @default("zscore")
+  direction    String    @default("both")
+  configJson   Json?
+  sql          String
+  enabled      Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId, enabled])
+}
+
 model SchemaAnnotation {
   id          String   @id @default(cuid())
   tenantId    String
