@@ -15,7 +15,8 @@ export default auth((req) => {
   }
 
   const isLoggedIn = !!req.auth;
-  const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
+  const isRoot = path === "/";
+  const isPublic = isRoot || PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
   const isApi = path.startsWith("/api");
 
   if (!isLoggedIn && !isPublic && !isApi) {
