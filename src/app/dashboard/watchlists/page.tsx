@@ -128,7 +128,7 @@ export default function WatchlistsPage() {
       </form>
 
       <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>Mevcut Watchlists ({watchlists.length})</h2>
-      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
       {!loading && watchlists.length === 0 && <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz watchlist yok.</div>}
       {watchlists.map((w) => (
         <div key={w.id} style={card}>

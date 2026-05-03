@@ -33,7 +33,7 @@ export default function SavedQueriesPage() {
         En az 2 kez başarıyla çalıştırılan sorgular. Tıklayarak chat&apos;te yeniden çalıştırabilirsiniz.
       </p>
 
-      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
       {!loading && queries.length === 0 && (
         <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz kayıtlı sorgu yok. Chat&apos;te sorduğunuz sorular cache&apos;e yazılır.</div>

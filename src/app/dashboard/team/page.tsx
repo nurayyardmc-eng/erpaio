@@ -138,7 +138,7 @@ export default function TeamPage() {
 
       <div style={card}>
         <h2 style={sectionTitle}>Kullanıcılar ({users.length})</h2>
-        {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+        {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
         {users.map((u) => (
           <div key={u.id} style={row}>
             <div style={{ flex: 1 }}>

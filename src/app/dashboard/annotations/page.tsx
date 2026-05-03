@@ -144,7 +144,7 @@ export default function AnnotationsPage() {
 
       <h2 style={{ fontSize: 14, color: "#94A3B8", marginBottom: 12 }}>Mevcut Açıklamalar ({annotations.length})</h2>
 
-      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
       {!loading && annotations.length === 0 && (
         <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz açıklama yok.</div>

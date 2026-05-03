@@ -105,7 +105,7 @@ export default function AuditPage() {
         </button>
       </div>
 
-      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
       {!loading && messages.length === 0 && (
         <div style={{ color: "#94A3B8", fontSize: 12 }}>Kayıt yok.</div>

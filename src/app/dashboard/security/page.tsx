@@ -68,7 +68,7 @@ export default function SecurityPage() {
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>İki Faktörlü Doğrulama (MFA)</h1>
 
       <div style={{ maxWidth: 520, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
-        {meEnabled === null && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+        {meEnabled === null && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
         {meEnabled === true && !setup && (
           <>

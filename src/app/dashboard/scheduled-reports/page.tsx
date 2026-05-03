@@ -118,7 +118,7 @@ export default function ScheduledReportsPage() {
       </form>
 
       <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>Mevcut Raporlar ({reports.length})</h2>
-      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
       {!loading && reports.length === 0 && <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz rapor yok.</div>}
       {reports.map((r) => (
         <div key={r.id} style={card}>

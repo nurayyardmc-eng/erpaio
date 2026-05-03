@@ -42,7 +42,7 @@ export default function OverviewPage() {
         {data && ` Son güncelleme: ${new Date(data.generatedAt).toLocaleString("tr-TR")}`}
       </p>
 
-      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
       {!loading && data && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>

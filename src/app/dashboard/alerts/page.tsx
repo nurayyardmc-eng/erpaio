@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Skeleton, SkeletonList } from "@/components/Skeleton";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -32,20 +33,20 @@ export default function AlertsPage() {
       <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>Bildirimler</h1>
 
-      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {loading && <SkeletonList count={3} height={72} gap={10} />}
 
       {!loading && alerts.length === 0 && (
         <div style={{ color: "#94A3B8", fontSize: 13 }}>Aktif bildirim yok.</div>
       )}
 
       {alerts.map((alert) => (
-        <div key={alert.id} style={{
+        <div key={alert.id} className="elevated" style={{
           background: "#FFFFFF",
           border: `1px solid ${SEVERITY_COLOR[alert.severity] ?? "#E5E7EB"}30`,
           borderLeft: `3px solid ${SEVERITY_COLOR[alert.severity] ?? "#E5E7EB"}`,
-          borderRadius: 8,
-          padding: 16,
-          marginBottom: 10,
+          borderRadius: 12,
+          padding: 18,
+          marginBottom: 12,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
