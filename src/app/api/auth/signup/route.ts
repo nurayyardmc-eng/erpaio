@@ -110,7 +110,7 @@ function welcomeEmailHtml(name: string, tenantName: string, verifyUrl: string): 
   return `<!doctype html><html><body style="margin:0;padding:24px;background:#07090F;color:#E8EDF5;font-family:monospace">
     <div style="max-width:560px;margin:0 auto;background:#0C1018;border:1px solid #131A26;border-radius:12px;padding:32px">
       <div style="color:#00E5FF;font-size:11px;letter-spacing:3px;margin-bottom:8px">ERPAIO</div>
-      <h2 style="margin:0 0 16px;font-size:20px">Hoş geldin ${escapeHtml(name)} 👋</h2>
+      <h2 style="margin:0 0 16px;font-size:22px;color:#0F172A">Hoş geldiniz ${escapeHtml(name)}</h2>
       <p style="color:#9AA5B4;font-size:13px;line-height:1.7">
         <strong style="color:#E8EDF5">${escapeHtml(tenantName)}</strong> hesabın oluşturuldu.
         14 gün ücretsiz Pro deneme süren başladı.

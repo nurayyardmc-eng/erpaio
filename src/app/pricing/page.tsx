@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Check, X as XIcon } from "lucide-react";
+import Logo from "@/components/Logo";
+import { colors } from "@/lib/theme";
 
 export const metadata = {
   title: "Fiyatlandırma · ERPAIO",
@@ -10,14 +13,13 @@ const plans = [
     name: "Starter",
     price: "₺499",
     period: "/ay",
-    color: "#69FF47",
     description: "Bireysel ve küçük takımlar için",
     features: [
       "1 ERP bağlantısı",
       "3 kullanıcıya kadar",
       "2M token / ay (~600 sorgu)",
-      "WhatsApp + push notification",
-      "Anomaly detection (saatlik+günlük)",
+      "WhatsApp + push bildirim",
+      "Anomaly tespiti (saatlik + günlük)",
       "Şifreli credential storage",
     ],
     notIncluded: ["MFA", "CSV export", "On-prem agent"],
@@ -27,7 +29,6 @@ const plans = [
     name: "Pro",
     price: "₺2.499",
     period: "/ay",
-    color: "#00E5FF",
     popular: true,
     description: "Büyüyen şirketler için",
     features: [
@@ -39,15 +40,14 @@ const plans = [
       "Audit log + CSV export",
       "Pre-computed dashboard",
       "İki faktörlü doğrulama (MFA)",
-      "👍 7/24 email destek",
+      "7/24 email destek",
     ],
-    cta: "Pro&apos;ya başla",
+    cta: "Pro'ya başla",
   },
   {
     name: "Enterprise",
     price: "Özel",
     period: "",
-    color: "#9C8AFF",
     description: "Bankalar, telekom, kamu",
     features: [
       "Sınırsız ERP bağlantısı",
@@ -55,7 +55,7 @@ const plans = [
       "200M+ token / ay özel",
       "On-prem agent (kendi sunucunuz)",
       "SAML SSO",
-      "Custom ERP profile (SAP, Oracle...)",
+      "Custom ERP profile (SAP, Oracle…)",
       "SLA: 99.9% uptime",
       "Adanmış destek mühendisi",
       "Penetrasyon testi raporu",
@@ -66,85 +66,161 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace" }}>
-      <header style={{ padding: "20px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #131A26" }}>
-        <Link href="/" style={{ color: "#00E5FF", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
-        <Link href="/login" style={{ color: "#9AA5B4", fontSize: 12, textDecoration: "none" }}>Giriş</Link>
+    <div style={{ minHeight: "100vh", background: colors.bg, color: colors.text }}>
+      <header style={{
+        padding: "20px 32px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderBottom: `1px solid ${colors.border}`,
+      }}>
+        <Link href="/"><Logo size={28} /></Link>
+        <Link href="/login" style={{ color: colors.textMuted, fontSize: 14, fontWeight: 500 }}>Giriş</Link>
       </header>
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 32px" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <h1 style={{ fontSize: 32, margin: "0 0 12px" }}>Şirketinizin boyutuna göre</h1>
-          <p style={{ color: "#9AA5B4", fontSize: 14 }}>14 gün ücretsiz Pro deneme — kart bilgisi gerekmez</p>
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 32px" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <h1 style={{
+            fontSize: 40,
+            margin: "0 0 12px",
+            fontWeight: 800,
+            color: colors.text,
+            letterSpacing: -1,
+          }}>
+            Şirketinizin boyutuna göre
+          </h1>
+          <p style={{ color: colors.textMuted, fontSize: 16 }}>
+            14 gün ücretsiz Pro deneme — kart bilgisi gerekmez
+          </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gap: 20,
+        }}>
           {plans.map((p) => (
             <div key={p.name} style={{
-              background: "#0C1018",
-              border: `1px solid ${p.popular ? p.color : "#131A26"}`,
-              borderRadius: 12,
-              padding: 28,
+              background: colors.card,
+              border: `${p.popular ? 2 : 1}px solid ${p.popular ? colors.brand : colors.border}`,
+              borderRadius: 16,
+              padding: 32,
               position: "relative",
             }}>
               {p.popular && (
                 <div style={{
-                  position: "absolute", top: -10, left: 20,
-                  background: p.color, color: "#07090F",
-                  padding: "2px 10px", borderRadius: 4,
-                  fontSize: 9, fontWeight: 700, letterSpacing: 2,
+                  position: "absolute",
+                  top: -12,
+                  left: 24,
+                  background: colors.brand,
+                  color: colors.textInverse,
+                  padding: "4px 12px",
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: 1,
                 }}>
                   POPÜLER
                 </div>
               )}
-              <div style={{ color: p.color, fontSize: 11, letterSpacing: 3, marginBottom: 8 }}>{p.name.toUpperCase()}</div>
-              <div style={{ marginBottom: 12 }}>
-                <span style={{ fontSize: 32, fontWeight: 700 }}>{p.price}</span>
-                <span style={{ color: "#9AA5B4", fontSize: 14 }}>{p.period}</span>
+              <div style={{
+                color: colors.brand,
+                fontSize: 12,
+                letterSpacing: 2,
+                marginBottom: 12,
+                fontWeight: 600,
+                textTransform: "uppercase",
+              }}>
+                {p.name}
               </div>
-              <p style={{ color: "#9AA5B4", fontSize: 12, marginBottom: 24, lineHeight: 1.5 }}>{p.description}</p>
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 36, fontWeight: 800, color: colors.text, letterSpacing: -1 }}>
+                  {p.price}
+                </span>
+                <span style={{ color: colors.textMuted, fontSize: 16 }}>{p.period}</span>
+              </div>
+              <p style={{
+                color: colors.textMuted,
+                fontSize: 14,
+                marginBottom: 28,
+                lineHeight: 1.5,
+              }}>
+                {p.description}
+              </p>
 
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px" }}>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
                 {p.features.map((f) => (
-                  <li key={f} style={{ color: "#E8EDF5", fontSize: 12, lineHeight: 1.7, paddingLeft: 18, position: "relative" }}>
-                    <span style={{ position: "absolute", left: 0, color: p.color }}>✓</span>
+                  <li key={f} style={{
+                    color: colors.text,
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    paddingLeft: 28,
+                    position: "relative",
+                    marginBottom: 8,
+                  }}>
+                    <span style={{ position: "absolute", left: 0, top: 2, color: colors.brand }}>
+                      <Check size={16} strokeWidth={2.5} />
+                    </span>
                     {f}
                   </li>
                 ))}
                 {p.notIncluded?.map((f) => (
-                  <li key={f} style={{ color: "#3A4558", fontSize: 12, lineHeight: 1.7, paddingLeft: 18, position: "relative", textDecoration: "line-through" }}>
-                    <span style={{ position: "absolute", left: 0 }}>✗</span>
+                  <li key={f} style={{
+                    color: colors.textSubtle,
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    paddingLeft: 28,
+                    position: "relative",
+                    marginBottom: 8,
+                    textDecoration: "line-through",
+                  }}>
+                    <span style={{ position: "absolute", left: 0, top: 2 }}>
+                      <XIcon size={16} strokeWidth={2.5} />
+                    </span>
                     {f}
                   </li>
                 ))}
               </ul>
 
-              <Link href={p.name === "Enterprise" ? "mailto:sales@erpaio.com" : "/signup"} style={{
-                display: "block",
-                background: p.popular ? p.color : "transparent",
-                color: p.popular ? "#07090F" : p.color,
-                border: `1px solid ${p.color}`,
-                borderRadius: 8,
-                padding: "12px",
-                textAlign: "center",
-                textDecoration: "none",
-                fontSize: 12,
-                fontWeight: 600,
-              }}>
+              <Link
+                href={p.name === "Enterprise" ? "mailto:sales@erpaio.com" : "/signup"}
+                style={{
+                  display: "block",
+                  background: p.popular ? colors.brand : colors.bg,
+                  color: p.popular ? colors.textInverse : colors.brand,
+                  border: `1px solid ${colors.brand}`,
+                  borderRadius: 10,
+                  padding: 14,
+                  textAlign: "center",
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
                 {p.cta}
               </Link>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: 48, textAlign: "center", color: "#3A4558", fontSize: 11 }}>
+        <div style={{
+          marginTop: 56,
+          textAlign: "center",
+          color: colors.textSubtle,
+          fontSize: 13,
+        }}>
           KDV dahil değildir. Yıllık ödemede %20 indirim. Plan değişiklikleri pro-rata.
         </div>
       </main>
 
-      <footer style={{ padding: "24px 32px", borderTop: "1px solid #131A26", textAlign: "center", fontSize: 11, color: "#3A4558" }}>
-        <Link href="/privacy" style={{ color: "#3A4558", textDecoration: "none", marginRight: 16 }}>Gizlilik</Link>
-        <Link href="/terms" style={{ color: "#3A4558", textDecoration: "none" }}>Koşullar</Link>
+      <footer style={{
+        padding: "24px 32px",
+        borderTop: `1px solid ${colors.border}`,
+        textAlign: "center",
+        fontSize: 13,
+        color: colors.textSubtle,
+      }}>
+        <Link href="/privacy" style={{ color: colors.textSubtle, marginRight: 20 }}>Gizlilik</Link>
+        <Link href="/terms" style={{ color: colors.textSubtle }}>Koşullar</Link>
       </footer>
     </div>
   );

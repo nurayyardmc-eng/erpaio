@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { CheckCircle2, X } from "lucide-react";
+import { colors } from "@/lib/theme";
 
 const NPS_DISMISSED_KEY = "erpaio_nps_dismissed_until";
 const NPS_SUBMITTED_KEY = "erpaio_nps_submitted";
@@ -50,25 +52,52 @@ export default function NpsPrompt() {
       position: "fixed",
       bottom: 24,
       right: 24,
-      background: "#FFFFFF",
-      border: "1px solid #1A2B4740",
+      background: colors.card,
+      border: `1px solid ${colors.border}`,
       borderRadius: 12,
       padding: 20,
       width: 320,
-      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-      fontFamily: "inherit",
+      boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
       zIndex: 1000,
     }}>
       {submitted ? (
-        <div style={{ color: "#10B981", fontSize: 13, textAlign: "center" }}>✓ Teşekkürler!</div>
+        <div style={{
+          color: colors.success,
+          fontSize: 14,
+          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          justifyContent: "center",
+        }}>
+          <CheckCircle2 size={18} />
+          Teşekkürler!
+        </div>
       ) : (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ color: "#1A2B47", fontSize: 9, letterSpacing: 2 }}>HIZLI ANKET</div>
-            <button onClick={dismiss} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>×</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{
+              color: colors.brand,
+              fontSize: 11,
+              letterSpacing: 2,
+              fontWeight: 700,
+              textTransform: "uppercase",
+            }}>
+              Hızlı Anket
+            </div>
+            <button onClick={dismiss} style={{
+              background: "none",
+              border: "none",
+              color: colors.textSubtle,
+              padding: 4,
+              display: "flex",
+              alignItems: "center",
+            }}>
+              <X size={16} />
+            </button>
           </div>
-          <p style={{ color: "#0F172A", fontSize: 12, lineHeight: 1.5, margin: "0 0 12px" }}>
-            ERPAIO'yu bir arkadaşına önerir misin? <strong>0-10 arası puan ver.</strong>
+          <p style={{ color: colors.text, fontSize: 13, lineHeight: 1.5, margin: "0 0 14px" }}>
+            ERPAIO&apos;yu bir arkadaşınıza önerir misiniz? <strong>0-10 puan verin.</strong>
           </p>
           <div style={{ display: "flex", gap: 4, marginBottom: 12, flexWrap: "wrap" }}>
             {Array.from({ length: 11 }, (_, i) => (
@@ -77,15 +106,14 @@ export default function NpsPrompt() {
                 onClick={() => setScore(i)}
                 style={{
                   flex: 1,
-                  minWidth: 22,
+                  minWidth: 24,
                   padding: "6px 0",
-                  background: score === i ? "#1A2B47" : "#F9FAFB",
-                  color: score === i ? "#F9FAFB" : "#475569",
-                  border: `1px solid ${score === i ? "#1A2B47" : "#E5E7EB"}`,
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  fontSize: 11,
+                  background: score === i ? colors.brand : colors.bg,
+                  color: score === i ? colors.textInverse : colors.textMuted,
+                  border: `1px solid ${score === i ? colors.brand : colors.border}`,
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 500,
                 }}
               >
                 {i}
@@ -99,10 +127,17 @@ export default function NpsPrompt() {
               placeholder="Yorum (opsiyonel)"
               rows={2}
               style={{
-                width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB",
-                borderRadius: 6, padding: 8, color: "#0F172A", fontSize: 11,
-                fontFamily: "inherit", boxSizing: "border-box", outline: "none", resize: "none",
-                marginBottom: 8,
+                width: "100%",
+                background: colors.bg,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 8,
+                padding: 10,
+                color: colors.text,
+                fontSize: 12,
+                boxSizing: "border-box",
+                outline: "none",
+                resize: "none",
+                marginBottom: 10,
               }}
             />
           )}
@@ -110,10 +145,15 @@ export default function NpsPrompt() {
             onClick={submit}
             disabled={score === null}
             style={{
-              width: "100%", background: "#1A2B4718", border: "1px solid #1A2B4740",
-              borderRadius: 6, padding: 8, color: "#1A2B47", fontSize: 11,
-              cursor: score === null ? "not-allowed" : "pointer", fontFamily: "inherit",
-              opacity: score === null ? 0.5 : 1,
+              width: "100%",
+              background: colors.brand,
+              border: "none",
+              borderRadius: 8,
+              padding: 10,
+              color: colors.textInverse,
+              fontSize: 13,
+              fontWeight: 600,
+              opacity: score === null ? 0.4 : 1,
             }}
           >
             Gönder

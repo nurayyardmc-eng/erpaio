@@ -71,7 +71,7 @@ export default function InsightsPage() {
 
           <Section title={`Profile Dışı Tablo / Kolon (${data.customItems.length})`} desc="Müşteri-özgü olabilir. Annotation'larla açıklama ekleyin → Claude doğru kullanır.">
             {data.customItems.length === 0 && (
-              <div style={{ color: "#94A3B8", fontSize: 12 }}>Tüm tablolar/kolonlar profile ile eşleşiyor ✓</div>
+              <div style={{ color: "#94A3B8", fontSize: 12 }}>Tüm tablolar/kolonlar profile ile eşleşiyor.</div>
             )}
             {data.customItems.slice(0, 50).map((c, i) => (
               <div key={i} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: 10, marginBottom: 6, fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

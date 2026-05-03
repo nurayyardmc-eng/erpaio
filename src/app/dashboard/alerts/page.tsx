@@ -35,7 +35,7 @@ export default function AlertsPage() {
       {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
       {!loading && alerts.length === 0 && (
-        <div style={{ color: "#94A3B8", fontSize: 13 }}>✅ Aktif bildirim yok.</div>
+        <div style={{ color: "#94A3B8", fontSize: 13 }}>Aktif bildirim yok.</div>
       )}
 
       {alerts.map((alert) => (
@@ -71,7 +71,7 @@ export default function AlertsPage() {
             </button>
           )}
           {alert.status === "acknowledged" && (
-            <span style={{ fontSize: 10, color: "#94A3B8" }}>✓ okundu</span>
+            <span style={{ fontSize: 10, color: "#94A3B8" }}>Okundu</span>
           )}
         </div>
       ))}
@@ -97,7 +97,7 @@ export default function AlertsPage() {
           }}
           style={{ background: "#F59E0B18", border: "1px solid #F59E0B40", borderRadius: 6, padding: "10px 20px", color: "#F59E0B", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
         >
-          🔔 Test Bildirimi Gönder
+          Test Bildirimi Gönder
         </button>
       </div>
     </div>

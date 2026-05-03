@@ -1,3 +1,4 @@
+import { Wrench, ArrowRight } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -19,6 +20,9 @@ export default function MaintenancePage() {
     }}>
       <Logo size={36} />
       <div style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
         background: colors.warningSoft,
         color: colors.warning,
         padding: "6px 14px",
@@ -27,6 +31,7 @@ export default function MaintenancePage() {
         fontWeight: 600,
         letterSpacing: 1,
       }}>
+        <Wrench size={14} />
         BAKIM
       </div>
       <h1 style={{ fontSize: 32, margin: 0, fontWeight: 700, color: colors.text, letterSpacing: -0.5 }}>
@@ -44,8 +49,11 @@ export default function MaintenancePage() {
         borderRadius: 10,
         fontSize: 14,
         fontWeight: 600,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
       }}>
-        Durum Sayfası →
+        Durum Sayfası <ArrowRight size={16} />
       </a>
     </div>
   );

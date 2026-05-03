@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -102,8 +103,12 @@ function ResetPasswordInner() {
             borderRadius: 10,
             fontSize: 14,
             fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}>
-            ✓ Şifre değiştirildi. Yönlendiriliyorsun...
+            <CheckCircle2 size={18} />
+            Şifre değiştirildi. Yönlendiriliyorsun...
           </div>
         ) : (
           <form onSubmit={submit}>

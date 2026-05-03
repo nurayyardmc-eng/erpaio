@@ -1,5 +1,16 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import {
+  AlertTriangle,
+  AlertCircle,
+  Zap,
+  Pencil,
+  Download,
+  FileSpreadsheet,
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { downloadXlsx } from "@/lib/export/xlsx";
 import { detectChartHint, type ChartHint } from "@/lib/charts/detect";
@@ -461,14 +472,14 @@ export default function ChatPage() {
                 <div style={{ maxWidth: "85%", width: "100%" }}>
                   {msg.status === "loading" && <div style={{ color: "#94A3B8", fontSize: 12 }}>SQL üretiliyor...</div>}
                   {msg.status === "error" && (
-                    <div style={{ background: "#EF444418", border: "1px solid #EF444430", borderRadius: 8, padding: "10px 14px", color: "#EF4444", fontSize: 12 }}>
-                      ❌ {msg.content}
+                    <div style={{ background: "#FEE2E2", border: "1px solid #EF444430", borderRadius: 8, padding: "10px 14px", color: "#EF4444", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+                      <AlertCircle size={16} /> {msg.content}
                     </div>
                   )}
                   {msg.status === "confirm" && (
                     <div style={{ background: "#F59E0B18", border: "1px solid #F59E0B40", borderRadius: 8, padding: 14 }}>
-                      <div style={{ fontSize: 9, color: "#F59E0B", letterSpacing: 2, marginBottom: 8 }}>
-                        ⚠ ONAY GEREKİYOR · CONFIDENCE %{Math.round(msg.confidence * 100)}
+                      <div style={{ fontSize: 11, color: "#F59E0B", letterSpacing: 1, marginBottom: 8, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                        <AlertTriangle size={14} /> ONAY GEREKİYOR · CONFIDENCE %{Math.round(msg.confidence * 100)}
                       </div>
                       {msg.ambiguity && (
                         <div style={{ color: "#F59E0B", fontSize: 12, marginBottom: 10 }}>
@@ -503,26 +514,33 @@ export default function ChatPage() {
                         <div style={{ fontSize: 9, color: "#94A3B8", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
                           <span>SQL · {msg.latencyMs}ms · {msg.total} satır</span>
                           {msg.cacheHit && (
-                            <span style={{ color: "#9C8AFF", border: "1px solid #9C8AFF40", borderRadius: 4, padding: "1px 6px", fontSize: 8, letterSpacing: 1 }}>
-                              ⚡ CACHED
+                            <span style={{ color: "#9C8AFF", border: "1px solid #9C8AFF40", borderRadius: 4, padding: "1px 6px", fontSize: 9, letterSpacing: 1, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                              <Zap size={9} strokeWidth={2.5} /> CACHED
                             </span>
                           )}
                           <span style={{ flex: 1 }} />
                           {!msg.editing && (
-                            <button onClick={() => startEdit(i)} title="Düzenle" style={iconBtnSmall}>✎</button>
+                            <button onClick={() => startEdit(i)} title="Düzenle" style={iconBtnSmall}>
+                              <Pencil size={12} />
+                            </button>
                           )}
                           {msg.results.length > 0 && (
                             <>
-                              <button onClick={() => exportCsv(msg)} title="CSV indir" style={iconBtnSmall}>📥 CSV</button>
-                              <button onClick={() => exportXlsx(msg)} title="Excel indir" style={iconBtnSmall}>📊 XLSX</button>
+                              <button onClick={() => exportCsv(msg)} title="CSV indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                <Download size={12} /> CSV
+                              </button>
+                              <button onClick={() => exportXlsx(msg)} title="Excel indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                <FileSpreadsheet size={12} /> XLSX
+                              </button>
                               {!msg.explanation && msg.question && (
                                 <button
                                   onClick={() => fetchExplain(i, msg)}
                                   disabled={msg.explainLoading}
                                   title="AI yorumu"
-                                  style={iconBtnSmall}
+                                  style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}
                                 >
-                                  {msg.explainLoading ? "..." : "🤖 Açıkla"}
+                                  <Sparkles size={12} />
+                                  {msg.explainLoading ? "..." : "Açıkla"}
                                 </button>
                               )}
                             </>
@@ -622,36 +640,36 @@ export default function ChatPage() {
                             disabled={msg.feedback !== null}
                             aria-label="thumbs-up"
                             style={{
-                              background: msg.feedback === 1 ? "#10B98120" : "transparent",
+                              background: msg.feedback === 1 ? "#D1FAE5" : "transparent",
                               border: `1px solid ${msg.feedback === 1 ? "#10B981" : "#E5E7EB"}`,
-                              borderRadius: 4,
-                              padding: "2px 8px",
+                              borderRadius: 6,
+                              padding: "4px 8px",
                               color: msg.feedback === 1 ? "#10B981" : "#94A3B8",
                               cursor: msg.feedback !== null ? "default" : "pointer",
                               opacity: msg.feedback === -1 ? 0.3 : 1,
-                              fontFamily: "inherit",
-                              fontSize: 10,
+                              display: "inline-flex",
+                              alignItems: "center",
                             }}
                           >
-                            👍
+                            <ThumbsUp size={13} />
                           </button>
                           <button
                             onClick={() => submitFeedback(i, msg.messageId!, -1)}
                             disabled={msg.feedback !== null}
                             aria-label="thumbs-down"
                             style={{
-                              background: msg.feedback === -1 ? "#EF444420" : "transparent",
+                              background: msg.feedback === -1 ? "#FEE2E2" : "transparent",
                               border: `1px solid ${msg.feedback === -1 ? "#EF4444" : "#E5E7EB"}`,
-                              borderRadius: 4,
-                              padding: "2px 8px",
+                              borderRadius: 6,
+                              padding: "4px 8px",
                               color: msg.feedback === -1 ? "#EF4444" : "#94A3B8",
                               cursor: msg.feedback !== null ? "default" : "pointer",
                               opacity: msg.feedback === 1 ? 0.3 : 1,
-                              fontFamily: "inherit",
-                              fontSize: 10,
+                              display: "inline-flex",
+                              alignItems: "center",
                             }}
                           >
-                            👎
+                            <ThumbsDown size={13} />
                           </button>
                         </div>
                       )}

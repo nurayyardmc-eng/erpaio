@@ -72,7 +72,18 @@ export default function SecurityPage() {
 
         {meEnabled === true && !setup && (
           <>
-            <div style={{ fontSize: 13, color: "#10B981", marginBottom: 12 }}>✓ MFA aktif</div>
+            <div style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              color: "#10B981",
+              background: "#D1FAE5",
+              padding: "4px 10px",
+              borderRadius: 999,
+              marginBottom: 12,
+              fontWeight: 500,
+            }}>MFA aktif</div>
             <p style={{ color: "#475569", fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
               Hesabın iki faktörlü doğrulama ile korunuyor. Her girişte authenticator&apos;dan 6 haneli kod istenir.
             </p>

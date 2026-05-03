@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -88,8 +89,14 @@ function Inner() {
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
           Email Doğrulama
         </h1>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>
-          {state === "verifying" ? "⏳" : state === "ok" ? "✅" : "❌"}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+          {state === "verifying" ? (
+            <Loader2 size={48} color={colors.textMuted} className="spin" />
+          ) : state === "ok" ? (
+            <CheckCircle2 size={48} color={colors.success} />
+          ) : (
+            <XCircle size={48} color={colors.error} />
+          )}
         </div>
         <p style={{ color: stateColor, fontSize: 15, fontWeight: 500 }}>
           {msg || "Kontrol ediliyor..."}

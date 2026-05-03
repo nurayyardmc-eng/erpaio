@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -55,8 +56,12 @@ export default function ForgotPasswordPage() {
               fontSize: 13,
               marginBottom: 16,
               fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
             }}>
-              ✓ Email gönderildi
+              <CheckCircle2 size={16} />
+              Email gönderildi
             </div>
             <p style={{ color: colors.textMuted, fontSize: 14, lineHeight: 1.6 }}>
               Eğer <strong style={{ color: colors.text }}>{email}</strong> sistemde kayıtlıysa, şifre sıfırlama linkini bu adrese gönderdik. Link 1 saat geçerli.

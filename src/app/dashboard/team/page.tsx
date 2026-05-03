@@ -143,7 +143,7 @@ export default function TeamPage() {
           <div key={u.id} style={row}>
             <div style={{ flex: 1 }}>
               <div style={{ color: "#0F172A", fontSize: 12 }}>
-                {u.email} {u.totpEnabled && <span style={{ color: "#10B981", fontSize: 9, marginLeft: 6 }}>🔒 MFA</span>}
+                {u.email} {u.totpEnabled && <span style={{ color: "#10B981", fontSize: 10, marginLeft: 8, fontWeight: 600, letterSpacing: 0.5 }}>MFA</span>}
               </div>
               <div style={{ color: "#475569", fontSize: 10 }}>
                 {u.name ?? "—"} · {new Date(u.createdAt).toLocaleDateString("tr-TR")}
