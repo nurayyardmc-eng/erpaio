@@ -92,12 +92,12 @@ function renderReportHtml(name: string, question: string, sql: string, rows: Rec
 
   return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
     <div style="max-width:760px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:32px">
-      <div style="color:#1A2B47;font-size:11px;letter-spacing:3px;margin-bottom:8px;font-weight:700">ERPAIO RAPOR</div>
+      <div style="color:#0A0A0A;font-size:11px;letter-spacing:3px;margin-bottom:8px;font-weight:700">ERPAIO RAPOR</div>
       <h2 style="margin:0 0 6px;font-size:22px;color:#0F172A;font-weight:700;letter-spacing:-0.3px">${esc(name)}</h2>
       <p style="color:#475569;font-size:14px;margin:0 0 20px">${esc(question)}</p>
       <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:16px">
         <div style="color:#94A3B8;font-size:11px;margin-bottom:8px;font-weight:600;letter-spacing:0.5px">SQL · ${rows.length} satır</div>
-        <pre style="color:#1A2B47;font-size:12px;margin:0;white-space:pre-wrap;font-family:ui-monospace,Menlo,Monaco,monospace">${esc(sql)}</pre>
+        <pre style="color:#0A0A0A;font-size:12px;margin:0;white-space:pre-wrap;font-family:ui-monospace,Menlo,Monaco,monospace">${esc(sql)}</pre>
       </div>
       <table style="width:100%;border-collapse:collapse;margin-top:20px;font-size:13px">
         <thead><tr>${head}</tr></thead>

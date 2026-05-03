@@ -20,11 +20,11 @@ export default function NotFound() {
         Aradığınız sayfa taşınmış veya hiç var olmamış olabilir.
       </p>
       <Link href="/dashboard" style={{
-        background: "#1A2B4718",
-        border: "1px solid #1A2B4740",
+        background: "#0A0A0A18",
+        border: "1px solid #0A0A0A40",
         borderRadius: 6,
         padding: "10px 20px",
-        color: "#1A2B47",
+        color: "#0A0A0A",
         fontSize: 12,
         textDecoration: "none",
       }}>

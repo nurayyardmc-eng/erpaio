@@ -62,7 +62,7 @@ function Inner() {
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", padding: 16 }}>
       <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 40, width: 420 }}>
-        <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
+        <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
         <h1 style={{ color: "#0F172A", fontSize: 20, margin: "0 0 12px" }}>Davet kabulü</h1>
         <p style={{ color: "#475569", fontSize: 12, marginBottom: 20 }}>
           Hesabını oluşturmak için bir şifre belirle.
@@ -82,7 +82,7 @@ function Inner() {
           <button
             type="submit"
             disabled={loading || !token}
-            style={{ width: "100%", background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6, padding: 12, color: "#1A2B47", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ width: "100%", background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6, padding: 12, color: "#0A0A0A", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
           >
             {loading ? "Kayıt..." : "Kabul et ve giriş yap"}
           </button>

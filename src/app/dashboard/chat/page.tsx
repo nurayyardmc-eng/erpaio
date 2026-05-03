@@ -74,9 +74,17 @@ export default function ChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [history, setHistory] = useState<ChatSessionListItem[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [userName, setUserName] = useState<string>("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((d) => {
+        const n = d?.user?.name?.trim() || d?.user?.email?.split("@")[0] || "";
+        setUserName(n);
+      })
+      .catch(() => {});
     fetch("/api/connections")
       .then((r) => r.json())
       .then((data: Connection[]) => {
@@ -514,12 +522,20 @@ export default function ChatPage() {
               textAlign: "center",
               padding: "0 24px",
             }}>
-              <div style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 400, letterSpacing: -1, color: "#0A0A0A", marginBottom: 12, lineHeight: 1.2 }}>
-                Bugün ne öğrenmek istersiniz?
+              <div style={{
+                fontFamily: "var(--font-playfair), Georgia, serif",
+                fontSize: "clamp(28px, 5vw, 44px)",
+                fontWeight: 400,
+                letterSpacing: -1,
+                color: "#0A0A0A",
+                marginBottom: 16,
+                lineHeight: 1.2,
+              }}>
+                {userName ? <>Merhaba <em style={{ fontStyle: "italic" }}>{userName}</em>,<br />size nasıl yardımcı olabilirim?</> : "Size nasıl yardımcı olabilirim?"}
               </div>
-              <p style={{ color: "#525252", fontSize: 15, margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
+              <p style={{ color: "#525252", fontSize: 15, margin: 0, maxWidth: 520, lineHeight: 1.6 }}>
                 {selectedConn
-                  ? "Veritabanınıza doğal Türkçe ile soru sorun. Yapay zeka SQL üretir, sonucu açıklar."
+                  ? "Veritabanınıza doğal Türkçe ile soru sorun. Yapay zeka SQL üretir, sonucu yorumlayarak gösterir."
                   : "Başlamak için önce bir ERP bağlantısı eklemeniz gerekiyor."}
               </p>
             </div>
@@ -528,7 +544,7 @@ export default function ChatPage() {
           {messages.map((msg, i) => (
             <div key={i} style={{ marginBottom: 16, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
               {msg.role === "user" ? (
-                <div style={{ background: "#1A2B4718", border: "1px solid #1A2B4730", borderRadius: 8, padding: "10px 14px", maxWidth: "70%", fontSize: 13 }}>
+                <div style={{ background: "#0A0A0A18", border: "1px solid #0A0A0A30", borderRadius: 8, padding: "10px 14px", maxWidth: "70%", fontSize: 13 }}>
                   {msg.content}
                 </div>
               ) : (
@@ -623,7 +639,7 @@ export default function ChatPage() {
                                 )
                               }
                               rows={Math.min(20, (msg.editedSql?.split("\n").length ?? 1) + 1)}
-                              style={{ width: "100%", background: "#F9FAFB", border: "1px solid #1A2B4740", borderRadius: 6, padding: 10, color: "#8EC8E8", fontSize: 11, fontFamily: "inherit", boxSizing: "border-box", resize: "vertical" }}
+                              style={{ width: "100%", background: "#F9FAFB", border: "1px solid #0A0A0A40", borderRadius: 6, padding: 10, color: "#8EC8E8", fontSize: 11, fontFamily: "inherit", boxSizing: "border-box", resize: "vertical" }}
                             />
                             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                               <button onClick={() => runEditedSql(i)} disabled={loading} style={{ background: "#10B98120", border: "1px solid #10B981", borderRadius: 4, padding: "4px 10px", color: "#10B981", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>
@@ -644,7 +660,7 @@ export default function ChatPage() {
                             <thead>
                               <tr>
                                 {msg.columns.map((col) => (
-                                  <th key={col} style={{ padding: "6px 10px", textAlign: "left", color: "#1A2B47", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{col}</th>
+                                  <th key={col} style={{ padding: "6px 10px", textAlign: "left", color: "#0A0A0A", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{col}</th>
                                 ))}
                               </tr>
                             </thead>

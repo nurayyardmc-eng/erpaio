@@ -39,11 +39,11 @@ export default function ErrorPage({
       <button
         onClick={reset}
         style={{
-          background: "#1A2B4718",
-          border: "1px solid #1A2B4740",
+          background: "#0A0A0A18",
+          border: "1px solid #0A0A0A40",
           borderRadius: 6,
           padding: "10px 20px",
-          color: "#1A2B47",
+          color: "#0A0A0A",
           fontSize: 12,
           cursor: "pointer",
           fontFamily: "inherit",

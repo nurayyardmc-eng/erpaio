@@ -62,7 +62,7 @@ export default function AdminPage() {
             <thead>
               <tr>
                 {["Tenant", "Plan", "Kullanıcı", "Bağlantı", "Cache", "Alert", "Token", "Oluşturma"].map((h) => (
-                  <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#1A2B47", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#0A0A0A", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>

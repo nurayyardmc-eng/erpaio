@@ -85,7 +85,7 @@ export default function WatchlistsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · WATCHLIST</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · WATCHLIST</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Eşik İzleme</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Bir sorgunun sonucu eşiği aştığında otomatik alert + email + push notification. Günde bir kez kontrol edilir.
@@ -137,7 +137,7 @@ export default function WatchlistsPage() {
               <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600 }}>{w.name}</div>
               <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{w.question}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
-                Tetikleme: <code style={{ color: "#1A2B47" }}>{w.thresholdOp} {w.thresholdVal}</code>
+                Tetikleme: <code style={{ color: "#0A0A0A" }}>{w.thresholdOp} {w.thresholdVal}</code>
                 {w.lastValue !== null && (<> · Son: <code style={{ color: w.triggeredAt ? "#F59E0B" : "#475569" }}>{w.lastValue}</code></>)}
                 {w.lastRunAt && <> · {new Date(w.lastRunAt).toLocaleString("tr-TR")}</>}
               </div>
@@ -163,14 +163,14 @@ const card: React.CSSProperties = {
   background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10,
   padding: 18, marginBottom: 12, maxWidth: 700,
 };
-const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#1A2B47", marginBottom: 14, fontWeight: 600 };
+const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#0A0A0A", marginBottom: 14, fontWeight: 600 };
 const input: React.CSSProperties = {
   width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6,
   padding: "8px 10px", color: "#0F172A", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", outline: "none",
 };
 const btnPrimary: React.CSSProperties = {
-  background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6,
-  padding: "8px 16px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+  background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6,
+  padding: "8px 16px", color: "#0A0A0A", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
 };
 const btnDanger: React.CSSProperties = {
   background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)",

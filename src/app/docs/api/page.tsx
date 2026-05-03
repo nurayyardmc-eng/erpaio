@@ -85,7 +85,7 @@ const groups = [
 
 const METHOD_COLORS: Record<string, string> = {
   GET: "#10B981",
-  POST: "#1A2B47",
+  POST: "#0A0A0A",
   PATCH: "#F59E0B",
   PUT: "#F59E0B",
   DELETE: "#EF4444",
@@ -95,24 +95,24 @@ export default function ApiDocsPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit" }}>
       <header style={{ padding: "20px 32px", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between" }}>
-        <Link href="/" style={{ color: "#1A2B47", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
+        <Link href="/" style={{ color: "#0A0A0A", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
         <Link href="/docs" style={{ color: "#475569", fontSize: 12, textDecoration: "none" }}>← Dokümantasyon</Link>
       </header>
 
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "60px 32px" }}>
         <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>API Referansı</h1>
         <p style={{ color: "#475569", fontSize: 14, marginBottom: 12 }}>
-          OpenAPI 3.1 spec: <a href="/api/openapi" style={{ color: "#1A2B47" }}>/api/openapi</a>
+          OpenAPI 3.1 spec: <a href="/api/openapi" style={{ color: "#0A0A0A" }}>/api/openapi</a>
         </p>
         <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16, marginBottom: 32 }}>
           <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 6 }}>Authentication</div>
           <code style={{ color: "#475569", fontSize: 12 }}>Authorization: Bearer &lt;JWT&gt;</code>
-          <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 10 }}>Token: <code style={{ color: "#1A2B47" }}>POST /api/auth/mobile-login</code></div>
+          <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 10 }}>Token: <code style={{ color: "#0A0A0A" }}>POST /api/auth/mobile-login</code></div>
         </div>
 
         {groups.map((g) => (
           <section key={g.title} style={{ marginBottom: 32 }}>
-            <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 12 }}>{g.title}</h2>
+            <h2 style={{ fontSize: 14, color: "#0A0A0A", marginBottom: 12 }}>{g.title}</h2>
             <div style={{ display: "grid", gap: 6 }}>
               {g.items.map((it) => (
                 <div key={it.path + it.method} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, fontSize: 12 }}>
@@ -130,9 +130,9 @@ export default function ApiDocsPage() {
         ))}
 
         <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 20, marginTop: 32, fontSize: 12, color: "#475569", lineHeight: 1.7 }}>
-          <strong style={{ color: "#1A2B47" }}>Rate limits:</strong> Tenant başına <code>/api/chat</code> 30/dk, <code>/api/chat/feedback</code> 60/dk/user, login deneme 10/15dk/IP.
-          <br /><strong style={{ color: "#1A2B47" }}>Token budget:</strong> Plan bazlı aylık limit. Aşılırsa 402.
-          <br /><strong style={{ color: "#1A2B47" }}>Errors:</strong> Tüm endpointler <code>{"{ \"error\": \"...\" }"}</code> formatında JSON döner.
+          <strong style={{ color: "#0A0A0A" }}>Rate limits:</strong> Tenant başına <code>/api/chat</code> 30/dk, <code>/api/chat/feedback</code> 60/dk/user, login deneme 10/15dk/IP.
+          <br /><strong style={{ color: "#0A0A0A" }}>Token budget:</strong> Plan bazlı aylık limit. Aşılırsa 402.
+          <br /><strong style={{ color: "#0A0A0A" }}>Errors:</strong> Tüm endpointler <code>{"{ \"error\": \"...\" }"}</code> formatında JSON döner.
         </div>
       </main>
     </div>

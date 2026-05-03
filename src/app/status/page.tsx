@@ -87,7 +87,7 @@ export default function StatusPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit" }}>
       <header style={{ padding: "20px 32px", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between" }}>
-        <Link href="/" style={{ color: "#1A2B47", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
+        <Link href="/" style={{ color: "#0A0A0A", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
         <div style={{ fontSize: 11, color: "#475569" }}>Status</div>
       </header>
 
@@ -112,7 +112,7 @@ export default function StatusPage() {
           )}
         </div>
 
-        <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 16 }}>Servisler</h2>
+        <h2 style={{ fontSize: 14, color: "#0A0A0A", marginBottom: 16 }}>Servisler</h2>
         {loading ? (
           <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>
         ) : (
@@ -149,7 +149,7 @@ export default function StatusPage() {
         )}
 
         <p style={{ fontSize: 10, color: "#94A3B8", marginTop: 24, textAlign: "center" }}>
-          Otomatik 30 saniyede bir yenilenir. Sorunlar için: <a href="mailto:support@erpaio.com" style={{ color: "#1A2B47" }}>support@erpaio.com</a>
+          Otomatik 30 saniyede bir yenilenir. Sorunlar için: <a href="mailto:support@erpaio.com" style={{ color: "#0A0A0A" }}>support@erpaio.com</a>
         </p>
       </main>
     </div>

@@ -5,7 +5,7 @@ const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
   high: "#F59E0B",
   medium: "#F59E0B",
-  low: "#1A2B47",
+  low: "#0A0A0A",
 };
 
 export default function AlertsPage() {
@@ -29,7 +29,7 @@ export default function AlertsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", fontFamily: "inherit", color: "#0F172A", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>Bildirimler</h1>
 
       {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}

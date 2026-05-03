@@ -64,7 +64,7 @@ export default function SecurityPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · GÜVENLİK</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · GÜVENLİK</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>İki Faktörlü Doğrulama (MFA)</h1>
 
       <div style={{ maxWidth: 520, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
@@ -118,7 +118,7 @@ export default function SecurityPage() {
             <img src={setup.qr} alt="QR" style={{ display: "block", margin: "12px auto", background: "#fff", padding: 8, borderRadius: 8 }} />
             <details style={{ marginBottom: 16 }}>
               <summary style={{ color: "#94A3B8", fontSize: 11, cursor: "pointer" }}>QR taranamıyorsa: manuel kod</summary>
-              <code style={{ display: "block", marginTop: 8, padding: 8, background: "#F9FAFB", borderRadius: 4, fontSize: 11, color: "#1A2B47", wordBreak: "break-all" }}>
+              <code style={{ display: "block", marginTop: 8, padding: 8, background: "#F9FAFB", borderRadius: 4, fontSize: 11, color: "#0A0A0A", wordBreak: "break-all" }}>
                 {setup.secret}
               </code>
             </details>
@@ -163,11 +163,11 @@ export default function SecurityPage() {
 }
 
 const btnPrimary: React.CSSProperties = {
-  background: "#1A2B4718",
-  border: "1px solid #1A2B4740",
+  background: "#0A0A0A18",
+  border: "1px solid #0A0A0A40",
   borderRadius: 6,
   padding: "10px 20px",
-  color: "#1A2B47",
+  color: "#0A0A0A",
   fontSize: 12,
   cursor: "pointer",
   fontFamily: "inherit",

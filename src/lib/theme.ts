@@ -9,9 +9,9 @@ export const colors = {
   borderStrong: "rgba(10, 10, 10, 0.12)",
   borderSubtle: "rgba(10, 10, 10, 0.04)",
 
-  brand: "#1A2B47",
-  brandHover: "#243556",
-  brandSoft: "#EEF2F7",
+  brand: "#0A0A0A",
+  brandHover: "#1A1A1A",
+  brandSoft: "#F2F1EE",
 
   text: "#0A0A0A",
   textMuted: "#525252",

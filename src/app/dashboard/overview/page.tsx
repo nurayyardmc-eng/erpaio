@@ -35,7 +35,7 @@ export default function OverviewPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · OVERVIEW</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · OVERVIEW</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Anlık Metrikler</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24 }}>
         Pre-computed — saatlik/günlük cron snapshotlarından, sıfır bekleme.
@@ -55,7 +55,7 @@ export default function OverviewPage() {
       {!loading && data && data.metrics.every((m) => m.latest === null) && (
         <div style={{ marginTop: 40, padding: 20, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, color: "#475569", fontSize: 12 }}>
           Henüz metrik snapshot yok. Cron job'u beklerken (saatlik 0:00, günlük 06:00) veya{" "}
-          <code style={{ color: "#1A2B47" }}>/api/cron/anomaly-detection</code> manuel tetiklenebilir.
+          <code style={{ color: "#0A0A0A" }}>/api/cron/anomaly-detection</code> manuel tetiklenebilir.
         </div>
       )}
     </div>
@@ -89,7 +89,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
       {hasData ? (
         <>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <div style={{ fontSize: 22, color: "#1A2B47", fontWeight: 700 }}>
+            <div style={{ fontSize: 22, color: "#0A0A0A", fontWeight: 700 }}>
               {formatValue(metric.latest)}
             </div>
             {change !== null && (
@@ -130,7 +130,7 @@ function Sparkline({ values }: { values: number[] }) {
     .join(" ");
   return (
     <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <polyline points={points} fill="none" stroke="#1A2B47" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      <polyline points={points} fill="none" stroke="#0A0A0A" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

@@ -76,7 +76,7 @@ export default function AnnotationsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANNOTATIONS</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANNOTATIONS</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Şema Açıklamaları</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Müşteri-özgü tablo/kolon açıklamaları ekleyin — Claude AI bu bilgilere
@@ -86,7 +86,7 @@ export default function AnnotationsPage() {
       </p>
 
       <form onSubmit={submit} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, maxWidth: 600, marginBottom: 32 }}>
-        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#1A2B47" }}>Yeni Açıklama</h2>
+        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#0A0A0A" }}>Yeni Açıklama</h2>
 
         <Field label="Tablo adı (örn: trFatura)">
           <input
@@ -130,7 +130,7 @@ export default function AnnotationsPage() {
           <button
             type="submit"
             disabled={saving}
-            style={{ background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6, padding: "10px 20px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6, padding: "10px 20px", color: "#0A0A0A", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
             {saving ? "Kaydediliyor..." : "Kaydet"}
           </button>
@@ -154,7 +154,7 @@ export default function AnnotationsPage() {
         <div key={a.id} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 14, marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "#1A2B47", marginBottom: 4 }}>
+              <div style={{ fontSize: 12, color: "#0A0A0A", marginBottom: 4 }}>
                 {a.tableName}{a.columnName ? `.${a.columnName}` : ""}
                 {a.hidden && <span style={{ color: "#EF4444", marginLeft: 8 }}>⊘ gizli</span>}
               </div>

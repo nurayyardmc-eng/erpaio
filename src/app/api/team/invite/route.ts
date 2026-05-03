@@ -72,14 +72,14 @@ export async function POST(req: Request) {
     subject: `${tenant.name} ekibine katılın · ERPAIO`,
     html: `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
       <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:40px">
-        <div style="color:#1A2B47;font-size:11px;letter-spacing:3px;margin-bottom:16px;font-weight:700">ERPAIO</div>
+        <div style="color:#0A0A0A;font-size:11px;letter-spacing:3px;margin-bottom:16px;font-weight:700">ERPAIO</div>
         <h2 style="font-size:22px;margin:0 0 16px;font-weight:700;color:#0F172A;letter-spacing:-0.5px">${escapeHtml(tenant.name)} sizi ekibe davet etti</h2>
         <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:16px;margin:0 0 24px">
           <div style="color:#94A3B8;font-size:11px;letter-spacing:1px;margin-bottom:4px;font-weight:600;text-transform:uppercase">ROL</div>
           <div style="color:#0F172A;font-size:15px;font-weight:600;text-transform:capitalize">${role}</div>
         </div>
         <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px">Davet 7 gün geçerlidir.</p>
-        <a href="${acceptUrl}" style="display:inline-block;background:#1A2B47;color:#FFFFFF;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px">Daveti kabul et</a>
+        <a href="${acceptUrl}" style="display:inline-block;background:#0A0A0A;color:#FFFFFF;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px">Daveti kabul et</a>
       </div>
     </body></html>`,
   });

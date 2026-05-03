@@ -85,7 +85,7 @@ export default function ScheduledReportsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · RAPOR</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · RAPOR</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Planlı Raporlar</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Belirli bir soruyu seçtiğin sıklıkta çalıştırıp emailine gönderir. Soru
@@ -150,7 +150,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const card: React.CSSProperties = { background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 18, marginBottom: 12, maxWidth: 700 };
-const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#1A2B47", marginBottom: 14, fontWeight: 600 };
+const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#0A0A0A", marginBottom: 14, fontWeight: 600 };
 const input: React.CSSProperties = { width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6, padding: "8px 10px", color: "#0F172A", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", outline: "none" };
-const btnPrimary: React.CSSProperties = { background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6, padding: "8px 16px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit" };
+const btnPrimary: React.CSSProperties = { background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6, padding: "8px 16px", color: "#0A0A0A", fontSize: 12, cursor: "pointer", fontFamily: "inherit" };
 const btnDanger: React.CSSProperties = { background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)", borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit" };

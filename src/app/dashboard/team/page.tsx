@@ -88,7 +88,7 @@ export default function TeamPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · TAKIM</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · TAKIM</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>Takım Yönetimi</h1>
 
       <div style={card}>
@@ -172,7 +172,7 @@ const card: React.CSSProperties = {
   marginBottom: 16,
   maxWidth: 700,
 };
-const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#1A2B47", marginBottom: 14, fontWeight: 600 };
+const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#0A0A0A", marginBottom: 14, fontWeight: 600 };
 const label: React.CSSProperties = { color: "#94A3B8", fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 };
 const input: React.CSSProperties = {
   width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6,
@@ -183,8 +183,8 @@ const row: React.CSSProperties = {
   borderBottom: "1px solid #E5E7EB", gap: 8,
 };
 const btnPrimary: React.CSSProperties = {
-  background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6,
-  padding: "8px 16px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+  background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6,
+  padding: "8px 16px", color: "#0A0A0A", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
 };
 const btnDanger: React.CSSProperties = {
   background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)",

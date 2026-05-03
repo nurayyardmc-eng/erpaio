@@ -13,7 +13,7 @@ export default function PrivacyPage() {
       padding: "40px 20px",
     }}>
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
-        <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
+        <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
         <h1 style={{ fontSize: 24, marginBottom: 8 }}>Gizlilik Politikası</h1>
         <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 32 }}>Son güncelleme: 2026-05-03</p>
 
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
             "Veri taşınabilirliği (JSON/CSV export)",
             "İşlemeye itiraz",
           ]} />
-          Talepleriniz için: <a href="mailto:privacy@erpaio.com" style={{ color: "#1A2B47" }}>privacy@erpaio.com</a>
+          Talepleriniz için: <a href="mailto:privacy@erpaio.com" style={{ color: "#0A0A0A" }}>privacy@erpaio.com</a>
         </Section>
 
         <Section title="7. Güvenlik önlemleri">
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
 
         <Section title="10. İletişim">
           Veri sorumlusu: <strong>ERPAIO</strong>
-          <br />Email: <a href="mailto:privacy@erpaio.com" style={{ color: "#1A2B47" }}>privacy@erpaio.com</a>
+          <br />Email: <a href="mailto:privacy@erpaio.com" style={{ color: "#0A0A0A" }}>privacy@erpaio.com</a>
         </Section>
       </div>
     </div>
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: 28 }}>
-      <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 12 }}>{title}</h2>
+      <h2 style={{ fontSize: 14, color: "#0A0A0A", marginBottom: 12 }}>{title}</h2>
       <div style={{ color: "#475569", fontSize: 12, lineHeight: 1.7 }}>{children}</div>
     </section>
   );

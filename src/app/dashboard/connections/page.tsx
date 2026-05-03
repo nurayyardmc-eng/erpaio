@@ -77,7 +77,7 @@ export default function ConnectionsPage() {
       color: "#0F172A",
       padding: 40,
     }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>ERP Bağlantıları</h1>
 
       {toast && (
@@ -88,9 +88,9 @@ export default function ConnectionsPage() {
             padding: "10px 14px",
             borderRadius: 6,
             fontSize: 12,
-            border: `1px solid ${toast.kind === "ok" ? "#10B98140" : toast.kind === "err" ? "#EF444440" : "#1A2B4740"}`,
-            background: toast.kind === "ok" ? "#10B98115" : toast.kind === "err" ? "#EF444415" : "#1A2B4715",
-            color: toast.kind === "ok" ? "#10B981" : toast.kind === "err" ? "#EF4444" : "#1A2B47",
+            border: `1px solid ${toast.kind === "ok" ? "#10B98140" : toast.kind === "err" ? "#EF444440" : "#0A0A0A40"}`,
+            background: toast.kind === "ok" ? "#10B98115" : toast.kind === "err" ? "#EF444415" : "#0A0A0A15",
+            color: toast.kind === "ok" ? "#10B981" : toast.kind === "err" ? "#EF4444" : "#0A0A0A",
           }}
         >
           {toast.msg}
@@ -99,7 +99,7 @@ export default function ConnectionsPage() {
 
       {/* Form */}
       <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, maxWidth: 500, marginBottom: 32 }}>
-        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#1A2B47" }}>Yeni Bağlantı Ekle</h2>
+        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#0A0A0A" }}>Yeni Bağlantı Ekle</h2>
         <form onSubmit={handleSubmit}>
           {[
             { label: "ERP Tipi", key: "erpType", type: "select" },
@@ -135,7 +135,7 @@ export default function ConnectionsPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{ marginTop: 8, width: "100%", background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6, padding: "10px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ marginTop: 8, width: "100%", background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6, padding: "10px", color: "#0A0A0A", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
             {loading ? "Bağlanıyor..." : "Bağlantı Ekle →"}
           </button>

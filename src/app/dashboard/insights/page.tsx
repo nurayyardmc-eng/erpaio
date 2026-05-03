@@ -34,7 +34,7 @@ export default function InsightsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · INSIGHTS</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · INSIGHTS</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>ERP Şema Analizi</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Başarılı sorgulardan otomatik öğrenilen ilişkiler + profile dışı (müşteri özel) tablolar/kolonlar.
@@ -84,7 +84,7 @@ export default function InsightsPage() {
                 </div>
                 <a
                   href={`/dashboard/annotations?prefill_table=${encodeURIComponent(c.table)}${c.column ? `&prefill_column=${encodeURIComponent(c.column)}` : ""}`}
-                  style={{ background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 4, padding: "3px 10px", color: "#1A2B47", fontSize: 10, textDecoration: "none" }}
+                  style={{ background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 4, padding: "3px 10px", color: "#0A0A0A", fontSize: 10, textDecoration: "none" }}
                 >
                   Annotation ekle
                 </a>
@@ -100,7 +100,7 @@ export default function InsightsPage() {
 function Section({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: 32, maxWidth: 760 }}>
-      <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 4 }}>{title}</h2>
+      <h2 style={{ fontSize: 14, color: "#0A0A0A", marginBottom: 4 }}>{title}</h2>
       <p style={{ color: "#94A3B8", fontSize: 10, marginBottom: 12 }}>{desc}</p>
       {children}
     </section>

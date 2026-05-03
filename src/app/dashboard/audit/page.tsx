@@ -61,7 +61,7 @@ export default function AuditPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · AUDIT</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · AUDIT</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Aktivite Logu</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Tenant&apos;ınızda çalıştırılan tüm sohbet sorguları. KVKK gereği erişim hakkı.
@@ -73,11 +73,11 @@ export default function AuditPage() {
             key={f}
             onClick={() => setFilter(f)}
             style={{
-              background: filter === f ? "#1A2B4718" : "transparent",
-              border: `1px solid ${filter === f ? "#1A2B47" : "#E5E7EB"}`,
+              background: filter === f ? "#0A0A0A18" : "transparent",
+              border: `1px solid ${filter === f ? "#0A0A0A" : "#E5E7EB"}`,
               borderRadius: 6,
               padding: "6px 12px",
-              color: filter === f ? "#1A2B47" : "#475569",
+              color: filter === f ? "#0A0A0A" : "#475569",
               fontSize: 11,
               cursor: "pointer",
               fontFamily: "inherit",
@@ -115,7 +115,7 @@ export default function AuditPage() {
         <div key={m.id} style={{
           background: "#FFFFFF",
           border: "1px solid #E5E7EB",
-          borderLeft: `2px solid ${m.role === "user" ? "#1A2B47" : m.success ? "#10B981" : "#EF4444"}`,
+          borderLeft: `2px solid ${m.role === "user" ? "#0A0A0A" : m.success ? "#10B981" : "#EF4444"}`,
           borderRadius: 6,
           padding: 12,
           marginBottom: 6,
@@ -126,7 +126,7 @@ export default function AuditPage() {
             <span>·</span>
             <span style={{ color: "#475569" }}>{m.userEmail}</span>
             <span>·</span>
-            <span style={{ color: m.role === "user" ? "#1A2B47" : "#9C8AFF" }}>{m.role}</span>
+            <span style={{ color: m.role === "user" ? "#0A0A0A" : "#9C8AFF" }}>{m.role}</span>
             {m.latencyMs !== null && <><span>·</span><span>{m.latencyMs}ms</span></>}
             {m.rowCount !== null && <><span>·</span><span>{m.rowCount} satır</span></>}
           </div>

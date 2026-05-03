@@ -1,7 +1,7 @@
 "use client";
 import type { ChartHint } from "@/lib/charts/detect";
 
-const COLORS = ["#1A2B47", "#10B981", "#F59E0B", "#F59E0B", "#9C8AFF", "#EF4444"];
+const COLORS = ["#0A0A0A", "#10B981", "#F59E0B", "#F59E0B", "#9C8AFF", "#EF4444"];
 
 interface Props {
   hint: ChartHint;
@@ -147,7 +147,7 @@ const chartBox: React.CSSProperties = {
 function ChartHeader({ title, reason }: { title: string; reason: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-      <span style={{ fontSize: 11, color: "#1A2B47" }}>{title}</span>
+      <span style={{ fontSize: 11, color: "#0A0A0A" }}>{title}</span>
       <span style={{ fontSize: 9, color: "#94A3B8" }}>auto · {reason}</span>
     </div>
   );
