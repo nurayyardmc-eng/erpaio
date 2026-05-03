@@ -124,12 +124,15 @@ export default function DashboardSidebar() {
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 10,
-                    background: active ? colors.bgSubtle : "transparent",
-                    color: active ? colors.text : colors.textMuted,
+                    background: active
+                      ? colors.bgSubtle
+                      : hoveredHref === href ? colors.bgMuted : "transparent",
+                    color: active ? colors.text : (hoveredHref === href ? colors.text : colors.textMuted),
                     position: "relative",
+                    transition: "background 0.15s ease, color 0.15s ease",
                   }}
                 >
-                  <Icon size={17} strokeWidth={1.8} />
+                  <Icon size={17} strokeWidth={active ? 2 : 1.7} />
                   {active && (
                     <span style={{
                       position: "absolute",

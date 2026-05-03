@@ -5,8 +5,9 @@ export const colors = {
   card: "#FFFFFF",
   bgDark: "#0A0A0A",
 
-  border: "#E2E0DB",
-  borderStrong: "#D0CEC8",
+  border: "rgba(10, 10, 10, 0.08)",
+  borderStrong: "rgba(10, 10, 10, 0.12)",
+  borderSubtle: "rgba(10, 10, 10, 0.04)",
 
   brand: "#1A2B47",
   brandHover: "#243556",

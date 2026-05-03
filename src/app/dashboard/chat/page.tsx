@@ -10,6 +10,8 @@ import {
   Sparkles,
   ThumbsUp,
   ThumbsDown,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from "lucide-react";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { downloadXlsx } from "@/lib/export/xlsx";
@@ -383,21 +385,38 @@ export default function ChatPage() {
   };
 
   return (
-    <div style={{ height: "calc(100vh - 56px)", background: "#F9FAFB", fontFamily: "inherit", color: "#0F172A", display: "flex" }}>
-      {/* Sidebar */}
+    <div style={{ height: "calc(100vh - 56px)", background: "#FAFAF8", fontFamily: "inherit", color: "#0A0A0A", display: "flex" }}>
+      {/* Sidebar — sohbet geçmişi */}
       <aside style={{
-        width: historyOpen ? 240 : 0,
-        transition: "width 0.15s",
+        width: historyOpen ? 260 : 0,
+        transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         overflow: "hidden",
-        borderRight: historyOpen ? "1px solid #E5E7EB" : "none",
-        background: "#0A0D14",
+        borderRight: historyOpen ? "1px solid rgba(10,10,10,0.08)" : "none",
+        background: "#FFFFFF",
+        flexShrink: 0,
       }}>
-        <div style={{ padding: 12, borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 9, color: "#94A3B8", letterSpacing: 2 }}>GEÇMİŞ</div>
-          <button onClick={newSession} title="Yeni sohbet" style={iconBtn}>+</button>
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(10,10,10,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 11, color: "#737373", letterSpacing: 2, fontWeight: 600, textTransform: "uppercase" }}>Sohbet Geçmişi</div>
+          <button
+            onClick={newSession}
+            title="Yeni sohbet"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: "#0A0A0A",
+              color: "#FAFAF8",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+            }}
+          >+</button>
         </div>
-        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 50px)" }}>
-          {history.length === 0 && <div style={{ color: "#94A3B8", fontSize: 11, padding: 12 }}>Henüz sohbet yok.</div>}
+        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 110px)", padding: "8px" }}>
+          {history.length === 0 && <div style={{ color: "#737373", fontSize: 13, padding: "20px 12px", textAlign: "center" }}>Henüz sohbet yok.</div>}
           {history.map((s) => (
             <button
               key={s.id}
@@ -406,19 +425,23 @@ export default function ChatPage() {
                 display: "block",
                 width: "100%",
                 textAlign: "left",
-                padding: "8px 12px",
-                background: s.id === sessionId ? "#E5E7EB" : "transparent",
+                padding: "10px 12px",
+                background: s.id === sessionId ? "rgba(10,10,10,0.06)" : "transparent",
                 border: "none",
-                borderBottom: "1px solid #0F141C",
-                color: "#0F172A",
+                borderRadius: 8,
+                color: "#0A0A0A",
                 fontFamily: "inherit",
-                fontSize: 11,
+                fontSize: 13,
                 cursor: "pointer",
                 lineHeight: 1.4,
+                marginBottom: 2,
+                transition: "background 0.15s ease",
               }}
+              onMouseEnter={(e) => { if (s.id !== sessionId) e.currentTarget.style.background = "rgba(10,10,10,0.03)"; }}
+              onMouseLeave={(e) => { if (s.id !== sessionId) e.currentTarget.style.background = "transparent"; }}
             >
-              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</div>
-              <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 2 }}>{s.messageCount} mesaj · {new Date(s.createdAt).toLocaleDateString("tr-TR")}</div>
+              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: s.id === sessionId ? 500 : 400 }}>{s.title}</div>
+              <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>{s.messageCount} mesaj · {new Date(s.createdAt).toLocaleDateString("tr-TR")}</div>
             </button>
           ))}
         </div>
@@ -427,19 +450,50 @@ export default function ChatPage() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Header */}
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={() => setHistoryOpen((v) => !v)} title="Geçmiş" style={iconBtn}>☰</button>
-            <div>
-              <div style={{ fontSize: 9, color: "#1A2B47", letterSpacing: 3 }}>ERPAIO · CHAT</div>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>Veritabanına Sor</div>
-            </div>
-          </div>
+        <div style={{
+          padding: "12px 20px",
+          borderBottom: "1px solid rgba(10,10,10,0.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "#FFFFFF",
+          minHeight: 56,
+        }}>
+          <button
+            onClick={() => setHistoryOpen((v) => !v)}
+            title={historyOpen ? "Geçmişi kapat" : "Geçmişi aç"}
+            aria-label={historyOpen ? "Geçmişi kapat" : "Geçmişi aç"}
+            style={{
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "transparent",
+              border: "none",
+              borderRadius: 8,
+              color: "#525252",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(10,10,10,0.05)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+          >
+            {historyOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+          </button>
           {connections.length > 0 && (
             <select
               value={selectedConn}
               onChange={(e) => setSelectedConn(e.target.value)}
-              style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "6px 10px", color: "#0F172A", fontSize: 11, fontFamily: "inherit" }}
+              style={{
+                background: "#FAFAF8",
+                border: "1px solid rgba(10,10,10,0.08)",
+                borderRadius: 8,
+                padding: "8px 12px",
+                color: "#0A0A0A",
+                fontSize: 13,
+                fontFamily: "inherit",
+                cursor: "pointer",
+              }}
             >
               {connections.map((c) => (
                 <option key={c.id} value={c.id}>{c.dbName}</option>

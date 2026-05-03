@@ -30,7 +30,9 @@ export default function DashboardHeader({ email, name }: Props) {
 
   return (
     <header style={{
-      background: colors.bg,
+      background: "rgba(250,250,248,0.85)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
       borderBottom: `1px solid ${colors.border}`,
       padding: "12px 24px",
       paddingLeft: "max(24px, calc(env(safe-area-inset-left) + 60px))",
@@ -39,12 +41,16 @@ export default function DashboardHeader({ email, name }: Props) {
       justifyContent: "space-between",
       minHeight: 56,
       gap: 12,
+      position: "sticky",
+      top: 0,
+      zIndex: 10,
     }}>
       <div style={{
-        fontSize: 15,
-        fontWeight: 600,
+        fontFamily: "var(--font-playfair), Georgia, serif",
+        fontSize: 20,
+        fontWeight: 400,
         color: colors.text,
-        letterSpacing: -0.2,
+        letterSpacing: -0.5,
       }}>
         {title}
       </div>
