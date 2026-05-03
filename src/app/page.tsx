@@ -96,9 +96,10 @@ const sectionPad: React.CSSProperties = {
 };
 
 const sectionH2: React.CSSProperties = {
-  fontSize: "clamp(26px, 5vw, 36px)",
-  fontWeight: 800,
-  margin: "8px 0 0",
+  fontFamily: "var(--font-playfair), Georgia, serif",
+  fontSize: "clamp(28px, 4.5vw, 52px)",
+  fontWeight: 400,
+  margin: "0 0 0",
   letterSpacing: -1,
   lineHeight: 1.15,
 };
@@ -113,100 +114,81 @@ export default async function Home() {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "rgba(255,255,255,0.85)",
-        backdropFilter: "blur(12px)",
+        background: "rgba(250,250,248,0.88)",
+        backdropFilter: "blur(20px)",
         borderBottom: `1px solid ${colors.border}`,
-        padding: "14px clamp(16px, 4vw, 32px)",
+        padding: "16px clamp(16px, 4vw, 48px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         gap: 12,
       }}>
-        <Link href="/"><Logo size={26} /></Link>
+        <Link href="/" aria-label="ERPAIO"><Logo size={32} /></Link>
 
-        <nav className="hide-mobile" style={{ gap: 24, fontSize: 14, alignItems: "center" }}>
+        <nav className="hide-mobile" style={{ gap: 28, fontSize: 14, alignItems: "center", letterSpacing: 0.3 }}>
           {navItems.map((n) => (
-            <a key={n.href} href={n.href} style={{ color: colors.textMuted, fontWeight: 500 }}>{n.label}</a>
+            <a key={n.href} href={n.href} style={{ color: colors.textMuted, fontWeight: 400 }}>{n.label}</a>
           ))}
         </nav>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <Link href="/login" style={{ color: colors.textMuted, fontWeight: 500, fontSize: 14 }}>Giriş</Link>
-          <Link href="/signup" style={{
-            background: colors.brand,
-            color: colors.textInverse,
-            padding: "8px 14px",
-            borderRadius: 8,
-            fontWeight: 600,
-            fontSize: 13,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            whiteSpace: "nowrap",
-          }}>
+          <Link href="/login" style={{ color: colors.text, fontWeight: 500, fontSize: 14 }}>Giriş</Link>
+          <Link href="/signup" style={pillBtnDark}>
             Başla <ArrowRight size={14} />
           </Link>
         </div>
       </header>
 
       <main>
-        <section className="responsive-hero" style={{ padding: "100px 32px 80px", maxWidth: 1100, margin: "0 auto" }}>
+        <section className="responsive-hero" style={{ padding: "120px 32px 80px", maxWidth: 1100, margin: "0 auto" }}>
           <div style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 8,
-            background: colors.brandSoft,
-            color: colors.brand,
-            padding: "6px 14px",
-            borderRadius: 999,
-            fontSize: 12,
-            fontWeight: 600,
-            marginBottom: 28,
-            letterSpacing: 0.3,
+            gap: 10,
+            background: "transparent",
+            border: `1px solid ${colors.border}`,
+            color: colors.textMuted,
+            padding: "8px 18px",
+            borderRadius: 100,
+            fontSize: 11,
+            fontWeight: 500,
+            marginBottom: 36,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
           }}>
-            <Sparkles size={14} />
+            <span style={{ width: 6, height: 6, borderRadius: 3, background: colors.brand }} />
             Kendi Kendini Geliştiren ERP AI
           </div>
 
-          <h1 style={{
-            fontSize: "clamp(36px, 7vw, 64px)",
+          <h1 className="font-serif" style={{
+            fontSize: "clamp(40px, 7vw, 80px)",
             lineHeight: 1.05,
-            margin: "0 0 24px",
-            fontWeight: 800,
-            letterSpacing: -1.5,
+            margin: "0 0 28px",
+            fontWeight: 400,
+            letterSpacing: -2,
             maxWidth: 880,
+            color: colors.text,
           }}>
-            ERP&apos;iniz için <span style={{ color: colors.brand }}>kendi kendini geliştiren</span> AI sistemi
+            ERP&apos;iniz için <em style={{ fontStyle: "italic", color: colors.brand }}>kendi kendini geliştiren</em> AI sistemi
           </h1>
 
-          <p style={{ fontSize: "clamp(15px, 1.8vw, 19px)", color: colors.textMuted, lineHeight: 1.6, marginBottom: 40, maxWidth: 720 }}>
+          <p style={{
+            fontSize: "clamp(15px, 1.7vw, 18px)",
+            color: colors.textMuted,
+            lineHeight: 1.75,
+            marginBottom: 44,
+            maxWidth: 580,
+            fontWeight: 300,
+          }}>
             Sistem işlerinizi sürekli izler, önemli olayı bildirir, sonuçtan öğrenir,
             içgörüleri kontrollü aksiyona dönüştürür — mevcut ERP&apos;nizi değiştirmeden.
           </p>
 
           <div style={{ display: "flex", gap: 12, marginBottom: 60, flexWrap: "wrap" }}>
-            <a href="#iletisim" style={{
-              background: colors.brand,
-              color: colors.textInverse,
-              padding: "14px 28px",
-              borderRadius: 12,
-              fontSize: 15,
-              fontWeight: 600,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-            }}>
+            <a href="#iletisim" style={pillBtnDark}>
               Demo Talep Et <ArrowRight size={16} />
             </a>
-            <a href="#surec" style={{
-              background: colors.bg,
-              color: colors.text,
-              border: `1px solid ${colors.border}`,
-              padding: "14px 28px",
-              borderRadius: 12,
-              fontSize: 15,
-              fontWeight: 500,
-            }}>
+            <a href="#surec" style={pillBtnGhost}>
               Nasıl Çalışır
             </a>
           </div>
@@ -414,23 +396,40 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="iletisim" className="responsive-cta-bg" style={{ background: colors.brand, color: colors.textInverse, padding: "100px 32px" }}>
+        <section id="iletisim" className="responsive-cta-bg" style={{ background: colors.bgDark, color: colors.textInverse, padding: "120px 32px" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-            <h2 style={{ fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 800, margin: "0 0 16px", letterSpacing: -1, lineHeight: 1.15 }}>
+            <Logo size={48} variant="mark" />
+            <h2 className="font-serif" style={{
+              fontSize: "clamp(32px, 5vw, 52px)",
+              fontWeight: 400,
+              margin: "32px 0 20px",
+              letterSpacing: -1,
+              lineHeight: 1.15,
+              color: "#FAFAF8",
+            }}>
               Pilot başlatın
             </h2>
-            <p style={{ fontSize: "clamp(15px, 1.6vw, 17px)", color: "rgba(255,255,255,0.8)", lineHeight: 1.6, marginBottom: 36 }}>
+            <p style={{
+              fontSize: "clamp(15px, 1.6vw, 17px)",
+              color: "rgba(250,250,248,0.65)",
+              lineHeight: 1.75,
+              marginBottom: 44,
+              fontWeight: 300,
+              maxWidth: 480,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}>
               14 gün ücretsiz Pro deneme, kart bilgisi gerekmez.
               Veya bir gösterim ile süreç hakkında konuşalım.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/signup" style={{
-                background: colors.bg,
-                color: colors.brand,
-                padding: "14px 28px",
-                borderRadius: 12,
-                fontSize: 15,
-                fontWeight: 600,
+                background: "#FAFAF8",
+                color: "#0A0A0A",
+                padding: "16px 36px",
+                borderRadius: 100,
+                fontSize: 14,
+                fontWeight: 500,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
@@ -439,12 +438,12 @@ export default async function Home() {
               </Link>
               <a href="mailto:demo@erpaio.com" style={{
                 background: "transparent",
-                color: colors.textInverse,
-                border: "1px solid rgba(255,255,255,0.4)",
-                padding: "14px 28px",
-                borderRadius: 12,
-                fontSize: 15,
-                fontWeight: 500,
+                color: "#FAFAF8",
+                border: "1px solid rgba(250,250,248,0.3)",
+                padding: "16px 36px",
+                borderRadius: 100,
+                fontSize: 14,
+                fontWeight: 400,
               }}>
                 Demo iste
               </a>
@@ -484,13 +483,38 @@ export default async function Home() {
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      color: colors.brand,
-      fontSize: 12,
-      fontWeight: 700,
+      color: colors.textSubtle,
+      fontSize: 11,
+      fontWeight: 500,
       letterSpacing: 3,
       textTransform: "uppercase",
+      marginBottom: 16,
     }}>
       {children}
     </div>
   );
 }
+
+const pillBtnDark: React.CSSProperties = {
+  background: colors.bgDark,
+  color: colors.textInverse,
+  padding: "14px 32px",
+  borderRadius: 100,
+  fontSize: 14,
+  fontWeight: 500,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  whiteSpace: "nowrap",
+};
+
+const pillBtnGhost: React.CSSProperties = {
+  background: "transparent",
+  color: colors.text,
+  border: `1px solid ${colors.borderStrong}`,
+  padding: "14px 32px",
+  borderRadius: 100,
+  fontSize: 14,
+  fontWeight: 400,
+  whiteSpace: "nowrap",
+};

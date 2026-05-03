@@ -5,12 +5,19 @@
 }
 
 html, body {
-  background: #FFFFFF;
-  color: #0F172A;
+  background: #FAFAF8;
+  color: #0A0A0A;
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv11", "ss01";
+  overflow-x: hidden;
+}
+
+.font-serif {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -2px;
 }
 
 a {
@@ -78,7 +85,12 @@ button:disabled {
 
   .responsive-flex-col {
     flex-direction: column !important;
-    align-items: flex-start !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .responsive-flex-col > * {
+    justify-content: center !important;
   }
 
   .responsive-cta-bg {

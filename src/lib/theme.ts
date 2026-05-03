@@ -1,20 +1,21 @@
 export const colors = {
-  bg: "#FFFFFF",
-  bgSubtle: "#F9FAFB",
-  bgMuted: "#F3F4F6",
+  bg: "#FAFAF8",
+  bgSubtle: "#F2F1EE",
+  bgMuted: "#EDECE8",
   card: "#FFFFFF",
+  bgDark: "#0A0A0A",
 
-  border: "#E5E7EB",
-  borderStrong: "#D1D5DB",
+  border: "#E2E0DB",
+  borderStrong: "#D0CEC8",
 
   brand: "#1A2B47",
   brandHover: "#243556",
   brandSoft: "#EEF2F7",
 
-  text: "#0F172A",
-  textMuted: "#475569",
-  textSubtle: "#94A3B8",
-  textInverse: "#FFFFFF",
+  text: "#0A0A0A",
+  textMuted: "#6B6B6B",
+  textSubtle: "#9E9E9E",
+  textInverse: "#FAFAF8",
 
   success: "#10B981",
   successSoft: "#D1FAE5",
