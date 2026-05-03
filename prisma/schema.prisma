@@ -85,6 +85,8 @@ model ChatSession {
   tenantId  String
   userId    String
   title     String?
+  notes     String?
+  pinned    Boolean       @default(false)
   createdAt DateTime      @default(now())
   tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -281,6 +283,40 @@ model TenantIpAllowlist {
   createdAt DateTime @default(now())
 
   @@unique([tenantId, cidr])
+}
+
+model TableEmbedding {
+  id           String   @id @default(cuid())
+  tenantId     String
+  connectionId String
+  tableName    String
+  columnName   String?
+  text         String
+  embeddingHex String
+  createdAt    DateTime @default(now())
+
+  @@unique([tenantId, connectionId, tableName, columnName])
+  @@index([tenantId, connectionId])
+}
+
+model EncryptionKey {
+  id           String    @id @default(cuid())
+  version      Int       @unique
+  keyHashSha256 String
+  rotatedAt    DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model NpsResponse {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  score       Int
+  comment     String?
+  promptedAt  DateTime
+  respondedAt DateTime @default(now())
+
+  @@index([tenantId, respondedAt])
 }
 
 model CustomMetric {

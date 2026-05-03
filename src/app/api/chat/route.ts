@@ -34,6 +34,30 @@ interface AiResponse {
   ambiguity: string | null;
 }
 
+async function loadConversationHistory(
+  sessionId: string,
+  tenantId: string,
+): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
+  const messages = await prisma.chatMessage.findMany({
+    where: { session: { id: sessionId, tenantId } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+    select: { role: true, content: true, sqlQuery: true, success: true, rowCount: true },
+  });
+  return messages
+    .reverse()
+    .filter((m) => m.success)
+    .map((m) => {
+      if (m.role === "user") {
+        return { role: "user" as const, content: m.content };
+      }
+      const summary = m.sqlQuery
+        ? `${m.sqlQuery}\n\n(${m.rowCount ?? 0} satır döndü)`
+        : m.content;
+      return { role: "assistant" as const, content: summary };
+    });
+}
+
 function parseAiResponse(raw: string): AiResponse {
   const cleaned = raw
     .replace(/^```(?:json)?\s*/i, "")
@@ -180,6 +204,10 @@ ${sampleContext}
 ## CANLI ŞEMA (INFORMATION_SCHEMA çıktısı)
 ${schema}`;
 
+      const conversationHistory = sessionId
+        ? await loadConversationHistory(sessionId, tenantId)
+        : [];
+
       const msg = await client.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
@@ -190,7 +218,10 @@ ${schema}`;
             cache_control: { type: "ephemeral" },
           },
         ],
-        messages: [{ role: "user", content: question }],
+        messages: [
+          ...conversationHistory,
+          { role: "user", content: question },
+        ],
       });
 
       const block = msg.content.find((b) => b.type === "text");
