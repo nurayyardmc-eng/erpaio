@@ -38,20 +38,23 @@ model Tenant {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  tenantId      String
-  email         String        @unique
-  passwordHash  String
-  name          String?
-  role          String        @default("viewer")
-  isSysAdmin    Boolean       @default(false)
-  totpSecretEnc String?
-  totpEnabled   Boolean       @default(false)
-  createdAt     DateTime      @default(now())
-  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  sessions      ChatSession[]
-  apiTokens     ApiToken[]
-  pushTokens    PushToken[]
+  id               String        @id @default(cuid())
+  tenantId         String
+  email            String        @unique
+  emailVerifiedAt  DateTime?
+  passwordHash     String
+  name             String?
+  role             String        @default("viewer")
+  isSysAdmin       Boolean       @default(false)
+  totpSecretEnc    String?
+  totpEnabled      Boolean       @default(false)
+  failedLoginCount Int           @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime      @default(now())
+  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions         ChatSession[]
+  apiTokens        ApiToken[]
+  pushTokens       PushToken[]
 }
 
 model ErpConnection {
@@ -192,6 +195,17 @@ model PushToken {
 
   @@index([userId])
   @@index([tenantId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model PasswordResetToken {

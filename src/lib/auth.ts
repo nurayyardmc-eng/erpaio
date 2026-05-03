@@ -20,17 +20,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
         if (!user) return null;
 
+        if (user.lockedUntil && user.lockedUntil > new Date()) {
+          throw new Error("ACCOUNT_LOCKED");
+        }
+
         const valid = await bcrypt.compare(
           credentials.password as string,
           user.passwordHash,
         );
-        if (!valid) return null;
+        if (!valid) {
+          const nextCount = (user.failedLoginCount ?? 0) + 1;
+          const shouldLock = nextCount >= 5;
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginCount: nextCount,
+              lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60_000) : null,
+            },
+          });
+          return null;
+        }
 
         if (user.totpEnabled && user.totpSecretEnc) {
           const code = (credentials.totpCode as string | undefined) ?? "";
           if (!verifyCode(user.totpSecretEnc, code)) {
             throw new Error("MFA_REQUIRED");
           }
+        }
+
+        if ((user.failedLoginCount ?? 0) > 0 || user.lockedUntil) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { failedLoginCount: 0, lockedUntil: null },
+          });
         }
 
         return {

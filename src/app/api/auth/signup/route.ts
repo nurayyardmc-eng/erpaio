@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { rateLimit } from "@/lib/rateLimit";
@@ -79,10 +80,23 @@ export async function POST(req: Request) {
 
   log.info({ tenantId: tenant.id, userId: tenant.users[0].id }, "Signup completed");
 
+  const verifyToken = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(verifyToken).digest("hex");
+  await prisma.emailVerificationToken.create({
+    data: {
+      userId: tenant.users[0].id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60_000),
+    },
+  });
+
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app";
+  const verifyUrl = `${baseUrl}/verify-email?token=${verifyToken}`;
+
   void sendEmail({
     to: email,
     subject: "ERPAIO'ya hoş geldiniz",
-    html: welcomeEmailHtml(name ?? email, tenantName),
+    html: welcomeEmailHtml(name ?? email, tenantName, verifyUrl),
   });
 
   return Response.json({
@@ -92,7 +106,7 @@ export async function POST(req: Request) {
   });
 }
 
-function welcomeEmailHtml(name: string, tenantName: string): string {
+function welcomeEmailHtml(name: string, tenantName: string, verifyUrl: string): string {
   return `<!doctype html><html><body style="margin:0;padding:24px;background:#07090F;color:#E8EDF5;font-family:monospace">
     <div style="max-width:560px;margin:0 auto;background:#0C1018;border:1px solid #131A26;border-radius:12px;padding:32px">
       <div style="color:#00E5FF;font-size:11px;letter-spacing:3px;margin-bottom:8px">ERPAIO</div>
@@ -101,6 +115,13 @@ function welcomeEmailHtml(name: string, tenantName: string): string {
         <strong style="color:#E8EDF5">${escapeHtml(tenantName)}</strong> hesabın oluşturuldu.
         14 gün ücretsiz Pro deneme süren başladı.
       </p>
+      <div style="background:#FF950018;border:1px solid #FF950040;border-radius:8px;padding:16px;margin:20px 0">
+        <div style="color:#FF9500;font-size:11px;letter-spacing:2px;margin-bottom:6px">EMAIL DOĞRULAMA</div>
+        <p style="color:#9AA5B4;font-size:12px;margin:0 0 12px;line-height:1.6">Hesabını aktive etmek için aşağıdaki bağlantıya tıkla (24 saat geçerli):</p>
+        <a href="${verifyUrl}" style="display:inline-block;background:#FF9500;color:#07090F;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;font-size:12px">
+          Email&apos;i Doğrula
+        </a>
+      </div>
       <h3 style="font-size:13px;color:#00E5FF;margin-top:24px">Başlangıç adımları</h3>
       <ol style="color:#9AA5B4;font-size:12px;line-height:1.8;padding-left:20px">
         <li>ERP&apos;niz için read-only user oluşturun</li>

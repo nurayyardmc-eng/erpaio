@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import NpsPrompt from "@/components/NpsPrompt";
+import CookieConsent from "@/components/CookieConsent";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -51,6 +52,7 @@ export default async function DashboardPage() {
         ))}
       </div>
       <NpsPrompt />
+      <CookieConsent />
     </div>
   );
 }
