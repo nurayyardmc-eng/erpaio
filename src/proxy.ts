@@ -20,9 +20,21 @@ export default auth((req) => {
   const isPublic = isRoot || PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
   const isApi = path.startsWith("/api");
 
-  // Unauth user on root → serve static landing.html (URL stays at /)
+  // Lang query param → set cookie + redirect (clean URL)
+  const langParam = req.nextUrl.searchParams.get("lang");
+  if (isRoot && langParam && ["en", "tr", "ar"].includes(langParam)) {
+    const res = NextResponse.redirect(new URL("/", req.url));
+    res.cookies.set("erpaio_lang", langParam, { maxAge: 60 * 60 * 24 * 365, path: "/" });
+    return res;
+  }
+
+  // Unauth user on root → serve static landing.html based on cookie language
   if (isRoot && !isLoggedIn) {
-    return NextResponse.rewrite(new URL("/landing.html", req.url));
+    const lang = req.cookies.get("erpaio_lang")?.value;
+    const file = lang === "tr" ? "/landing-tr.html"
+      : lang === "ar" ? "/landing-ar.html"
+      : "/landing.html";
+    return NextResponse.rewrite(new URL(file, req.url));
   }
 
   if (!isLoggedIn && !isPublic && !isApi) {
