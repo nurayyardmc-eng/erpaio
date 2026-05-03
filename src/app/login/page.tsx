@@ -15,17 +15,24 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("Email veya şifre hatalı.");
+      if (result?.error) {
+        setError("Email veya şifre hatalı.");
+        setLoading(false);
+        return;
+      }
+
+      window.location.href = "/dashboard";
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Giriş başarısız. Lütfen tekrar deneyin.");
       setLoading(false);
-    } else {
-      router.push("/dashboard");
     }
   };
 
