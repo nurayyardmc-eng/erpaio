@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardHeader from "@/components/DashboardHeader";
+import CommandPalette from "@/components/CommandPalette";
 import { colors } from "@/lib/theme";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
+      <CommandPalette />
     </div>
   );
 }

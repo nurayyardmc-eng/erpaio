@@ -1,8 +1,10 @@
 "use client";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import Logo from "@/components/Logo";
+import NotificationBell from "@/components/NotificationBell";
 import { colors } from "@/lib/theme";
 
 const TITLES: Record<string, string> = {
@@ -62,7 +64,44 @@ export default function DashboardHeader({ email, name }: Props) {
           {title}
         </div>
       </div>
-      <UserMenu email={email} name={name} />
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button
+          onClick={() => {
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+          }}
+          aria-label="Komut paleti aç"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            height: 36,
+            padding: "0 12px",
+            border: `1px solid ${colors.border}`,
+            background: colors.bg,
+            borderRadius: 10,
+            color: colors.textMuted,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          <Search size={14} />
+          <span className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            Ara
+            <kbd style={{
+              fontSize: 10,
+              border: `1px solid ${colors.border}`,
+              padding: "1px 5px",
+              borderRadius: 4,
+              fontFamily: "ui-monospace, Menlo, Monaco, monospace",
+              color: colors.textSubtle,
+            }}>
+              ⌘K
+            </kbd>
+          </span>
+        </button>
+        <NotificationBell />
+        <UserMenu email={email} name={name} />
+      </div>
     </header>
   );
 }
