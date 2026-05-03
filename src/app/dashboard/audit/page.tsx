@@ -1,5 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Download, ScrollText } from "lucide-react";
+import Pagination from "@/components/Pagination";
+import EmptyState from "@/components/EmptyState";
+import { Skeleton } from "@/components/Skeleton";
 
 interface AuditMessage {
   id: string;
@@ -15,10 +19,13 @@ interface AuditMessage {
   userEmail: string;
 }
 
+const PAGE_SIZE = 25;
+
 export default function AuditPage() {
   const [messages, setMessages] = useState<AuditMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "user" | "assistant" | "errors">("all");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const params = new URLSearchParams({ limit: "200" });
@@ -29,8 +36,11 @@ export default function AuditPage() {
       .then((d) => {
         setMessages(d.messages ?? []);
         setLoading(false);
+        setPage(1);
       });
   }, [filter]);
+
+  const paged = messages.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const exportCsv = () => {
     const rows = messages.map((m) => ({
@@ -92,26 +102,39 @@ export default function AuditPage() {
           disabled={messages.length === 0}
           style={{
             background: "#FFFFFF",
-            border: "1px solid #E5E7EB",
-            borderRadius: 6,
-            padding: "6px 12px",
-            color: "#475569",
-            fontSize: 11,
+            border: "1px solid rgba(10,10,10,0.12)",
+            borderRadius: 100,
+            padding: "6px 14px",
+            color: "#525252",
+            fontSize: 12,
             cursor: "pointer",
             fontFamily: "inherit",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          📥 CSV indir
+          <Download size={14} /> CSV indir
         </button>
       </div>
 
-      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
-
-      {!loading && messages.length === 0 && (
-        <div style={{ color: "#94A3B8", fontSize: 12 }}>Kayıt yok.</div>
+      {loading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} height={56} />
+          ))}
+        </div>
       )}
 
-      {messages.map((m) => (
+      {!loading && messages.length === 0 && (
+        <EmptyState
+          icon={<ScrollText size={28} />}
+          title="Kayıt yok"
+          description="Bu filtrede henüz aktivite yok. Sohbet ekranında soru sorunca buraya işlenir."
+        />
+      )}
+
+      {paged.map((m) => (
         <div key={m.id} style={{
           background: "#FFFFFF",
           border: "1px solid #E5E7EB",
@@ -135,6 +158,10 @@ export default function AuditPage() {
           </div>
         </div>
       ))}
+
+      {!loading && messages.length > 0 && (
+        <Pagination page={page} pageSize={PAGE_SIZE} total={messages.length} onChange={setPage} />
+      )}
     </div>
   );
 }

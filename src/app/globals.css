@@ -107,6 +107,21 @@ html {
   background-size: 24px 24px;
 }
 
+/* Print styles — clean reports */
+@media print {
+  nav, header, aside, footer, .no-print, button, .lang-switcher,
+  .nav-links, .hamburger, .scroll-top-btn, .topbar { display: none !important; }
+  body, html { background: #FFFFFF !important; color: #000 !important; }
+  * { color: #000 !important; box-shadow: none !important; }
+  .elevated { box-shadow: none !important; border: 1px solid #ccc !important; }
+  a { color: #000 !important; text-decoration: underline; }
+  .print-only { display: block !important; }
+  table { page-break-inside: avoid; }
+  tr { page-break-inside: avoid; }
+}
+
+.print-only { display: none; }
+
 /* Toast slide-in */
 @keyframes slideInRight {
   from { transform: translateX(120%); opacity: 0; }
