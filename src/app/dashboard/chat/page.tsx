@@ -451,8 +451,23 @@ export default function ChatPage() {
         {/* Messages */}
         <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
           {messages.length === 0 && (
-            <div style={{ textAlign: "center", marginTop: 80, color: "#94A3B8", fontSize: 14 }}>
-              ERP&apos;nize sormak istediğiniz şeyi Türkçe yazın.
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "60%",
+              textAlign: "center",
+              padding: "0 24px",
+            }}>
+              <div style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 400, letterSpacing: -1, color: "#0A0A0A", marginBottom: 12, lineHeight: 1.2 }}>
+                Bugün ne öğrenmek istersiniz?
+              </div>
+              <p style={{ color: "#525252", fontSize: 15, margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
+                {selectedConn
+                  ? "Veritabanınıza doğal Türkçe ile soru sorun. Yapay zeka SQL üretir, sonucu açıklar."
+                  : "Başlamak için önce bir ERP bağlantısı eklemeniz gerekiyor."}
+              </p>
             </div>
           )}
 
@@ -676,22 +691,30 @@ export default function ChatPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
-        <div style={{ padding: 16, borderTop: "1px solid #E5E7EB", display: "flex", gap: 10 }}>
+        {/* Input — sticky + safe area */}
+        <div className="safe-bottom" style={{
+          padding: "12px 16px",
+          borderTop: "1px solid #E5E7EB",
+          display: "flex",
+          gap: 10,
+          background: "#FFFFFF",
+          position: "sticky",
+          bottom: 0,
+        }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder={selectedConn ? "Nebim veritabanınıza Türkçe sorular sorabilirsiniz..." : "Önce bir ERP bağlantısı ekleyin..."}
+            placeholder={selectedConn ? "Veritabanınıza Türkçe soru sorun…" : "Önce bir ERP bağlantısı ekleyin"}
             disabled={loading || !selectedConn}
-            style={{ flex: 1, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: "10px 14px", color: "#0F172A", fontSize: 13, fontFamily: "inherit", outline: "none" }}
+            style={{ flex: 1, background: "#FAFAF8", border: "1px solid #E5E7EB", borderRadius: 100, padding: "12px 18px", color: "#0A0A0A", fontSize: 14, fontFamily: "inherit", outline: "none" }}
           />
           <button
             onClick={sendMessage}
             disabled={loading || !input.trim() || !selectedConn}
-            style={{ background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 8, padding: "10px 20px", color: "#1A2B47", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ background: "#0A0A0A", border: "none", borderRadius: 100, padding: "0 24px", color: "#FAFAF8", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", minWidth: 64 }}
           >
-            {loading ? "..." : "→"}
+            {loading ? "…" : "Gönder"}
           </button>
         </div>
       </div>

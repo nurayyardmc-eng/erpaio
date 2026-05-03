@@ -13,8 +13,8 @@ export const colors = {
   brandSoft: "#EEF2F7",
 
   text: "#0A0A0A",
-  textMuted: "#6B6B6B",
-  textSubtle: "#9E9E9E",
+  textMuted: "#525252",
+  textSubtle: "#737373",
   textInverse: "#FAFAF8",
 
   success: "#10B981",

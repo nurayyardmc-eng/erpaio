@@ -23,41 +23,61 @@ import {
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
-// Sıra: günlük kullanım → kurulum → analiz → admin
-const navItems = [
-  // Günlük
-  { href: "/dashboard/chat", label: "Sohbet", Icon: MessageSquare },
-  { href: "/dashboard/overview", label: "Metrikler", Icon: BarChart3 },
-  { href: "/dashboard/saved", label: "Kayıtlı", Icon: Bookmark },
-  { href: "/dashboard/alerts", label: "Bildirimler", Icon: Bell },
-  // Kurulum
-  { href: "/dashboard/connections", label: "Bağlantılar", Icon: Database },
-  { href: "/dashboard/annotations", label: "Açıklamalar", Icon: FileText },
-  { href: "/dashboard/watchlists", label: "Watchlists", Icon: Eye },
-  // Analiz
-  { href: "/dashboard/insights", label: "Analiz", Icon: TrendingUp },
-  { href: "/dashboard/scheduled-reports", label: "Raporlar", Icon: Send },
-  { href: "/dashboard/audit", label: "Audit", Icon: ScrollText },
-  // Admin
-  { href: "/dashboard/team", label: "Takım", Icon: Users },
-  { href: "/dashboard/security", label: "Güvenlik", Icon: Shield },
-  { href: "/dashboard/settings", label: "Ayarlar", Icon: SettingsIcon },
+interface NavItem { href: string; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>; }
+
+const navGroups: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Günlük",
+    items: [
+      { href: "/dashboard/chat", label: "Sohbet", Icon: MessageSquare },
+      { href: "/dashboard/overview", label: "Metrikler", Icon: BarChart3 },
+      { href: "/dashboard/saved", label: "Kayıtlı", Icon: Bookmark },
+      { href: "/dashboard/alerts", label: "Bildirimler", Icon: Bell },
+    ],
+  },
+  {
+    label: "Kurulum",
+    items: [
+      { href: "/dashboard/connections", label: "Bağlantılar", Icon: Database },
+      { href: "/dashboard/annotations", label: "Açıklamalar", Icon: FileText },
+      { href: "/dashboard/watchlists", label: "Watchlists", Icon: Eye },
+    ],
+  },
+  {
+    label: "Analiz",
+    items: [
+      { href: "/dashboard/insights", label: "Analiz", Icon: TrendingUp },
+      { href: "/dashboard/scheduled-reports", label: "Raporlar", Icon: Send },
+      { href: "/dashboard/audit", label: "Audit", Icon: ScrollText },
+    ],
+  },
+  {
+    label: "Admin",
+    items: [
+      { href: "/dashboard/team", label: "Takım", Icon: Users },
+      { href: "/dashboard/security", label: "Güvenlik", Icon: Shield },
+      { href: "/dashboard/settings", label: "Ayarlar", Icon: SettingsIcon },
+    ],
+  },
 ];
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   const sidebarContent = (
     <>
-      <Link href="/" style={{ marginBottom: 16, padding: 4 }}>
-        <Logo size={28} variant="mark" />
+      <Link href="/" style={{ marginBottom: 12, padding: 4, display: "block" }} aria-label="Ana sayfa">
+        <Logo size={24} variant="mark" />
       </Link>
 
       <Link
         href="/dashboard/chat"
         title="Yeni Sohbet"
         onClick={() => setMobileOpen(false)}
+        onMouseEnter={() => setHoveredHref("__new__")}
+        onMouseLeave={() => setHoveredHref(null)}
         style={{
           width: 40,
           height: 40,
@@ -67,55 +87,72 @@ export default function DashboardSidebar() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          marginBottom: 16,
+          marginBottom: 12,
+          position: "relative",
         }}
       >
-        <Plus size={20} strokeWidth={2.5} />
+        <Plus size={18} strokeWidth={2.5} />
+        {hoveredHref === "__new__" && <Tooltip>Yeni Sohbet</Tooltip>}
       </Link>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, overflowY: "auto", padding: "0 4px", width: "100%", alignItems: "center" }}>
-        {navItems.map(({ href, label, Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
-          return (
-            <Link
-              key={href}
-              href={href}
-              title={label}
-              onClick={() => setMobileOpen(false)}
-              style={{
-                width: 44,
-                height: 44,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 10,
-                background: active ? colors.bgSubtle : "transparent",
-                color: active ? colors.text : colors.textMuted,
-                position: "relative",
-              }}
-            >
-              <Icon size={18} strokeWidth={1.8} />
-              {active && (
-                <span style={{
-                  position: "absolute",
-                  left: -4,
-                  top: 10,
-                  bottom: 10,
-                  width: 2,
-                  borderRadius: 2,
-                  background: colors.text,
-                }} />
-              )}
-            </Link>
-          );
-        })}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", width: "100%", alignItems: "center" }}>
+        {navGroups.map((group, gi) => (
+          <div key={group.label} style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            alignItems: "center",
+            paddingTop: gi === 0 ? 0 : 12,
+            paddingBottom: gi === navGroups.length - 1 ? 0 : 12,
+            borderTop: gi === 0 ? "none" : `1px solid ${colors.border}`,
+            width: "calc(100% - 16px)",
+          }}>
+            {group.items.map(({ href, label, Icon }) => {
+              const active = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileOpen(false)}
+                  onMouseEnter={() => setHoveredHref(href)}
+                  onMouseLeave={() => setHoveredHref(null)}
+                  aria-label={label}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 10,
+                    background: active ? colors.bgSubtle : "transparent",
+                    color: active ? colors.text : colors.textMuted,
+                    position: "relative",
+                  }}
+                >
+                  <Icon size={17} strokeWidth={1.8} />
+                  {active && (
+                    <span style={{
+                      position: "absolute",
+                      left: -8,
+                      top: 8,
+                      bottom: 8,
+                      width: 2,
+                      borderRadius: 2,
+                      background: colors.text,
+                    }} />
+                  )}
+                  {hoveredHref === href && <Tooltip>{label}</Tooltip>}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </>
   );
 
   return (
     <>
-      {/* Mobile hamburger button — top-left, fixed */}
       <button
         onClick={() => setMobileOpen(true)}
         className="show-mobile"
@@ -139,15 +176,14 @@ export default function DashboardSidebar() {
         <Menu size={18} color={colors.text} />
       </button>
 
-      {/* Desktop sidebar — always visible */}
       <aside className="hide-mobile" style={{
-        width: 64,
-        minWidth: 64,
+        width: 56,
+        minWidth: 56,
         background: colors.bg,
         borderRight: `1px solid ${colors.border}`,
         flexDirection: "column",
         alignItems: "center",
-        padding: "16px 0",
+        padding: "12px 0",
         height: "100vh",
         position: "sticky",
         top: 0,
@@ -155,7 +191,6 @@ export default function DashboardSidebar() {
         {sidebarContent}
       </aside>
 
-      {/* Mobile drawer overlay */}
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
@@ -168,20 +203,19 @@ export default function DashboardSidebar() {
         />
       )}
 
-      {/* Mobile drawer */}
       <aside
         style={{
           position: "fixed",
           top: 0,
           left: mobileOpen ? 0 : -80,
           bottom: 0,
-          width: 64,
+          width: 56,
           background: colors.bg,
           borderRight: `1px solid ${colors.border}`,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          padding: "16px 0",
+          padding: "12px 0",
           zIndex: 100,
           transition: "left 0.2s ease",
         }}
@@ -198,7 +232,7 @@ export default function DashboardSidebar() {
             background: "transparent",
             border: "none",
             cursor: "pointer",
-            marginBottom: 8,
+            marginBottom: 4,
             color: colors.textMuted,
           }}
         >
@@ -207,5 +241,28 @@ export default function DashboardSidebar() {
         {sidebarContent}
       </aside>
     </>
+  );
+}
+
+function Tooltip({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      position: "absolute",
+      left: "calc(100% + 12px)",
+      top: "50%",
+      transform: "translateY(-50%)",
+      background: colors.text,
+      color: colors.bg,
+      padding: "5px 10px",
+      borderRadius: 6,
+      fontSize: 12,
+      fontWeight: 500,
+      whiteSpace: "nowrap",
+      pointerEvents: "none",
+      zIndex: 50,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+    }}>
+      {children}
+    </span>
   );
 }
