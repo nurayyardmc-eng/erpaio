@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/login", "/privacy", "/terms", "/signup", "/forgot-password", "/reset-password", "/pricing", "/docs", "/status", "/accept-invite", "/verify-email", "/maintenance"];
@@ -18,6 +19,11 @@ export default auth((req) => {
   const isRoot = path === "/";
   const isPublic = isRoot || PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
   const isApi = path.startsWith("/api");
+
+  // Unauth user on root → serve static landing.html (URL stays at /)
+  if (isRoot && !isLoggedIn) {
+    return NextResponse.rewrite(new URL("/landing.html", req.url));
+  }
 
   if (!isLoggedIn && !isPublic && !isApi) {
     return Response.redirect(new URL("/login", req.url));
