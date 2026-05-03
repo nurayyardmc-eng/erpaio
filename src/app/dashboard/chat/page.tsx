@@ -1,6 +1,9 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { downloadXlsx } from "@/lib/export/xlsx";
+import { detectChartHint, type ChartHint } from "@/lib/charts/detect";
+import MiniChart from "@/components/MiniChart";
 
 interface Connection {
   id: string;
@@ -28,6 +31,8 @@ interface AssistantSuccessMsg {
   feedback: 1 | -1 | null;
   editing?: boolean;
   editedSql?: string;
+  chartHint?: ChartHint;
+  followUps?: string[];
 }
 
 interface AssistantLoadingMsg { role: "assistant"; status: "loading" }
@@ -138,6 +143,36 @@ export default function ChatPage() {
     const csv = rowsToCsv(msg.results, msg.columns);
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     downloadCsv(`erpaio-${ts}.csv`, csv);
+  };
+
+  const exportXlsx = (msg: AssistantSuccessMsg) => {
+    if (msg.results.length === 0) return;
+    const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    downloadXlsx(`erpaio-${ts}.xlsx`, msg.results, msg.columns);
+  };
+
+  const fetchFollowUps = async (sql: string, rowCount: number, question: string) => {
+    try {
+      const res = await fetch("/api/chat/follow-ups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, sql, rowCount }),
+      });
+      const data = await res.json();
+      if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+        setMessages((prev) => {
+          const lastIdx = prev.findLastIndex((m) => m.role === "assistant" && m.status === "success");
+          if (lastIdx === -1) return prev;
+          return prev.map((m, i) =>
+            i === lastIdx && m.role === "assistant" && m.status === "success"
+              ? { ...m, followUps: data.suggestions }
+              : m,
+          );
+        });
+      }
+    } catch {
+      // ignore
+    }
   };
 
   const startEdit = (idx: number) => {
@@ -424,7 +459,10 @@ export default function ChatPage() {
                             <button onClick={() => startEdit(i)} title="Düzenle" style={iconBtnSmall}>✎</button>
                           )}
                           {msg.results.length > 0 && (
-                            <button onClick={() => exportCsv(msg)} title="CSV indir" style={iconBtnSmall}>📥</button>
+                            <>
+                              <button onClick={() => exportCsv(msg)} title="CSV indir" style={iconBtnSmall}>📥 CSV</button>
+                              <button onClick={() => exportXlsx(msg)} title="Excel indir" style={iconBtnSmall}>📊 XLSX</button>
+                            </>
                           )}
                         </div>
                         {msg.editing ? (
@@ -478,6 +516,34 @@ export default function ChatPage() {
                           </table>
                         </div>
                       )}
+                      {msg.chartHint && msg.chartHint.type !== "none" && (
+                        <MiniChart hint={msg.chartHint} rows={msg.results} />
+                      )}
+
+                      {msg.followUps && msg.followUps.length > 0 && (
+                        <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          <span style={{ fontSize: 9, color: "#3A4558", marginRight: 4, alignSelf: "center" }}>İLGİLİ:</span>
+                          {msg.followUps.map((fu, fi) => (
+                            <button
+                              key={fi}
+                              onClick={() => setInput(fu)}
+                              style={{
+                                background: "#0C1018",
+                                border: "1px solid #131A26",
+                                borderRadius: 12,
+                                padding: "3px 10px",
+                                color: "#9C8AFF",
+                                fontSize: 10,
+                                cursor: "pointer",
+                                fontFamily: "monospace",
+                              }}
+                            >
+                              {fu}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
                       {msg.messageId && (
                         <div style={{ marginTop: 8, display: "flex", gap: 6, alignItems: "center", fontSize: 10 }}>
                           <span style={{ color: "#3A4558", marginRight: 4 }}>Faydalı mı?</span>
