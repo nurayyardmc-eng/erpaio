@@ -16,6 +16,40 @@ export default function SettingsPage() {
   const [tenant, setTenant] = useState<TenantSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdStatus, setPwdStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  const changePassword = async () => {
+    if (pwd.next !== pwd.confirm) {
+      setPwdStatus({ kind: "err", msg: "Yeni şifreler eşleşmiyor." });
+      return;
+    }
+    if (pwd.next.length < 8) {
+      setPwdStatus({ kind: "err", msg: "Yeni şifre en az 8 karakter olmalı." });
+      return;
+    }
+    setPwdSaving(true);
+    setPwdStatus(null);
+    try {
+      const res = await fetch("/api/me/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: pwd.current, newPassword: pwd.next }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPwdStatus({ kind: "ok", msg: "Şifre güncellendi." });
+        setPwd({ current: "", next: "", confirm: "" });
+      } else {
+        setPwdStatus({ kind: "err", msg: data.error || "Hata." });
+      }
+    } catch {
+      setPwdStatus({ kind: "err", msg: "Ağ hatası." });
+    } finally {
+      setPwdSaving(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/tenant").then(async (r) => {
@@ -153,6 +187,34 @@ export default function SettingsPage() {
             </span>
           )}
         </div>
+
+        {/* Şifre değiştir */}
+        <section style={card}>
+          <h2 style={sectionTitle}>Şifre Değiştir</h2>
+          <Field label="Mevcut Şifre">
+            <input type="password" value={pwd.current} onChange={(e) => setPwd({ ...pwd, current: e.target.value })} style={input} />
+          </Field>
+          <Field label="Yeni Şifre (min 8 karakter)">
+            <input type="password" value={pwd.next} onChange={(e) => setPwd({ ...pwd, next: e.target.value })} style={input} />
+          </Field>
+          <Field label="Yeni Şifre (tekrar)">
+            <input type="password" value={pwd.confirm} onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })} style={input} />
+          </Field>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button
+              onClick={changePassword}
+              disabled={pwdSaving || !pwd.current || !pwd.next || !pwd.confirm}
+              style={{ background: "#FF950018", border: "1px solid #FF950040", borderRadius: 6, padding: "10px 24px", color: "#FF9500", fontSize: 12, cursor: pwdSaving ? "not-allowed" : "pointer", fontFamily: "monospace" }}
+            >
+              {pwdSaving ? "Güncelleniyor..." : "Şifre Değiştir"}
+            </button>
+            {pwdStatus && (
+              <span style={{ color: pwdStatus.kind === "ok" ? "#69FF47" : "#FF6B6B", fontSize: 11 }}>
+                {pwdStatus.msg}
+              </span>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
