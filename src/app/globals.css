@@ -44,3 +44,50 @@ button:disabled {
 .spin {
   animation: spin 1s linear infinite;
 }
+
+/* Responsive helpers */
+.hide-mobile {
+  display: flex;
+}
+
+.show-mobile {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .show-mobile {
+    display: flex !important;
+  }
+
+  .responsive-section {
+    padding: 60px 20px !important;
+  }
+
+  .responsive-hero {
+    padding: 60px 20px 40px !important;
+  }
+
+  .responsive-grid-3,
+  .responsive-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .responsive-flex-col {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .responsive-cta-bg {
+    padding: 60px 20px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .responsive-process-step {
+    flex-direction: column !important;
+  }
+}

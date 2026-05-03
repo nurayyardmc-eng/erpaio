@@ -89,6 +89,20 @@ const trustItems = [
   { Icon: ShieldCheck, title: "Açıklanabilir AI" },
 ];
 
+const sectionPad: React.CSSProperties = {
+  padding: "100px 32px",
+  maxWidth: 1100,
+  margin: "0 auto",
+};
+
+const sectionH2: React.CSSProperties = {
+  fontSize: "clamp(26px, 5vw, 36px)",
+  fontWeight: 800,
+  margin: "8px 0 0",
+  letterSpacing: -1,
+  lineHeight: 1.15,
+};
+
 export default async function Home() {
   const session = await auth();
   if (session) redirect("/dashboard");
@@ -102,35 +116,41 @@ export default async function Home() {
         background: "rgba(255,255,255,0.85)",
         backdropFilter: "blur(12px)",
         borderBottom: `1px solid ${colors.border}`,
-        padding: "16px 32px",
+        padding: "14px clamp(16px, 4vw, 32px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 12,
       }}>
-        <Link href="/"><Logo size={28} /></Link>
-        <nav style={{ display: "flex", gap: 28, fontSize: 14, alignItems: "center" }}>
+        <Link href="/"><Logo size={26} /></Link>
+
+        <nav className="hide-mobile" style={{ gap: 24, fontSize: 14, alignItems: "center" }}>
           {navItems.map((n) => (
             <a key={n.href} href={n.href} style={{ color: colors.textMuted, fontWeight: 500 }}>{n.label}</a>
           ))}
-          <Link href="/login" style={{ color: colors.textMuted, fontWeight: 500 }}>Giriş</Link>
+        </nav>
+
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <Link href="/login" style={{ color: colors.textMuted, fontWeight: 500, fontSize: 14 }}>Giriş</Link>
           <Link href="/signup" style={{
             background: colors.brand,
             color: colors.textInverse,
-            padding: "8px 16px",
+            padding: "8px 14px",
             borderRadius: 8,
             fontWeight: 600,
             fontSize: 13,
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
+            whiteSpace: "nowrap",
           }}>
-            Ücretsiz Başla <ArrowRight size={14} />
+            Başla <ArrowRight size={14} />
           </Link>
-        </nav>
+        </div>
       </header>
 
       <main>
-        <section style={{ padding: "100px 32px 80px", maxWidth: 1100, margin: "0 auto" }}>
+        <section className="responsive-hero" style={{ padding: "100px 32px 80px", maxWidth: 1100, margin: "0 auto" }}>
           <div style={{
             display: "inline-flex",
             alignItems: "center",
@@ -149,26 +169,26 @@ export default async function Home() {
           </div>
 
           <h1 style={{
-            fontSize: 64,
+            fontSize: "clamp(36px, 7vw, 64px)",
             lineHeight: 1.05,
-            margin: "0 0 28px",
+            margin: "0 0 24px",
             fontWeight: 800,
-            letterSpacing: -2,
+            letterSpacing: -1.5,
             maxWidth: 880,
           }}>
             ERP&apos;iniz için <span style={{ color: colors.brand }}>kendi kendini geliştiren</span> AI sistemi
           </h1>
 
-          <p style={{ fontSize: 19, color: colors.textMuted, lineHeight: 1.6, marginBottom: 44, maxWidth: 720 }}>
+          <p style={{ fontSize: "clamp(15px, 1.8vw, 19px)", color: colors.textMuted, lineHeight: 1.6, marginBottom: 40, maxWidth: 720 }}>
             Sistem işlerinizi sürekli izler, önemli olayı bildirir, sonuçtan öğrenir,
             içgörüleri kontrollü aksiyona dönüştürür — mevcut ERP&apos;nizi değiştirmeden.
           </p>
 
-          <div style={{ display: "flex", gap: 12, marginBottom: 80, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 12, marginBottom: 60, flexWrap: "wrap" }}>
             <a href="#iletisim" style={{
               background: colors.brand,
               color: colors.textInverse,
-              padding: "16px 32px",
+              padding: "14px 28px",
               borderRadius: 12,
               fontSize: 15,
               fontWeight: 600,
@@ -182,7 +202,7 @@ export default async function Home() {
               background: colors.bg,
               color: colors.text,
               border: `1px solid ${colors.border}`,
-              padding: "16px 32px",
+              padding: "14px 28px",
               borderRadius: 12,
               fontSize: 15,
               fontWeight: 500,
@@ -193,25 +213,25 @@ export default async function Home() {
 
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
             gap: 24,
-            paddingTop: 32,
+            paddingTop: 28,
             borderTop: `1px solid ${colors.border}`,
           }}>
             {stats.map((s) => (
               <div key={s.label}>
-                <div style={{ fontSize: 36, fontWeight: 800, color: colors.text, letterSpacing: -1 }}>{s.value}</div>
+                <div style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: colors.text, letterSpacing: -1 }}>{s.value}</div>
                 <div style={{ fontSize: 13, color: colors.textMuted, marginTop: 4 }}>{s.label}</div>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="vizyon" style={{ background: colors.bgSubtle, padding: "80px 32px" }}>
+        <section id="vizyon" className="responsive-section" style={{ background: colors.bgSubtle, padding: "80px 32px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <SectionLabel>Çekirdek Fikir</SectionLabel>
             <h2 style={sectionH2}>Sürekli zeka döngüsü</h2>
-            <p style={{ fontSize: 17, color: colors.textMuted, lineHeight: 1.7, maxWidth: 800 }}>
+            <p style={{ fontSize: "clamp(15px, 1.6vw, 17px)", color: colors.textMuted, lineHeight: 1.7, maxWidth: 800, marginTop: 20 }}>
               ERPAIO; izleme, geri bildirim, tespit, öneri ve aksiyon adımlarını tek bir sürekli döngüde
               birleştirir. Her döngüden öğrenir, kararlarını keskinleştirir. Mevcut ERP&apos;nize ek bir yük
               bindirmez — read-only bağlantıyla yan tarafta çalışır.
@@ -219,12 +239,12 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="yetenekler" style={{ padding: "100px 32px", maxWidth: 1100, margin: "0 auto" }}>
+        <section id="yetenekler" className="responsive-section" style={sectionPad}>
           <SectionLabel>Yetenekler</SectionLabel>
           <h2 style={sectionH2}>Dokuz çekirdek yetenek</h2>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
             gap: 16,
             marginTop: 40,
           }}>
@@ -233,7 +253,7 @@ export default async function Home() {
                 background: colors.card,
                 border: `1px solid ${colors.border}`,
                 borderRadius: 14,
-                padding: 28,
+                padding: 24,
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                   <div style={{
@@ -256,13 +276,13 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="kullanim" style={{ background: colors.bgSubtle, padding: "100px 32px" }}>
+        <section id="kullanim" className="responsive-section" style={{ background: colors.bgSubtle, padding: "100px 32px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <SectionLabel>Kullanım Alanları</SectionLabel>
             <h2 style={sectionH2}>Sektör örnekleri</h2>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
               gap: 16,
               marginTop: 40,
             }}>
@@ -271,7 +291,7 @@ export default async function Home() {
                   background: colors.card,
                   border: `1px solid ${colors.border}`,
                   borderRadius: 14,
-                  padding: 32,
+                  padding: 28,
                 }}>
                   <div style={{
                     width: 48,
@@ -285,7 +305,7 @@ export default async function Home() {
                   }}>
                     <u.Icon size={24} color={colors.brand} strokeWidth={2} />
                   </div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 12px" }}>{u.title}</h3>
+                  <h3 style={{ fontSize: 19, fontWeight: 700, margin: "0 0 12px" }}>{u.title}</h3>
                   <p style={{ fontSize: 15, color: colors.textMuted, lineHeight: 1.6, margin: 0 }}>{u.desc}</p>
                 </div>
               ))}
@@ -293,12 +313,12 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="platform" style={{ padding: "100px 32px", maxWidth: 1100, margin: "0 auto" }}>
+        <section id="platform" className="responsive-section" style={sectionPad}>
           <SectionLabel>Platform</SectionLabel>
           <h2 style={sectionH2}>Çekirdek bileşenler</h2>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: 16,
             marginTop: 40,
           }}>
@@ -317,36 +337,37 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="surec" style={{ background: colors.bgSubtle, padding: "100px 32px" }}>
+        <section id="surec" className="responsive-section" style={{ background: colors.bgSubtle, padding: "100px 32px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <SectionLabel>Süreç</SectionLabel>
             <h2 style={sectionH2}>Altı adımda kendini geliştiren zeka döngüsü</h2>
-            <div style={{ marginTop: 48, display: "flex", flexDirection: "column", gap: 20 }}>
-              {processSteps.map((s, i) => (
-                <div key={s.num} style={{
+            <div style={{ marginTop: 40, display: "flex", flexDirection: "column", gap: 16 }}>
+              {processSteps.map((s) => (
+                <div key={s.num} className="responsive-process-step" style={{
                   display: "flex",
-                  gap: 24,
+                  gap: 20,
                   background: colors.card,
                   border: `1px solid ${colors.border}`,
                   borderRadius: 14,
-                  padding: 28,
+                  padding: 24,
+                  alignItems: "flex-start",
                 }}>
                   <div style={{
-                    width: 56,
-                    minWidth: 56,
-                    height: 56,
+                    width: 52,
+                    minWidth: 52,
+                    height: 52,
                     background: colors.brandSoft,
                     borderRadius: 12,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}>
-                    <s.Icon size={26} color={colors.brand} strokeWidth={2} />
+                    <s.Icon size={24} color={colors.brand} strokeWidth={2} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
                       <div style={{ color: colors.textSubtle, fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>{s.num}</div>
-                      <h3 style={{ fontSize: 19, fontWeight: 700, margin: 0 }}>{s.title}</h3>
+                      <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{s.title}</h3>
                     </div>
                     <p style={{ fontSize: 15, color: colors.textMuted, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
                   </div>
@@ -356,13 +377,13 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="guven" style={{ padding: "100px 32px", maxWidth: 1100, margin: "0 auto" }}>
+        <section id="guven" className="responsive-section" style={sectionPad}>
           <SectionLabel>Kurumsal Güven</SectionLabel>
           <h2 style={sectionH2}>Güvenlik ve uyumluluk</h2>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 16,
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 14,
             marginTop: 40,
           }}>
             {trustItems.map((t) => (
@@ -370,22 +391,22 @@ export default async function Home() {
                 background: colors.card,
                 border: `1px solid ${colors.border}`,
                 borderRadius: 14,
-                padding: 28,
+                padding: 24,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
                 gap: 14,
               }}>
                 <div style={{
-                  width: 44,
-                  height: 44,
+                  width: 42,
+                  height: 42,
                   background: colors.brandSoft,
                   borderRadius: 10,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}>
-                  <t.Icon size={22} color={colors.brand} strokeWidth={2} />
+                  <t.Icon size={20} color={colors.brand} strokeWidth={2} />
                 </div>
                 <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{t.title}</h3>
               </div>
@@ -393,12 +414,12 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="iletisim" style={{ background: colors.brand, color: colors.textInverse, padding: "100px 32px" }}>
+        <section id="iletisim" className="responsive-cta-bg" style={{ background: colors.brand, color: colors.textInverse, padding: "100px 32px" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-            <h2 style={{ fontSize: 40, fontWeight: 800, margin: "0 0 16px", letterSpacing: -1, lineHeight: 1.15 }}>
+            <h2 style={{ fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 800, margin: "0 0 16px", letterSpacing: -1, lineHeight: 1.15 }}>
               Pilot başlatın
             </h2>
-            <p style={{ fontSize: 17, color: "rgba(255,255,255,0.8)", lineHeight: 1.6, marginBottom: 40 }}>
+            <p style={{ fontSize: "clamp(15px, 1.6vw, 17px)", color: "rgba(255,255,255,0.8)", lineHeight: 1.6, marginBottom: 36 }}>
               14 gün ücretsiz Pro deneme, kart bilgisi gerekmez.
               Veya bir gösterim ile süreç hakkında konuşalım.
             </p>
@@ -406,7 +427,7 @@ export default async function Home() {
               <Link href="/signup" style={{
                 background: colors.bg,
                 color: colors.brand,
-                padding: "16px 32px",
+                padding: "14px 28px",
                 borderRadius: 12,
                 fontSize: 15,
                 fontWeight: 600,
@@ -420,7 +441,7 @@ export default async function Home() {
                 background: "transparent",
                 color: colors.textInverse,
                 border: "1px solid rgba(255,255,255,0.4)",
-                padding: "16px 32px",
+                padding: "14px 28px",
                 borderRadius: 12,
                 fontSize: 15,
                 fontWeight: 500,
@@ -432,8 +453,8 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer style={{
-        padding: "32px",
+      <footer className="responsive-flex-col" style={{
+        padding: "32px clamp(16px, 4vw, 32px)",
         borderTop: `1px solid ${colors.border}`,
         display: "flex",
         flexWrap: "wrap",
@@ -449,7 +470,7 @@ export default async function Home() {
           <Logo size={20} />
           <span>© 2026 ERPAIO · İstanbul</span>
         </div>
-        <div style={{ display: "flex", gap: 24 }}>
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           <Link href="/pricing" style={{ color: colors.textSubtle }}>Fiyatlandırma</Link>
           <Link href="/privacy" style={{ color: colors.textSubtle }}>Gizlilik</Link>
           <Link href="/terms" style={{ color: colors.textSubtle }}>Koşullar</Link>
@@ -459,14 +480,6 @@ export default async function Home() {
     </div>
   );
 }
-
-const sectionH2: React.CSSProperties = {
-  fontSize: 36,
-  fontWeight: 800,
-  margin: "8px 0 0",
-  letterSpacing: -1,
-  lineHeight: 1.15,
-};
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
