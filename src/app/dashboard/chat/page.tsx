@@ -451,14 +451,8 @@ export default function ChatPage() {
         {/* Messages */}
         <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
           {messages.length === 0 && (
-            <div style={{ textAlign: "center", marginTop: 60 }}>
-              <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 16 }}>Örnek sorular:</div>
-              {["Toplam kaç ürün var?", "En son 10 siparişi göster", "Bu ay kaç satış yapıldı?"].map((q) => (
-                <button key={q} onClick={() => setInput(q)}
-                  style={{ display: "block", margin: "8px auto", background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "8px 16px", color: "#1A2B47", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
-                  {q}
-                </button>
-              ))}
+            <div style={{ textAlign: "center", marginTop: 80, color: "#94A3B8", fontSize: 14 }}>
+              ERP&apos;nize sormak istediğiniz şeyi Türkçe yazın.
             </div>
           )}
 
