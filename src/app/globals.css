@@ -50,9 +50,101 @@ button:not(:disabled):active {
   border-color: rgba(10, 10, 10, 0.08);
 }
 
+.hairline-gradient {
+  height: 1px;
+  border: none;
+  background: linear-gradient(90deg, transparent, rgba(10,10,10,0.12), transparent);
+  margin: 0;
+}
+
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+}
+
+/* Card elevation (Linear/Vercel style multi-layer) */
+.elevated {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+  transition: box-shadow 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.elevated:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+/* Hover lift (no shadow) */
+.lift {
+  transition: transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s ease;
+}
+.lift:hover { transform: translateY(-2px); }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(10,10,10,0.04) 25%, rgba(10,10,10,0.08) 50%, rgba(10,10,10,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 8px;
+}
+
+/* Fade-in on scroll */
+.fade-in {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Subtle dot grid */
+.dot-grid {
+  background-image: radial-gradient(rgba(10,10,10,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Logo entrance animation */
+@keyframes logoFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.logo-anim {
+  animation: logoFadeIn 0.8s cubic-bezier(0.4,0,0.2,1) both;
+}
+
+/* Drop cap (editorial) */
+.drop-cap::first-letter {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 4em;
+  float: left;
+  line-height: 0.85;
+  margin-right: 8px;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+/* Button ripple */
+button.ripple {
+  position: relative;
+  overflow: hidden;
+}
+button.ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255,255,255,0.2);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+button.ripple:active::after {
+  opacity: 1;
+  transition: 0s;
 }
 
 ::selection {
