@@ -1,9 +1,23 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { ChevronDown, LogOut, Settings, Shield } from "lucide-react";
 import { colors } from "@/lib/theme";
+
+async function manualSignOut() {
+  try {
+    const csrfRes = await fetch("/api/auth/csrf");
+    const { csrfToken } = await csrfRes.json();
+    await fetch("/api/auth/signout", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ csrfToken, callbackUrl: "/" }),
+    });
+  } catch {
+    // ignore — redirect anyway
+  }
+  window.location.href = "/";
+}
 
 interface UserMenuProps {
   email: string;
@@ -100,7 +114,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
           </Link>
 
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={manualSignOut}
             style={{
               ...menuItemStyle,
               border: "none",
