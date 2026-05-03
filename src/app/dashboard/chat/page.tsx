@@ -383,7 +383,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F9FAFB", fontFamily: "inherit", color: "#0F172A", display: "flex" }}>
+    <div style={{ height: "calc(100vh - 56px)", background: "#F9FAFB", fontFamily: "inherit", color: "#0F172A", display: "flex" }}>
       {/* Sidebar */}
       <aside style={{
         width: historyOpen ? 240 : 0,
