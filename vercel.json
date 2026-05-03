@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
   "crons": [
     { "path": "/api/cron/anomaly-detection?mode=daily", "schedule": "0 6 * * *" },
     { "path": "/api/cron/scheduled-reports", "schedule": "0 3 * * *" },
