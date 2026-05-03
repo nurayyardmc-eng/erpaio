@@ -25,6 +25,9 @@ model Tenant {
   stripeCustomerId     String?           @unique
   stripeSubscriptionId String?           @unique
   subscriptionStatus   String?
+  brandingLogoUrl      String?
+  brandingPrimary      String?
+  brandingSenderName   String?
   createdAt            DateTime          @default(now())
   users                User[]
   connections          ErpConnection[]
