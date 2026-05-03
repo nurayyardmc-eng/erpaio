@@ -33,6 +33,9 @@ interface AssistantSuccessMsg {
   editedSql?: string;
   chartHint?: ChartHint;
   followUps?: string[];
+  explanation?: string;
+  explainLoading?: boolean;
+  question?: string;
 }
 
 interface AssistantLoadingMsg { role: "assistant"; status: "loading" }
@@ -69,6 +72,17 @@ export default function ChatPage() {
         if (active.length > 0) setSelectedConn(active[0].id);
       });
     refreshHistory();
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const prefill = params.get("prefill");
+      if (prefill) {
+        setInput(prefill);
+        const url = new URL(window.location.href);
+        url.searchParams.delete("prefill");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -149,6 +163,45 @@ export default function ChatPage() {
     if (msg.results.length === 0) return;
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     downloadXlsx(`erpaio-${ts}.xlsx`, msg.results, msg.columns);
+  };
+
+  const fetchExplain = async (idx: number, msg: AssistantSuccessMsg) => {
+    if (!msg.question) return;
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i === idx && m.role === "assistant" && m.status === "success"
+          ? { ...m, explainLoading: true }
+          : m,
+      ),
+    );
+    try {
+      const res = await fetch("/api/chat/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: msg.question,
+          sql: msg.sql,
+          topRows: msg.results.slice(0, 10),
+          totalRows: msg.total,
+        }),
+      });
+      const data = await res.json();
+      setMessages((prev) =>
+        prev.map((m, i) =>
+          i === idx && m.role === "assistant" && m.status === "success"
+            ? { ...m, explanation: data.explanation || "", explainLoading: false }
+            : m,
+        ),
+      );
+    } catch {
+      setMessages((prev) =>
+        prev.map((m, i) =>
+          i === idx && m.role === "assistant" && m.status === "success"
+            ? { ...m, explainLoading: false }
+            : m,
+        ),
+      );
+    }
   };
 
   const fetchFollowUps = async (sql: string, rowCount: number, question: string) => {
@@ -462,6 +515,16 @@ export default function ChatPage() {
                             <>
                               <button onClick={() => exportCsv(msg)} title="CSV indir" style={iconBtnSmall}>📥 CSV</button>
                               <button onClick={() => exportXlsx(msg)} title="Excel indir" style={iconBtnSmall}>📊 XLSX</button>
+                              {!msg.explanation && msg.question && (
+                                <button
+                                  onClick={() => fetchExplain(i, msg)}
+                                  disabled={msg.explainLoading}
+                                  title="AI yorumu"
+                                  style={iconBtnSmall}
+                                >
+                                  {msg.explainLoading ? "..." : "🤖 Açıkla"}
+                                </button>
+                              )}
                             </>
                           )}
                         </div>
@@ -516,6 +579,13 @@ export default function ChatPage() {
                           </table>
                         </div>
                       )}
+                      {msg.explanation && (
+                        <div style={{ background: "#9C8AFF15", border: "1px solid #9C8AFF40", borderRadius: 8, padding: 12, marginTop: 8 }}>
+                          <div style={{ fontSize: 9, color: "#9C8AFF", letterSpacing: 2, marginBottom: 6 }}>🤖 AI YORUMU</div>
+                          <div style={{ fontSize: 12, color: "#E8EDF5", lineHeight: 1.6 }}>{msg.explanation}</div>
+                        </div>
+                      )}
+
                       {msg.chartHint && msg.chartHint.type !== "none" && (
                         <MiniChart hint={msg.chartHint} rows={msg.results} />
                       )}

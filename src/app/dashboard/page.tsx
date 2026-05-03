@@ -2,6 +2,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import NpsPrompt from "@/components/NpsPrompt";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -28,7 +29,10 @@ export default async function DashboardPage() {
           { href: "/dashboard/annotations", label: "Şema Açıklamaları", desc: "Tablo/kolon notları (admin)", color: "#FF9500" },
           { href: "/dashboard/insights", label: "Şema Analizi", desc: "FK çıkarımı + custom alanlar", color: "#FFD740" },
           { href: "/dashboard/saved", label: "Kayıtlı Sorgular", desc: "Sık kullanılanlar (👍'lı)", color: "#9C8AFF" },
+          { href: "/dashboard/scheduled-reports", label: "Planlı Raporlar", desc: "Email ile periyodik rapor", color: "#9C8AFF" },
+          { href: "/dashboard/watchlists", label: "Watchlists", desc: "Eşik aşımı izleme", color: "#FF9500" },
           { href: "/dashboard/audit", label: "Aktivite Logu", desc: "KVKK audit trail", color: "#9C8AFF" },
+          { href: "/dashboard/team", label: "Takım", desc: "Kullanıcı ve davetler", color: "#69FF47" },
           { href: "/dashboard/security", label: "Güvenlik (MFA)", desc: "İki faktörlü doğrulama", color: "#FFD740" },
           { href: "/dashboard/settings", label: "Ayarlar", desc: "Hesap ve tercihler", color: "#69FF47" },
         ].map((item) => (
@@ -46,6 +50,7 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+      <NpsPrompt />
     </div>
   );
 }

@@ -1,13 +1,36 @@
 import { Resend } from "resend";
 import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
+import { prisma } from "@/lib/db/prisma";
 
 const log = childLogger({ component: "email" });
 
 const apiKey = process.env.RESEND_API_KEY;
-const fromAddress = process.env.RESEND_FROM ?? "ERPAIO <noreply@erpaio.app>";
+const defaultFrom = process.env.RESEND_FROM ?? "ERPAIO <noreply@erpaio.app>";
+const fromDomain = (process.env.RESEND_FROM ?? "noreply@erpaio.app").match(/<?([^>]+@[^>]+)>?/)?.[1]?.split("@")[1] ?? "erpaio.app";
 
 const client = apiKey ? new Resend(apiKey) : null;
+
+const senderCache = new Map<string, { from: string; ts: number }>();
+const CACHE_TTL = 5 * 60_000;
+
+async function resolveSenderFor(tenantId: string): Promise<string> {
+  const cached = senderCache.get(tenantId);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.from;
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { brandingSenderName: true, plan: true },
+  }).catch(() => null);
+
+  const senderName = tenant?.brandingSenderName?.trim();
+  const from = senderName && tenant?.plan === "enterprise"
+    ? `${senderName} <noreply@${fromDomain}>`
+    : defaultFrom;
+
+  senderCache.set(tenantId, { from, ts: Date.now() });
+  return from;
+}
 
 export interface EmailOptions {
   to: string | string[];
@@ -15,6 +38,7 @@ export interface EmailOptions {
   html?: string;
   text?: string;
   replyTo?: string;
+  tenantId?: string;
 }
 
 export async function sendEmail(options: EmailOptions): Promise<{ ok: boolean; id?: string }> {
@@ -22,16 +46,19 @@ export async function sendEmail(options: EmailOptions): Promise<{ ok: boolean; i
     log.warn({}, "Resend API key not set; email skipped");
     return { ok: false };
   }
+
+  const from = options.tenantId ? await resolveSenderFor(options.tenantId) : defaultFrom;
+
   try {
     const result = await client.emails.send({
-      from: fromAddress,
+      from,
       to: options.to,
       subject: options.subject,
       html: options.html ?? options.text ?? "",
       text: options.text,
       replyTo: options.replyTo,
     });
-    log.info({ to: options.to, id: result.data?.id }, "Email sent");
+    log.info({ to: options.to, id: result.data?.id, from }, "Email sent");
     return { ok: true, id: result.data?.id };
   } catch (err) {
     log.error({ err }, "Email send failed");
