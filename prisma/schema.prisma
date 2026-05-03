@@ -216,6 +216,54 @@ model Invitation {
   @@index([tokenHash])
 }
 
+model ScheduledReport {
+  id           String    @id @default(cuid())
+  tenantId     String
+  userId       String
+  name         String
+  question     String
+  connectionId String
+  schedule     String
+  emailTo      String
+  enabled      Boolean   @default(true)
+  lastRunAt    DateTime?
+  lastError    String?
+  createdAt    DateTime  @default(now())
+
+  @@index([tenantId])
+  @@index([enabled, schedule])
+}
+
+model Watchlist {
+  id           String    @id @default(cuid())
+  tenantId     String
+  userId       String
+  name         String
+  question     String
+  connectionId String
+  thresholdOp  String
+  thresholdVal Float
+  emailTo      String?
+  enabled      Boolean   @default(true)
+  lastRunAt    DateTime?
+  lastValue    Float?
+  triggeredAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([tenantId])
+  @@index([enabled])
+}
+
+model TenantIpAllowlist {
+  id        String   @id @default(cuid())
+  tenantId  String
+  cidr      String
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, cidr])
+}
+
 model SchemaAnnotation {
   id          String   @id @default(cuid())
   tenantId    String
