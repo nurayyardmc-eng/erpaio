@@ -68,10 +68,6 @@ export default function DashboardSidebar() {
 
   const sidebarContent = (
     <>
-      <Link href="/" style={{ marginBottom: 12, padding: 4, display: "block" }} aria-label="Ana sayfa">
-        <Logo size={24} variant="mark" />
-      </Link>
-
       <Link
         href="/dashboard/chat"
         title="Yeni Sohbet"

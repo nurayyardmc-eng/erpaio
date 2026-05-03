@@ -25,12 +25,12 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);over
 .topbar span:first-child{color:var(--text-light);font-weight:500}.topbar-sep{color:#333;margin:0 2px}
 
 /* NAV */
-nav{position:fixed;top:24px;left:0;right:0;z-index:1000;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(250,250,248,0.85);border-bottom:1px solid var(--border);transition:all .4s ease}
+nav{position:fixed;top:24px;left:0;right:0;z-index:1000;padding:10px 32px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(250,250,248,0.85);border-bottom:1px solid var(--border);transition:all .4s ease}
 .nav-logo{height:20px}.nav-links{display:flex;gap:36px;align-items:center}
 .nav-links a{font-size:14px;font-weight:400;color:var(--text-secondary);text-decoration:none;letter-spacing:.5px;transition:color .3s}.nav-links a:hover{color:var(--text)}
 
 /* HERO */
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:160px 24px 100px}
+.hero{min-height:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 24px 60px}
 .hero-logo{height:80px;margin-bottom:48px;animation:fadeIn 1s ease both}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border:1px solid var(--border);border-radius:100px;font-size:12px;font-weight:400;color:var(--text-secondary);margin-bottom:40px;animation:fadeSlideUp .8s ease .1s both;letter-spacing:1px;text-transform:uppercase}
 .hero-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--text);animation:pulse 2.5s infinite}
@@ -271,7 +271,7 @@ footer{background:var(--bg-dark);border-top:1px solid rgba(255,255,255,.06);padd
 
 <!-- HERO -->
 <section class="hero dot-grid">
-  <img class="hero-logo logo-anim" src="/logo.svg" alt="ERPAIO" style="height:clamp(280px,55vh,520px);width:auto;max-width:90%;margin:0 auto 24px;display:block" />
+  <img class="hero-logo logo-anim" src="/logo.svg" alt="ERPAIO" style="height:clamp(220px,40vh,380px);width:auto;max-width:90%;margin:0 auto 4px;display:block" />
   
   <div class="hero-badge"><span class="dot"></span> Self-Improving AI System</div>
   <h1>A self-improving<br><em>AI system</em> for your ERP.</h1>
@@ -508,7 +508,7 @@ footer{background:var(--bg-dark);border-top:1px solid rgba(255,255,255,.06);padd
 <footer>
   <div class="footer-inner">
     <div>
-      <img class="footer-brand-logo" src="/logo.svg" alt="ERPAIO" style="height:56px;width:auto;filter:invert(1) brightness(2);opacity:0.9" />
+      <img class="footer-brand-logo" src="/logo.svg" alt="ERPAIO" style="height:80px;width:auto;filter:invert(1) brightness(2);opacity:0.9" />
       <p class="footer-tagline">A self-improving system that understands, notifies, and acts.</p>
     </div>
     <div class="footer-links">

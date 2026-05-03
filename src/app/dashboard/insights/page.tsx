@@ -69,7 +69,7 @@ export default function InsightsPage() {
             ))}
           </Section>
 
-          <Section title={`Profile Dışı Tablo / Kolon (${data.customItems.length})`} desc="Müşteri-özgü olabilir. Annotation'larla açıklama ekleyin → Claude doğru kullanır.">
+          <Section title={`Profile Dışı Tablo / Kolon (${data.customItems.length})`} desc="Müşteri-özgü olabilir. Annotation'larla açıklama ekleyin → ERPAIO doğru kullanır.">
             {data.customItems.length === 0 && (
               <div style={{ color: "#94A3B8", fontSize: 12 }}>Tüm tablolar/kolonlar profile ile eşleşiyor.</div>
             )}

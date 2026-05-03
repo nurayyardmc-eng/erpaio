@@ -1,6 +1,8 @@
 "use client";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import UserMenu from "@/components/UserMenu";
+import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
 const TITLES: Record<string, string> = {
@@ -45,14 +47,20 @@ export default function DashboardHeader({ email, name }: Props) {
       top: 0,
       zIndex: 10,
     }}>
-      <div style={{
-        fontFamily: "var(--font-playfair), Georgia, serif",
-        fontSize: 20,
-        fontWeight: 400,
-        color: colors.text,
-        letterSpacing: -0.5,
-      }}>
-        {title}
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <Link href="/" aria-label="Ana sayfa" style={{ display: "flex", alignItems: "center" }}>
+          <Logo size={36} />
+        </Link>
+        <div style={{ width: 1, height: 24, background: "rgba(10,10,10,0.08)" }} />
+        <div style={{
+          fontFamily: "var(--font-playfair), Georgia, serif",
+          fontSize: 20,
+          fontWeight: 400,
+          color: colors.text,
+          letterSpacing: -0.5,
+        }}>
+          {title}
+        </div>
       </div>
       <UserMenu email={email} name={name} />
     </header>

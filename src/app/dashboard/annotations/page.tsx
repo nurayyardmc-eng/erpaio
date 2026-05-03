@@ -79,7 +79,7 @@ export default function AnnotationsPage() {
       <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANNOTATIONS</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Şema Açıklamaları</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
-        Müşteri-özgü tablo/kolon açıklamaları ekleyin — Claude AI bu bilgilere
+        Müşteri-özgü tablo/kolon açıklamaları ekleyin — ERPAIO bu bilgilere
         profile'dan da, canlı şemadan da ÖNCELİKLE bakar. ERP&apos;niz kirli/özelleşmiş
         ise, &quot;trFatura aslında bizde sadece Online satışlar tutar&quot; gibi notlar
         hallucination&apos;u önler.
@@ -123,7 +123,7 @@ export default function AnnotationsPage() {
             checked={form.hidden}
             onChange={(e) => setForm({ ...form, hidden: e.target.checked })}
           />
-          <span>Bu tabloyu/kolonu Claude&apos;a gizle (kullanma)</span>
+          <span>Bu tabloyu/kolonu ERPAIO&apos;a gizle (kullanma)</span>
         </label>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
