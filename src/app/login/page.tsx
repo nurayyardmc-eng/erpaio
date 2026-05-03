@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { Mail, Lock, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -67,26 +68,32 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
             <label style={labelStyle}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
-              autoComplete="email"
-              required
-            />
+            <div style={{ position: "relative" }}>
+              <Mail size={16} style={iconStyle} />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ ...inputStyle, paddingLeft: 42 }}
+                autoComplete="email"
+                required
+              />
+            </div>
           </div>
 
           <div style={{ marginBottom: 8 }}>
             <label style={labelStyle}>Şifre</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
-              autoComplete="current-password"
-              required
-            />
+            <div style={{ position: "relative" }}>
+              <Lock size={16} style={iconStyle} />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ ...inputStyle, paddingLeft: 42 }}
+                autoComplete="current-password"
+                required
+              />
+            </div>
           </div>
 
           <div style={{ marginBottom: 20, fontSize: 13, textAlign: "right" }}>
@@ -100,11 +107,15 @@ export default function LoginPage() {
               background: colors.errorSoft,
               color: colors.error,
               padding: "10px 12px",
-              borderRadius: 8,
+              borderRadius: 10,
               fontSize: 13,
               marginBottom: 16,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontWeight: 500,
             }}>
-              {error}
+              <AlertCircle size={16} /> {error}
             </div>
           )}
 
@@ -153,4 +164,13 @@ const inputStyle: React.CSSProperties = {
   outline: "none",
   boxSizing: "border-box",
   transition: "border-color 0.15s",
+};
+
+const iconStyle: React.CSSProperties = {
+  position: "absolute",
+  left: 14,
+  top: "50%",
+  transform: "translateY(-50%)",
+  color: colors.textMuted,
+  pointerEvents: "none",
 };

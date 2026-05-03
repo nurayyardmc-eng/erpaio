@@ -1,6 +1,10 @@
 "use client";
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import Link from "next/link";
+import { AlertOctagon, RefreshCw, Home } from "lucide-react";
+import Logo from "@/components/Logo";
+import { colors } from "@/lib/theme";
 
 export default function ErrorPage({
   error,
@@ -16,41 +20,88 @@ export default function ErrorPage({
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#F9FAFB",
-      color: "#0F172A",
-      fontFamily: "inherit",
+      background: colors.bg,
+      color: colors.text,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      gap: 16,
+      gap: 20,
       padding: 40,
+      textAlign: "center",
     }}>
-      <div style={{ color: "#EF4444", fontSize: 10, letterSpacing: 3 }}>HATA</div>
-      <h1 style={{ fontSize: 22, margin: 0 }}>Bir şeyler ters gitti</h1>
-      <p style={{ color: "#94A3B8", fontSize: 12, textAlign: "center", maxWidth: 480 }}>
-        Beklenmedik bir hata oluştu. Sentry'ye iletildi, geliştirme ekibi inceleyecek.
+      <Logo size={36} variant="mark" />
+      <div style={{
+        width: 64,
+        height: 64,
+        background: "#FEE2E2",
+        borderRadius: 16,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: 8,
+      }}>
+        <AlertOctagon size={28} color="#EF4444" />
+      </div>
+      <h1 style={{
+        fontFamily: "var(--font-playfair), Georgia, serif",
+        fontSize: 28,
+        fontWeight: 400,
+        letterSpacing: -1,
+        margin: 0,
+        color: colors.text,
+      }}>
+        Bir şeyler ters gitti
+      </h1>
+      <p style={{ color: colors.textMuted, fontSize: 15, maxWidth: 480, lineHeight: 1.6, margin: 0 }}>
+        Beklenmedik bir hata oluştu. Geliştirme ekibimiz bilgilendirildi.
       </p>
       {error.digest && (
-        <code style={{ color: "#94A3B8", fontSize: 10, background: "#FFFFFF", padding: "4px 10px", borderRadius: 4 }}>
-          ID: {error.digest}
+        <code style={{
+          color: colors.textMuted,
+          fontSize: 12,
+          background: colors.bgSubtle,
+          padding: "6px 12px",
+          borderRadius: 6,
+          fontFamily: "ui-monospace, Menlo, Monaco, monospace",
+        }}>
+          Hata ID: {error.digest}
         </code>
       )}
-      <button
-        onClick={reset}
-        style={{
-          background: "#0A0A0A18",
-          border: "1px solid #0A0A0A40",
-          borderRadius: 6,
-          padding: "10px 20px",
-          color: "#0A0A0A",
-          fontSize: 12,
-          cursor: "pointer",
-          fontFamily: "inherit",
-        }}
-      >
-        Tekrar dene
-      </button>
+      <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
+        <button
+          onClick={reset}
+          style={{
+            background: colors.text,
+            color: colors.bg,
+            border: "none",
+            padding: "12px 24px",
+            borderRadius: 100,
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <RefreshCw size={16} /> Tekrar dene
+        </button>
+        <Link href="/" style={{
+          background: colors.bg,
+          color: colors.text,
+          border: `1px solid ${colors.borderStrong}`,
+          padding: "12px 24px",
+          borderRadius: 100,
+          fontSize: 14,
+          fontWeight: 500,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+        }}>
+          <Home size={16} /> Ana sayfa
+        </Link>
+      </div>
     </div>
   );
 }

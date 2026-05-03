@@ -1,35 +1,76 @@
 import Link from "next/link";
+import { ArrowLeft, Home } from "lucide-react";
+import Logo from "@/components/Logo";
+import { colors } from "@/lib/theme";
 
 export default function NotFound() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#F9FAFB",
-      color: "#0F172A",
-      fontFamily: "inherit",
+      background: colors.bg,
+      color: colors.text,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      gap: 16,
+      gap: 20,
       padding: 40,
+      textAlign: "center",
     }}>
-      <div style={{ color: "#EF4444", fontSize: 10, letterSpacing: 3 }}>404</div>
-      <h1 style={{ fontSize: 24, margin: 0 }}>Sayfa bulunamadı</h1>
-      <p style={{ color: "#94A3B8", fontSize: 12, textAlign: "center", maxWidth: 400 }}>
-        Aradığınız sayfa taşınmış veya hiç var olmamış olabilir.
-      </p>
-      <Link href="/dashboard" style={{
-        background: "#0A0A0A18",
-        border: "1px solid #0A0A0A40",
-        borderRadius: 6,
-        padding: "10px 20px",
-        color: "#0A0A0A",
-        fontSize: 12,
-        textDecoration: "none",
+      <Logo size={36} variant="mark" />
+      <div style={{
+        fontFamily: "var(--font-playfair), Georgia, serif",
+        fontSize: "clamp(80px, 16vw, 160px)",
+        fontWeight: 400,
+        letterSpacing: -4,
+        lineHeight: 1,
+        color: colors.text,
+        margin: "12px 0",
       }}>
-        ← Dashboard
-      </Link>
+        404
+      </div>
+      <h1 style={{
+        fontFamily: "var(--font-playfair), Georgia, serif",
+        fontSize: 28,
+        fontWeight: 400,
+        letterSpacing: -1,
+        margin: 0,
+        color: colors.text,
+      }}>
+        Sayfa bulunamadı
+      </h1>
+      <p style={{ color: colors.textMuted, fontSize: 15, maxWidth: 420, lineHeight: 1.6, margin: 0 }}>
+        Aradığınız sayfa taşınmış veya silinmiş olabilir.
+      </p>
+      <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
+        <Link href="/" style={{
+          background: colors.text,
+          color: colors.bg,
+          padding: "12px 24px",
+          borderRadius: 100,
+          fontSize: 14,
+          fontWeight: 500,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+        }}>
+          <Home size={16} /> Ana sayfa
+        </Link>
+        <Link href="/dashboard" style={{
+          background: colors.bg,
+          color: colors.text,
+          border: `1px solid ${colors.borderStrong}`,
+          padding: "12px 24px",
+          borderRadius: 100,
+          fontSize: 14,
+          fontWeight: 500,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+        }}>
+          <ArrowLeft size={16} /> Dashboard
+        </Link>
+      </div>
     </div>
   );
 }
