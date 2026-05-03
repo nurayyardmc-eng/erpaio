@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
-  high: "#FF9500",
-  medium: "#FFD740",
-  low: "#00E5FF",
+  high: "#F59E0B",
+  medium: "#F59E0B",
+  low: "#1A2B47",
 };
 
 export default function AlertsPage() {
@@ -28,21 +28,21 @@ export default function AlertsPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", fontFamily: "monospace", color: "#E8EDF5", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", fontFamily: "inherit", color: "#0F172A", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>Bildirimler</h1>
 
-      {loading && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
+      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
       {!loading && alerts.length === 0 && (
-        <div style={{ color: "#3A4558", fontSize: 13 }}>✅ Aktif bildirim yok.</div>
+        <div style={{ color: "#94A3B8", fontSize: 13 }}>✅ Aktif bildirim yok.</div>
       )}
 
       {alerts.map((alert) => (
         <div key={alert.id} style={{
-          background: "#0C1018",
-          border: `1px solid ${SEVERITY_COLOR[alert.severity] ?? "#131A26"}30`,
-          borderLeft: `3px solid ${SEVERITY_COLOR[alert.severity] ?? "#131A26"}`,
+          background: "#FFFFFF",
+          border: `1px solid ${SEVERITY_COLOR[alert.severity] ?? "#E5E7EB"}30`,
+          borderLeft: `3px solid ${SEVERITY_COLOR[alert.severity] ?? "#E5E7EB"}`,
           borderRadius: 8,
           padding: 16,
           marginBottom: 10,
@@ -55,30 +55,30 @@ export default function AlertsPage() {
               <span style={{ fontSize: 9, color: SEVERITY_COLOR[alert.severity], background: `${SEVERITY_COLOR[alert.severity]}20`, padding: "2px 6px", borderRadius: 3, letterSpacing: 1 }}>
                 {alert.severity.toUpperCase()}
               </span>
-              <span style={{ fontSize: 9, color: "#3A4558" }}>{alert.module ?? "general"}</span>
+              <span style={{ fontSize: 9, color: "#94A3B8" }}>{alert.module ?? "general"}</span>
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{alert.title}</div>
-            {alert.description && <div style={{ fontSize: 11, color: "#9AA5B4" }}>{alert.description}</div>}
-            <div style={{ fontSize: 10, color: "#3A4558", marginTop: 6 }}>{new Date(alert.createdAt).toLocaleString("tr-TR")}</div>
+            {alert.description && <div style={{ fontSize: 11, color: "#475569" }}>{alert.description}</div>}
+            <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 6 }}>{new Date(alert.createdAt).toLocaleString("tr-TR")}</div>
           </div>
 
           {alert.status === "open" && (
             <button
               onClick={() => acknowledge(alert.id)}
-              style={{ background: "#131A26", border: "1px solid #1E2A3E", borderRadius: 6, padding: "6px 12px", color: "#9AA5B4", fontSize: 10, cursor: "pointer", fontFamily: "monospace", flexShrink: 0 }}
+              style={{ background: "#E5E7EB", border: "1px solid #D1D5DB", borderRadius: 6, padding: "6px 12px", color: "#475569", fontSize: 10, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
             >
               Okundu
             </button>
           )}
           {alert.status === "acknowledged" && (
-            <span style={{ fontSize: 10, color: "#3A4558" }}>✓ okundu</span>
+            <span style={{ fontSize: 10, color: "#94A3B8" }}>✓ okundu</span>
           )}
         </div>
       ))}
 
       {/* Test butonu */}
-      <div style={{ marginTop: 32, borderTop: "1px solid #131A26", paddingTop: 24 }}>
-        <div style={{ fontSize: 11, color: "#3A4558", marginBottom: 12 }}>Test bildirimi gönder:</div>
+      <div style={{ marginTop: 32, borderTop: "1px solid #E5E7EB", paddingTop: 24 }}>
+        <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 12 }}>Test bildirimi gönder:</div>
         <button
           onClick={async () => {
             await fetch("/api/alerts", {
@@ -95,7 +95,7 @@ export default function AlertsPage() {
             const updated = await fetch("/api/alerts").then((r) => r.json());
             setAlerts(updated);
           }}
-          style={{ background: "#FF950018", border: "1px solid #FF950040", borderRadius: 6, padding: "10px 20px", color: "#FF9500", fontSize: 12, cursor: "pointer", fontFamily: "monospace" }}
+          style={{ background: "#F59E0B18", border: "1px solid #F59E0B40", borderRadius: 6, padding: "10px 20px", color: "#F59E0B", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
         >
           🔔 Test Bildirimi Gönder
         </button>

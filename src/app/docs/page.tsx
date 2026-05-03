@@ -50,55 +50,55 @@ const sections = [
 
 export default function DocsPage() {
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace" }}>
-      <header style={{ padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #131A26" }}>
-        <Link href="/" style={{ color: "#00E5FF", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
-        <Link href="/login" style={{ color: "#9AA5B4", fontSize: 12, textDecoration: "none" }}>Giriş</Link>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit" }}>
+      <header style={{ padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #E5E7EB" }}>
+        <Link href="/" style={{ color: "#1A2B47", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
+        <Link href="/login" style={{ color: "#475569", fontSize: 12, textDecoration: "none" }}>Giriş</Link>
       </header>
 
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "60px 32px" }}>
         <h1 style={{ fontSize: 28, margin: "0 0 12px" }}>Dokümantasyon</h1>
-        <p style={{ color: "#9AA5B4", fontSize: 14, marginBottom: 40 }}>
+        <p style={{ color: "#475569", fontSize: 14, marginBottom: 40 }}>
           ERPAIO&apos;yu nasıl kuracağınız ve kullanacağınızla ilgili rehberler.
-          Belge eksikse: <a href="mailto:support@erpaio.com" style={{ color: "#00E5FF" }}>support@erpaio.com</a>
+          Belge eksikse: <a href="mailto:support@erpaio.com" style={{ color: "#1A2B47" }}>support@erpaio.com</a>
         </p>
 
         {sections.map((s) => (
           <section key={s.title} style={{ marginBottom: 36 }}>
-            <h2 style={{ fontSize: 14, color: "#00E5FF", marginBottom: 16 }}>{s.title}</h2>
+            <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 16 }}>{s.title}</h2>
             <div style={{ display: "grid", gap: 8 }}>
               {s.items.map((it) => (
                 <a
                   key={it.title}
                   href={it.href ?? "#"}
                   style={{
-                    background: "#0C1018",
-                    border: "1px solid #131A26",
+                    background: "#FFFFFF",
+                    border: "1px solid #E5E7EB",
                     borderRadius: 8,
                     padding: 14,
                     textDecoration: "none",
                     display: "block",
                   }}
                 >
-                  <div style={{ color: "#E8EDF5", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+                  <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
                     {it.title}
                   </div>
-                  <div style={{ color: "#9AA5B4", fontSize: 11 }}>{it.desc}</div>
+                  <div style={{ color: "#475569", fontSize: 11 }}>{it.desc}</div>
                 </a>
               ))}
             </div>
           </section>
         ))}
 
-        <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, padding: 20, marginTop: 40, fontSize: 12, color: "#9AA5B4", lineHeight: 1.7 }}>
-          <strong style={{ color: "#00E5FF" }}>Pilot kullanıcısıysanız:</strong> Onboarding sürecinde Customer Success ekibimizle 1-2 saatlik kurulum görüşmesi yapacağız. Anlam çıkmayan tablolar için annotation girişi, anomaly threshold tuning, custom rapor talep edebilirsiniz.
+        <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 20, marginTop: 40, fontSize: 12, color: "#475569", lineHeight: 1.7 }}>
+          <strong style={{ color: "#1A2B47" }}>Pilot kullanıcısıysanız:</strong> Onboarding sürecinde Customer Success ekibimizle 1-2 saatlik kurulum görüşmesi yapacağız. Anlam çıkmayan tablolar için annotation girişi, anomaly threshold tuning, custom rapor talep edebilirsiniz.
         </div>
       </main>
 
-      <footer style={{ padding: "24px 32px", borderTop: "1px solid #131A26", textAlign: "center", fontSize: 11, color: "#3A4558" }}>
-        <Link href="/privacy" style={{ color: "#3A4558", textDecoration: "none", marginRight: 16 }}>Gizlilik</Link>
-        <Link href="/terms" style={{ color: "#3A4558", textDecoration: "none", marginRight: 16 }}>Koşullar</Link>
-        <Link href="/pricing" style={{ color: "#3A4558", textDecoration: "none" }}>Fiyatlar</Link>
+      <footer style={{ padding: "24px 32px", borderTop: "1px solid #E5E7EB", textAlign: "center", fontSize: 11, color: "#94A3B8" }}>
+        <Link href="/privacy" style={{ color: "#94A3B8", textDecoration: "none", marginRight: 16 }}>Gizlilik</Link>
+        <Link href="/terms" style={{ color: "#94A3B8", textDecoration: "none", marginRight: 16 }}>Koşullar</Link>
+        <Link href="/pricing" style={{ color: "#94A3B8", textDecoration: "none" }}>Fiyatlar</Link>
       </footer>
     </div>
   );

@@ -84,10 +84,10 @@ export default function ScheduledReportsPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · RAPOR</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · RAPOR</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Planlı Raporlar</h1>
-      <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
+      <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Belirli bir soruyu seçtiğin sıklıkta çalıştırıp emailine gönderir. Soru
         önce chat'te sorulmuş ve cache'lenmiş olmalı.
       </p>
@@ -114,23 +114,23 @@ export default function ScheduledReportsPage() {
           <input required type="email" value={form.emailTo} onChange={(e) => setForm({ ...form, emailTo: e.target.value })} style={input} />
         </Field>
         <button type="submit" disabled={saving} style={btnPrimary}>{saving ? "..." : "Planla"}</button>
-        {status && <span style={{ marginLeft: 12, color: status.kind === "ok" ? "#69FF47" : "#FF6B6B", fontSize: 11 }}>{status.msg}</span>}
+        {status && <span style={{ marginLeft: 12, color: status.kind === "ok" ? "#10B981" : "#EF4444", fontSize: 11 }}>{status.msg}</span>}
       </form>
 
-      <h2 style={{ ...sectionTitle, color: "#3A4558", marginBottom: 12 }}>Mevcut Raporlar ({reports.length})</h2>
-      {loading && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
-      {!loading && reports.length === 0 && <div style={{ color: "#3A4558", fontSize: 12 }}>Henüz rapor yok.</div>}
+      <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>Mevcut Raporlar ({reports.length})</h2>
+      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
+      {!loading && reports.length === 0 && <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz rapor yok.</div>}
       {reports.map((r) => (
         <div key={r.id} style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ color: "#E8EDF5", fontSize: 13, fontWeight: 600 }}>{r.name}</div>
-              <div style={{ color: "#9AA5B4", fontSize: 11, marginTop: 4 }}>{r.question}</div>
-              <div style={{ marginTop: 6, fontSize: 10, color: "#3A4558" }}>
+              <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600 }}>{r.name}</div>
+              <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{r.question}</div>
+              <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
                 {SCHEDULES[r.schedule] ?? r.schedule} · {r.emailTo}
                 {r.lastRunAt && <> · son: {new Date(r.lastRunAt).toLocaleString("tr-TR")}</>}
               </div>
-              {r.lastError && <div style={{ color: "#FF6B6B", fontSize: 10, marginTop: 4 }}>⚠ {r.lastError}</div>}
+              {r.lastError && <div style={{ color: "#EF4444", fontSize: 10, marginTop: 4 }}>⚠ {r.lastError}</div>}
             </div>
             <button onClick={() => remove(r.id)} style={btnDanger}>Sil</button>
           </div>
@@ -143,14 +143,14 @@ export default function ScheduledReportsPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 10 }}>
-      <label style={{ color: "#3A4558", fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 }}>{label}</label>
+      <label style={{ color: "#94A3B8", fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 }}>{label}</label>
       {children}
     </div>
   );
 }
 
-const card: React.CSSProperties = { background: "#0C1018", border: "1px solid #131A26", borderRadius: 10, padding: 18, marginBottom: 12, maxWidth: 700 };
-const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#00E5FF", marginBottom: 14, fontWeight: 600 };
-const input: React.CSSProperties = { width: "100%", background: "#07090F", border: "1px solid #131A26", borderRadius: 6, padding: "8px 10px", color: "#E8EDF5", fontSize: 12, fontFamily: "monospace", boxSizing: "border-box", outline: "none" };
-const btnPrimary: React.CSSProperties = { background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 6, padding: "8px 16px", color: "#00E5FF", fontSize: 12, cursor: "pointer", fontFamily: "monospace" };
-const btnDanger: React.CSSProperties = { background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)", borderRadius: 4, padding: "4px 10px", color: "#FF6B6B", fontSize: 10, cursor: "pointer", fontFamily: "monospace" };
+const card: React.CSSProperties = { background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 18, marginBottom: 12, maxWidth: 700 };
+const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#1A2B47", marginBottom: 14, fontWeight: 600 };
+const input: React.CSSProperties = { width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6, padding: "8px 10px", color: "#0F172A", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", outline: "none" };
+const btnPrimary: React.CSSProperties = { background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6, padding: "8px 16px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit" };
+const btnDanger: React.CSSProperties = { background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)", borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit" };

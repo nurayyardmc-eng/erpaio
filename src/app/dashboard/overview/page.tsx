@@ -34,15 +34,15 @@ export default function OverviewPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · OVERVIEW</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · OVERVIEW</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Anlık Metrikler</h1>
-      <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 24 }}>
+      <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24 }}>
         Pre-computed — saatlik/günlük cron snapshotlarından, sıfır bekleme.
         {data && ` Son güncelleme: ${new Date(data.generatedAt).toLocaleString("tr-TR")}`}
       </p>
 
-      {loading && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
+      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
       {!loading && data && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
@@ -53,9 +53,9 @@ export default function OverviewPage() {
       )}
 
       {!loading && data && data.metrics.every((m) => m.latest === null) && (
-        <div style={{ marginTop: 40, padding: 20, background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, color: "#9AA5B4", fontSize: 12 }}>
+        <div style={{ marginTop: 40, padding: 20, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, color: "#475569", fontSize: 12 }}>
           Henüz metrik snapshot yok. Cron job'u beklerken (saatlik 0:00, günlük 06:00) veya{" "}
-          <code style={{ color: "#00E5FF" }}>/api/cron/anomaly-detection</code> manuel tetiklenebilir.
+          <code style={{ color: "#1A2B47" }}>/api/cron/anomaly-detection</code> manuel tetiklenebilir.
         </div>
       )}
     </div>
@@ -66,12 +66,12 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   const hasData = metric.latest !== null;
   const change = metric.changePercent;
   const changeColor =
-    change === null ? "#3A4558" : change > 0 ? "#69FF47" : change < 0 ? "#FF6B6B" : "#9AA5B4";
+    change === null ? "#94A3B8" : change > 0 ? "#10B981" : change < 0 ? "#EF4444" : "#475569";
 
   return (
     <div style={{
-      background: "#0C1018",
-      border: "1px solid #131A26",
+      background: "#FFFFFF",
+      border: "1px solid #E5E7EB",
       borderRadius: 10,
       padding: 18,
       display: "flex",
@@ -79,17 +79,17 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
       gap: 10,
     }}>
       <div>
-        <div style={{ fontSize: 9, color: "#3A4558", letterSpacing: 2, marginBottom: 4 }}>
+        <div style={{ fontSize: 9, color: "#94A3B8", letterSpacing: 2, marginBottom: 4 }}>
           {metric.schedule === "hourly" ? "SAATLİK" : "GÜNLÜK"} · {metric.sampleCount} snapshot
         </div>
-        <div style={{ fontSize: 12, color: "#E8EDF5", fontWeight: 600 }}>{metric.label}</div>
-        <div style={{ fontSize: 10, color: "#9AA5B4", marginTop: 2 }}>{metric.description}</div>
+        <div style={{ fontSize: 12, color: "#0F172A", fontWeight: 600 }}>{metric.label}</div>
+        <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>{metric.description}</div>
       </div>
 
       {hasData ? (
         <>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <div style={{ fontSize: 22, color: "#00E5FF", fontWeight: 700 }}>
+            <div style={{ fontSize: 22, color: "#1A2B47", fontWeight: 700 }}>
               {formatValue(metric.latest)}
             </div>
             {change !== null && (
@@ -102,13 +102,13 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
           {metric.sparkline.length > 1 && <Sparkline values={metric.sparkline} />}
 
           {metric.latestAt && (
-            <div style={{ fontSize: 9, color: "#3A4558" }}>
+            <div style={{ fontSize: 9, color: "#94A3B8" }}>
               {new Date(metric.latestAt).toLocaleString("tr-TR")}
             </div>
           )}
         </>
       ) : (
-        <div style={{ fontSize: 11, color: "#3A4558" }}>Veri henüz yok</div>
+        <div style={{ fontSize: 11, color: "#94A3B8" }}>Veri henüz yok</div>
       )}
     </div>
   );
@@ -130,7 +130,7 @@ function Sparkline({ values }: { values: number[] }) {
     .join(" ");
   return (
     <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <polyline points={points} fill="none" stroke="#00E5FF" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      <polyline points={points} fill="none" stroke="#1A2B47" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

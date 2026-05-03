@@ -1,6 +1,8 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Logo from "@/components/Logo";
+import { colors } from "@/lib/theme";
 
 export default function ResetPasswordPage() {
   return (
@@ -12,7 +14,14 @@ export default function ResetPasswordPage() {
 
 function Loader() {
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#3A4558", fontFamily: "monospace", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{
+      minHeight: "100vh",
+      background: colors.bgSubtle,
+      color: colors.textMuted,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}>
       Yükleniyor...
     </div>
   );
@@ -62,17 +71,44 @@ function ResetPasswordInner() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "monospace", padding: 16 }}>
-      <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 40, width: 400 }}>
-        <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
-        <h1 style={{ color: "#E8EDF5", fontSize: 20, margin: "0 0 24px" }}>Yeni Şifre</h1>
+    <div style={{
+      minHeight: "100vh",
+      background: colors.bgSubtle,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    }}>
+      <div style={{
+        background: colors.card,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 16,
+        padding: 40,
+        width: 400,
+        boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.05)",
+      }}>
+        <div style={{ marginBottom: 28 }}>
+          <Logo size={32} />
+        </div>
+        <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
+          Yeni Şifre
+        </h1>
 
         {ok ? (
-          <p style={{ color: "#69FF47", fontSize: 13 }}>✓ Şifre değiştirildi. Login&apos;e yönlendiriliyorsun...</p>
+          <div style={{
+            background: colors.successSoft,
+            color: colors.success,
+            padding: "12px 14px",
+            borderRadius: 10,
+            fontSize: 14,
+            fontWeight: 500,
+          }}>
+            ✓ Şifre değiştirildi. Yönlendiriliyorsun...
+          </div>
         ) : (
           <form onSubmit={submit}>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ color: "#3A4558", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4 }}>YENİ ŞİFRE (8+ karakter)</label>
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Yeni Şifre (min 8 karakter)</label>
               <input
                 required type="password" minLength={8}
                 value={password}
@@ -81,7 +117,7 @@ function ResetPasswordInner() {
               />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ color: "#3A4558", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4 }}>TEKRAR</label>
+              <label style={labelStyle}>Tekrar</label>
               <input
                 required type="password" minLength={8}
                 value={confirm}
@@ -89,13 +125,28 @@ function ResetPasswordInner() {
                 style={inputStyle}
               />
             </div>
-            {error && <div style={{ color: "#FF6B6B", fontSize: 12, marginBottom: 12 }}>{error}</div>}
+            {error && (
+              <div style={{
+                background: colors.errorSoft,
+                color: colors.error,
+                padding: "10px 12px",
+                borderRadius: 8,
+                fontSize: 13,
+                marginBottom: 12,
+              }}>{error}</div>
+            )}
             <button
               type="submit"
               disabled={loading || !token}
               style={{
-                width: "100%", background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 6,
-                padding: 12, color: "#00E5FF", fontSize: 13, cursor: "pointer", fontFamily: "monospace",
+                width: "100%",
+                background: colors.brand,
+                border: "none",
+                borderRadius: 10,
+                padding: 12,
+                color: colors.textInverse,
+                fontSize: 14,
+                fontWeight: 600,
               }}
             >
               {loading ? "Kaydediliyor..." : "Şifreyi Değiştir"}
@@ -107,8 +158,22 @@ function ResetPasswordInner() {
   );
 }
 
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: 13,
+  fontWeight: 500,
+  color: colors.text,
+  marginBottom: 6,
+};
+
 const inputStyle: React.CSSProperties = {
-  width: "100%", background: "#07090F", border: "1px solid #131A26", borderRadius: 6,
-  padding: "10px 12px", color: "#E8EDF5", fontSize: 13, fontFamily: "monospace",
-  boxSizing: "border-box", outline: "none",
+  width: "100%",
+  background: colors.bg,
+  border: `1px solid ${colors.border}`,
+  borderRadius: 10,
+  padding: "10px 14px",
+  color: colors.text,
+  fontSize: 14,
+  outline: "none",
+  boxSizing: "border-box",
 };

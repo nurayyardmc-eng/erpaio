@@ -1,35 +1,49 @@
+import Logo from "@/components/Logo";
+import { colors } from "@/lib/theme";
+
 export const metadata = { title: "Bakım · ERPAIO" };
 
 export default function MaintenancePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#07090F",
-      color: "#E8EDF5",
-      fontFamily: "monospace",
+      background: colors.bgSubtle,
+      color: colors.text,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      gap: 16,
+      gap: 20,
       padding: 40,
       textAlign: "center",
     }}>
-      <div style={{ color: "#FF9500", fontSize: 10, letterSpacing: 3 }}>BAKIM</div>
-      <h1 style={{ fontSize: 28, margin: 0 }}>ERPAIO geçici olarak kapalı</h1>
-      <p style={{ color: "#9AA5B4", fontSize: 13, maxWidth: 480, lineHeight: 1.6 }}>
-        Sistemde planlı bakım yapıyoruz. En kısa sürede geri döneceğiz.
-        Acil durumlar için: <a href="mailto:support@erpaio.com" style={{ color: "#00E5FF" }}>support@erpaio.com</a>
+      <Logo size={36} />
+      <div style={{
+        background: colors.warningSoft,
+        color: colors.warning,
+        padding: "6px 14px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 600,
+        letterSpacing: 1,
+      }}>
+        BAKIM
+      </div>
+      <h1 style={{ fontSize: 32, margin: 0, fontWeight: 700, color: colors.text, letterSpacing: -0.5 }}>
+        ERPAIO geçici olarak kapalı
+      </h1>
+      <p style={{ color: colors.textMuted, fontSize: 15, maxWidth: 480, lineHeight: 1.7 }}>
+        Sistemde planlı bakım yapıyoruz. En kısa sürede geri döneceğiz.<br />
+        Acil durumlar: <a href="mailto:support@erpaio.com" style={{ color: colors.brand, fontWeight: 500 }}>support@erpaio.com</a>
       </p>
       <a href="https://erpaio.vercel.app/status" style={{
-        marginTop: 16,
-        background: "#00E5FF18",
-        border: "1px solid #00E5FF40",
-        padding: "10px 20px",
-        borderRadius: 8,
-        color: "#00E5FF",
-        textDecoration: "none",
-        fontSize: 12,
+        marginTop: 8,
+        background: colors.brand,
+        color: colors.textInverse,
+        padding: "12px 24px",
+        borderRadius: 10,
+        fontSize: 14,
+        fontWeight: 600,
       }}>
         Durum Sayfası →
       </a>

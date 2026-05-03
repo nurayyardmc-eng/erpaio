@@ -60,10 +60,10 @@ export default function AuditPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · AUDIT</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · AUDIT</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Aktivite Logu</h1>
-      <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
+      <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Tenant&apos;ınızda çalıştırılan tüm sohbet sorguları. KVKK gereği erişim hakkı.
       </p>
 
@@ -73,14 +73,14 @@ export default function AuditPage() {
             key={f}
             onClick={() => setFilter(f)}
             style={{
-              background: filter === f ? "#00E5FF18" : "transparent",
-              border: `1px solid ${filter === f ? "#00E5FF" : "#131A26"}`,
+              background: filter === f ? "#1A2B4718" : "transparent",
+              border: `1px solid ${filter === f ? "#1A2B47" : "#E5E7EB"}`,
               borderRadius: 6,
               padding: "6px 12px",
-              color: filter === f ? "#00E5FF" : "#9AA5B4",
+              color: filter === f ? "#1A2B47" : "#475569",
               fontSize: 11,
               cursor: "pointer",
-              fontFamily: "monospace",
+              fontFamily: "inherit",
             }}
           >
             {f === "all" ? "Hepsi" : f === "user" ? "Sorular" : f === "assistant" ? "SQL" : "Hatalar"}
@@ -91,46 +91,46 @@ export default function AuditPage() {
           onClick={exportCsv}
           disabled={messages.length === 0}
           style={{
-            background: "#0C1018",
-            border: "1px solid #131A26",
+            background: "#FFFFFF",
+            border: "1px solid #E5E7EB",
             borderRadius: 6,
             padding: "6px 12px",
-            color: "#9AA5B4",
+            color: "#475569",
             fontSize: 11,
             cursor: "pointer",
-            fontFamily: "monospace",
+            fontFamily: "inherit",
           }}
         >
           📥 CSV indir
         </button>
       </div>
 
-      {loading && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
+      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
       {!loading && messages.length === 0 && (
-        <div style={{ color: "#3A4558", fontSize: 12 }}>Kayıt yok.</div>
+        <div style={{ color: "#94A3B8", fontSize: 12 }}>Kayıt yok.</div>
       )}
 
       {messages.map((m) => (
         <div key={m.id} style={{
-          background: "#0C1018",
-          border: "1px solid #131A26",
-          borderLeft: `2px solid ${m.role === "user" ? "#00E5FF" : m.success ? "#69FF47" : "#FF6B6B"}`,
+          background: "#FFFFFF",
+          border: "1px solid #E5E7EB",
+          borderLeft: `2px solid ${m.role === "user" ? "#1A2B47" : m.success ? "#10B981" : "#EF4444"}`,
           borderRadius: 6,
           padding: 12,
           marginBottom: 6,
           fontSize: 11,
         }}>
-          <div style={{ display: "flex", gap: 8, color: "#3A4558", fontSize: 9, marginBottom: 6 }}>
+          <div style={{ display: "flex", gap: 8, color: "#94A3B8", fontSize: 9, marginBottom: 6 }}>
             <span>{new Date(m.createdAt).toLocaleString("tr-TR")}</span>
             <span>·</span>
-            <span style={{ color: "#9AA5B4" }}>{m.userEmail}</span>
+            <span style={{ color: "#475569" }}>{m.userEmail}</span>
             <span>·</span>
-            <span style={{ color: m.role === "user" ? "#00E5FF" : "#9C8AFF" }}>{m.role}</span>
+            <span style={{ color: m.role === "user" ? "#1A2B47" : "#9C8AFF" }}>{m.role}</span>
             {m.latencyMs !== null && <><span>·</span><span>{m.latencyMs}ms</span></>}
             {m.rowCount !== null && <><span>·</span><span>{m.rowCount} satır</span></>}
           </div>
-          <div style={{ color: m.role === "user" ? "#E8EDF5" : "#8EC8E8", whiteSpace: "pre-wrap", overflowWrap: "break-word" }}>
+          <div style={{ color: m.role === "user" ? "#0F172A" : "#8EC8E8", whiteSpace: "pre-wrap", overflowWrap: "break-word" }}>
             {m.content}
           </div>
         </div>

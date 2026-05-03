@@ -63,17 +63,17 @@ export default function SecurityPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · GÜVENLİK</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · GÜVENLİK</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>İki Faktörlü Doğrulama (MFA)</h1>
 
-      <div style={{ maxWidth: 520, background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 24 }}>
-        {meEnabled === null && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
+      <div style={{ maxWidth: 520, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
+        {meEnabled === null && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
         {meEnabled === true && !setup && (
           <>
-            <div style={{ fontSize: 13, color: "#69FF47", marginBottom: 12 }}>✓ MFA aktif</div>
-            <p style={{ color: "#9AA5B4", fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: "#10B981", marginBottom: 12 }}>✓ MFA aktif</div>
+            <p style={{ color: "#475569", fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
               Hesabın iki faktörlü doğrulama ile korunuyor. Her girişte authenticator&apos;dan 6 haneli kod istenir.
             </p>
             <button
@@ -88,8 +88,8 @@ export default function SecurityPage() {
 
         {meEnabled === false && !setup && (
           <>
-            <div style={{ fontSize: 13, color: "#FF9500", marginBottom: 12 }}>⚠ MFA aktif değil</div>
-            <p style={{ color: "#9AA5B4", fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: "#F59E0B", marginBottom: 12 }}>⚠ MFA aktif değil</div>
+            <p style={{ color: "#475569", fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
               Authenticator app (Google Authenticator, 1Password, Authy) kullanarak hesabını güçlendir.
               Pro plan ve üzeri için kullanılabilir.
             </p>
@@ -101,20 +101,20 @@ export default function SecurityPage() {
 
         {setup && (
           <div>
-            <div style={{ fontSize: 12, color: "#9AA5B4", marginBottom: 12 }}>
-              <strong style={{ color: "#E8EDF5" }}>1. Adım:</strong> Authenticator app&apos;inle bu QR kodu tara.
+            <div style={{ fontSize: 12, color: "#475569", marginBottom: 12 }}>
+              <strong style={{ color: "#0F172A" }}>1. Adım:</strong> Authenticator app&apos;inle bu QR kodu tara.
             </div>
             <img src={setup.qr} alt="QR" style={{ display: "block", margin: "12px auto", background: "#fff", padding: 8, borderRadius: 8 }} />
             <details style={{ marginBottom: 16 }}>
-              <summary style={{ color: "#3A4558", fontSize: 11, cursor: "pointer" }}>QR taranamıyorsa: manuel kod</summary>
-              <code style={{ display: "block", marginTop: 8, padding: 8, background: "#07090F", borderRadius: 4, fontSize: 11, color: "#00E5FF", wordBreak: "break-all" }}>
+              <summary style={{ color: "#94A3B8", fontSize: 11, cursor: "pointer" }}>QR taranamıyorsa: manuel kod</summary>
+              <code style={{ display: "block", marginTop: 8, padding: 8, background: "#F9FAFB", borderRadius: 4, fontSize: 11, color: "#1A2B47", wordBreak: "break-all" }}>
                 {setup.secret}
               </code>
             </details>
 
             <form onSubmit={verify}>
-              <div style={{ fontSize: 12, color: "#9AA5B4", marginBottom: 8 }}>
-                <strong style={{ color: "#E8EDF5" }}>2. Adım:</strong> App&apos;te görünen 6 haneli kodu gir.
+              <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
+                <strong style={{ color: "#0F172A" }}>2. Adım:</strong> App&apos;te görünen 6 haneli kodu gir.
               </div>
               <input
                 value={code}
@@ -124,9 +124,9 @@ export default function SecurityPage() {
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 style={{
-                  width: "100%", background: "#07090F", border: "1px solid #131A26",
-                  borderRadius: 6, padding: "10px 12px", color: "#E8EDF5",
-                  fontSize: 18, fontFamily: "monospace", textAlign: "center",
+                  width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB",
+                  borderRadius: 6, padding: "10px 12px", color: "#0F172A",
+                  fontSize: 18, fontFamily: "inherit", textAlign: "center",
                   letterSpacing: 6, boxSizing: "border-box", outline: "none",
                 }}
               />
@@ -142,7 +142,7 @@ export default function SecurityPage() {
         )}
 
         {status && (
-          <div style={{ marginTop: 16, color: status.kind === "ok" ? "#69FF47" : "#FF6B6B", fontSize: 12 }}>
+          <div style={{ marginTop: 16, color: status.kind === "ok" ? "#10B981" : "#EF4444", fontSize: 12 }}>
             {status.msg}
           </div>
         )}
@@ -152,14 +152,14 @@ export default function SecurityPage() {
 }
 
 const btnPrimary: React.CSSProperties = {
-  background: "#00E5FF18",
-  border: "1px solid #00E5FF40",
+  background: "#1A2B4718",
+  border: "1px solid #1A2B4740",
   borderRadius: 6,
   padding: "10px 20px",
-  color: "#00E5FF",
+  color: "#1A2B47",
   fontSize: 12,
   cursor: "pointer",
-  fontFamily: "monospace",
+  fontFamily: "inherit",
 };
 
 const btnDanger: React.CSSProperties = {
@@ -167,8 +167,8 @@ const btnDanger: React.CSSProperties = {
   border: "1px solid rgba(255,107,107,0.4)",
   borderRadius: 6,
   padding: "10px 20px",
-  color: "#FF6B6B",
+  color: "#EF4444",
   fontSize: 12,
   cursor: "pointer",
-  fontFamily: "monospace",
+  fontFamily: "inherit",
 };

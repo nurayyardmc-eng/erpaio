@@ -1,6 +1,8 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Logo from "@/components/Logo";
+import { colors } from "@/lib/theme";
 
 export default function VerifyEmailPage() {
   return (
@@ -11,7 +13,18 @@ export default function VerifyEmailPage() {
 }
 
 function Loader() {
-  return <div style={{ minHeight: "100vh", background: "#07090F", color: "#3A4558", fontFamily: "monospace", display: "flex", alignItems: "center", justifyContent: "center" }}>Yükleniyor...</div>;
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: colors.bgSubtle,
+      color: colors.textMuted,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}>
+      Yükleniyor...
+    </div>
+  );
 }
 
 function Inner() {
@@ -49,16 +62,43 @@ function Inner() {
       });
   }, [token, router]);
 
+  const stateColor = state === "ok" ? colors.success : state === "err" ? colors.error : colors.textMuted;
+
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "monospace", padding: 16 }}>
-      <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 40, width: 420, textAlign: "center" }}>
-        <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
-        <h1 style={{ color: "#E8EDF5", fontSize: 20, margin: "0 0 16px" }}>Email Doğrulama</h1>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>
+    <div style={{
+      minHeight: "100vh",
+      background: colors.bgSubtle,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    }}>
+      <div style={{
+        background: colors.card,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 16,
+        padding: 40,
+        width: 420,
+        textAlign: "center",
+        boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.05)",
+      }}>
+        <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
+          <Logo size={32} />
+        </div>
+        <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
+          Email Doğrulama
+        </h1>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>
           {state === "verifying" ? "⏳" : state === "ok" ? "✅" : "❌"}
         </div>
-        <p style={{ color: state === "ok" ? "#69FF47" : state === "err" ? "#FF6B6B" : "#9AA5B4", fontSize: 13 }}>{msg || "Kontrol ediliyor..."}</p>
-        {state === "ok" && <p style={{ color: "#3A4558", fontSize: 11, marginTop: 12 }}>Yönlendiriliyorsun...</p>}
+        <p style={{ color: stateColor, fontSize: 15, fontWeight: 500 }}>
+          {msg || "Kontrol ediliyor..."}
+        </p>
+        {state === "ok" && (
+          <p style={{ color: colors.textSubtle, fontSize: 13, marginTop: 16 }}>
+            Yönlendiriliyorsun...
+          </p>
+        )}
       </div>
     </div>
   );

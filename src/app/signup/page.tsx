@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
+import { colors } from "@/lib/theme";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -33,14 +35,34 @@ export default function SignupPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "monospace", padding: 16 }}>
-      <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 40, width: 400 }}>
-        <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
-        <h1 style={{ color: "#E8EDF5", fontSize: 20, margin: "0 0 8px" }}>Kayıt Ol</h1>
-        <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 24 }}>14 gün ücretsiz Pro deneme — kart bilgisi gerekmez.</p>
+    <div style={{
+      minHeight: "100vh",
+      background: colors.bgSubtle,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    }}>
+      <div style={{
+        background: colors.card,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 16,
+        padding: 40,
+        width: 440,
+        boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.05)",
+      }}>
+        <div style={{ marginBottom: 28 }}>
+          <Logo size={32} />
+        </div>
+        <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 8px", fontWeight: 700, letterSpacing: -0.5 }}>
+          Hesap Oluştur
+        </h1>
+        <p style={{ color: colors.textMuted, fontSize: 14, marginBottom: 28 }}>
+          14 gün ücretsiz Pro deneme — kart bilgisi gerekmez.
+        </p>
 
         <form onSubmit={submit}>
-          <Field label="ŞİRKET ADI">
+          <Field label="Şirket Adı">
             <input
               required
               value={form.tenantName}
@@ -50,7 +72,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="ADIN">
+          <Field label="Adın">
             <input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -59,7 +81,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="EMAIL">
+          <Field label="Email">
             <input
               required type="email"
               autoComplete="email"
@@ -69,7 +91,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="ŞİFRE (en az 8 karakter)">
+          <Field label="Şifre (min 8 karakter)">
             <input
               required type="password"
               autoComplete="new-password"
@@ -80,34 +102,44 @@ export default function SignupPage() {
             />
           </Field>
 
-          {error && <div style={{ color: "#FF6B6B", fontSize: 12, marginBottom: 12 }}>{error}</div>}
+          {error && (
+            <div style={{
+              background: colors.errorSoft,
+              color: colors.error,
+              padding: "10px 12px",
+              borderRadius: 8,
+              fontSize: 13,
+              marginBottom: 12,
+            }}>
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             style={{
               width: "100%",
-              background: "#00E5FF18",
-              border: "1px solid #00E5FF40",
-              borderRadius: 6,
+              background: colors.brand,
+              border: "none",
+              borderRadius: 10,
               padding: 12,
-              color: "#00E5FF",
-              fontSize: 13,
-              cursor: loading ? "not-allowed" : "pointer",
-              fontFamily: "monospace",
+              color: colors.textInverse,
+              fontSize: 14,
+              fontWeight: 600,
               marginTop: 8,
             }}
           >
-            {loading ? "Kayıt yapılıyor..." : "Kayıt Ol →"}
+            {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
           </button>
         </form>
 
-        <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#3A4558" }}>
-          Hesabın var mı? <Link href="/login" style={{ color: "#00E5FF", textDecoration: "none" }}>Giriş Yap</Link>
+        <div style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: colors.textMuted }}>
+          Hesabın var mı? <Link href="/login" style={{ color: colors.brand, fontWeight: 600 }}>Giriş Yap</Link>
         </div>
-        <div style={{ marginTop: 12, textAlign: "center", fontSize: 9, color: "#3A4558" }}>
-          Devam ederek <Link href="/terms" style={{ color: "#3A4558" }}>Kullanım Koşulları</Link> ve{" "}
-          <Link href="/privacy" style={{ color: "#3A4558" }}>Gizlilik Politikası</Link>&apos;nı kabul edersiniz.
+        <div style={{ marginTop: 16, textAlign: "center", fontSize: 11, color: colors.textSubtle, lineHeight: 1.6 }}>
+          Devam ederek <Link href="/terms" style={{ color: colors.textMuted }}>Kullanım Koşulları</Link> ve{" "}
+          <Link href="/privacy" style={{ color: colors.textMuted }}>Gizlilik Politikası</Link>&apos;nı kabul edersiniz.
         </div>
       </div>
     </div>
@@ -116,8 +148,14 @@ export default function SignupPage() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 12 }}>
-      <label style={{ color: "#3A4558", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4 }}>{label}</label>
+    <div style={{ marginBottom: 14 }}>
+      <label style={{
+        display: "block",
+        fontSize: 13,
+        fontWeight: 500,
+        color: colors.text,
+        marginBottom: 6,
+      }}>{label}</label>
       {children}
     </div>
   );
@@ -125,13 +163,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "#07090F",
-  border: "1px solid #131A26",
-  borderRadius: 6,
-  padding: "10px 12px",
-  color: "#E8EDF5",
-  fontSize: 13,
-  fontFamily: "monospace",
-  boxSizing: "border-box",
+  background: colors.bg,
+  border: `1px solid ${colors.border}`,
+  borderRadius: 10,
+  padding: "10px 14px",
+  color: colors.text,
+  fontSize: 14,
   outline: "none",
+  boxSizing: "border-box",
 };

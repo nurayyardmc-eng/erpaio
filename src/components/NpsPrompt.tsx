@@ -50,24 +50,24 @@ export default function NpsPrompt() {
       position: "fixed",
       bottom: 24,
       right: 24,
-      background: "#0C1018",
-      border: "1px solid #00E5FF40",
+      background: "#FFFFFF",
+      border: "1px solid #1A2B4740",
       borderRadius: 12,
       padding: 20,
       width: 320,
       boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-      fontFamily: "monospace",
+      fontFamily: "inherit",
       zIndex: 1000,
     }}>
       {submitted ? (
-        <div style={{ color: "#69FF47", fontSize: 13, textAlign: "center" }}>✓ Teşekkürler!</div>
+        <div style={{ color: "#10B981", fontSize: 13, textAlign: "center" }}>✓ Teşekkürler!</div>
       ) : (
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ color: "#00E5FF", fontSize: 9, letterSpacing: 2 }}>HIZLI ANKET</div>
-            <button onClick={dismiss} style={{ background: "none", border: "none", color: "#3A4558", cursor: "pointer", fontSize: 14 }}>×</button>
+            <div style={{ color: "#1A2B47", fontSize: 9, letterSpacing: 2 }}>HIZLI ANKET</div>
+            <button onClick={dismiss} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>×</button>
           </div>
-          <p style={{ color: "#E8EDF5", fontSize: 12, lineHeight: 1.5, margin: "0 0 12px" }}>
+          <p style={{ color: "#0F172A", fontSize: 12, lineHeight: 1.5, margin: "0 0 12px" }}>
             ERPAIO'yu bir arkadaşına önerir misin? <strong>0-10 arası puan ver.</strong>
           </p>
           <div style={{ display: "flex", gap: 4, marginBottom: 12, flexWrap: "wrap" }}>
@@ -79,12 +79,12 @@ export default function NpsPrompt() {
                   flex: 1,
                   minWidth: 22,
                   padding: "6px 0",
-                  background: score === i ? "#00E5FF" : "#07090F",
-                  color: score === i ? "#07090F" : "#9AA5B4",
-                  border: `1px solid ${score === i ? "#00E5FF" : "#131A26"}`,
+                  background: score === i ? "#1A2B47" : "#F9FAFB",
+                  color: score === i ? "#F9FAFB" : "#475569",
+                  border: `1px solid ${score === i ? "#1A2B47" : "#E5E7EB"}`,
                   borderRadius: 4,
                   cursor: "pointer",
-                  fontFamily: "monospace",
+                  fontFamily: "inherit",
                   fontSize: 11,
                 }}
               >
@@ -99,9 +99,9 @@ export default function NpsPrompt() {
               placeholder="Yorum (opsiyonel)"
               rows={2}
               style={{
-                width: "100%", background: "#07090F", border: "1px solid #131A26",
-                borderRadius: 6, padding: 8, color: "#E8EDF5", fontSize: 11,
-                fontFamily: "monospace", boxSizing: "border-box", outline: "none", resize: "none",
+                width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB",
+                borderRadius: 6, padding: 8, color: "#0F172A", fontSize: 11,
+                fontFamily: "inherit", boxSizing: "border-box", outline: "none", resize: "none",
                 marginBottom: 8,
               }}
             />
@@ -110,9 +110,9 @@ export default function NpsPrompt() {
             onClick={submit}
             disabled={score === null}
             style={{
-              width: "100%", background: "#00E5FF18", border: "1px solid #00E5FF40",
-              borderRadius: 6, padding: 8, color: "#00E5FF", fontSize: 11,
-              cursor: score === null ? "not-allowed" : "pointer", fontFamily: "monospace",
+              width: "100%", background: "#1A2B4718", border: "1px solid #1A2B4740",
+              borderRadius: 6, padding: 8, color: "#1A2B47", fontSize: 11,
+              cursor: score === null ? "not-allowed" : "pointer", fontFamily: "inherit",
               opacity: score === null ? 0.5 : 1,
             }}
           >

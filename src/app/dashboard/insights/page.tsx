@@ -33,10 +33,10 @@ export default function InsightsPage() {
   }, [selected]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · INSIGHTS</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · INSIGHTS</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>ERP Şema Analizi</h1>
-      <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
+      <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Başarılı sorgulardan otomatik öğrenilen ilişkiler + profile dışı (müşteri özel) tablolar/kolonlar.
         Bu bilgileri annotation'larla profile'a kalıcı ekleyebilirsiniz.
       </p>
@@ -45,22 +45,22 @@ export default function InsightsPage() {
         <select
           value={selected}
           onChange={e => setSelected(e.target.value)}
-          style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 6, padding: "6px 10px", color: "#E8EDF5", fontSize: 11, fontFamily: "monospace", marginBottom: 24 }}
+          style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "6px 10px", color: "#0F172A", fontSize: 11, fontFamily: "inherit", marginBottom: 24 }}
         >
           {conns.map(c => <option key={c.id} value={c.id}>{c.dbName}</option>)}
         </select>
       )}
 
-      {loading && <div style={{ color: "#3A4558" }}>Analiz ediliyor...</div>}
+      {loading && <div style={{ color: "#94A3B8" }}>Analiz ediliyor...</div>}
 
       {data && (
         <>
           <Section title={`Çıkarılmış İlişkiler (${data.inferredForeignKeys.length})`} desc="Başarılı sorgularınızdan tespit edilen JOIN pattern'leri. 3+ kez görünen ilişkiler güvenilir.">
             {data.inferredForeignKeys.length === 0 && (
-              <div style={{ color: "#3A4558", fontSize: 12 }}>Yeterli veri yok. 10+ farklı sorgu sorduktan sonra tekrar bakın.</div>
+              <div style={{ color: "#94A3B8", fontSize: 12 }}>Yeterli veri yok. 10+ farklı sorgu sorduktan sonra tekrar bakın.</div>
             )}
             {data.inferredForeignKeys.slice(0, 25).map((fk, i) => (
-              <div key={i} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 6, padding: 10, marginBottom: 6, fontSize: 11, display: "flex", justifyContent: "space-between" }}>
+              <div key={i} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: 10, marginBottom: 6, fontSize: 11, display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "#8EC8E8" }}>
                   {fk.fromTable}.{fk.fromColumn} = {fk.toTable}.{fk.toColumn}
                 </span>
@@ -71,20 +71,20 @@ export default function InsightsPage() {
 
           <Section title={`Profile Dışı Tablo / Kolon (${data.customItems.length})`} desc="Müşteri-özgü olabilir. Annotation'larla açıklama ekleyin → Claude doğru kullanır.">
             {data.customItems.length === 0 && (
-              <div style={{ color: "#3A4558", fontSize: 12 }}>Tüm tablolar/kolonlar profile ile eşleşiyor ✓</div>
+              <div style={{ color: "#94A3B8", fontSize: 12 }}>Tüm tablolar/kolonlar profile ile eşleşiyor ✓</div>
             )}
             {data.customItems.slice(0, 50).map((c, i) => (
-              <div key={i} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 6, padding: 10, marginBottom: 6, fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={i} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: 10, marginBottom: 6, fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ color: c.type === "table" ? "#FF9500" : "#FFD740" }}>
+                  <div style={{ color: c.type === "table" ? "#F59E0B" : "#F59E0B" }}>
                     {c.type === "table" ? "📋" : "🔹"} {c.table}{c.column ? `.${c.column}` : ""}
-                    {c.dataType && <span style={{ color: "#3A4558", marginLeft: 8 }}>({c.dataType})</span>}
+                    {c.dataType && <span style={{ color: "#94A3B8", marginLeft: 8 }}>({c.dataType})</span>}
                   </div>
-                  <div style={{ color: "#9AA5B4", fontSize: 9, marginTop: 2 }}>{c.reason}</div>
+                  <div style={{ color: "#475569", fontSize: 9, marginTop: 2 }}>{c.reason}</div>
                 </div>
                 <a
                   href={`/dashboard/annotations?prefill_table=${encodeURIComponent(c.table)}${c.column ? `&prefill_column=${encodeURIComponent(c.column)}` : ""}`}
-                  style={{ background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 4, padding: "3px 10px", color: "#00E5FF", fontSize: 10, textDecoration: "none" }}
+                  style={{ background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 4, padding: "3px 10px", color: "#1A2B47", fontSize: 10, textDecoration: "none" }}
                 >
                   Annotation ekle
                 </a>
@@ -100,8 +100,8 @@ export default function InsightsPage() {
 function Section({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: 32, maxWidth: 760 }}>
-      <h2 style={{ fontSize: 14, color: "#00E5FF", marginBottom: 4 }}>{title}</h2>
-      <p style={{ color: "#3A4558", fontSize: 10, marginBottom: 12 }}>{desc}</p>
+      <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 4 }}>{title}</h2>
+      <p style={{ color: "#94A3B8", fontSize: 10, marginBottom: 12 }}>{desc}</p>
       {children}
     </section>
   );

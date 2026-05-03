@@ -75,18 +75,18 @@ export default function AnnotationsPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANNOTATIONS</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANNOTATIONS</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Şema Açıklamaları</h1>
-      <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
+      <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Müşteri-özgü tablo/kolon açıklamaları ekleyin — Claude AI bu bilgilere
         profile'dan da, canlı şemadan da ÖNCELİKLE bakar. ERP&apos;niz kirli/özelleşmiş
         ise, &quot;trFatura aslında bizde sadece Online satışlar tutar&quot; gibi notlar
         hallucination&apos;u önler.
       </p>
 
-      <form onSubmit={submit} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 24, maxWidth: 600, marginBottom: 32 }}>
-        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#00E5FF" }}>Yeni Açıklama</h2>
+      <form onSubmit={submit} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, maxWidth: 600, marginBottom: 32 }}>
+        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#1A2B47" }}>Yeni Açıklama</h2>
 
         <Field label="Tablo adı (örn: trFatura)">
           <input
@@ -130,44 +130,44 @@ export default function AnnotationsPage() {
           <button
             type="submit"
             disabled={saving}
-            style={{ background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 6, padding: "10px 20px", color: "#00E5FF", fontSize: 12, cursor: "pointer", fontFamily: "monospace" }}
+            style={{ background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6, padding: "10px 20px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
             {saving ? "Kaydediliyor..." : "Kaydet"}
           </button>
           {status && (
-            <span style={{ color: status.kind === "ok" ? "#69FF47" : "#FF6B6B", fontSize: 11 }}>
+            <span style={{ color: status.kind === "ok" ? "#10B981" : "#EF4444", fontSize: 11 }}>
               {status.msg}
             </span>
           )}
         </div>
       </form>
 
-      <h2 style={{ fontSize: 14, color: "#3A4558", marginBottom: 12 }}>Mevcut Açıklamalar ({annotations.length})</h2>
+      <h2 style={{ fontSize: 14, color: "#94A3B8", marginBottom: 12 }}>Mevcut Açıklamalar ({annotations.length})</h2>
 
-      {loading && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
+      {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
       {!loading && annotations.length === 0 && (
-        <div style={{ color: "#3A4558", fontSize: 12 }}>Henüz açıklama yok.</div>
+        <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz açıklama yok.</div>
       )}
 
       {annotations.map((a) => (
-        <div key={a.id} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, padding: 14, marginBottom: 8 }}>
+        <div key={a.id} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 14, marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "#00E5FF", marginBottom: 4 }}>
+              <div style={{ fontSize: 12, color: "#1A2B47", marginBottom: 4 }}>
                 {a.tableName}{a.columnName ? `.${a.columnName}` : ""}
-                {a.hidden && <span style={{ color: "#FF6B6B", marginLeft: 8 }}>⊘ gizli</span>}
+                {a.hidden && <span style={{ color: "#EF4444", marginLeft: 8 }}>⊘ gizli</span>}
               </div>
               {a.description && (
-                <div style={{ fontSize: 12, color: "#9AA5B4" }}>{a.description}</div>
+                <div style={{ fontSize: 12, color: "#475569" }}>{a.description}</div>
               )}
-              <div style={{ fontSize: 9, color: "#3A4558", marginTop: 4 }}>
+              <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 4 }}>
                 {new Date(a.updatedAt).toLocaleString("tr-TR")}
               </div>
             </div>
             <button
               onClick={() => remove(a)}
-              style={{ background: "transparent", border: "1px solid #FF6B6B40", borderRadius: 4, padding: "4px 10px", color: "#FF6B6B", fontSize: 10, cursor: "pointer", fontFamily: "monospace" }}
+              style={{ background: "transparent", border: "1px solid #EF444440", borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}
             >
               Sil
             </button>
@@ -181,7 +181,7 @@ export default function AnnotationsPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <label style={{ color: "#3A4558", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4, textTransform: "uppercase" }}>
+      <label style={{ color: "#94A3B8", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4, textTransform: "uppercase" }}>
         {label}
       </label>
       {children}
@@ -191,13 +191,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "#07090F",
-  border: "1px solid #131A26",
+  background: "#F9FAFB",
+  border: "1px solid #E5E7EB",
   borderRadius: 6,
   padding: "8px 12px",
-  color: "#E8EDF5",
+  color: "#0F172A",
   fontSize: 12,
-  fontFamily: "monospace",
+  fontFamily: "inherit",
   boxSizing: "border-box",
   outline: "none",
 };

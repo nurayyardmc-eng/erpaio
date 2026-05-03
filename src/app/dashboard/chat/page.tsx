@@ -372,21 +372,21 @@ export default function ChatPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", fontFamily: "monospace", color: "#E8EDF5", display: "flex" }}>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", fontFamily: "inherit", color: "#0F172A", display: "flex" }}>
       {/* Sidebar */}
       <aside style={{
         width: historyOpen ? 240 : 0,
         transition: "width 0.15s",
         overflow: "hidden",
-        borderRight: historyOpen ? "1px solid #131A26" : "none",
+        borderRight: historyOpen ? "1px solid #E5E7EB" : "none",
         background: "#0A0D14",
       }}>
-        <div style={{ padding: 12, borderBottom: "1px solid #131A26", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 9, color: "#3A4558", letterSpacing: 2 }}>GEÇMİŞ</div>
+        <div style={{ padding: 12, borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 9, color: "#94A3B8", letterSpacing: 2 }}>GEÇMİŞ</div>
           <button onClick={newSession} title="Yeni sohbet" style={iconBtn}>+</button>
         </div>
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 50px)" }}>
-          {history.length === 0 && <div style={{ color: "#3A4558", fontSize: 11, padding: 12 }}>Henüz sohbet yok.</div>}
+          {history.length === 0 && <div style={{ color: "#94A3B8", fontSize: 11, padding: 12 }}>Henüz sohbet yok.</div>}
           {history.map((s) => (
             <button
               key={s.id}
@@ -396,18 +396,18 @@ export default function ChatPage() {
                 width: "100%",
                 textAlign: "left",
                 padding: "8px 12px",
-                background: s.id === sessionId ? "#131A26" : "transparent",
+                background: s.id === sessionId ? "#E5E7EB" : "transparent",
                 border: "none",
                 borderBottom: "1px solid #0F141C",
-                color: "#E8EDF5",
-                fontFamily: "monospace",
+                color: "#0F172A",
+                fontFamily: "inherit",
                 fontSize: 11,
                 cursor: "pointer",
                 lineHeight: 1.4,
               }}
             >
               <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</div>
-              <div style={{ fontSize: 9, color: "#3A4558", marginTop: 2 }}>{s.messageCount} mesaj · {new Date(s.createdAt).toLocaleDateString("tr-TR")}</div>
+              <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 2 }}>{s.messageCount} mesaj · {new Date(s.createdAt).toLocaleDateString("tr-TR")}</div>
             </button>
           ))}
         </div>
@@ -416,11 +416,11 @@ export default function ChatPage() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Header */}
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid #131A26", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button onClick={() => setHistoryOpen((v) => !v)} title="Geçmiş" style={iconBtn}>☰</button>
             <div>
-              <div style={{ fontSize: 9, color: "#00E5FF", letterSpacing: 3 }}>ERPAIO · CHAT</div>
+              <div style={{ fontSize: 9, color: "#1A2B47", letterSpacing: 3 }}>ERPAIO · CHAT</div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>Veritabanına Sor</div>
             </div>
           </div>
@@ -428,7 +428,7 @@ export default function ChatPage() {
             <select
               value={selectedConn}
               onChange={(e) => setSelectedConn(e.target.value)}
-              style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 6, padding: "6px 10px", color: "#E8EDF5", fontSize: 11, fontFamily: "monospace" }}
+              style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "6px 10px", color: "#0F172A", fontSize: 11, fontFamily: "inherit" }}
             >
               {connections.map((c) => (
                 <option key={c.id} value={c.id}>{c.dbName}</option>
@@ -441,10 +441,10 @@ export default function ChatPage() {
         <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
           {messages.length === 0 && (
             <div style={{ textAlign: "center", marginTop: 60 }}>
-              <div style={{ fontSize: 11, color: "#3A4558", marginBottom: 16 }}>Örnek sorular:</div>
+              <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 16 }}>Örnek sorular:</div>
               {["Toplam kaç ürün var?", "En son 10 siparişi göster", "Bu ay kaç satış yapıldı?"].map((q) => (
                 <button key={q} onClick={() => setInput(q)}
-                  style={{ display: "block", margin: "8px auto", background: "#0C1018", border: "1px solid #131A26", borderRadius: 6, padding: "8px 16px", color: "#00E5FF", fontSize: 11, cursor: "pointer", fontFamily: "monospace" }}>
+                  style={{ display: "block", margin: "8px auto", background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "8px 16px", color: "#1A2B47", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
                   {q}
                 </button>
               ))}
@@ -454,29 +454,29 @@ export default function ChatPage() {
           {messages.map((msg, i) => (
             <div key={i} style={{ marginBottom: 16, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
               {msg.role === "user" ? (
-                <div style={{ background: "#00E5FF18", border: "1px solid #00E5FF30", borderRadius: 8, padding: "10px 14px", maxWidth: "70%", fontSize: 13 }}>
+                <div style={{ background: "#1A2B4718", border: "1px solid #1A2B4730", borderRadius: 8, padding: "10px 14px", maxWidth: "70%", fontSize: 13 }}>
                   {msg.content}
                 </div>
               ) : (
                 <div style={{ maxWidth: "85%", width: "100%" }}>
-                  {msg.status === "loading" && <div style={{ color: "#3A4558", fontSize: 12 }}>SQL üretiliyor...</div>}
+                  {msg.status === "loading" && <div style={{ color: "#94A3B8", fontSize: 12 }}>SQL üretiliyor...</div>}
                   {msg.status === "error" && (
-                    <div style={{ background: "#FF6B6B18", border: "1px solid #FF6B6B30", borderRadius: 8, padding: "10px 14px", color: "#FF6B6B", fontSize: 12 }}>
+                    <div style={{ background: "#EF444418", border: "1px solid #EF444430", borderRadius: 8, padding: "10px 14px", color: "#EF4444", fontSize: 12 }}>
                       ❌ {msg.content}
                     </div>
                   )}
                   {msg.status === "confirm" && (
-                    <div style={{ background: "#FF950018", border: "1px solid #FF950040", borderRadius: 8, padding: 14 }}>
-                      <div style={{ fontSize: 9, color: "#FF9500", letterSpacing: 2, marginBottom: 8 }}>
+                    <div style={{ background: "#F59E0B18", border: "1px solid #F59E0B40", borderRadius: 8, padding: 14 }}>
+                      <div style={{ fontSize: 9, color: "#F59E0B", letterSpacing: 2, marginBottom: 8 }}>
                         ⚠ ONAY GEREKİYOR · CONFIDENCE %{Math.round(msg.confidence * 100)}
                       </div>
                       {msg.ambiguity && (
-                        <div style={{ color: "#FFD740", fontSize: 12, marginBottom: 10 }}>
+                        <div style={{ color: "#F59E0B", fontSize: 12, marginBottom: 10 }}>
                           {msg.ambiguity}
                         </div>
                       )}
                       {msg.explanation && (
-                        <div style={{ color: "#9AA5B4", fontSize: 11, marginBottom: 10, fontStyle: "italic" }}>
+                        <div style={{ color: "#475569", fontSize: 11, marginBottom: 10, fontStyle: "italic" }}>
                           {msg.explanation}
                         </div>
                       )}
@@ -484,13 +484,13 @@ export default function ChatPage() {
                       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                         <button
                           onClick={() => confirmAndRun(i, msg.question)}
-                          style={{ background: "#69FF4720", border: "1px solid #69FF47", borderRadius: 4, padding: "6px 14px", color: "#69FF47", fontSize: 11, cursor: "pointer", fontFamily: "monospace" }}
+                          style={{ background: "#10B98120", border: "1px solid #10B981", borderRadius: 4, padding: "6px 14px", color: "#10B981", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
                         >
                           Çalıştır
                         </button>
                         <button
                           onClick={() => cancelConfirm(i)}
-                          style={{ background: "transparent", border: "1px solid #131A26", borderRadius: 4, padding: "6px 14px", color: "#9AA5B4", fontSize: 11, cursor: "pointer", fontFamily: "monospace" }}
+                          style={{ background: "transparent", border: "1px solid #E5E7EB", borderRadius: 4, padding: "6px 14px", color: "#475569", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
                         >
                           İptal
                         </button>
@@ -499,8 +499,8 @@ export default function ChatPage() {
                   )}
                   {msg.status === "success" && (
                     <div>
-                      <div style={{ background: "#060A12", border: "1px solid #131A26", borderRadius: 8, padding: 12, marginBottom: 10 }}>
-                        <div style={{ fontSize: 9, color: "#3A4558", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ background: "#060A12", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12, marginBottom: 10 }}>
+                        <div style={{ fontSize: 9, color: "#94A3B8", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
                           <span>SQL · {msg.latencyMs}ms · {msg.total} satır</span>
                           {msg.cacheHit && (
                             <span style={{ color: "#9C8AFF", border: "1px solid #9C8AFF40", borderRadius: 4, padding: "1px 6px", fontSize: 8, letterSpacing: 1 }}>
@@ -542,13 +542,13 @@ export default function ChatPage() {
                                 )
                               }
                               rows={Math.min(20, (msg.editedSql?.split("\n").length ?? 1) + 1)}
-                              style={{ width: "100%", background: "#07090F", border: "1px solid #00E5FF40", borderRadius: 6, padding: 10, color: "#8EC8E8", fontSize: 11, fontFamily: "monospace", boxSizing: "border-box", resize: "vertical" }}
+                              style={{ width: "100%", background: "#F9FAFB", border: "1px solid #1A2B4740", borderRadius: 6, padding: 10, color: "#8EC8E8", fontSize: 11, fontFamily: "inherit", boxSizing: "border-box", resize: "vertical" }}
                             />
                             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                              <button onClick={() => runEditedSql(i)} disabled={loading} style={{ background: "#69FF4720", border: "1px solid #69FF47", borderRadius: 4, padding: "4px 10px", color: "#69FF47", fontSize: 10, cursor: "pointer", fontFamily: "monospace" }}>
+                              <button onClick={() => runEditedSql(i)} disabled={loading} style={{ background: "#10B98120", border: "1px solid #10B981", borderRadius: 4, padding: "4px 10px", color: "#10B981", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>
                                 Çalıştır
                               </button>
-                              <button onClick={() => cancelEdit(i)} style={{ background: "transparent", border: "1px solid #131A26", borderRadius: 4, padding: "4px 10px", color: "#3A4558", fontSize: 10, cursor: "pointer", fontFamily: "monospace" }}>
+                              <button onClick={() => cancelEdit(i)} style={{ background: "transparent", border: "1px solid #E5E7EB", borderRadius: 4, padding: "4px 10px", color: "#94A3B8", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>
                                 İptal
                               </button>
                             </div>
@@ -563,15 +563,15 @@ export default function ChatPage() {
                             <thead>
                               <tr>
                                 {msg.columns.map((col) => (
-                                  <th key={col} style={{ padding: "6px 10px", textAlign: "left", color: "#00E5FF", borderBottom: "1px solid #131A26", whiteSpace: "nowrap" }}>{col}</th>
+                                  <th key={col} style={{ padding: "6px 10px", textAlign: "left", color: "#1A2B47", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{col}</th>
                                 ))}
                               </tr>
                             </thead>
                             <tbody>
                               {msg.results.slice(0, 50).map((row, ri) => (
-                                <tr key={ri} style={{ borderBottom: "1px solid #0C1018" }}>
+                                <tr key={ri} style={{ borderBottom: "1px solid #FFFFFF" }}>
                                   {msg.columns.map((col) => (
-                                    <td key={col} style={{ padding: "6px 10px", color: "#9AA5B4" }}>{String(row[col] ?? "")}</td>
+                                    <td key={col} style={{ padding: "6px 10px", color: "#475569" }}>{String(row[col] ?? "")}</td>
                                   ))}
                                 </tr>
                               ))}
@@ -582,7 +582,7 @@ export default function ChatPage() {
                       {msg.explanation && (
                         <div style={{ background: "#9C8AFF15", border: "1px solid #9C8AFF40", borderRadius: 8, padding: 12, marginTop: 8 }}>
                           <div style={{ fontSize: 9, color: "#9C8AFF", letterSpacing: 2, marginBottom: 6 }}>🤖 AI YORUMU</div>
-                          <div style={{ fontSize: 12, color: "#E8EDF5", lineHeight: 1.6 }}>{msg.explanation}</div>
+                          <div style={{ fontSize: 12, color: "#0F172A", lineHeight: 1.6 }}>{msg.explanation}</div>
                         </div>
                       )}
 
@@ -592,20 +592,20 @@ export default function ChatPage() {
 
                       {msg.followUps && msg.followUps.length > 0 && (
                         <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          <span style={{ fontSize: 9, color: "#3A4558", marginRight: 4, alignSelf: "center" }}>İLGİLİ:</span>
+                          <span style={{ fontSize: 9, color: "#94A3B8", marginRight: 4, alignSelf: "center" }}>İLGİLİ:</span>
                           {msg.followUps.map((fu, fi) => (
                             <button
                               key={fi}
                               onClick={() => setInput(fu)}
                               style={{
-                                background: "#0C1018",
-                                border: "1px solid #131A26",
+                                background: "#FFFFFF",
+                                border: "1px solid #E5E7EB",
                                 borderRadius: 12,
                                 padding: "3px 10px",
                                 color: "#9C8AFF",
                                 fontSize: 10,
                                 cursor: "pointer",
-                                fontFamily: "monospace",
+                                fontFamily: "inherit",
                               }}
                             >
                               {fu}
@@ -616,20 +616,20 @@ export default function ChatPage() {
 
                       {msg.messageId && (
                         <div style={{ marginTop: 8, display: "flex", gap: 6, alignItems: "center", fontSize: 10 }}>
-                          <span style={{ color: "#3A4558", marginRight: 4 }}>Faydalı mı?</span>
+                          <span style={{ color: "#94A3B8", marginRight: 4 }}>Faydalı mı?</span>
                           <button
                             onClick={() => submitFeedback(i, msg.messageId!, 1)}
                             disabled={msg.feedback !== null}
                             aria-label="thumbs-up"
                             style={{
-                              background: msg.feedback === 1 ? "#69FF4720" : "transparent",
-                              border: `1px solid ${msg.feedback === 1 ? "#69FF47" : "#131A26"}`,
+                              background: msg.feedback === 1 ? "#10B98120" : "transparent",
+                              border: `1px solid ${msg.feedback === 1 ? "#10B981" : "#E5E7EB"}`,
                               borderRadius: 4,
                               padding: "2px 8px",
-                              color: msg.feedback === 1 ? "#69FF47" : "#3A4558",
+                              color: msg.feedback === 1 ? "#10B981" : "#94A3B8",
                               cursor: msg.feedback !== null ? "default" : "pointer",
                               opacity: msg.feedback === -1 ? 0.3 : 1,
-                              fontFamily: "monospace",
+                              fontFamily: "inherit",
                               fontSize: 10,
                             }}
                           >
@@ -640,14 +640,14 @@ export default function ChatPage() {
                             disabled={msg.feedback !== null}
                             aria-label="thumbs-down"
                             style={{
-                              background: msg.feedback === -1 ? "#FF6B6B20" : "transparent",
-                              border: `1px solid ${msg.feedback === -1 ? "#FF6B6B" : "#131A26"}`,
+                              background: msg.feedback === -1 ? "#EF444420" : "transparent",
+                              border: `1px solid ${msg.feedback === -1 ? "#EF4444" : "#E5E7EB"}`,
                               borderRadius: 4,
                               padding: "2px 8px",
-                              color: msg.feedback === -1 ? "#FF6B6B" : "#3A4558",
+                              color: msg.feedback === -1 ? "#EF4444" : "#94A3B8",
                               cursor: msg.feedback !== null ? "default" : "pointer",
                               opacity: msg.feedback === 1 ? 0.3 : 1,
-                              fontFamily: "monospace",
+                              fontFamily: "inherit",
                               fontSize: 10,
                             }}
                           >
@@ -665,19 +665,19 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div style={{ padding: 16, borderTop: "1px solid #131A26", display: "flex", gap: 10 }}>
+        <div style={{ padding: 16, borderTop: "1px solid #E5E7EB", display: "flex", gap: 10 }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder={selectedConn ? "Nebim veritabanınıza Türkçe sorular sorabilirsiniz..." : "Önce bir ERP bağlantısı ekleyin..."}
             disabled={loading || !selectedConn}
-            style={{ flex: 1, background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, padding: "10px 14px", color: "#E8EDF5", fontSize: 13, fontFamily: "monospace", outline: "none" }}
+            style={{ flex: 1, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: "10px 14px", color: "#0F172A", fontSize: 13, fontFamily: "inherit", outline: "none" }}
           />
           <button
             onClick={sendMessage}
             disabled={loading || !input.trim() || !selectedConn}
-            style={{ background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 8, padding: "10px 20px", color: "#00E5FF", fontSize: 13, cursor: "pointer", fontFamily: "monospace" }}
+            style={{ background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 8, padding: "10px 20px", color: "#1A2B47", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
           >
             {loading ? "..." : "→"}
           </button>
@@ -689,23 +689,23 @@ export default function ChatPage() {
 
 const iconBtn: React.CSSProperties = {
   background: "transparent",
-  border: "1px solid #131A26",
+  border: "1px solid #E5E7EB",
   borderRadius: 4,
   width: 28,
   height: 28,
-  color: "#9AA5B4",
+  color: "#475569",
   fontSize: 14,
   cursor: "pointer",
-  fontFamily: "monospace",
+  fontFamily: "inherit",
 };
 
 const iconBtnSmall: React.CSSProperties = {
   background: "transparent",
-  border: "1px solid #131A26",
+  border: "1px solid #E5E7EB",
   borderRadius: 3,
   padding: "1px 6px",
-  color: "#3A4558",
+  color: "#94A3B8",
   fontSize: 11,
   cursor: "pointer",
-  fontFamily: "monospace",
+  fontFamily: "inherit",
 };

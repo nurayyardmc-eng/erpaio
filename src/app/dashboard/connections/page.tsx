@@ -72,12 +72,12 @@ export default function ConnectionsPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#07090F",
-      fontFamily: "monospace",
-      color: "#E8EDF5",
+      background: "#F9FAFB",
+      fontFamily: "inherit",
+      color: "#0F172A",
       padding: 40,
     }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>ERP Bağlantıları</h1>
 
       {toast && (
@@ -88,9 +88,9 @@ export default function ConnectionsPage() {
             padding: "10px 14px",
             borderRadius: 6,
             fontSize: 12,
-            border: `1px solid ${toast.kind === "ok" ? "#69FF4740" : toast.kind === "err" ? "#FF6B6B40" : "#00E5FF40"}`,
-            background: toast.kind === "ok" ? "#69FF4715" : toast.kind === "err" ? "#FF6B6B15" : "#00E5FF15",
-            color: toast.kind === "ok" ? "#69FF47" : toast.kind === "err" ? "#FF6B6B" : "#00E5FF",
+            border: `1px solid ${toast.kind === "ok" ? "#10B98140" : toast.kind === "err" ? "#EF444440" : "#1A2B4740"}`,
+            background: toast.kind === "ok" ? "#10B98115" : toast.kind === "err" ? "#EF444415" : "#1A2B4715",
+            color: toast.kind === "ok" ? "#10B981" : toast.kind === "err" ? "#EF4444" : "#1A2B47",
           }}
         >
           {toast.msg}
@@ -98,8 +98,8 @@ export default function ConnectionsPage() {
       )}
 
       {/* Form */}
-      <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 12, padding: 24, maxWidth: 500, marginBottom: 32 }}>
-        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#00E5FF" }}>Yeni Bağlantı Ekle</h2>
+      <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, maxWidth: 500, marginBottom: 32 }}>
+        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#1A2B47" }}>Yeni Bağlantı Ekle</h2>
         <form onSubmit={handleSubmit}>
           {[
             { label: "ERP Tipi", key: "erpType", type: "select" },
@@ -110,12 +110,12 @@ export default function ConnectionsPage() {
             { label: "Şifre", key: "password", type: "password" },
           ].map(({ label, key, type }) => (
             <div key={key} style={{ marginBottom: 12 }}>
-              <label style={{ color: "#3A4558", fontSize: 11, display: "block", marginBottom: 4 }}>{label.toUpperCase()}</label>
+              <label style={{ color: "#94A3B8", fontSize: 11, display: "block", marginBottom: 4 }}>{label.toUpperCase()}</label>
               {type === "select" ? (
                 <select
                   value={(form as any)[key]}
                   onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                  style={{ width: "100%", background: "#07090F", border: "1px solid #131A26", borderRadius: 6, padding: "8px 12px", color: "#E8EDF5", fontSize: 12, fontFamily: "monospace" }}
+                  style={{ width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6, padding: "8px 12px", color: "#0F172A", fontSize: 12, fontFamily: "inherit" }}
                 >
                   <option value="nebim_v3">Nebim V3</option>
                   <option value="sap">SAP</option>
@@ -126,7 +126,7 @@ export default function ConnectionsPage() {
                   type={type}
                   value={(form as any)[key]}
                   onChange={(e) => setForm({ ...form, [key]: type === "number" ? Number(e.target.value) : e.target.value })}
-                  style={{ width: "100%", background: "#07090F", border: "1px solid #131A26", borderRadius: 6, padding: "8px 12px", color: "#E8EDF5", fontSize: 12, fontFamily: "monospace", boxSizing: "border-box" }}
+                  style={{ width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6, padding: "8px 12px", color: "#0F172A", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
                   required
                 />
               )}
@@ -135,7 +135,7 @@ export default function ConnectionsPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{ marginTop: 8, width: "100%", background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 6, padding: "10px", color: "#00E5FF", fontSize: 12, cursor: "pointer", fontFamily: "monospace" }}
+            style={{ marginTop: 8, width: "100%", background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6, padding: "10px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
             {loading ? "Bağlanıyor..." : "Bağlantı Ekle →"}
           </button>
@@ -145,14 +145,14 @@ export default function ConnectionsPage() {
       {/* Connections List */}
       {connections.length > 0 && (
         <div>
-          <h2 style={{ fontSize: 14, marginBottom: 12, color: "#3A4558" }}>Mevcut Bağlantılar</h2>
+          <h2 style={{ fontSize: 14, marginBottom: 12, color: "#94A3B8" }}>Mevcut Bağlantılar</h2>
           {connections.map((conn: any) => (
-            <div key={conn.id} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, padding: 16, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={conn.id} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{conn.dbName}</div>
-                <div style={{ fontSize: 11, color: "#3A4558" }}>{conn.host} · {conn.erpType}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8" }}>{conn.host} · {conn.erpType}</div>
               </div>
-              <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: conn.status === "active" ? "#69FF4720" : "#FF6B6B20", color: conn.status === "active" ? "#69FF47" : "#FF6B6B" }}>
+              <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: conn.status === "active" ? "#10B98120" : "#EF444420", color: conn.status === "active" ? "#10B981" : "#EF4444" }}>
                 {conn.status}
               </span>
             </div>

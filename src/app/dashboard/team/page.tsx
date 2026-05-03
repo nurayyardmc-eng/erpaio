@@ -87,8 +87,8 @@ export default function TeamPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace", padding: 40 }}>
-      <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · TAKIM</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
+      <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · TAKIM</div>
       <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>Takım Yönetimi</h1>
 
       <div style={card}>
@@ -115,7 +115,7 @@ export default function TeamPage() {
           </button>
         </form>
         {status && (
-          <div style={{ marginTop: 8, fontSize: 11, color: status.kind === "ok" ? "#69FF47" : "#FF6B6B" }}>{status.msg}</div>
+          <div style={{ marginTop: 8, fontSize: 11, color: status.kind === "ok" ? "#10B981" : "#EF4444" }}>{status.msg}</div>
         )}
       </div>
 
@@ -125,8 +125,8 @@ export default function TeamPage() {
           {invitations.map((inv) => (
             <div key={inv.id} style={row}>
               <div style={{ flex: 1 }}>
-                <div style={{ color: "#E8EDF5", fontSize: 12 }}>{inv.email}</div>
-                <div style={{ color: "#9AA5B4", fontSize: 10 }}>
+                <div style={{ color: "#0F172A", fontSize: 12 }}>{inv.email}</div>
+                <div style={{ color: "#475569", fontSize: 10 }}>
                   {inv.role} · {new Date(inv.expiresAt).toLocaleDateString("tr-TR")} tarihinde sona erer
                 </div>
               </div>
@@ -138,14 +138,14 @@ export default function TeamPage() {
 
       <div style={card}>
         <h2 style={sectionTitle}>Kullanıcılar ({users.length})</h2>
-        {loading && <div style={{ color: "#3A4558" }}>Yükleniyor...</div>}
+        {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
         {users.map((u) => (
           <div key={u.id} style={row}>
             <div style={{ flex: 1 }}>
-              <div style={{ color: "#E8EDF5", fontSize: 12 }}>
-                {u.email} {u.totpEnabled && <span style={{ color: "#69FF47", fontSize: 9, marginLeft: 6 }}>🔒 MFA</span>}
+              <div style={{ color: "#0F172A", fontSize: 12 }}>
+                {u.email} {u.totpEnabled && <span style={{ color: "#10B981", fontSize: 9, marginLeft: 6 }}>🔒 MFA</span>}
               </div>
-              <div style={{ color: "#9AA5B4", fontSize: 10 }}>
+              <div style={{ color: "#475569", fontSize: 10 }}>
                 {u.name ?? "—"} · {new Date(u.createdAt).toLocaleDateString("tr-TR")}
               </div>
             </div>
@@ -165,28 +165,28 @@ export default function TeamPage() {
 }
 
 const card: React.CSSProperties = {
-  background: "#0C1018",
-  border: "1px solid #131A26",
+  background: "#FFFFFF",
+  border: "1px solid #E5E7EB",
   borderRadius: 10,
   padding: 20,
   marginBottom: 16,
   maxWidth: 700,
 };
-const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#00E5FF", marginBottom: 14, fontWeight: 600 };
-const label: React.CSSProperties = { color: "#3A4558", fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 };
+const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#1A2B47", marginBottom: 14, fontWeight: 600 };
+const label: React.CSSProperties = { color: "#94A3B8", fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 };
 const input: React.CSSProperties = {
-  width: "100%", background: "#07090F", border: "1px solid #131A26", borderRadius: 6,
-  padding: "8px 10px", color: "#E8EDF5", fontSize: 12, fontFamily: "monospace", boxSizing: "border-box", outline: "none",
+  width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6,
+  padding: "8px 10px", color: "#0F172A", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", outline: "none",
 };
 const row: React.CSSProperties = {
   display: "flex", alignItems: "center", padding: "10px 0",
-  borderBottom: "1px solid #131A26", gap: 8,
+  borderBottom: "1px solid #E5E7EB", gap: 8,
 };
 const btnPrimary: React.CSSProperties = {
-  background: "#00E5FF18", border: "1px solid #00E5FF40", borderRadius: 6,
-  padding: "8px 16px", color: "#00E5FF", fontSize: 12, cursor: "pointer", fontFamily: "monospace",
+  background: "#1A2B4718", border: "1px solid #1A2B4740", borderRadius: 6,
+  padding: "8px 16px", color: "#1A2B47", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
 };
 const btnDanger: React.CSSProperties = {
   background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)",
-  borderRadius: 4, padding: "4px 10px", color: "#FF6B6B", fontSize: 10, cursor: "pointer", fontFamily: "monospace",
+  borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit",
 };
