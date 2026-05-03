@@ -13,6 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
+import { isBiometricSupported, isBiometricEnabled, setBiometricEnabled } from "../lib/biometric";
 import { colors, font, radius, spacing } from "../lib/theme";
 
 interface Props {
@@ -26,6 +27,21 @@ export default function SettingsScreen({ onLogout }: Props) {
   const [draft, setDraft] = useState<TenantSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const [bioSupported, setBioSupported] = useState(false);
+  const [bioEnabled, setBioEnabled] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      setBioSupported(await isBiometricSupported());
+      setBioEnabled(await isBiometricEnabled());
+    })();
+  }, []);
+
+  const toggleBiometric = async (v: boolean) => {
+    await setBiometricEnabled(v);
+    setBioEnabled(v);
+    setStatus({ kind: "ok", msg: v ? "Biyometrik aktif." : "Biyometrik kapatıldı." });
+  };
 
   useEffect(() => {
     if (tenantQuery.data && !draft) setDraft(tenantQuery.data);
@@ -189,6 +205,16 @@ export default function SettingsScreen({ onLogout }: Props) {
           </View>
         )}
       </Section>
+
+      {bioSupported && (
+        <Section title="Güvenlik">
+          <ToggleRow
+            label="Biyometrik kilit (Face ID / Touch ID)"
+            value={bioEnabled}
+            onChange={toggleBiometric}
+          />
+        </Section>
+      )}
 
       <Section title="Yasal">
         <TouchableOpacity onPress={() => Linking.openURL("https://erpaio.vercel.app/privacy")}>

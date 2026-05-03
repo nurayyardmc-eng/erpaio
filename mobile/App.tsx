@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StatusBar, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import ChatStackNav from "./src/screens/ChatStackNav";
@@ -13,12 +16,22 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import { getToken, clearToken } from "./src/lib/api";
 import { logout as authLogout } from "./src/lib/auth";
 import { registerForPush } from "./src/lib/push";
+import { authenticate, isBiometricEnabled, isBiometricSupported } from "./src/lib/biometric";
 import { colors, font } from "./src/lib/theme";
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 30_000 },
+    queries: {
+      retry: 1,
+      staleTime: 30_000,
+      gcTime: 24 * 60 * 60_000,
+    },
   },
+});
+
+const persister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: "erpaio-cache-v1",
 });
 
 const Stack = createNativeStackNavigator();
@@ -48,16 +61,8 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
         tabBarInactiveTintColor: colors.textDim,
       }}
     >
-      <Tabs.Screen
-        name="Chat"
-        component={ChatStackNav}
-        options={{ headerShown: false }}
-      />
-      <Tabs.Screen
-        name="Alerts"
-        component={AlertsScreen}
-        options={{ headerShown: false }}
-      />
+      <Tabs.Screen name="Chat" component={ChatStackNav} options={{ headerShown: false }} />
+      <Tabs.Screen name="Alerts" component={AlertsScreen} options={{ headerShown: false }} />
       <Tabs.Screen
         name="Ayarlar"
         children={() => <SettingsScreen onLogout={onLogout} />}
@@ -68,12 +73,28 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
 }
 
 export default function App() {
-  const [authState, setAuthState] = useState<"loading" | "authed" | "guest">("loading");
+  const [authState, setAuthState] = useState<"loading" | "biometric" | "authed" | "guest">("loading");
+  const [biometricFailed, setBiometricFailed] = useState(false);
 
   useEffect(() => {
     void (async () => {
       const t = await getToken();
-      setAuthState(t ? "authed" : "guest");
+      if (!t) {
+        setAuthState("guest");
+        return;
+      }
+      const enabled = await isBiometricEnabled();
+      if (enabled && (await isBiometricSupported())) {
+        setAuthState("biometric");
+        const ok = await authenticate("ERPAIO'ya giriş için doğrulama");
+        if (ok) {
+          setAuthState("authed");
+        } else {
+          setBiometricFailed(true);
+        }
+      } else {
+        setAuthState("authed");
+      }
     })();
   }, []);
 
@@ -89,13 +110,38 @@ export default function App() {
     setAuthState("guest");
   };
 
+  const retryBiometric = async () => {
+    setBiometricFailed(false);
+    const ok = await authenticate("ERPAIO'ya giriş için doğrulama");
+    if (ok) setAuthState("authed");
+    else setBiometricFailed(true);
+  };
+
+  const skipBiometric = async () => {
+    await clearToken();
+    setAuthState("guest");
+  };
+
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
         <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
-        {authState === "loading" ? (
+        {authState === "loading" || authState === "biometric" ? (
           <View style={styles.loader}>
             <ActivityIndicator color={colors.accent} />
+            {biometricFailed && (
+              <View style={{ marginTop: 24, alignItems: "center", gap: 12 }}>
+                <Text style={{ color: colors.danger, fontFamily: font, fontSize: 12 }}>
+                  Doğrulama başarısız.
+                </Text>
+                <TouchableOpacity onPress={retryBiometric} style={biometricBtn}>
+                  <Text style={{ color: colors.accent, fontFamily: font, fontSize: 13 }}>Tekrar Dene</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={skipBiometric}>
+                  <Text style={{ color: colors.textDim, fontFamily: font, fontSize: 11 }}>Şifre ile gir</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         ) : (
           <NavigationContainer theme={navTheme}>
@@ -112,7 +158,7 @@ export default function App() {
             </Stack.Navigator>
           </NavigationContainer>
         )}
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
 }
@@ -120,3 +166,12 @@ export default function App() {
 const styles = StyleSheet.create({
   loader: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 });
+
+const biometricBtn = {
+  background: colors.accentMuted,
+  borderColor: colors.accentBorder,
+  borderWidth: 1,
+  borderRadius: 6,
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+};

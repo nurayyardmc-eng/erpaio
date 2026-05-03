@@ -17,11 +17,13 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getConnections,
   getSession,
+  runSql,
   sendFeedback,
   sendQuestion,
   type ChatResponse,
   type Connection,
 } from "../lib/chat";
+import { shareCsv } from "../lib/share";
 import { colors, font, radius, spacing } from "../lib/theme";
 import type { ChatStackParamList } from "./SessionsScreen";
 
@@ -39,6 +41,8 @@ interface SuccessMsg {
   messageId?: string;
   cacheHit?: boolean;
   feedback: 1 | -1 | null;
+  editing?: boolean;
+  editedSql?: string;
 }
 type Msg = UserMsg | LoadingMsg | ErrorMsg | SuccessMsg;
 
@@ -134,6 +138,74 @@ export default function ChatScreen({ route, navigation }: Props) {
     }
   };
 
+  const startEdit = (idx: number) => {
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i === idx && m.role === "assistant" && m.status === "success"
+          ? { ...m, editing: true, editedSql: m.sql }
+          : m,
+      ),
+    );
+  };
+
+  const cancelEdit = (idx: number) => {
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i === idx && m.role === "assistant" && m.status === "success"
+          ? { ...m, editing: false, editedSql: undefined }
+          : m,
+      ),
+    );
+  };
+
+  const runEdited = async (idx: number) => {
+    const target = messages[idx];
+    if (target?.role !== "assistant" || target.status !== "success" || !target.editedSql) return;
+    if (!selectedConn) return;
+    const sql = target.editedSql;
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i === idx && m.role === "assistant" && m.status === "success"
+          ? { ...m, editing: false, editedSql: undefined }
+          : m,
+      ),
+    );
+    setLoading(true);
+    setMessages((prev) => [...prev, { role: "assistant", status: "loading" }]);
+    try {
+      const data = await runSql(selectedConn, sql, sessionId);
+      if (!sessionId) setSessionId(data.sessionId);
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        {
+          role: "assistant",
+          status: "success",
+          sql: data.sql,
+          results: data.results,
+          columns: data.columns,
+          total: data.total,
+          latencyMs: data.latencyMs,
+          messageId: data.messageId,
+          cacheHit: false,
+          feedback: null,
+        },
+      ]);
+    } catch (e) {
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { role: "assistant", status: "error", content: e instanceof Error ? e.message : "SQL hatası." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const shareResult = async (msg: SuccessMsg) => {
+    if (msg.results.length === 0) return;
+    const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    await shareCsv(`erpaio-${ts}.csv`, msg.results, msg.columns).catch(() => {});
+  };
+
   const submitFeedback = async (idx: number, messageId: string, value: 1 | -1) => {
     setMessages((prev) =>
       prev.map((m, i) => (i === idx && m.role === "assistant" && m.status === "success" ? { ...m, feedback: value } : m)),
@@ -176,7 +248,61 @@ export default function ChatScreen({ route, navigation }: Props) {
               </View>
             )}
           </View>
-          <Text style={styles.sqlText}>{item.sql}</Text>
+          {item.editing ? (
+            <View>
+              <TextInput
+                value={item.editedSql ?? ""}
+                onChangeText={(t) =>
+                  setMessages((prev) =>
+                    prev.map((m, i) =>
+                      i === index && m.role === "assistant" && m.status === "success"
+                        ? { ...m, editedSql: t }
+                        : m,
+                    ),
+                  )
+                }
+                multiline
+                style={{
+                  backgroundColor: colors.bg,
+                  borderColor: colors.accentBorder,
+                  borderWidth: 1,
+                  borderRadius: radius.md,
+                  padding: spacing(2),
+                  color: "#8EC8E8",
+                  fontFamily: font,
+                  fontSize: 11,
+                  minHeight: 100,
+                  textAlignVertical: "top",
+                }}
+              />
+              <View style={{ flexDirection: "row", gap: spacing(2), marginTop: spacing(1.5) }}>
+                <TouchableOpacity
+                  onPress={() => runEdited(index)}
+                  disabled={loading}
+                  style={{ backgroundColor: "rgba(105,255,71,0.15)", borderColor: colors.success, borderWidth: 1, borderRadius: radius.sm, paddingHorizontal: spacing(3), paddingVertical: spacing(1) }}
+                >
+                  <Text style={{ color: colors.success, fontFamily: font, fontSize: 11 }}>Çalıştır</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => cancelEdit(index)} style={{ borderColor: colors.border, borderWidth: 1, borderRadius: radius.sm, paddingHorizontal: spacing(3), paddingVertical: spacing(1) }}>
+                  <Text style={{ color: colors.textMuted, fontFamily: font, fontSize: 11 }}>İptal</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.sqlText}>{item.sql}</Text>
+              <View style={{ flexDirection: "row", gap: spacing(2), marginTop: spacing(1.5) }}>
+                <TouchableOpacity onPress={() => startEdit(index)} style={iconBtnStyle}>
+                  <Text style={iconTextStyle}>✎ Düzenle</Text>
+                </TouchableOpacity>
+                {item.results.length > 0 && (
+                  <TouchableOpacity onPress={() => shareResult(item)} style={iconBtnStyle}>
+                    <Text style={iconTextStyle}>📤 Paylaş</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
         </View>
 
         {item.results.length > 0 && (
@@ -405,3 +531,12 @@ const styles = StyleSheet.create({
   },
   sendBtnText: { color: colors.accent, fontFamily: font, fontSize: 16 },
 });
+
+const iconBtnStyle = {
+  borderColor: colors.border,
+  borderWidth: 1,
+  borderRadius: radius.sm,
+  paddingHorizontal: spacing(2),
+  paddingVertical: spacing(1),
+};
+const iconTextStyle = { color: colors.textDim, fontFamily: font, fontSize: 10 };
