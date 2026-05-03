@@ -41,7 +41,7 @@ export default function MaintenancePage() {
         Sistemde planlı bakım yapıyoruz. En kısa sürede geri döneceğiz.<br />
         Acil durumlar: <a href="mailto:support@erpaio.com" style={{ color: colors.brand, fontWeight: 500 }}>support@erpaio.com</a>
       </p>
-      <a href="https://erpaio.vercel.app/status" style={{
+      <a href="/status" style={{
         marginTop: 8,
         background: colors.brand,
         color: colors.textInverse,

@@ -1,7 +1,7 @@
 "use client";
 import type { ChartHint } from "@/lib/charts/detect";
 
-const COLORS = ["#00E5FF", "#69FF47", "#FFD740", "#FF9500", "#9C8AFF", "#FF6B6B"];
+const COLORS = ["#1A2B47", "#10B981", "#F59E0B", "#F59E0B", "#9C8AFF", "#EF4444"];
 
 interface Props {
   hint: ChartHint;
@@ -44,11 +44,11 @@ function LineChart({ hint, rows }: Props) {
     <div style={chartBox}>
       <ChartHeader title={`${yCol} (${hint.xColumn ?? ""})`} reason={hint.reason} />
       <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: 200 }}>
-        <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#131A26" />
-        <line x1={pad} y1={pad} x2={pad} y2={h - pad} stroke="#131A26" />
+        <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#E5E7EB" />
+        <line x1={pad} y1={pad} x2={pad} y2={h - pad} stroke="#E5E7EB" />
         <polyline points={points} fill="none" stroke={COLORS[0]} strokeWidth="2" />
-        <text x={pad} y={pad - 4} fill="#9AA5B4" fontSize="10">{formatN(max)}</text>
-        <text x={pad} y={h - pad + 14} fill="#9AA5B4" fontSize="10">{formatN(min)}</text>
+        <text x={pad} y={pad - 4} fill="#475569" fontSize="10">{formatN(max)}</text>
+        <text x={pad} y={h - pad + 14} fill="#475569" fontSize="10">{formatN(min)}</text>
       </svg>
     </div>
   );
@@ -69,11 +69,11 @@ function BarChart({ hint, rows }: Props) {
       <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "0 8px" }}>
         {values.slice(0, 12).map((v, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10 }}>
-            <div style={{ width: 90, color: "#9AA5B4", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.label}</div>
-            <div style={{ flex: 1, height: 16, background: "#131A26", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ width: 90, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.label}</div>
+            <div style={{ flex: 1, height: 16, background: "#E5E7EB", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${(v.value / max) * 100}%`, background: COLORS[0] }} />
             </div>
-            <div style={{ width: 60, color: "#E8EDF5", fontFamily: "monospace", textAlign: "right" }}>{formatN(v.value)}</div>
+            <div style={{ width: 60, color: "#0F172A", fontFamily: "inherit", textAlign: "right" }}>{formatN(v.value)}</div>
           </div>
         ))}
       </div>
@@ -126,8 +126,8 @@ function PieChart({ hint, rows }: Props) {
           {slices.slice(0, 6).map((s, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
               <span style={{ width: 8, height: 8, background: s.color, borderRadius: 2 }} />
-              <span style={{ color: "#9AA5B4", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
-              <span style={{ color: "#E8EDF5", fontFamily: "monospace" }}>{((s.value / total) * 100).toFixed(0)}%</span>
+              <span style={{ color: "#475569", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
+              <span style={{ color: "#0F172A", fontFamily: "inherit" }}>{((s.value / total) * 100).toFixed(0)}%</span>
             </div>
           ))}
         </div>
@@ -138,7 +138,7 @@ function PieChart({ hint, rows }: Props) {
 
 const chartBox: React.CSSProperties = {
   background: "#060A12",
-  border: "1px solid #131A26",
+  border: "1px solid #E5E7EB",
   borderRadius: 8,
   padding: 12,
   marginTop: 8,
@@ -147,8 +147,8 @@ const chartBox: React.CSSProperties = {
 function ChartHeader({ title, reason }: { title: string; reason: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-      <span style={{ fontSize: 11, color: "#00E5FF" }}>{title}</span>
-      <span style={{ fontSize: 9, color: "#3A4558" }}>auto · {reason}</span>
+      <span style={{ fontSize: 11, color: "#1A2B47" }}>{title}</span>
+      <span style={{ fontSize: 9, color: "#94A3B8" }}>auto · {reason}</span>
     </div>
   );
 }

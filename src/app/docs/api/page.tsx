@@ -84,55 +84,55 @@ const groups = [
 ];
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: "#69FF47",
-  POST: "#00E5FF",
-  PATCH: "#FFD740",
-  PUT: "#FFD740",
-  DELETE: "#FF6B6B",
+  GET: "#10B981",
+  POST: "#1A2B47",
+  PATCH: "#F59E0B",
+  PUT: "#F59E0B",
+  DELETE: "#EF4444",
 };
 
 export default function ApiDocsPage() {
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace" }}>
-      <header style={{ padding: "20px 32px", borderBottom: "1px solid #131A26", display: "flex", justifyContent: "space-between" }}>
-        <Link href="/" style={{ color: "#00E5FF", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
-        <Link href="/docs" style={{ color: "#9AA5B4", fontSize: 12, textDecoration: "none" }}>← Dokümantasyon</Link>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit" }}>
+      <header style={{ padding: "20px 32px", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between" }}>
+        <Link href="/" style={{ color: "#1A2B47", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
+        <Link href="/docs" style={{ color: "#475569", fontSize: 12, textDecoration: "none" }}>← Dokümantasyon</Link>
       </header>
 
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "60px 32px" }}>
         <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>API Referansı</h1>
-        <p style={{ color: "#9AA5B4", fontSize: 14, marginBottom: 12 }}>
-          OpenAPI 3.1 spec: <a href="/api/openapi" style={{ color: "#00E5FF" }}>/api/openapi</a>
+        <p style={{ color: "#475569", fontSize: 14, marginBottom: 12 }}>
+          OpenAPI 3.1 spec: <a href="/api/openapi" style={{ color: "#1A2B47" }}>/api/openapi</a>
         </p>
-        <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, padding: 16, marginBottom: 32 }}>
-          <div style={{ fontSize: 11, color: "#3A4558", marginBottom: 6 }}>Authentication</div>
-          <code style={{ color: "#9AA5B4", fontSize: 12 }}>Authorization: Bearer &lt;JWT&gt;</code>
-          <div style={{ fontSize: 11, color: "#3A4558", marginTop: 10 }}>Token: <code style={{ color: "#00E5FF" }}>POST /api/auth/mobile-login</code></div>
+        <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16, marginBottom: 32 }}>
+          <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 6 }}>Authentication</div>
+          <code style={{ color: "#475569", fontSize: 12 }}>Authorization: Bearer &lt;JWT&gt;</code>
+          <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 10 }}>Token: <code style={{ color: "#1A2B47" }}>POST /api/auth/mobile-login</code></div>
         </div>
 
         {groups.map((g) => (
           <section key={g.title} style={{ marginBottom: 32 }}>
-            <h2 style={{ fontSize: 14, color: "#00E5FF", marginBottom: 12 }}>{g.title}</h2>
+            <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 12 }}>{g.title}</h2>
             <div style={{ display: "grid", gap: 6 }}>
               {g.items.map((it) => (
-                <div key={it.path + it.method} style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 6, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, fontSize: 12 }}>
+                <div key={it.path + it.method} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 6, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, fontSize: 12 }}>
                   <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
                     {it.method.split(" ").map((m) => (
-                      <span key={m} style={{ color: METHOD_COLORS[m] ?? "#9AA5B4", fontSize: 9, fontWeight: 600, padding: "2px 6px", border: `1px solid ${METHOD_COLORS[m] ?? "#9AA5B4"}40`, borderRadius: 3 }}>{m}</span>
+                      <span key={m} style={{ color: METHOD_COLORS[m] ?? "#475569", fontSize: 9, fontWeight: 600, padding: "2px 6px", border: `1px solid ${METHOD_COLORS[m] ?? "#475569"}40`, borderRadius: 3 }}>{m}</span>
                     ))}
                   </div>
-                  <code style={{ color: "#E8EDF5", flex: 1 }}>{it.path}</code>
-                  <span style={{ color: "#9AA5B4", fontSize: 11 }}>{it.desc}</span>
+                  <code style={{ color: "#0F172A", flex: 1 }}>{it.path}</code>
+                  <span style={{ color: "#475569", fontSize: 11 }}>{it.desc}</span>
                 </div>
               ))}
             </div>
           </section>
         ))}
 
-        <div style={{ background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, padding: 20, marginTop: 32, fontSize: 12, color: "#9AA5B4", lineHeight: 1.7 }}>
-          <strong style={{ color: "#00E5FF" }}>Rate limits:</strong> Tenant başına <code>/api/chat</code> 30/dk, <code>/api/chat/feedback</code> 60/dk/user, login deneme 10/15dk/IP.
-          <br /><strong style={{ color: "#00E5FF" }}>Token budget:</strong> Plan bazlı aylık limit. Aşılırsa 402.
-          <br /><strong style={{ color: "#00E5FF" }}>Errors:</strong> Tüm endpointler <code>{"{ \"error\": \"...\" }"}</code> formatında JSON döner.
+        <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 20, marginTop: 32, fontSize: 12, color: "#475569", lineHeight: 1.7 }}>
+          <strong style={{ color: "#1A2B47" }}>Rate limits:</strong> Tenant başına <code>/api/chat</code> 30/dk, <code>/api/chat/feedback</code> 60/dk/user, login deneme 10/15dk/IP.
+          <br /><strong style={{ color: "#1A2B47" }}>Token budget:</strong> Plan bazlı aylık limit. Aşılırsa 402.
+          <br /><strong style={{ color: "#1A2B47" }}>Errors:</strong> Tüm endpointler <code>{"{ \"error\": \"...\" }"}</code> formatında JSON döner.
         </div>
       </main>
     </div>

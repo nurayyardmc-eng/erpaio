@@ -68,20 +68,20 @@ export async function sendEmail(options: EmailOptions): Promise<{ ok: boolean; i
 }
 
 export function alertEmailHtml(opts: { severity: string; title: string; description?: string | null }): string {
-  const colors: Record<string, string> = {
-    critical: "#FF3B30",
-    high: "#FF9500",
-    medium: "#FFD740",
-    low: "#00E5FF",
+  const sevColors: Record<string, { fg: string; bg: string }> = {
+    critical: { fg: "#DC2626", bg: "#FEE2E2" },
+    high: { fg: "#F59E0B", bg: "#FEF3C7" },
+    medium: { fg: "#3B82F6", bg: "#DBEAFE" },
+    low: { fg: "#475569", bg: "#F3F4F6" },
   };
-  const color = colors[opts.severity] ?? "#9AA5B4";
+  const sev = sevColors[opts.severity] ?? sevColors.low;
   return `<!doctype html>
-<html><body style="margin:0;padding:24px;background:#07090F;color:#E8EDF5;font-family:monospace">
-  <div style="max-width:560px;margin:0 auto;background:#0C1018;border:1px solid #131A26;border-radius:12px;padding:24px;border-left:4px solid ${color}">
-    <div style="color:${color};font-size:11px;letter-spacing:2px;margin-bottom:8px">${opts.severity.toUpperCase()} ALERT</div>
-    <h2 style="margin:0 0 12px;font-size:18px">${escapeHtml(opts.title)}</h2>
-    ${opts.description ? `<p style="color:#9AA5B4;font-size:13px;line-height:1.6">${escapeHtml(opts.description)}</p>` : ""}
-    <p style="color:#3A4558;font-size:11px;margin-top:24px">— ERPAIO</p>
+<html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:32px;border-left:4px solid ${sev.fg}">
+    <div style="display:inline-block;background:${sev.bg};color:${sev.fg};font-size:11px;letter-spacing:1.5px;padding:4px 10px;border-radius:999px;margin-bottom:16px;font-weight:700">${opts.severity.toUpperCase()} ALERT</div>
+    <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#0F172A;letter-spacing:-0.3px">${escapeHtml(opts.title)}</h2>
+    ${opts.description ? `<p style="color:#475569;font-size:15px;line-height:1.6;margin:0">${escapeHtml(opts.description)}</p>` : ""}
+    <p style="color:#94A3B8;font-size:12px;margin-top:32px;border-top:1px solid #E5E7EB;padding-top:16px">— ERPAIO</p>
   </div>
 </body></html>`;
 }

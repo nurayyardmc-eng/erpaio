@@ -44,13 +44,13 @@ export async function POST(req: Request) {
   void sendEmail({
     to: email,
     subject: "ERPAIO — Şifre sıfırlama linki",
-    html: `<!doctype html><html><body style="margin:0;padding:24px;background:#07090F;color:#E8EDF5;font-family:monospace">
-      <div style="max-width:480px;margin:0 auto;background:#0C1018;border:1px solid #131A26;border-radius:12px;padding:32px">
-        <div style="color:#00E5FF;font-size:11px;letter-spacing:3px;margin-bottom:8px">ERPAIO</div>
-        <h2 style="font-size:18px;margin:0 0 12px">Şifre sıfırlama</h2>
-        <p style="color:#9AA5B4;font-size:13px;line-height:1.6">Aşağıdaki bağlantıya tıklayarak yeni bir şifre belirleyin. Link 1 saat geçerlidir.</p>
-        <a href="${resetUrl}" style="display:inline-block;margin:20px 0;background:#00E5FF;color:#07090F;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px">Şifreyi sıfırla →</a>
-        <p style="color:#3A4558;font-size:11px;line-height:1.5">Bu talebi siz yapmadıysanız bu emaili silebilirsiniz, hesabınız güvende.</p>
+    html: `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+      <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:40px">
+        <div style="color:#1A2B47;font-size:11px;letter-spacing:3px;margin-bottom:16px;font-weight:700">ERPAIO</div>
+        <h2 style="font-size:22px;margin:0 0 12px;font-weight:700;color:#0F172A;letter-spacing:-0.5px">Şifre Sıfırlama</h2>
+        <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 24px">Aşağıdaki bağlantıya tıklayarak yeni bir şifre belirleyin. Link 1 saat geçerlidir.</p>
+        <a href="${resetUrl}" style="display:inline-block;background:#1A2B47;color:#FFFFFF;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px">Şifreyi sıfırla</a>
+        <p style="color:#94A3B8;font-size:12px;line-height:1.5;margin-top:32px;border-top:1px solid #E5E7EB;padding-top:20px">Bu talebi siz yapmadıysanız bu emaili silebilirsiniz, hesabınız güvende.</p>
       </div>
     </body></html>`,
   });

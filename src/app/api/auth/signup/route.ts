@@ -107,32 +107,32 @@ export async function POST(req: Request) {
 }
 
 function welcomeEmailHtml(name: string, tenantName: string, verifyUrl: string): string {
-  return `<!doctype html><html><body style="margin:0;padding:24px;background:#07090F;color:#E8EDF5;font-family:monospace">
-    <div style="max-width:560px;margin:0 auto;background:#0C1018;border:1px solid #131A26;border-radius:12px;padding:32px">
-      <div style="color:#00E5FF;font-size:11px;letter-spacing:3px;margin-bottom:8px">ERPAIO</div>
-      <h2 style="margin:0 0 16px;font-size:22px;color:#0F172A">Hoş geldiniz ${escapeHtml(name)}</h2>
-      <p style="color:#9AA5B4;font-size:13px;line-height:1.7">
-        <strong style="color:#E8EDF5">${escapeHtml(tenantName)}</strong> hesabın oluşturuldu.
-        14 gün ücretsiz Pro deneme süren başladı.
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app";
+  return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+    <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:40px">
+      <div style="color:#1A2B47;font-size:11px;letter-spacing:3px;margin-bottom:16px;font-weight:700">ERPAIO</div>
+      <h2 style="margin:0 0 16px;font-size:24px;color:#0F172A;font-weight:700;letter-spacing:-0.5px">Hoş geldiniz, ${escapeHtml(name)}</h2>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 24px">
+        <strong style="color:#0F172A">${escapeHtml(tenantName)}</strong> hesabınız oluşturuldu. 14 gün ücretsiz Pro deneme başladı.
       </p>
-      <div style="background:#FF950018;border:1px solid #FF950040;border-radius:8px;padding:16px;margin:20px 0">
-        <div style="color:#FF9500;font-size:11px;letter-spacing:2px;margin-bottom:6px">EMAIL DOĞRULAMA</div>
-        <p style="color:#9AA5B4;font-size:12px;margin:0 0 12px;line-height:1.6">Hesabını aktive etmek için aşağıdaki bağlantıya tıkla (24 saat geçerli):</p>
-        <a href="${verifyUrl}" style="display:inline-block;background:#FF9500;color:#07090F;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;font-size:12px">
+      <div style="background:#FEF3C7;border:1px solid #F59E0B40;border-radius:10px;padding:20px;margin:0 0 24px">
+        <div style="color:#92400E;font-size:11px;letter-spacing:1.5px;margin-bottom:8px;font-weight:700">EMAIL DOĞRULAMA</div>
+        <p style="color:#475569;font-size:14px;margin:0 0 16px;line-height:1.5">Hesabınızı aktive etmek için aşağıdaki bağlantıya tıklayın (24 saat geçerli):</p>
+        <a href="${verifyUrl}" style="display:inline-block;background:#1A2B47;color:#FFFFFF;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px">
           Email&apos;i Doğrula
         </a>
       </div>
-      <h3 style="font-size:13px;color:#00E5FF;margin-top:24px">Başlangıç adımları</h3>
-      <ol style="color:#9AA5B4;font-size:12px;line-height:1.8;padding-left:20px">
-        <li>ERP&apos;niz için read-only user oluşturun</li>
+      <h3 style="font-size:15px;color:#0F172A;margin:32px 0 12px;font-weight:600">Başlangıç adımları</h3>
+      <ol style="color:#475569;font-size:14px;line-height:1.8;padding-left:20px;margin:0">
+        <li>ERP&apos;niz için read-only kullanıcı oluşturun</li>
         <li>Dashboard → ERP Bağlantıları → Yeni Bağlantı</li>
-        <li>Şema otomatik taranır (30 saniye)</li>
-        <li>Türkçe ilk sorularınızı yazın!</li>
+        <li>Şema 30 saniyede taranır</li>
+        <li>Türkçe ilk sorularınızı yazın</li>
       </ol>
-      <a href="https://erpaio.vercel.app/login" style="display:inline-block;margin-top:24px;background:#00E5FF;color:#07090F;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px">
-        Dashboard'a git →
+      <a href="${baseUrl}/login" style="display:inline-block;margin-top:32px;background:#1A2B47;color:#FFFFFF;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px">
+        Dashboard&apos;a git →
       </a>
-      <p style="color:#3A4558;font-size:11px;margin-top:32px">Sorular: support@erpaio.com</p>
+      <p style="color:#94A3B8;font-size:12px;margin-top:32px;border-top:1px solid #E5E7EB;padding-top:20px">Sorular: <a href="mailto:support@erpaio.com" style="color:#1A2B47">support@erpaio.com</a></p>
     </div>
   </body></html>`;
 }

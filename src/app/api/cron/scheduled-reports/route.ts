@@ -85,25 +85,25 @@ export async function GET(req: NextRequest) {
 
 function renderReportHtml(name: string, question: string, sql: string, rows: Record<string, unknown>[]): string {
   const cols = rows.length > 0 ? Object.keys(rows[0]) : [];
-  const head = cols.map((c) => `<th style="text-align:left;padding:6px 10px;color:#00E5FF;border-bottom:1px solid #131A26">${esc(c)}</th>`).join("");
-  const body = rows.slice(0, 100).map((r) =>
-    `<tr>${cols.map((c) => `<td style="padding:4px 10px;color:#9AA5B4">${esc(String(r[c] ?? ""))}</td>`).join("")}</tr>`,
+  const head = cols.map((c) => `<th style="text-align:left;padding:8px 12px;color:#0F172A;border-bottom:2px solid #E5E7EB;font-weight:600">${esc(c)}</th>`).join("");
+  const body = rows.slice(0, 100).map((r, i) =>
+    `<tr style="background:${i % 2 === 0 ? "#FFFFFF" : "#F9FAFB"}">${cols.map((c) => `<td style="padding:6px 12px;color:#475569;border-bottom:1px solid #F3F4F6">${esc(String(r[c] ?? ""))}</td>`).join("")}</tr>`,
   ).join("");
 
-  return `<!doctype html><html><body style="margin:0;padding:24px;background:#07090F;color:#E8EDF5;font-family:monospace">
-    <div style="max-width:760px;margin:0 auto">
-      <div style="color:#00E5FF;font-size:11px;letter-spacing:3px;margin-bottom:8px">ERPAIO RAPOR</div>
-      <h2 style="margin:0 0 4px;font-size:18px">${esc(name)}</h2>
-      <p style="color:#9AA5B4;font-size:12px;margin:0 0 16px">${esc(question)}</p>
-      <div style="background:#0C1018;border:1px solid #131A26;border-radius:8px;padding:16px">
-        <div style="color:#3A4558;font-size:10px;margin-bottom:6px">SQL · ${rows.length} satır</div>
-        <pre style="color:#8EC8E8;font-size:10px;margin:0;white-space:pre-wrap">${esc(sql)}</pre>
+  return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+    <div style="max-width:760px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:32px">
+      <div style="color:#1A2B47;font-size:11px;letter-spacing:3px;margin-bottom:8px;font-weight:700">ERPAIO RAPOR</div>
+      <h2 style="margin:0 0 6px;font-size:22px;color:#0F172A;font-weight:700;letter-spacing:-0.3px">${esc(name)}</h2>
+      <p style="color:#475569;font-size:14px;margin:0 0 20px">${esc(question)}</p>
+      <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:16px">
+        <div style="color:#94A3B8;font-size:11px;margin-bottom:8px;font-weight:600;letter-spacing:0.5px">SQL · ${rows.length} satır</div>
+        <pre style="color:#1A2B47;font-size:12px;margin:0;white-space:pre-wrap;font-family:ui-monospace,Menlo,Monaco,monospace">${esc(sql)}</pre>
       </div>
-      <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:11px">
+      <table style="width:100%;border-collapse:collapse;margin-top:20px;font-size:13px">
         <thead><tr>${head}</tr></thead>
         <tbody>${body}</tbody>
       </table>
-      ${rows.length > 100 ? `<p style="color:#3A4558;font-size:10px;text-align:center;margin-top:8px">İlk 100 satır gösteriliyor (toplam ${rows.length})</p>` : ""}
+      ${rows.length > 100 ? `<p style="color:#94A3B8;font-size:12px;text-align:center;margin-top:12px">İlk 100 satır gösteriliyor (toplam ${rows.length})</p>` : ""}
     </div>
   </body></html>`;
 }

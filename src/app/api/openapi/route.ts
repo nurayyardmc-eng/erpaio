@@ -1,5 +1,3 @@
-export const dynamic = "force-static";
-
 const SPEC = {
   openapi: "3.1.0",
   info: {
@@ -8,7 +6,7 @@ const SPEC = {
     description: "Türkçe doğal dil → ERP SQL sorgusu üretimi, anomaly detection, alert dispatch.",
     contact: { email: "support@erpaio.com" },
   },
-  servers: [{ url: "https://erpaio.vercel.app" }],
+  servers: [{ url: process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app" }],
   security: [{ bearerAuth: [] }],
   components: {
     securitySchemes: {

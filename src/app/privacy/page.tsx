@@ -7,15 +7,15 @@ export default function PrivacyPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#07090F",
-      color: "#E8EDF5",
-      fontFamily: "monospace",
+      background: "#F9FAFB",
+      color: "#0F172A",
+      fontFamily: "inherit",
       padding: "40px 20px",
     }}>
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
-        <div style={{ color: "#00E5FF", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
+        <div style={{ color: "#1A2B47", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
         <h1 style={{ fontSize: 24, marginBottom: 8 }}>Gizlilik Politikası</h1>
-        <p style={{ color: "#3A4558", fontSize: 11, marginBottom: 32 }}>Son güncelleme: 2026-05-03</p>
+        <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 32 }}>Son güncelleme: 2026-05-03</p>
 
         <Section title="1. Genel">
           ERPAIO ("hizmet", "biz") müşterilerin ERP veritabanlarına Türkçe doğal dil
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
             "Veri taşınabilirliği (JSON/CSV export)",
             "İşlemeye itiraz",
           ]} />
-          Talepleriniz için: <a href="mailto:privacy@erpaio.com" style={{ color: "#00E5FF" }}>privacy@erpaio.com</a>
+          Talepleriniz için: <a href="mailto:privacy@erpaio.com" style={{ color: "#1A2B47" }}>privacy@erpaio.com</a>
         </Section>
 
         <Section title="7. Güvenlik önlemleri">
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
 
         <Section title="10. İletişim">
           Veri sorumlusu: <strong>ERPAIO</strong>
-          <br />Email: <a href="mailto:privacy@erpaio.com" style={{ color: "#00E5FF" }}>privacy@erpaio.com</a>
+          <br />Email: <a href="mailto:privacy@erpaio.com" style={{ color: "#1A2B47" }}>privacy@erpaio.com</a>
         </Section>
       </div>
     </div>
@@ -113,8 +113,8 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: 28 }}>
-      <h2 style={{ fontSize: 14, color: "#00E5FF", marginBottom: 12 }}>{title}</h2>
-      <div style={{ color: "#9AA5B4", fontSize: 12, lineHeight: 1.7 }}>{children}</div>
+      <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 12 }}>{title}</h2>
+      <div style={{ color: "#475569", fontSize: 12, lineHeight: 1.7 }}>{children}</div>
     </section>
   );
 }

@@ -35,15 +35,15 @@ export async function POST(req: Request) {
   void sendEmail({
     to: user.email,
     subject: "ERPAIO email adresinizi doğrulayın",
-    html: `<!doctype html><html><body style="margin:0;padding:24px;background:#07090F;color:#E8EDF5;font-family:monospace">
-      <div style="max-width:480px;margin:0 auto;background:#0C1018;border:1px solid #131A26;border-radius:12px;padding:32px">
-        <div style="color:#00E5FF;font-size:11px;letter-spacing:3px;margin-bottom:8px">ERPAIO</div>
-        <h2 style="font-size:18px;margin:0 0 12px">Email doğrulama</h2>
-        <p style="color:#9AA5B4;font-size:13px;line-height:1.6">
-          Hesabınızı tam aktive etmek için aşağıdaki bağlantıya tıklayın. Link 24 saat geçerlidir.
+    html: `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+      <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:40px">
+        <div style="color:#1A2B47;font-size:11px;letter-spacing:3px;margin-bottom:16px;font-weight:700">ERPAIO</div>
+        <h2 style="font-size:22px;margin:0 0 12px;font-weight:700;color:#0F172A;letter-spacing:-0.5px">Email Doğrulama</h2>
+        <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 24px">
+          Hesabınızı tam olarak aktive etmek için aşağıdaki bağlantıya tıklayın. Link 24 saat geçerlidir.
         </p>
-        <a href="${verifyUrl}" style="display:inline-block;margin:20px 0;background:#00E5FF;color:#07090F;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px">Email'i doğrula →</a>
-        <p style="color:#3A4558;font-size:11px">Bu talebi siz yapmadıysanız emaili silebilirsiniz.</p>
+        <a href="${verifyUrl}" style="display:inline-block;background:#1A2B47;color:#FFFFFF;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px">Email&apos;i Doğrula</a>
+        <p style="color:#94A3B8;font-size:12px;margin-top:32px;border-top:1px solid #E5E7EB;padding-top:20px">Bu talebi siz yapmadıysanız emaili silebilirsiniz.</p>
       </div>
     </body></html>`,
     tenantId: session.user.tenantId,

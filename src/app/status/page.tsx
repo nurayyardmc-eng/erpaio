@@ -85,10 +85,10 @@ export default function StatusPage() {
     : "unknown";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", color: "#E8EDF5", fontFamily: "monospace" }}>
-      <header style={{ padding: "20px 32px", borderBottom: "1px solid #131A26", display: "flex", justifyContent: "space-between" }}>
-        <Link href="/" style={{ color: "#00E5FF", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
-        <div style={{ fontSize: 11, color: "#9AA5B4" }}>Status</div>
+    <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit" }}>
+      <header style={{ padding: "20px 32px", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between" }}>
+        <Link href="/" style={{ color: "#1A2B47", fontSize: 11, letterSpacing: 4, fontWeight: 700, textDecoration: "none" }}>ERPAIO</Link>
+        <div style={{ fontSize: 11, color: "#475569" }}>Status</div>
       </header>
 
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "60px 32px" }}>
@@ -104,23 +104,23 @@ export default function StatusPage() {
           <div style={{ color: colorFor(overall), fontSize: 11, letterSpacing: 3, marginBottom: 6 }}>
             {labelFor(overall)}
           </div>
-          <div style={{ fontSize: 18, color: "#E8EDF5" }}>{summaryFor(overall)}</div>
+          <div style={{ fontSize: 18, color: "#0F172A" }}>{summaryFor(overall)}</div>
           {health && (
-            <div style={{ fontSize: 10, color: "#3A4558", marginTop: 8 }}>
+            <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 8 }}>
               v{health.version} · son güncelleme {new Date(health.timestamp).toLocaleString("tr-TR")}
             </div>
           )}
         </div>
 
-        <h2 style={{ fontSize: 14, color: "#00E5FF", marginBottom: 16 }}>Servisler</h2>
+        <h2 style={{ fontSize: 14, color: "#1A2B47", marginBottom: 16 }}>Servisler</h2>
         {loading ? (
-          <div style={{ color: "#3A4558" }}>Yükleniyor...</div>
+          <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
             {services.map((s) => (
               <div key={s.name} style={{
-                background: "#0C1018",
-                border: "1px solid #131A26",
+                background: "#FFFFFF",
+                border: "1px solid #E5E7EB",
                 borderLeft: `3px solid ${colorFor(s.status)}`,
                 borderRadius: 8,
                 padding: 14,
@@ -129,9 +129,9 @@ export default function StatusPage() {
                 alignItems: "center",
               }}>
                 <div>
-                  <div style={{ fontSize: 13, color: "#E8EDF5" }}>{s.name}</div>
-                  <div style={{ fontSize: 10, color: "#9AA5B4" }}>{s.description}</div>
-                  {s.message && <div style={{ fontSize: 10, color: "#FF9500", marginTop: 4 }}>⚠ {s.message}</div>}
+                  <div style={{ fontSize: 13, color: "#0F172A" }}>{s.name}</div>
+                  <div style={{ fontSize: 10, color: "#475569" }}>{s.description}</div>
+                  {s.message && <div style={{ fontSize: 10, color: "#F59E0B", marginTop: 4 }}>⚠ {s.message}</div>}
                 </div>
                 <div style={{ color: colorFor(s.status), fontSize: 10, letterSpacing: 1, whiteSpace: "nowrap" }}>
                   {labelFor(s.status)}
@@ -142,14 +142,14 @@ export default function StatusPage() {
         )}
 
         {health && (
-          <div style={{ marginTop: 32, padding: 16, background: "#0C1018", border: "1px solid #131A26", borderRadius: 8, fontSize: 11, color: "#9AA5B4" }}>
-            <div style={{ marginBottom: 4 }}>DB latency: <strong style={{ color: "#E8EDF5" }}>{health.checks.database.latencyMs}ms</strong></div>
-            <div>Environment: <strong style={{ color: "#E8EDF5" }}>{health.env}</strong></div>
+          <div style={{ marginTop: 32, padding: 16, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 11, color: "#475569" }}>
+            <div style={{ marginBottom: 4 }}>DB latency: <strong style={{ color: "#0F172A" }}>{health.checks.database.latencyMs}ms</strong></div>
+            <div>Environment: <strong style={{ color: "#0F172A" }}>{health.env}</strong></div>
           </div>
         )}
 
-        <p style={{ fontSize: 10, color: "#3A4558", marginTop: 24, textAlign: "center" }}>
-          Otomatik 30 saniyede bir yenilenir. Sorunlar için: <a href="mailto:support@erpaio.com" style={{ color: "#00E5FF" }}>support@erpaio.com</a>
+        <p style={{ fontSize: 10, color: "#94A3B8", marginTop: 24, textAlign: "center" }}>
+          Otomatik 30 saniyede bir yenilenir. Sorunlar için: <a href="mailto:support@erpaio.com" style={{ color: "#1A2B47" }}>support@erpaio.com</a>
         </p>
       </main>
     </div>
@@ -157,11 +157,11 @@ export default function StatusPage() {
 }
 
 function colorFor(s: string): string {
-  return s === "operational" ? "#69FF47" : s === "degraded" ? "#FFD740" : s === "outage" ? "#FF3B30" : "#3A4558";
+  return s === "operational" ? "#10B981" : s === "degraded" ? "#F59E0B" : s === "outage" ? "#FF3B30" : "#94A3B8";
 }
 
 function bgFor(s: string): string {
-  return s === "operational" ? "rgba(105,255,71,0.1)" : s === "degraded" ? "rgba(255,215,64,0.1)" : s === "outage" ? "rgba(255,59,48,0.1)" : "#0C1018";
+  return s === "operational" ? "rgba(105,255,71,0.1)" : s === "degraded" ? "rgba(255,215,64,0.1)" : s === "outage" ? "rgba(255,59,48,0.1)" : "#FFFFFF";
 }
 
 function labelFor(s: string): string {
