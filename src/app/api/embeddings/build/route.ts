@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
            FROM INFORMATION_SCHEMA.COLUMNS c
            JOIN INFORMATION_SCHEMA.TABLES t ON c.TABLE_NAME = t.TABLE_NAME
            WHERE t.TABLE_TYPE = 'BASE TABLE'`,
-        )) as SchemaRow[];
+        )) as unknown as SchemaRow[];
 
         const profileSlug = conn.erpProfile ?? (conn.erpType === "nebim_v3" ? "nebim_v3" : null);
         const profile = profileSlug ? loadProfile(profileSlug) : null;

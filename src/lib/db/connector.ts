@@ -1,9 +1,13 @@
 import sql from "mssql";
+import { Pool as PgPool } from "pg";
 import { decrypt } from "@/lib/crypto/encrypt";
 import { prisma } from "@/lib/db/prisma";
 
+type AnyPool = sql.ConnectionPool | PgPool;
+
 interface PoolEntry {
-  pool: sql.ConnectionPool;
+  pool: AnyPool;
+  kind: "mssql" | "postgres";
   lastUsedAt: number;
 }
 
@@ -16,7 +20,7 @@ async function evictIdle() {
   for (const [id, entry] of pools) {
     if (now - entry.lastUsedAt > POOL_IDLE_MS) {
       pools.delete(id);
-      try { await entry.pool.close(); } catch {}
+      await closePool(entry).catch(() => {});
     }
   }
   if (pools.size > MAX_POOLS) {
@@ -26,18 +30,26 @@ async function evictIdle() {
     const toEvict = sorted.slice(0, pools.size - MAX_POOLS);
     for (const [id, entry] of toEvict) {
       pools.delete(id);
-      try { await entry.pool.close(); } catch {}
+      await closePool(entry).catch(() => {});
     }
   }
 }
 
-export async function getPool(connectionId: string): Promise<sql.ConnectionPool> {
+async function closePool(entry: PoolEntry): Promise<void> {
+  if (entry.kind === "mssql") {
+    await (entry.pool as sql.ConnectionPool).close();
+  } else {
+    await (entry.pool as PgPool).end();
+  }
+}
+
+export async function getPoolEntry(connectionId: string): Promise<PoolEntry> {
   await evictIdle();
 
   const cached = pools.get(connectionId);
   if (cached) {
     cached.lastUsedAt = Date.now();
-    return cached.pool;
+    return cached;
   }
 
   const conn = await prisma.erpConnection.findUnique({
@@ -45,29 +57,60 @@ export async function getPool(connectionId: string): Promise<sql.ConnectionPool>
   });
   if (!conn) throw new Error("Bağlantı bulunamadı.");
 
-  const config: sql.config = {
-    server: conn.host,
-    port: conn.port,
-    database: conn.dbName,
-    user: conn.username,
-    password: decrypt(conn.passwordEnc),
-    options: {
-      encrypt: true,
-      trustServerCertificate: true,
-      enableArithAbort: true,
-    },
-    pool: { max: 5, min: 0, idleTimeoutMillis: 30_000 },
-    requestTimeout: 15_000,
-  };
+  const password = decrypt(conn.passwordEnc);
+  const kind: "mssql" | "postgres" = conn.erpType === "postgres" ? "postgres" : "mssql";
 
-  const pool = await new sql.ConnectionPool(config).connect();
-  pools.set(connectionId, { pool, lastUsedAt: Date.now() });
-  pool.on("error", () => pools.delete(connectionId));
-  return pool;
+  let pool: AnyPool;
+  if (kind === "postgres") {
+    pool = new PgPool({
+      host: conn.host,
+      port: conn.port,
+      database: conn.dbName,
+      user: conn.username,
+      password,
+      ssl: { rejectUnauthorized: false },
+      max: 5,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 15_000,
+    });
+    await (pool as PgPool).query("SELECT 1");
+  } else {
+    pool = await new sql.ConnectionPool({
+      server: conn.host,
+      port: conn.port,
+      database: conn.dbName,
+      user: conn.username,
+      password,
+      options: {
+        encrypt: true,
+        trustServerCertificate: true,
+        enableArithAbort: true,
+      },
+      pool: { max: 5, min: 0, idleTimeoutMillis: 30_000 },
+      requestTimeout: 15_000,
+    }).connect();
+    (pool as sql.ConnectionPool).on("error", () => pools.delete(connectionId));
+  }
+
+  const entry: PoolEntry = { pool, kind, lastUsedAt: Date.now() };
+  pools.set(connectionId, entry);
+  return entry;
 }
 
-export async function queryERP(connectionId: string, sqlStr: string) {
-  const pool = await getPool(connectionId);
-  const result = await pool.request().query(sqlStr);
-  return result.recordset;
+export async function getPool(connectionId: string): Promise<sql.ConnectionPool> {
+  const entry = await getPoolEntry(connectionId);
+  if (entry.kind !== "mssql") {
+    throw new Error("getPool only works for mssql; use getPoolEntry for postgres");
+  }
+  return entry.pool as sql.ConnectionPool;
+}
+
+export async function queryERP(connectionId: string, sqlStr: string): Promise<Record<string, unknown>[]> {
+  const entry = await getPoolEntry(connectionId);
+  if (entry.kind === "postgres") {
+    const result = await (entry.pool as PgPool).query(sqlStr);
+    return result.rows as Record<string, unknown>[];
+  }
+  const result = await (entry.pool as sql.ConnectionPool).request().query(sqlStr);
+  return result.recordset as Record<string, unknown>[];
 }

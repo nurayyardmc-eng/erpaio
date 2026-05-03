@@ -28,7 +28,7 @@ export async function findCustomItems(
      FROM INFORMATION_SCHEMA.COLUMNS c
      JOIN INFORMATION_SCHEMA.TABLES t ON c.TABLE_NAME = t.TABLE_NAME
      WHERE t.TABLE_TYPE = 'BASE TABLE'`,
-  )) as SchemaRow[];
+  )) as unknown as SchemaRow[];
 
   const customs: CustomItem[] = [];
   const seenTables = new Set<string>();

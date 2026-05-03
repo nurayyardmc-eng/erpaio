@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
+import { dialectFromErpType } from "@/lib/db/dialect";
 
 export async function GET(
   req: Request,
@@ -20,12 +21,13 @@ export async function GET(
     return Response.json({ error: "Bulunamadı." }, { status: 404 });
   }
 
+  const dialect = dialectFromErpType(conn.erpType);
+  const tablesQuery = dialect === "postgres"
+    ? `SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = 'public' ORDER BY table_name`
+    : `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME`;
+
   try {
-    const tables = await queryERP(id, `
-      SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
-      WHERE TABLE_TYPE = 'BASE TABLE'
-      ORDER BY TABLE_NAME
-    `);
+    const tables = await queryERP(id, tablesQuery);
 
     await prisma.erpConnection.update({
       where: { id },

@@ -4,7 +4,7 @@ import { encrypt } from "@/lib/crypto/encrypt";
 import { z } from "zod";
 
 const Schema = z.object({
-  erpType: z.enum(["nebim_v3", "sap", "dynamics365"]),
+  erpType: z.enum(["nebim_v3", "sap", "dynamics365", "postgres"]),
   host: z.string().min(1),
   port: z.number().default(1433),
   dbName: z.string().min(1),

@@ -86,6 +86,11 @@ export function dialectFromErpType(erpType: string): DbDialect {
       return "oracle";
     case "oracle_ebs":
       return "oracle";
+    case "postgres":
+      return "postgres";
+    case "mysql":
+    case "odoo":
+      return "mysql";
     default:
       return "mssql";
   }

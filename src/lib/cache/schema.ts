@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
+import { dialectFromErpType, getDialect } from "@/lib/db/dialect";
 import { invalidateForTenant } from "./queryCache";
 import { invalidateSampleRows } from "./sampleRows";
 import { childLogger } from "@/lib/observability/logger";
@@ -47,16 +48,15 @@ export async function getSchema(connectionId: string): Promise<string> {
 }
 
 async function buildSchema(connectionId: string): Promise<string> {
-  const tables = await queryERP(connectionId, `
-    SELECT c.TABLE_NAME, c.COLUMN_NAME, c.DATA_TYPE
-    FROM INFORMATION_SCHEMA.COLUMNS c
-    JOIN INFORMATION_SCHEMA.TABLES t ON c.TABLE_NAME = t.TABLE_NAME
-    WHERE t.TABLE_TYPE = 'BASE TABLE'
-    ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
-  `);
+  const conn = await prisma.erpConnection.findUnique({
+    where: { id: connectionId },
+    select: { erpType: true },
+  });
+  const dialect = getDialect(dialectFromErpType(conn?.erpType ?? "nebim_v3"));
+  const rows = await queryERP(connectionId, dialect.schemaQuery);
 
   const grouped: Record<string, string[]> = {};
-  for (const row of tables) {
+  for (const row of rows as Array<{ TABLE_NAME: string; COLUMN_NAME: string; DATA_TYPE: string }>) {
     if (!grouped[row.TABLE_NAME]) grouped[row.TABLE_NAME] = [];
     grouped[row.TABLE_NAME].push(`${row.COLUMN_NAME}(${row.DATA_TYPE})`);
   }
