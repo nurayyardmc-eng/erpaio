@@ -19,6 +19,7 @@ import {
 import NpsPrompt from "@/components/NpsPrompt";
 import CookieConsent from "@/components/CookieConsent";
 import Logo from "@/components/Logo";
+import UserMenu from "@/components/UserMenu";
 import { colors } from "@/lib/theme";
 
 const items = [
@@ -52,9 +53,7 @@ export default async function DashboardPage() {
         justifyContent: "space-between",
       }}>
         <Logo size={28} />
-        <div style={{ fontSize: 13, color: colors.textMuted }}>
-          {session.user?.email}
-        </div>
+        <UserMenu email={session.user?.email ?? ""} name={session.user?.name} />
       </header>
 
       <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 32px" }}>

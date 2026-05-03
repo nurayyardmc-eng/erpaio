@@ -1,0 +1,132 @@
+"use client";
+import { useState, useRef, useEffect } from "react";
+import { signOut } from "next-auth/react";
+import Link from "next/link";
+import { ChevronDown, LogOut, Settings, Shield } from "lucide-react";
+import { colors } from "@/lib/theme";
+
+interface UserMenuProps {
+  email: string;
+  name?: string | null;
+}
+
+export default function UserMenu({ email, name }: UserMenuProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const initials = (name || email).split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          background: "transparent",
+          border: `1px solid ${colors.border}`,
+          borderRadius: 999,
+          padding: "6px 14px 6px 6px",
+          cursor: "pointer",
+        }}
+      >
+        <span style={{
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          background: colors.brand,
+          color: colors.textInverse,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 11,
+          fontWeight: 700,
+        }}>
+          {initials}
+        </span>
+        <span style={{ fontSize: 13, color: colors.text, fontWeight: 500 }}>
+          {name || email.split("@")[0]}
+        </span>
+        <ChevronDown size={14} color={colors.textMuted} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute",
+          right: 0,
+          top: "calc(100% + 8px)",
+          background: colors.card,
+          border: `1px solid ${colors.border}`,
+          borderRadius: 12,
+          minWidth: 220,
+          boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+          overflow: "hidden",
+          zIndex: 100,
+        }}>
+          <div style={{
+            padding: "12px 16px",
+            borderBottom: `1px solid ${colors.border}`,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{name || email.split("@")[0]}</div>
+            <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{email}</div>
+          </div>
+
+          <Link
+            href="/dashboard/settings"
+            onClick={() => setOpen(false)}
+            style={menuItemStyle}
+          >
+            <Settings size={15} color={colors.textMuted} />
+            Ayarlar
+          </Link>
+          <Link
+            href="/dashboard/security"
+            onClick={() => setOpen(false)}
+            style={menuItemStyle}
+          >
+            <Shield size={15} color={colors.textMuted} />
+            Güvenlik
+          </Link>
+
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            style={{
+              ...menuItemStyle,
+              border: "none",
+              borderTop: `1px solid ${colors.border}`,
+              width: "100%",
+              background: "transparent",
+              color: colors.error,
+              textAlign: "left",
+            }}
+          >
+            <LogOut size={15} color={colors.error} />
+            Çıkış Yap
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const menuItemStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "10px 16px",
+  fontSize: 14,
+  color: colors.text,
+  cursor: "pointer",
+  textDecoration: "none",
+};
