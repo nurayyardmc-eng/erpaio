@@ -23,17 +23,22 @@ import {
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
+// Sıra: günlük kullanım → kurulum → analiz → admin
 const navItems = [
+  // Günlük
   { href: "/dashboard/chat", label: "Sohbet", Icon: MessageSquare },
   { href: "/dashboard/overview", label: "Metrikler", Icon: BarChart3 },
-  { href: "/dashboard/connections", label: "Bağlantılar", Icon: Database },
-  { href: "/dashboard/alerts", label: "Bildirimler", Icon: Bell },
   { href: "/dashboard/saved", label: "Kayıtlı", Icon: Bookmark },
-  { href: "/dashboard/scheduled-reports", label: "Raporlar", Icon: Send },
-  { href: "/dashboard/watchlists", label: "Watchlists", Icon: Eye },
-  { href: "/dashboard/insights", label: "Analiz", Icon: TrendingUp },
+  { href: "/dashboard/alerts", label: "Bildirimler", Icon: Bell },
+  // Kurulum
+  { href: "/dashboard/connections", label: "Bağlantılar", Icon: Database },
   { href: "/dashboard/annotations", label: "Açıklamalar", Icon: FileText },
+  { href: "/dashboard/watchlists", label: "Watchlists", Icon: Eye },
+  // Analiz
+  { href: "/dashboard/insights", label: "Analiz", Icon: TrendingUp },
+  { href: "/dashboard/scheduled-reports", label: "Raporlar", Icon: Send },
   { href: "/dashboard/audit", label: "Audit", Icon: ScrollText },
+  // Admin
   { href: "/dashboard/team", label: "Takım", Icon: Users },
   { href: "/dashboard/security", label: "Güvenlik", Icon: Shield },
   { href: "/dashboard/settings", label: "Ayarlar", Icon: SettingsIcon },
