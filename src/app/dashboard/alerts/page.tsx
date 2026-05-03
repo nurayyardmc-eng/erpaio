@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Skeleton, SkeletonList } from "@/components/Skeleton";
+import { Bell } from "lucide-react";
+import { SkeletonList } from "@/components/Skeleton";
+import EmptyState from "@/components/EmptyState";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -36,7 +38,11 @@ export default function AlertsPage() {
       {loading && <SkeletonList count={3} height={72} gap={10} />}
 
       {!loading && alerts.length === 0 && (
-        <div style={{ color: "#94A3B8", fontSize: 13 }}>Aktif bildirim yok.</div>
+        <EmptyState
+          icon={<Bell size={28} />}
+          title="Henüz bildirim yok"
+          description="Anomaly detector saatlik çalışıyor. Önemli olaylar burada gözükür."
+        />
       )}
 
       {alerts.map((alert) => (

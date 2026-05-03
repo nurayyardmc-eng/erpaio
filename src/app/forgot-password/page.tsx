@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -83,12 +83,15 @@ export default function ForgotPasswordPage() {
             </p>
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Email</label>
-              <input
-                required type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={inputStyle}
-              />
+              <div style={{ position: "relative" }}>
+                <Mail size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: colors.textMuted, pointerEvents: "none" }} />
+                <input
+                  required type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{ ...inputStyle, paddingLeft: 42 }}
+                />
+              </div>
             </div>
             <button
               type="submit"

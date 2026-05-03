@@ -1,7 +1,7 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Lock, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -114,31 +114,43 @@ function ResetPasswordInner() {
           <form onSubmit={submit}>
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Yeni Şifre (min 8 karakter)</label>
-              <input
-                required type="password" minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={inputStyle}
-              />
+              <div style={{ position: "relative" }}>
+                <Lock size={16} style={iconStyle} />
+                <input
+                  required type="password" minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ ...inputStyle, paddingLeft: 42 }}
+                />
+              </div>
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Tekrar</label>
-              <input
-                required type="password" minLength={8}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                style={inputStyle}
-              />
+              <div style={{ position: "relative" }}>
+                <Lock size={16} style={iconStyle} />
+                <input
+                  required type="password" minLength={8}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  style={{ ...inputStyle, paddingLeft: 42 }}
+                />
+              </div>
             </div>
             {error && (
               <div style={{
                 background: colors.errorSoft,
                 color: colors.error,
                 padding: "10px 12px",
-                borderRadius: 8,
+                borderRadius: 10,
                 fontSize: 13,
                 marginBottom: 12,
-              }}>{error}</div>
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontWeight: 500,
+              }}>
+                <AlertCircle size={16} /> {error}
+              </div>
             )}
             <button
               type="submit"
@@ -181,4 +193,13 @@ const inputStyle: React.CSSProperties = {
   fontSize: 14,
   outline: "none",
   boxSizing: "border-box",
+};
+
+const iconStyle: React.CSSProperties = {
+  position: "absolute",
+  left: 14,
+  top: "50%",
+  transform: "translateY(-50%)",
+  color: colors.textMuted,
+  pointerEvents: "none",
 };

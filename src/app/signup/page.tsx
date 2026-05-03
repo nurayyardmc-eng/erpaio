@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Mail, Lock, User, Building2, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 
@@ -62,43 +63,43 @@ export default function SignupPage() {
         </p>
 
         <form onSubmit={submit}>
-          <Field label="Şirket Adı">
+          <Field label="Şirket Adı" icon={<Building2 size={16} />}>
             <input
               required
               value={form.tenantName}
               onChange={(e) => setForm({ ...form, tenantName: e.target.value })}
               placeholder="Acme Ltd."
-              style={inputStyle}
+              style={{ ...inputStyle, paddingLeft: 42 }}
             />
           </Field>
 
-          <Field label="Adın">
+          <Field label="Adın" icon={<User size={16} />}>
             <input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Ali Yılmaz"
-              style={inputStyle}
+              style={{ ...inputStyle, paddingLeft: 42 }}
             />
           </Field>
 
-          <Field label="Email">
+          <Field label="Email" icon={<Mail size={16} />}>
             <input
               required type="email"
               autoComplete="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              style={inputStyle}
+              style={{ ...inputStyle, paddingLeft: 42 }}
             />
           </Field>
 
-          <Field label="Şifre (min 8 karakter)">
+          <Field label="Şifre (min 8 karakter)" icon={<Lock size={16} />}>
             <input
               required type="password"
               autoComplete="new-password"
               minLength={8}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              style={inputStyle}
+              style={{ ...inputStyle, paddingLeft: 42 }}
             />
           </Field>
 
@@ -107,11 +108,15 @@ export default function SignupPage() {
               background: colors.errorSoft,
               color: colors.error,
               padding: "10px 12px",
-              borderRadius: 8,
+              borderRadius: 10,
               fontSize: 13,
               marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontWeight: 500,
             }}>
-              {error}
+              <AlertCircle size={16} /> {error}
             </div>
           )}
 
@@ -146,7 +151,7 @@ export default function SignupPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <label style={{
@@ -156,7 +161,22 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         color: colors.text,
         marginBottom: 6,
       }}>{label}</label>
-      {children}
+      <div style={{ position: "relative" }}>
+        {icon && (
+          <span style={{
+            position: "absolute",
+            left: 14,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: colors.textMuted,
+            display: "flex",
+            pointerEvents: "none",
+          }}>
+            {icon}
+          </span>
+        )}
+        {children}
+      </div>
     </div>
   );
 }
