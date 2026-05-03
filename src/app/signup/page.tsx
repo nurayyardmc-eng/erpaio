@@ -51,8 +51,8 @@ export default function SignupPage() {
         width: 440,
         boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.05)",
       }}>
-        <div style={{ marginBottom: 28 }}>
-          <Logo size={32} />
+        <div style={{ marginBottom: 28, display: "flex", justifyContent: "center" }}>
+          <Logo size={48} variant="stacked" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 8px", fontWeight: 700, letterSpacing: -0.5 }}>
           Hesap Oluştur

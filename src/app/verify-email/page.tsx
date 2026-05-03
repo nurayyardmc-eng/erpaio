@@ -84,7 +84,7 @@ function Inner() {
         boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.05)",
       }}>
         <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
-          <Logo size={32} />
+          <Logo size={48} variant="stacked" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
           Email Doğrulama

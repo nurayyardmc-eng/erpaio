@@ -18,7 +18,7 @@ export default function MaintenancePage() {
       padding: 40,
       textAlign: "center",
     }}>
-      <Logo size={36} />
+      <Logo size={56} variant="stacked" />
       <div style={{
         display: "inline-flex",
         alignItems: "center",
