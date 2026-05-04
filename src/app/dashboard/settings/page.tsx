@@ -241,6 +241,9 @@ export default function SettingsPage() {
               <div style={{ ...inputStyle, color: colors.textMuted, background: colors.bgSubtle }}>
                 {profile.email}
               </div>
+              <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>
+                Email değiştirmek için <a href="mailto:support@erpaio.com" style={{ color: colors.text, textDecoration: "underline" }}>support@erpaio.com</a> ile iletişime geçin.
+              </div>
             </Field>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <button
@@ -373,6 +376,28 @@ export default function SettingsPage() {
                 </span>
               )}
             </div>
+          </Section>
+
+          <Section title="Hesap Güvenliği">
+            <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>
+              İki faktörlü doğrulama (MFA), güven listesi (IP allowlist) ve API token yönetimi ayrı sayfada.
+            </p>
+            <Link
+              href="/dashboard/security"
+              style={{
+                display: "inline-block",
+                padding: "10px 18px",
+                borderRadius: 100,
+                background: colors.bg,
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              Güvenlik ayarlarına git →
+            </Link>
           </Section>
 
           <DangerZone />
