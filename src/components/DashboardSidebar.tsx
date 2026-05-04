@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,7 +17,6 @@ import {
   Send,
   Eye,
   Plus,
-  Menu,
   X,
 } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -65,6 +64,12 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handler = () => setMobileOpen(true);
+    window.addEventListener("erpaio-open-sidebar", handler);
+    return () => window.removeEventListener("erpaio-open-sidebar", handler);
+  }, []);
 
   const sidebarContent = (
     <>
@@ -152,29 +157,6 @@ export default function DashboardSidebar() {
 
   return (
     <>
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="show-mobile"
-        aria-label="Menüyü aç"
-        style={{
-          display: "none",
-          position: "fixed",
-          top: 12,
-          left: 12,
-          zIndex: 50,
-          width: 40,
-          height: 40,
-          background: colors.bg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: 10,
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-        }}
-      >
-        <Menu size={18} color={colors.text} />
-      </button>
-
       <aside className="hide-mobile" style={{
         width: 56,
         minWidth: 56,

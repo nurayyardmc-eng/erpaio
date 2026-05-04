@@ -48,7 +48,18 @@ export default function DashboardHeader({ email, name }: Props) {
       zIndex: 10,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 20, minWidth: 0 }}>
-        <Link href="/" aria-label="Ana sayfa" style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+        <Link
+          href="/"
+          aria-label="Ana sayfa"
+          onClick={(e) => {
+            // Mobilde amblem = menü tetikleyici (navigation yerine sidebar aç)
+            if (typeof window !== "undefined" && window.innerWidth <= 900) {
+              e.preventDefault();
+              window.dispatchEvent(new CustomEvent("erpaio-open-sidebar"));
+            }
+          }}
+          style={{ display: "flex", alignItems: "center", flexShrink: 0, cursor: "pointer" }}
+        >
           <Logo size={36} variant="mark" />
         </Link>
         <div className="hide-mobile" style={{ width: 1, height: 24, background: "rgba(10,10,10,0.08)" }} />
