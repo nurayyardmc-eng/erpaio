@@ -172,7 +172,26 @@ export async function POST(req: Request) {
       const annotationsContext = annotationsToPromptContext(await getAnnotations(tenantId));
       const erpName = erpProfile?.name ?? "ERP";
 
-      const systemText = `Sen bir SQL Server uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL SELECT sorgusuna çeviriyorsun.
+      // Dialect-aware: Postgres / MS SQL / MySQL syntax differences
+      const isPostgres = conn.erpType === "postgres";
+      const isMsSql = !isPostgres && (conn.erpType === "nebim_v3" || conn.erpType === "dynamics365" || !conn.erpProfile);
+      const dialectName = isPostgres ? "PostgreSQL" : isMsSql ? "SQL Server" : "ERP veritabanı";
+
+      const dialectRules = isPostgres
+        ? `- String literal: '...' (NVARCHAR yok). Türkçe karakterler doğrudan UTF-8.
+- Tarih: NOW(), CURRENT_DATE, INTERVAL '1 day', date_trunc('month', col).
+- LIMIT n (TOP n yok).
+- Identifier quoting: "tabloAdi" (köşeli parantez yok).`
+        : `- Türkçe karakterler için NVARCHAR + N'...' prefix.
+- Tarih: GETDATE(), DATEADD(), CAST(... AS DATE).
+- TOP n (LIMIT yok).
+- Identifier: [tabloAdi] (köşeli parantez).`;
+
+      const profileSpecificRules = erpProfile?.slug === "nebim_v3"
+        ? "- IptalDurumu = 0 her zaman filtrele (varsa)."
+        : "";
+
+      const systemText = `Sen bir ${dialectName} uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL SELECT sorgusuna çeviriyorsun.
 
 YANIT FORMATI (zorunlu, sadece JSON, başka hiçbir şey yazma):
 {
@@ -190,9 +209,9 @@ CONFIDENCE REHBERİ:
 
 KESİN KURALLAR:
 - Sadece SELECT veya WITH — DROP/DELETE/UPDATE/INSERT/ALTER/EXEC/MERGE YASAK.
-- Türkçe karakterler için NVARCHAR + N'...' prefix.
-- IptalDurumu = 0 her zaman filtrele (varsa).
-- Tarih: GETDATE(), DATEADD(), CAST(... AS DATE).
+- SADECE aşağıdaki şemada listelenen tablo ve kolonları kullan. Şemada olmayan kolon/tablo asla varsayma.
+${dialectRules}
+${profileSpecificRules}
 - ERP profiline ÖNCELİK VER — şema listesi referans, profile semantic.
 
 ${profileContext}
@@ -201,7 +220,7 @@ ${annotationsContext}
 
 ${sampleContext}
 
-## CANLI ŞEMA (INFORMATION_SCHEMA çıktısı)
+## CANLI ŞEMA (information_schema çıktısı)
 ${schema}`;
 
       const conversationHistory = sessionId
