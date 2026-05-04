@@ -98,10 +98,10 @@ export default function DashboardSidebar() {
             flexDirection: "column",
             gap: 2,
             alignItems: "center",
-            paddingTop: gi === 0 ? 0 : 12,
-            paddingBottom: gi === navGroups.length - 1 ? 0 : 12,
+            paddingTop: gi === 0 ? 0 : 8,
+            paddingBottom: gi === navGroups.length - 1 ? 0 : 8,
             borderTop: gi === 0 ? "none" : `1px solid ${colors.border}`,
-            width: "calc(100% - 16px)",
+            width: "calc(100% - 12px)",
           }}>
             {group.items.map(({ href, label, Icon }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
