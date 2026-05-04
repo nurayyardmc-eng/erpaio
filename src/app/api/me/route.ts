@@ -15,6 +15,7 @@ export async function GET(req: Request) {
       id: true,
       email: true,
       name: true,
+      avatarBase64: true,
       role: true,
       tenantId: true,
       tenant: { select: { id: true, name: true, plan: true } },
@@ -30,7 +31,8 @@ export async function GET(req: Request) {
 }
 
 const PatchSchema = z.object({
-  name: z.string().min(1).max(80).nullable(),
+  name: z.string().min(1).max(80).nullable().optional(),
+  avatarBase64: z.string().max(500_000).nullable().optional(), // ~370KB base64 max
 });
 
 export async function PATCH(req: Request) {
@@ -41,10 +43,19 @@ export async function PATCH(req: Request) {
   const body = PatchSchema.safeParse(await req.json());
   if (!body.success) return Response.json({ error: body.error.issues[0].message }, { status: 400 });
 
+  const data: { name?: string | null; avatarBase64?: string | null } = {};
+  if (body.data.name !== undefined) data.name = body.data.name?.trim() || null;
+  if (body.data.avatarBase64 !== undefined) {
+    if (body.data.avatarBase64 && !body.data.avatarBase64.startsWith("data:image/")) {
+      return Response.json({ error: "Geçersiz görsel formatı." }, { status: 400 });
+    }
+    data.avatarBase64 = body.data.avatarBase64;
+  }
+
   const updated = await prisma.user.update({
     where: { id: user.id },
-    data: { name: body.data.name?.trim() || null },
-    select: { id: true, email: true, name: true },
+    data,
+    select: { id: true, email: true, name: true, avatarBase64: true },
   });
 
   childLogger({ component: "me-update" }).info({ userId: user.id }, "Profile updated");

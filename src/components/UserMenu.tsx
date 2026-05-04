@@ -26,6 +26,7 @@ interface UserMenuProps {
 
 export default function UserMenu({ email, name }: UserMenuProps) {
   const [open, setOpen] = useState(false);
+  const [avatar, setAvatar] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,6 +38,13 @@ export default function UserMenu({ email, name }: UserMenuProps) {
     if (open) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((d) => setAvatar(d?.user?.avatarBase64 ?? null))
+      .catch(() => {});
+  }, []);
 
   const initials = (name || email).split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
 
@@ -59,7 +67,8 @@ export default function UserMenu({ email, name }: UserMenuProps) {
           width: 28,
           height: 28,
           borderRadius: "50%",
-          background: colors.brand,
+          overflow: "hidden",
+          background: avatar ? "transparent" : colors.brand,
           color: colors.textInverse,
           display: "inline-flex",
           alignItems: "center",
@@ -67,7 +76,12 @@ export default function UserMenu({ email, name }: UserMenuProps) {
           fontSize: 11,
           fontWeight: 700,
         }}>
-          {initials}
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            initials
+          )}
         </span>
         <span style={{ fontSize: 13, color: colors.text, fontWeight: 500 }}>
           {name || email.split("@")[0]}

@@ -24,8 +24,8 @@ export default function SettingsPage() {
   const [pwdSaving, setPwdSaving] = useState(false);
   const [pwdStatus, setPwdStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
-  // Profile (kişisel bilgi)
-  const [profile, setProfile] = useState({ name: "", email: "" });
+  // Profile (kişisel bilgi + avatar)
+  const [profile, setProfile] = useState({ name: "", email: "", avatarBase64: null as string | null });
   const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
@@ -35,7 +35,11 @@ export default function SettingsPage() {
     fetch("/api/me").then(async (r) => {
       if (r.ok) {
         const d = await r.json();
-        setProfile({ name: d.user?.name ?? "", email: d.user?.email ?? "" });
+        setProfile({
+          name: d.user?.name ?? "",
+          email: d.user?.email ?? "",
+          avatarBase64: d.user?.avatarBase64 ?? null,
+        });
       }
     });
   }, []);
@@ -46,7 +50,10 @@ export default function SettingsPage() {
       const res = await fetch("/api/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: profile.name || null }),
+        body: JSON.stringify({
+          name: profile.name || null,
+          avatarBase64: profile.avatarBase64,
+        }),
       });
       if (res.ok) {
         showToast("Profil güncellendi", "success");
@@ -59,6 +66,21 @@ export default function SettingsPage() {
     } finally {
       setProfileSaving(false);
     }
+  };
+
+  const onAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 300_000) {
+      showToast("Dosya çok büyük (max 300KB)", "error");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setProfile((p) => ({ ...p, avatarBase64: base64 }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const save = async () => {
@@ -155,6 +177,56 @@ export default function SettingsPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <Section title="Profilim">
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                overflow: "hidden",
+                background: profile.avatarBase64 ? "transparent" : colors.brand,
+                color: colors.textInverse,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 22,
+                fontWeight: 600,
+                flexShrink: 0,
+                border: `1px solid ${colors.border}`,
+              }}>
+                {profile.avatarBase64 ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.avatarBase64} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  (profile.name || profile.email).slice(0, 2).toUpperCase()
+                )}
+              </div>
+              <div>
+                <label style={{
+                  display: "inline-block",
+                  padding: "8px 14px",
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 100,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  background: colors.bg,
+                  color: colors.text,
+                  fontWeight: 500,
+                }}>
+                  Avatar yükle
+                  <input type="file" accept="image/*" onChange={onAvatarChange} style={{ display: "none" }} />
+                </label>
+                {profile.avatarBase64 && (
+                  <button
+                    onClick={() => setProfile({ ...profile, avatarBase64: null })}
+                    style={{ marginLeft: 8, padding: "8px 12px", background: "transparent", border: "none", color: colors.error, fontSize: 12, cursor: "pointer" }}
+                  >
+                    Kaldır
+                  </button>
+                )}
+                <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>JPG/PNG, max 300KB</div>
+              </div>
+            </div>
+
             <Field label="İsim">
               <input
                 value={profile.name}
