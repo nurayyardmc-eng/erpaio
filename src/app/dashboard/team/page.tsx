@@ -1,5 +1,6 @@
 "use client";
 import { confirmDialog } from "@/components/Confirm";
+import ErrorState from "@/components/ErrorState";
 import { useEffect, useState } from "react";
 
 interface TeamUser {
@@ -23,17 +24,27 @@ export default function TeamPage() {
   const [users, setUsers] = useState<TeamUser[]>([]);
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"viewer" | "admin">("viewer");
   const [inviting, setInviting] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
   const refresh = () => {
+    setLoading(true);
+    setError(false);
     fetch("/api/team")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         setUsers(d.users ?? []);
         setInvitations(d.invitations ?? []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
         setLoading(false);
       });
   };
@@ -120,7 +131,13 @@ export default function TeamPage() {
         )}
       </div>
 
-      {invitations.length > 0 && (
+      {error && (
+        <div style={{ maxWidth: 700, marginBottom: 16 }}>
+          <ErrorState onRetry={refresh} />
+        </div>
+      )}
+
+      {!error && invitations.length > 0 && (
         <div style={card}>
           <h2 style={sectionTitle}>Bekleyen Davetler ({invitations.length})</h2>
           {invitations.map((inv) => (
@@ -137,6 +154,7 @@ export default function TeamPage() {
         </div>
       )}
 
+      {!error && (
       <div style={card}>
         <h2 style={sectionTitle}>Kullanıcılar ({users.length})</h2>
         {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
@@ -161,6 +179,7 @@ export default function TeamPage() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

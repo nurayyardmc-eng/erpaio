@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/ErrorState";
 
 interface Annotation {
   id: string;
@@ -15,15 +16,25 @@ interface Annotation {
 export default function AnnotationsPage() {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [form, setForm] = useState({ tableName: "", columnName: "", description: "", hidden: false });
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
   const refresh = () => {
+    setLoading(true);
+    setError(false);
     fetch("/api/annotations")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         setAnnotations(d.annotations ?? []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
         setLoading(false);
       });
   };
@@ -148,7 +159,9 @@ export default function AnnotationsPage() {
 
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
-      {!loading && annotations.length === 0 && (
+      {!loading && error && <ErrorState onRetry={refresh} />}
+
+      {!loading && !error && annotations.length === 0 && (
         <EmptyState
           icon={<FileText size={28} />}
           title="Henüz açıklama yok"

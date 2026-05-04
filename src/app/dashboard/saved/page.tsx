@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bookmark } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/ErrorState";
 
 interface SavedQuery {
   id: string;
@@ -17,14 +18,28 @@ interface SavedQuery {
 export default function SavedQueriesPage() {
   const [queries, setQueries] = useState<SavedQuery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
+    setError(false);
     fetch("/api/saved-queries")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         setQueries(d.queries ?? []);
         setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    load();
   }, []);
 
   return (
@@ -43,7 +58,9 @@ export default function SavedQueriesPage() {
         </div>
       )}
 
-      {!loading && queries.length === 0 && (
+      {!loading && error && <ErrorState onRetry={load} />}
+
+      {!loading && !error && queries.length === 0 && (
         <EmptyState
           icon={<Bookmark size={28} />}
           title="Henüz kayıtlı sorgu yok"

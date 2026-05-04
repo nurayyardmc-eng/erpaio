@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { SkeletonList } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/ErrorState";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -27,14 +28,23 @@ interface Alert {
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
+    setError(false);
     fetch("/api/alerts")
-      .then((r) => r.json())
-      .then((data) => { setAlerts(data); setLoading(false); });
-  }, []);
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => { setAlerts(data); setLoading(false); })
+      .catch(() => { setError(true); setLoading(false); });
+  };
+
+  useEffect(load, []);
 
   const filtered = alerts.filter((a) =>
     (severityFilter === "all" || a.severity === severityFilter) &&
@@ -57,7 +67,9 @@ export default function AlertsPage() {
 
       {loading && <SkeletonList count={3} height={72} gap={10} />}
 
-      {!loading && alerts.length > 0 && (
+      {!loading && error && <ErrorState onRetry={load} />}
+
+      {!loading && !error && alerts.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
           <FilterPill label="Tümü" active={severityFilter === "all"} onClick={() => setSeverityFilter("all")} />
           <FilterPill label="Kritik" active={severityFilter === "critical"} onClick={() => setSeverityFilter("critical")} />
@@ -71,7 +83,7 @@ export default function AlertsPage() {
         </div>
       )}
 
-      {!loading && alerts.length === 0 && (
+      {!loading && !error && alerts.length === 0 && (
         <EmptyState
           icon={<Bell size={28} />}
           title="Henüz bildirim yok"

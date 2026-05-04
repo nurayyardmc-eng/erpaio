@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Database } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/ErrorState";
 
 interface Connection { id: string; dbName: string; status: string; erpProfile: string | null; erpType: string }
 interface InferredFk { fromTable: string; fromColumn: string; toTable: string; toColumn: string; occurrences: number }
@@ -8,29 +11,55 @@ interface InsightsResp { inferredForeignKeys: InferredFk[]; customItems: CustomI
 
 export default function InsightsPage() {
   const [conns, setConns] = useState<Connection[]>([]);
+  const [connsLoading, setConnsLoading] = useState(true);
+  const [connsError, setConnsError] = useState(false);
   const [selected, setSelected] = useState<string>("");
   const [data, setData] = useState<InsightsResp | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/connections").then(r => r.json()).then((cs: Connection[]) => {
-      const active = cs.filter(c => c.status === "active");
-      setConns(active);
-      if (active.length > 0) setSelected(active[0].id);
-    });
-  }, []);
+  const loadConns = () => {
+    setConnsLoading(true);
+    setConnsError(false);
+    fetch("/api/connections")
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((cs: Connection[]) => {
+        const active = cs.filter(c => c.status === "active");
+        setConns(active);
+        if (active.length > 0) setSelected(active[0].id);
+        setConnsLoading(false);
+      })
+      .catch(() => {
+        setConnsError(true);
+        setConnsLoading(false);
+      });
+  };
 
-  useEffect(() => {
+  useEffect(loadConns, []);
+
+  const loadInsights = () => {
     if (!selected) return;
     setLoading(true);
+    setError(false);
     fetch(`/api/erp-insights?connectionId=${selected}`)
-      .then(r => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d: InsightsResp) => {
         setData(d);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [selected]);
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
+  };
+
+  useEffect(loadInsights, [selected]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
@@ -40,6 +69,16 @@ export default function InsightsPage() {
         Başarılı sorgulardan otomatik öğrenilen ilişkiler + profile dışı (müşteri özel) tablolar/kolonlar.
         Bu bilgileri annotation'larla profile'a kalıcı ekleyebilirsiniz.
       </p>
+
+      {connsError && <ErrorState onRetry={loadConns} />}
+
+      {!connsLoading && !connsError && conns.length === 0 && (
+        <EmptyState
+          icon={<Database size={28} />}
+          title="Aktif ERP bağlantısı yok"
+          description="Şema analizi için en az bir aktif ERP bağlantısı gerekli."
+        />
+      )}
 
       {conns.length > 0 && (
         <select
@@ -53,7 +92,9 @@ export default function InsightsPage() {
 
       {loading && <div style={{ color: "#94A3B8" }}>Analiz ediliyor...</div>}
 
-      {data && (
+      {!loading && error && <ErrorState onRetry={loadInsights} />}
+
+      {!error && data && (
         <>
           <Section title={`Çıkarılmış İlişkiler (${data.inferredForeignKeys.length})`} desc="Başarılı sorgularınızdan tespit edilen JOIN pattern'leri. 3+ kez görünen ilişkiler güvenilir.">
             {data.inferredForeignKeys.length === 0 && (
