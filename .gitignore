@@ -67,3 +67,4 @@ desktop/dist
 agent/erpaio-agent
 agent/dist
 agent/go.sum
+.expo/
