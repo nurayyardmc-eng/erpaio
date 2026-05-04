@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   }
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0].message }, { status: 400 });
+  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
 
   const { sql, connectionId, sessionId } = body.data;
 

@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 
 interface Watchlist {
@@ -78,7 +79,7 @@ export default function WatchlistsPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Bu watchlist'i silmek istediğine emin misin?")) return;
+    const _ok = await confirmDialog({ title: "Watchlist sil?", message: "Bu watchlist kalıcı olarak silinir.", confirmLabel: "Evet, sil", destructive: true }); if (!_ok) return;
     await fetch(`/api/watchlists?id=${id}`, { method: "DELETE" });
     refresh();
   };

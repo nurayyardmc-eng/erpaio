@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 
 interface SetupResp { secret: string; qr: string; uri: string }
@@ -54,7 +55,7 @@ export default function SecurityPage() {
   };
 
   const disable = async () => {
-    if (!confirm("MFA'yı kapatmak istediğine emin misin? Hesabın daha az güvenli olur.")) return;
+    const _ok = await confirmDialog({ title: "MFAyı kapat?", message: "Hesabın daha az güvenli olur.", confirmLabel: "Evet, kapat", destructive: true }); if (!_ok) return;
     setLoading(true);
     await fetch("/api/auth/mfa/setup", { method: "DELETE" });
     setStatus({ kind: "ok", msg: "MFA kapatıldı." });

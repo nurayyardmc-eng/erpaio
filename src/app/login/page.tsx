@@ -31,8 +31,7 @@ export default function LoginPage() {
       }
 
       window.location.href = "/dashboard";
-    } catch (err) {
-      console.error("Login error:", err);
+    } catch {
       setError("Giriş başarısız. Lütfen tekrar deneyin.");
       setLoading(false);
     }

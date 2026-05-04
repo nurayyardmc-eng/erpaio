@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 
 interface TeamUser {
@@ -76,7 +77,7 @@ export default function TeamPage() {
   };
 
   const removeUser = async (userId: string) => {
-    if (!confirm("Bu kullanıcıyı silmek istediğine emin misin?")) return;
+    const _ok = await confirmDialog({ title: "Kullanıcıyı sil?", message: "Bu işlem geri alınamaz.", confirmLabel: "Evet, sil", destructive: true }); if (!_ok) return;
     await fetch(`/api/team?userId=${userId}`, { method: "DELETE" });
     refresh();
   };

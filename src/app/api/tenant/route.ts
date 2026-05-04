@@ -44,7 +44,7 @@ export async function PATCH(req: Request) {
 
   const body = PatchSchema.safeParse(await req.json());
   if (!body.success) {
-    return Response.json({ error: body.error.issues[0].message }, { status: 400 });
+    return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
   }
 
   const tenant = await prisma.tenant.update({

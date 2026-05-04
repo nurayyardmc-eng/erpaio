@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 
 interface Report {
@@ -78,7 +79,7 @@ export default function ScheduledReportsPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Sil?")) return;
+    const _ok = await confirmDialog({ title: "Raporu sil?", message: "Periyodik rapor kalıcı silinir.", confirmLabel: "Evet, sil", destructive: true }); if (!_ok) return;
     await fetch(`/api/scheduled-reports?id=${id}`, { method: "DELETE" });
     refresh();
   };

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Bookmark } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface SavedQuery {
   id: string;
@@ -33,10 +35,20 @@ export default function SavedQueriesPage() {
         En az 2 kez başarıyla çalıştırılan sorgular. Tıklayarak chat&apos;te yeniden çalıştırabilirsiniz.
       </p>
 
-      {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
+      {loading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="skeleton" style={{ height: 64, borderRadius: 10 }} />
+          ))}
+        </div>
+      )}
 
       {!loading && queries.length === 0 && (
-        <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz kayıtlı sorgu yok. Chat&apos;te sorduğunuz sorular cache&apos;e yazılır.</div>
+        <EmptyState
+          icon={<Bookmark size={28} />}
+          title="Henüz kayıtlı sorgu yok"
+          description="Sohbette sorduğunuz başarılı sorgular otomatik olarak cache'e yazılır. Buradan tekrar erişebilirsiniz."
+        />
       )}
 
       <div style={{ display: "grid", gap: 12 }}>

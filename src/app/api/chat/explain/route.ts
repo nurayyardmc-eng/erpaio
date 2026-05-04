@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   if (!budget.ok) return Response.json({ error: budget.reason }, { status: 402 });
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0].message }, { status: 400 });
+  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
 
   const { question, sql, topRows, totalRows } = body.data;
   const log = childLogger({ component: "explain", tenantId: session.user.tenantId });
