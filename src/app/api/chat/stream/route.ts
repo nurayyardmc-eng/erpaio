@@ -22,7 +22,7 @@ export const maxDuration = 60;
 const BodySchema = z.object({
   question: z.string().min(1).max(500),
   connectionId: z.string(),
-  sessionId: z.string().optional(),
+  sessionId: z.string().nullish(),
 });
 
 function sse(event: string, data: unknown): string {

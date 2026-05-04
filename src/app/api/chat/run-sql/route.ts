@@ -12,7 +12,7 @@ import { z } from "zod";
 const BodySchema = z.object({
   sql: z.string().min(1).max(10_000),
   connectionId: z.string(),
-  sessionId: z.string().optional(),
+  sessionId: z.string().nullish(),
 });
 
 export async function POST(req: Request) {

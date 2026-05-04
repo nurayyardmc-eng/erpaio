@@ -23,8 +23,8 @@ const CONFIDENCE_THRESHOLD = 0.5;
 const BodySchema = z.object({
   question: z.string().min(1).max(500),
   connectionId: z.string(),
-  sessionId: z.string().optional(),
-  forceRun: z.boolean().optional(),
+  sessionId: z.string().nullish(),
+  forceRun: z.boolean().nullish(),
 });
 
 interface AiResponse {
