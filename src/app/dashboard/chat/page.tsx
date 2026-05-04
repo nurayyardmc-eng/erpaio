@@ -490,6 +490,7 @@ export default function ChatPage() {
           <button
             onClick={newSession}
             title="Yeni sohbet"
+            aria-label="Yeni sohbet başlat"
             style={{
               width: 28,
               height: 28,
