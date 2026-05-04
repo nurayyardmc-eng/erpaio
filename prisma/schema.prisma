@@ -85,16 +85,19 @@ model SchemaCache {
 }
 
 model ChatSession {
-  id        String        @id @default(cuid())
-  tenantId  String
-  userId    String
-  title     String?
-  notes     String?
-  pinned    Boolean       @default(false)
-  createdAt DateTime      @default(now())
-  tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages  ChatMessage[]
+  id         String        @id @default(cuid())
+  tenantId   String
+  userId     String
+  title      String?
+  notes      String?
+  pinned     Boolean       @default(false)
+  archivedAt DateTime?
+  createdAt  DateTime      @default(now())
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages   ChatMessage[]
+
+  @@index([tenantId, userId, archivedAt])
 }
 
 model ChatMessage {

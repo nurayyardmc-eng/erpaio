@@ -12,11 +12,19 @@ import {
   ThumbsDown,
   PanelLeftOpen,
   PanelLeftClose,
+  MoreHorizontal,
+  Pin,
+  PinOff,
+  Archive,
+  ArchiveRestore,
+  Trash2,
 } from "lucide-react";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { downloadXlsx } from "@/lib/export/xlsx";
 import { detectChartHint, type ChartHint } from "@/lib/charts/detect";
 import MiniChart from "@/components/MiniChart";
+import { confirmDialog } from "@/components/Confirm";
+import { showToast } from "@/components/Toaster";
 
 interface Connection {
   id: string;
@@ -28,6 +36,8 @@ interface ChatSessionListItem {
   id: string;
   title: string;
   messageCount: number;
+  pinned: boolean;
+  archivedAt: string | null;
   createdAt: string;
 }
 
@@ -74,6 +84,8 @@ export default function ChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [history, setHistory] = useState<ChatSessionListItem[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyView, setHistoryView] = useState<"active" | "archived">("active");
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +104,6 @@ export default function ChatPage() {
         setConnections(active);
         if (active.length > 0) setSelectedConn(active[0].id);
       });
-    refreshHistory();
 
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -110,10 +121,81 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const refreshHistory = async () => {
-    const r = await fetch("/api/chat/sessions");
+  const refreshHistory = async (view: "active" | "archived" = historyView) => {
+    const r = await fetch(`/api/chat/sessions?view=${view}`);
     if (r.ok) setHistory(await r.json());
   };
+
+  useEffect(() => {
+    refreshHistory(historyView);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyView]);
+
+  const togglePin = async (id: string, pinned: boolean) => {
+    setOpenMenu(null);
+    const r = await fetch(`/api/chat/sessions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pinned: !pinned }),
+    });
+    if (r.ok) {
+      showToast(pinned ? "Sabitleme kaldırıldı." : "Sohbet sabitlendi.");
+      refreshHistory();
+    } else {
+      showToast("İşlem başarısız.", "error");
+    }
+  };
+
+  const toggleArchive = async (id: string, isArchived: boolean) => {
+    setOpenMenu(null);
+    const r = await fetch(`/api/chat/sessions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archived: !isArchived }),
+    });
+    if (r.ok) {
+      showToast(isArchived ? "Sohbet geri alındı." : "Sohbet arşivlendi.");
+      if (sessionId === id) {
+        setSessionId(null);
+        setMessages([]);
+      }
+      refreshHistory();
+    } else {
+      showToast("İşlem başarısız.", "error");
+    }
+  };
+
+  const deleteSession = async (id: string, title: string) => {
+    setOpenMenu(null);
+    const ok = await confirmDialog({
+      title: "Sohbeti sil",
+      message: `"${title}" sohbeti ve içindeki tüm mesajlar kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
+      confirmLabel: "Sil",
+      cancelLabel: "İptal",
+      destructive: true,
+    });
+    if (!ok) return;
+
+    const r = await fetch(`/api/chat/sessions/${id}`, { method: "DELETE" });
+    if (r.ok) {
+      showToast("Sohbet silindi.");
+      if (sessionId === id) {
+        setSessionId(null);
+        setMessages([]);
+      }
+      refreshHistory();
+    } else {
+      showToast("Silinemedi.", "error");
+    }
+  };
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!openMenu) return;
+    const handler = () => setOpenMenu(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [openMenu]);
 
   const newSession = () => {
     setMessages([]);
@@ -423,35 +505,155 @@ export default function ChatPage() {
             }}
           >+</button>
         </div>
-        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 110px)", padding: "8px" }}>
-          {history.length === 0 && <div style={{ color: "#737373", fontSize: 13, padding: "20px 12px", textAlign: "center" }}>Henüz sohbet yok.</div>}
-          {history.map((s) => (
+
+        {/* Aktif / Arşiv toggle */}
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid rgba(10,10,10,0.06)", display: "flex", gap: 4 }}>
+          {(["active", "archived"] as const).map((v) => (
             <button
-              key={s.id}
-              onClick={() => loadSession(s.id)}
+              key={v}
+              onClick={() => setHistoryView(v)}
               style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
-                padding: "10px 12px",
-                background: s.id === sessionId ? "rgba(10,10,10,0.06)" : "transparent",
+                flex: 1,
+                padding: "6px 10px",
+                fontSize: 12,
+                fontWeight: 500,
+                borderRadius: 6,
                 border: "none",
-                borderRadius: 8,
-                color: "#0A0A0A",
-                fontFamily: "inherit",
-                fontSize: 13,
+                background: historyView === v ? "rgba(10,10,10,0.06)" : "transparent",
+                color: historyView === v ? "#0A0A0A" : "#737373",
                 cursor: "pointer",
-                lineHeight: 1.4,
-                marginBottom: 2,
-                transition: "background 0.15s ease",
+                fontFamily: "inherit",
               }}
-              onMouseEnter={(e) => { if (s.id !== sessionId) e.currentTarget.style.background = "rgba(10,10,10,0.03)"; }}
-              onMouseLeave={(e) => { if (s.id !== sessionId) e.currentTarget.style.background = "transparent"; }}
             >
-              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: s.id === sessionId ? 500 : 400 }}>{s.title}</div>
-              <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>{s.messageCount} mesaj · {new Date(s.createdAt).toLocaleDateString("tr-TR")}</div>
+              {v === "active" ? "Aktif" : "Arşiv"}
             </button>
           ))}
+        </div>
+
+        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 156px)", padding: "8px" }}>
+          {history.length === 0 && (
+            <div style={{ color: "#737373", fontSize: 13, padding: "20px 12px", textAlign: "center" }}>
+              {historyView === "active" ? "Henüz sohbet yok." : "Arşivlenmiş sohbet yok."}
+            </div>
+          )}
+          {history.map((s) => {
+            const isArchived = !!s.archivedAt;
+            const isActive = s.id === sessionId;
+            return (
+              <div
+                key={s.id}
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "stretch",
+                  background: isActive ? "rgba(10,10,10,0.06)" : "transparent",
+                  borderRadius: 8,
+                  marginBottom: 2,
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "rgba(10,10,10,0.03)"; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+              >
+                <button
+                  onClick={() => loadSession(s.id)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    textAlign: "left",
+                    padding: "10px 4px 10px 12px",
+                    background: "transparent",
+                    border: "none",
+                    color: "#0A0A0A",
+                    fontFamily: "inherit",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
+                    {s.pinned && <Pin size={11} color="#737373" style={{ flexShrink: 0 }} />}
+                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: isActive ? 500 : 400 }}>
+                      {s.title}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>
+                    {s.messageCount} mesaj · {new Date(s.createdAt).toLocaleDateString("tr-TR")}
+                  </div>
+                </button>
+
+                {/* Kebab menu trigger */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenMenu(openMenu === s.id ? null : s.id);
+                  }}
+                  className="session-menu-trigger"
+                  aria-label="Sohbet menüsü"
+                  style={{
+                    width: 28,
+                    minWidth: 28,
+                    background: "transparent",
+                    border: "none",
+                    color: "#737373",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 6,
+                    marginRight: 4,
+                    opacity: openMenu === s.id ? 1 : undefined,
+                  }}
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+
+                {openMenu === s.id && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      right: 4,
+                      marginTop: 4,
+                      background: "#FFFFFF",
+                      border: "1px solid rgba(10,10,10,0.08)",
+                      borderRadius: 10,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                      zIndex: 50,
+                      minWidth: 180,
+                      overflow: "hidden",
+                      padding: 4,
+                    }}
+                  >
+                    {!isArchived && (
+                      <button
+                        onClick={() => togglePin(s.id, s.pinned)}
+                        style={menuItemStyle}
+                      >
+                        {s.pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                        {s.pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => toggleArchive(s.id, isArchived)}
+                      style={menuItemStyle}
+                    >
+                      {isArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                      {isArchived ? "Arşivden çıkar" : "Arşivle"}
+                    </button>
+                    <div style={{ height: 1, background: "rgba(10,10,10,0.06)", margin: "4px 0" }} />
+                    <button
+                      onClick={() => deleteSession(s.id, s.title)}
+                      style={{ ...menuItemStyle, color: "#EF4444" }}
+                    >
+                      <Trash2 size={14} />
+                      Sil
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </aside>
 
@@ -833,4 +1035,20 @@ const iconBtnSmall: React.CSSProperties = {
   fontSize: 11,
   cursor: "pointer",
   fontFamily: "inherit",
+};
+
+const menuItemStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  width: "100%",
+  padding: "8px 12px",
+  fontSize: 13,
+  color: "#0A0A0A",
+  background: "transparent",
+  border: "none",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontFamily: "inherit",
+  textAlign: "left",
 };
