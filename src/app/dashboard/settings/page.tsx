@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { showToast } from "@/components/Toaster";
+import { confirmDialog } from "@/components/Confirm";
 import { colors } from "@/lib/theme";
 
 interface TenantSettings {
@@ -372,9 +374,176 @@ export default function SettingsPage() {
               )}
             </div>
           </Section>
+
+          <DangerZone />
         </div>
       </main>
     </div>
+  );
+}
+
+function DangerZone() {
+  const [showForm, setShowForm] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteAccount = async () => {
+    const ok = await confirmDialog({
+      title: "Hesabı silmek üzeresiniz",
+      message: "Bu işlem GERİ ALINAMAZ. Tüm veriler (kullanıcılar, sohbetler, bağlantılar, alertler) kalıcı olarak silinir. Devam ediyor musunuz?",
+      confirmLabel: "Evet, sil",
+      cancelLabel: "Vazgeç",
+      destructive: true,
+    });
+    if (!ok) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/tenant/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, confirmation }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast("Hesap silindi. Yönlendiriliyorsun…", "success");
+        setTimeout(() => { window.location.href = "/"; }, 1500);
+      } else {
+        showToast(data.error || "Hata", "error");
+      }
+    } catch {
+      showToast("Ağ hatası", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <section style={{
+      background: "#FFFFFF",
+      border: "1px solid rgba(239,68,68,0.3)",
+      borderRadius: 12,
+      padding: 24,
+      display: "flex",
+      flexDirection: "column",
+      gap: 14,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{
+          width: 32,
+          height: 32,
+          background: "#FEE2E2",
+          borderRadius: 8,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <AlertTriangle size={16} color="#EF4444" />
+        </div>
+        <h2 style={{ fontSize: 16, color: "#EF4444", margin: 0, fontWeight: 600 }}>Tehlikeli Bölge</h2>
+      </div>
+
+      <p style={{ color: colors.textMuted, fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+        Hesabımı silmek istiyorum. Bu işlem KVKK md. 7 silinme hakkı kapsamındadır.
+        Tüm veriler kaskat (cascade) olarak kalıcı silinir.
+      </p>
+
+      {!showForm ? (
+        <button
+          onClick={() => setShowForm(true)}
+          style={{
+            alignSelf: "flex-start",
+            background: "transparent",
+            color: "#EF4444",
+            border: "1px solid #EF4444",
+            borderRadius: 100,
+            padding: "10px 20px",
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: "pointer",
+          }}
+        >
+          Hesabı Sil
+        </button>
+      ) : (
+        <>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: colors.text, marginBottom: 6 }}>Şifre</div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              style={{
+                width: "100%",
+                background: colors.bg,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 10,
+                padding: "10px 14px",
+                fontSize: 14,
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: colors.text, marginBottom: 6 }}>
+              Onaylamak için &quot;<strong>HESABIMI SİL</strong>&quot; yazın
+            </div>
+            <input
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+              placeholder="HESABIMI SİL"
+              style={{
+                width: "100%",
+                background: colors.bg,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 10,
+                padding: "10px 14px",
+                fontSize: 14,
+                outline: "none",
+                boxSizing: "border-box",
+                fontFamily: "ui-monospace, Menlo, Monaco, monospace",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              onClick={deleteAccount}
+              disabled={deleting || !password || confirmation !== "HESABIMI SİL"}
+              style={{
+                background: "#EF4444",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: 100,
+                padding: "10px 20px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              {deleting ? "Siliniyor…" : "Hesabımı Kalıcı Sil"}
+            </button>
+            <button
+              onClick={() => { setShowForm(false); setPassword(""); setConfirmation(""); }}
+              style={{
+                background: "transparent",
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 100,
+                padding: "10px 20px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              İptal
+            </button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 

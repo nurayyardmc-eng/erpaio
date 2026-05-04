@@ -538,6 +538,26 @@ export default function ChatPage() {
                   ? "Veritabanınıza doğal Türkçe ile soru sorun. Yapay zeka SQL üretir, sonucu yorumlayarak gösterir."
                   : "Başlamak için önce bir ERP bağlantısı eklemeniz gerekiyor."}
               </p>
+              {!selectedConn && connections.length === 0 && (
+                <a
+                  href="/dashboard/connections"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginTop: 24,
+                    background: "#0A0A0A",
+                    color: "#FAFAF8",
+                    padding: "14px 28px",
+                    borderRadius: 100,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    textDecoration: "none",
+                  }}
+                >
+                  ERP Bağlantısı Ekle →
+                </a>
+              )}
             </div>
           )}
 
