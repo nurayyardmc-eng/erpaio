@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer, DarkTheme, NavigationContainerRef } from "@react-navigation/native";
+import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Notifications from "expo-notifications";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import ChatStackNav from "./src/screens/ChatStackNav";
@@ -77,7 +76,6 @@ export default function App() {
   const [authState, setAuthState] = useState<"loading" | "biometric" | "authed" | "guest">("loading");
   const [biometricFailed, setBiometricFailed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const navRef = useRef<NavigationContainerRef<Record<string, object | undefined>>>(null);
 
   // 401 handler — token geçersiz/expired olduğunda otomatik logout
   useEffect(() => {
@@ -111,32 +109,9 @@ export default function App() {
 
   useEffect(() => {
     if (authState !== "authed") return;
-    void registerForPush().catch(() => {});
-  }, [authState]);
-
-  // Push notification tap handler — bildirime tıklayınca ilgili ekrana git
-  useEffect(() => {
-    if (authState !== "authed") return;
-
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data as
-        | { alertId?: string; type?: string; sessionId?: string }
-        | undefined;
-
-      // Alert bildirimi → Alerts tab
-      if (data?.alertId || data?.type === "anomaly") {
-        navRef.current?.navigate("Tabs", { screen: "Alerts" });
-        return;
-      }
-
-      // Sohbet bildirimi → Chat tab
-      if (data?.sessionId) {
-        navRef.current?.navigate("Tabs", { screen: "Chat" });
-        return;
-      }
-    });
-
-    return () => subscription.remove();
+    // Expo Go SDK 53+ push notifications kısıtlı — dev client'ta tam çalışır.
+    // Hata fırlatsa bile uygulamayı çökertme.
+    registerForPush().catch(() => {});
   }, [authState]);
 
   const handleLogout = async () => {
@@ -159,8 +134,6 @@ export default function App() {
     else setBiometricFailed(true);
   };
 
-  // "Şifre ile gir" → token'ı silip Login ekranına gönder
-  // (eski davranışla aynı sonuç ama isim daha doğru: kullanıcı tekrar şifre girer)
   const passwordLogin = async () => {
     await clearToken();
     setAuthState("guest");
@@ -174,21 +147,19 @@ export default function App() {
           <View style={styles.loader}>
             <ActivityIndicator color={colors.accent} />
             {biometricFailed && (
-              <View style={{ marginTop: 24, alignItems: "center", gap: 12 }}>
-                <Text style={{ color: colors.danger, fontFamily: font, fontSize: 12 }}>
-                  Doğrulama başarısız.
-                </Text>
-                <TouchableOpacity onPress={retryBiometric} style={biometricBtn}>
-                  <Text style={{ color: colors.accent, fontFamily: font, fontSize: 13 }}>Tekrar Dene</Text>
+              <View style={styles.biometricFailedBox}>
+                <Text style={styles.biometricErrorText}>Doğrulama başarısız.</Text>
+                <TouchableOpacity onPress={retryBiometric} style={styles.biometricBtn}>
+                  <Text style={styles.biometricBtnText}>Tekrar Dene</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={passwordLogin}>
-                  <Text style={{ color: colors.textDim, fontFamily: font, fontSize: 11 }}>Şifre ile giriş yap</Text>
+                  <Text style={styles.biometricLink}>Şifre ile giriş yap</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
         ) : (
-          <NavigationContainer theme={navTheme} ref={navRef}>
+          <NavigationContainer theme={navTheme}>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               {authState === "guest" ? (
                 <Stack.Screen name="Login">
@@ -209,13 +180,16 @@ export default function App() {
 
 const styles = StyleSheet.create({
   loader: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
+  biometricFailedBox: { marginTop: 24, alignItems: "center", gap: 12 },
+  biometricErrorText: { color: colors.danger, fontFamily: font, fontSize: 12 },
+  biometricBtn: {
+    backgroundColor: colors.accentMuted,
+    borderColor: colors.accentBorder,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  biometricBtnText: { color: colors.accent, fontFamily: font, fontSize: 13 },
+  biometricLink: { color: colors.textDim, fontFamily: font, fontSize: 11 },
 });
-
-const biometricBtn = {
-  backgroundColor: colors.accentMuted,
-  borderColor: colors.accentBorder,
-  borderWidth: 1,
-  borderRadius: 6,
-  paddingHorizontal: 20,
-  paddingVertical: 10,
-};

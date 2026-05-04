@@ -4,17 +4,29 @@ import * as Device from "expo-device";
 import Constants from "expo-constants";
 import { api } from "./api";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Expo Go SDK 53+ push notifications'ı kaldırdı — sadece dev/standalone build'de çalışır.
+// Expo Go'da bu fonksiyonları çağırmaktan kaçınıyoruz, yoksa New Architecture
+// "expected boolean, got string" hatası fırlatabiliyor.
+const isExpoGo = Constants.executionEnvironment === "storeClient";
+
+if (!isExpoGo) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export async function registerForPush(): Promise<string | null> {
+  if (isExpoGo) {
+    // Sessizce skip — Expo Go'da push çalışmaz, dev/production build gerekir.
+    return null;
+  }
+
   if (!Device.isDevice) return null;
 
   if (Platform.OS === "android") {
@@ -64,6 +76,7 @@ export async function registerForPush(): Promise<string | null> {
 }
 
 export async function unregisterPushToken(token: string): Promise<void> {
+  if (isExpoGo) return;
   try {
     await api(`/api/me/push-token?token=${encodeURIComponent(token)}`, { method: "DELETE" });
   } catch {
