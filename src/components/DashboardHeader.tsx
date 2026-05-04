@@ -51,7 +51,7 @@ export default function DashboardHeader({ email, name }: Props) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <Link href="/" aria-label="Ana sayfa" style={{ display: "flex", alignItems: "center" }}>
-          <Logo size={36} />
+          <Logo size={36} variant="mark" />
         </Link>
         <div style={{ width: 1, height: 24, background: "rgba(10,10,10,0.08)" }} />
         <div style={{

@@ -74,7 +74,7 @@ export default function PricingPage() {
         justifyContent: "space-between",
         borderBottom: `1px solid ${colors.border}`,
       }}>
-        <Link href="/"><Logo size={28} /></Link>
+        <Link href="/"><Logo size={28} variant="mark" /></Link>
         <Link href="/login" style={{ color: colors.textMuted, fontSize: 14, fontWeight: 500 }}>Giriş</Link>
       </header>
 

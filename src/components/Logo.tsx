@@ -2,40 +2,35 @@
 
 interface LogoProps {
   size?: number;
-  variant?: "stacked" | "horizontal" | "mark";
+  variant?: "full" | "mark";
 }
 
-export default function Logo({ size = 32, variant = "horizontal" }: LogoProps) {
-  if (variant === "stacked") {
+/**
+ * Logo component
+ * - "full" (default): bars + "ERPAIO" yazısı (logo.svg, kare)
+ * - "mark": sadece bars amblem (logo-mark.svg, kare)
+ */
+export default function Logo({ size = 32, variant = "full" }: LogoProps) {
+  if (variant === "mark") {
     return (
       <img
-        src="/logo.svg"
+        src="/logo-mark.svg"
         alt="ERPAIO"
-        width={size * 2.4}
-        height={size * 2.4}
+        width={size}
+        height={size}
         style={{ display: "block" }}
       />
     );
   }
 
-  if (variant === "mark") {
-    return (
-      <img
-        src="/logo.svg"
-        alt="ERPAIO"
-        width={size}
-        height={size}
-        style={{ display: "block", objectFit: "cover", objectPosition: "top" }}
-      />
-    );
-  }
-
+  // full — kare aspect ratio (1:1)
   return (
     <img
       src="/logo.svg"
       alt="ERPAIO"
-      height={size * 1.4}
-      style={{ display: "block", height: size * 1.4, width: "auto" }}
+      width={size}
+      height={size}
+      style={{ display: "block" }}
     />
   );
 }

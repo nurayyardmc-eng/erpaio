@@ -165,7 +165,7 @@ export default function SettingsPage() {
         justifyContent: "space-between",
       }}>
         <Link href="/dashboard">
-          <Logo size={28} />
+          <Logo size={28} variant="mark" />
         </Link>
       </header>
 

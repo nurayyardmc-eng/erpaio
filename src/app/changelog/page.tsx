@@ -113,7 +113,7 @@ export default function ChangelogPage() {
         backdropFilter: "blur(12px)",
         zIndex: 10,
       }}>
-        <Link href="/" aria-label="Ana sayfa"><Logo size={28} /></Link>
+        <Link href="/" aria-label="Ana sayfa"><Logo size={28} variant="mark" /></Link>
         <Link href="/" style={{
           color: colors.textMuted,
           fontSize: 13,
