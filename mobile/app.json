@@ -42,9 +42,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "75dbff10-0b84-4eca-9ad7-62916a209c04"
       }
     },
-    "owner": "nurayyardmc-eng"
+    "owner": "erpaio"
   }
 }

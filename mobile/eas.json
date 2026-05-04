@@ -38,11 +38,6 @@
   },
   "submit": {
     "production": {
-      "ios": {
-        "ascAppId": "",
-        "appleId": "",
-        "appleTeamId": ""
-      },
       "android": {
         "serviceAccountKeyPath": "../play-service-account.json",
         "track": "internal"
