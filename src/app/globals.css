@@ -107,6 +107,41 @@ html {
   background-size: 24px 24px;
 }
 
+/* Skip links — klavye accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 8px;
+  background: #0A0A0A;
+  color: #FAFAF8;
+  padding: 8px 14px;
+  border-radius: 8px;
+  z-index: 9999;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 8px;
+  outline: 2px solid #FAFAF8;
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .fade-in {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* Print styles — clean reports */
 @media print {
   nav, header, aside, footer, .no-print, button, .lang-switcher,
