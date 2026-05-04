@@ -1,6 +1,8 @@
 "use client";
 import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
+import { Send } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface Report {
   id: string;
@@ -120,7 +122,13 @@ export default function ScheduledReportsPage() {
 
       <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>Mevcut Raporlar ({reports.length})</h2>
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
-      {!loading && reports.length === 0 && <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz rapor yok.</div>}
+      {!loading && reports.length === 0 && (
+        <EmptyState
+          icon={<Send size={28} />}
+          title="Henüz planlı rapor yok"
+          description="Sık çalıştırdığınız sorguları planlı olarak email ile gönderin. Günlük, haftalık veya aylık programlanabilir."
+        />
+      )}
       {reports.map((r) => (
         <div key={r.id} style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { FileText } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface Annotation {
   id: string;
@@ -147,7 +149,11 @@ export default function AnnotationsPage() {
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
       {!loading && annotations.length === 0 && (
-        <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz açıklama yok.</div>
+        <EmptyState
+          icon={<FileText size={28} />}
+          title="Henüz açıklama yok"
+          description="Tablo veya kolon açıklamaları ekleyin. AI bu bilgilerle Türkçe iş mantığını daha iyi anlar."
+        />
       )}
 
       {annotations.map((a) => (

@@ -14,8 +14,18 @@ const SEVERITY_COLOR: Record<string, string> = {
 type SeverityFilter = "all" | "critical" | "high" | "medium" | "low";
 type StatusFilter = "all" | "open" | "acknowledged";
 
+interface Alert {
+  id: string;
+  severity: string;
+  title: string;
+  description: string | null;
+  module: string | null;
+  status: string;
+  createdAt: string;
+}
+
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");

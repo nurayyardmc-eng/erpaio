@@ -1,6 +1,8 @@
 "use client";
 import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
+import { Eye } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 interface Watchlist {
   id: string;
@@ -130,7 +132,13 @@ export default function WatchlistsPage() {
 
       <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>Mevcut Watchlists ({watchlists.length})</h2>
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
-      {!loading && watchlists.length === 0 && <div style={{ color: "#94A3B8", fontSize: 12 }}>Henüz watchlist yok.</div>}
+      {!loading && watchlists.length === 0 && (
+        <EmptyState
+          icon={<Eye size={28} />}
+          title="Henüz watchlist yok"
+          description="Bir SQL sorgusunun sonucunu eşik değeriyle takip edin. Eşik aşıldığında bildirim alırsınız."
+        />
+      )}
       {watchlists.map((w) => (
         <div key={w.id} style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
