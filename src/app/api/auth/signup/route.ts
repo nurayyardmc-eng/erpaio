@@ -14,7 +14,8 @@ const BodySchema = z.object({
   tenantName: z.string().min(1).max(120),
 });
 
-const SIGNUP_LIMIT = { prefix: "signup", max: 5, windowMs: 60 * 60_000 };
+// Email enumeration brute force koruması — IP başına saatte 3 deneme
+const SIGNUP_LIMIT = { prefix: "signup", max: 3, windowMs: 60 * 60_000 };
 
 function slugify(s: string): string {
   return s

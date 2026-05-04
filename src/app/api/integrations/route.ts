@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 
 const PostSchema = z.object({
   kind: z.enum(["slack", "teams", "webhook"]),
@@ -29,6 +30,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
   if (session.user.role !== "owner" && session.user.role !== "admin") {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 
 const PutSchema = z.object({
   tableName: z.string().min(1).max(128),
@@ -21,6 +22,9 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
   if (session.user.role !== "admin" && session.user.role !== "owner") {

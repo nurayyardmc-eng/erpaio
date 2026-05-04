@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
 import { getPlan } from "@/lib/plans";
 import { childLogger } from "@/lib/observability/logger";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 
 const PostSchema = z.object({
   email: z.string().email(),
@@ -12,6 +13,9 @@ const PostSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
   if (session.user.role !== "owner" && session.user.role !== "admin") {

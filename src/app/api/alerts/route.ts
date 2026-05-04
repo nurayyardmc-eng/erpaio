@@ -5,6 +5,7 @@ import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/wha
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
@@ -23,6 +24,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
@@ -79,16 +83,20 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
 
   const { id, status } = await req.json();
 
-  const alert = await prisma.alert.findFirst({
+  // Atomik tenant-scoped update — başka tenant'ın alert'i id ile bilinse bile güncellenemez.
+  const result = await prisma.alert.updateMany({
     where: { id, tenantId: session.user.tenantId },
+    data: { status },
   });
-  if (!alert) return Response.json({ error: "Bulunamadı." }, { status: 404 });
+  if (result.count === 0) return Response.json({ error: "Bulunamadı." }, { status: 404 });
 
-  await prisma.alert.update({ where: { id }, data: { status } });
   return Response.json({ ok: true });
 }

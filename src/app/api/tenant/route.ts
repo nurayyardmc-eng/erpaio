@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 
 const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -36,6 +37,9 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
   if (session.user.role !== "admin" && session.user.role !== "owner") {

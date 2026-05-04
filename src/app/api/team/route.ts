@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { checkBodySize } from "@/lib/http/bodyLimit";
 
 const PatchSchema = z.object({
   userId: z.string(),
@@ -28,6 +29,9 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const tooBig = checkBodySize(req);
+  if (tooBig) return tooBig;
+
   const session = await getAuth(req);
   if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
   if (session.user.role !== "owner") {
@@ -37,12 +41,25 @@ export async function PATCH(req: Request) {
   const body = PatchSchema.safeParse(await req.json());
   if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
 
-  if (body.data.role === "owner" && body.data.userId !== session.user.id) {
-    const owners = await prisma.user.count({
+  // Owner devri bu endpoint'ten yapılamaz — atomic transfer için ayrı endpoint gerekli.
+  if (body.data.role === "owner") {
+    return Response.json({ error: "Owner devri için ayrı endpoint kullanın (henüz yok)." }, { status: 400 });
+  }
+
+  // Hedef kullanıcı tenant içinde mevcut mu?
+  const target = await prisma.user.findFirst({
+    where: { id: body.data.userId, tenantId: session.user.tenantId },
+    select: { role: true },
+  });
+  if (!target) return Response.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
+
+  // Son owner düşürülemez — tenant orphan kalmasın.
+  if (target.role === "owner") {
+    const ownerCount = await prisma.user.count({
       where: { tenantId: session.user.tenantId, role: "owner" },
     });
-    if (owners >= 1) {
-      return Response.json({ error: "Owner devri için ayrı endpoint kullanın (henüz yok)." }, { status: 400 });
+    if (ownerCount <= 1) {
+      return Response.json({ error: "Son owner rolü düşürülemez. Önce başka birini owner yapın." }, { status: 400 });
     }
   }
 
