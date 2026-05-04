@@ -182,12 +182,23 @@ export async function POST(req: Request) {
 - Tarih: NOW(), CURRENT_DATE, INTERVAL '1 day', date_trunc('month', col).
 - LIMIT n (TOP n yok).
 - Identifier quoting: "tabloAdi" (köşeli parantez yok).
-- TÜRKÇE TEXT KARŞILAŞTIRMA: Şehir/ad/soyisim gibi text alanlarda her zaman ILIKE kullan ve şehir/isim varyasyonları için LOWER(col) LIKE LOWER('%...%') tercih et. Örn: WHERE LOWER(m.sehir) = LOWER('istanbul') veya m.sehir ILIKE 'istanbul'. (Türkçe i/İ/I karışıklığını önler.)`
+- TÜRKÇE TEXT KARŞILAŞTIRMA — KRİTİK:
+  * Şehir/ad/ürün adı/kategori gibi text alanlarda ASLA "=" kullanma.
+  * Her zaman ILIKE ile wildcard pattern: WHERE m.sehir ILIKE '%istanbul%'
+  * Türkçe i/İ/I/ı karakterleri arasında karışıklık olabilir, ILIKE bunu önler (case-insensitive).
+  * Yazım hatası toleransı için kullanıcı sorgusundaki kelimenin EN AYIRT EDİCİ KÖKÜNÜ % ile çevrele.
+    Örn: "istanbul" → '%stanbul%' (i/İ farkı önemsiz), "Ankara" → '%nkara%', "İzmir" → '%zmir%'.
+  * Noktasız ASCII transliterasyonu kullan (İstanbul/Istanbul/istambul hepsi '%stanbul%' ile yakalanır).
+  * Sadece kesin eşleşme istenmediyse her text WHERE'de bu desen.`
         : `- Türkçe karakterler için NVARCHAR + N'...' prefix.
 - Tarih: GETDATE(), DATEADD(), CAST(... AS DATE).
 - TOP n (LIMIT yok).
 - Identifier: [tabloAdi] (köşeli parantez).
-- TÜRKÇE TEXT KARŞILAŞTIRMA: Türkçe text alanlarda LOWER(col) = LOWER(N'değer') kullan. (i/İ/I karışıklığını önler.)`;
+- TÜRKÇE TEXT KARŞILAŞTIRMA — KRİTİK:
+  * ASLA "=" kullanma text alanlarda.
+  * LOWER(col) LIKE LOWER(N'%kök%') kullan.
+  * Yazım hatası + i/İ toleransı için kelimenin ayırt edici kökünü % ile çevrele.
+    Örn: "istanbul" → LIKE LOWER(N'%stanbul%'), "Ankara" → LIKE LOWER(N'%nkara%').`;
 
       const profileSpecificRules = erpProfile?.slug === "nebim_v3"
         ? "- IptalDurumu = 0 her zaman filtrele (varsa)."
