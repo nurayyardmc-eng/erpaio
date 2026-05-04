@@ -27,6 +27,8 @@ interface UserMenuProps {
 export default function UserMenu({ email, name }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(null);
+  const [liveName, setLiveName] = useState<string | null>(null);
+  const [liveEmail, setLiveEmail] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,11 +44,17 @@ export default function UserMenu({ email, name }: UserMenuProps) {
   useEffect(() => {
     fetch("/api/me")
       .then((r) => r.json())
-      .then((d) => setAvatar(d?.user?.avatarBase64 ?? null))
+      .then((d) => {
+        setAvatar(d?.user?.avatarBase64 ?? null);
+        setLiveName(d?.user?.name ?? null);
+        setLiveEmail(d?.user?.email ?? null);
+      })
       .catch(() => {});
   }, []);
 
-  const initials = (name || email).split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
+  const displayName = liveName ?? name ?? "";
+  const displayEmail = liveEmail ?? email;
+  const initials = (displayName || displayEmail).split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -84,7 +92,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
           )}
         </span>
         <span style={{ fontSize: 13, color: colors.text, fontWeight: 500 }}>
-          {name || email.split("@")[0]}
+          {displayName || displayEmail.split("@")[0]}
         </span>
         <ChevronDown size={14} color={colors.textMuted} />
       </button>
@@ -106,8 +114,8 @@ export default function UserMenu({ email, name }: UserMenuProps) {
             padding: "12px 16px",
             borderBottom: `1px solid ${colors.border}`,
           }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{name || email.split("@")[0]}</div>
-            <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{email}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{displayName || displayEmail.split("@")[0]}</div>
+            <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{displayEmail}</div>
           </div>
 
           <Link
