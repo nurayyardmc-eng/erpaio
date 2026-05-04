@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
   try {
     const msg = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-4-5",
       max_tokens: 256,
       system: "Türkçe iş zekası uzmanısın. Kullanıcının az önce sorduğu soruyu ve sonucunu görüp, mantıklı 3 takip sorusu öner. Her biri kısa Türkçe (max 60 karakter), JSON array dön: [\"...\", \"...\", \"...\"]. Başka hiçbir şey yazma.",
       messages: [{

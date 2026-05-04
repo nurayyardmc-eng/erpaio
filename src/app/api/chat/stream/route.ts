@@ -117,7 +117,7 @@ ${schema}`;
           let buffer = "";
           await client.messages
             .stream({
-              model: "claude-sonnet-4-20250514",
+              model: "claude-sonnet-4-5",
               max_tokens: 1024,
               system: [{ type: "text", text: systemText, cache_control: { type: "ephemeral" } }],
               messages: [{ role: "user", content: question }],
