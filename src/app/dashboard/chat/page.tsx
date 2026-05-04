@@ -673,10 +673,10 @@ export default function ChatPage() {
             onClick={() => setHistoryOpen((v) => !v)}
             title={historyOpen ? "Geçmişi kapat" : "Geçmişi aç"}
             aria-label={historyOpen ? "Geçmişi kapat" : "Geçmişi aç"}
+            className="hide-mobile"
             style={{
               width: 36,
               height: 36,
-              display: "flex",
               alignItems: "center",
               justifyContent: "center",
               background: "transparent",

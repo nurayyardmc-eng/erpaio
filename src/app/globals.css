@@ -258,6 +258,17 @@ select:focus-visible {
   display: none;
 }
 
+/* User menu trigger: padding adapts to mobile */
+.user-menu-trigger { padding: 6px 14px 6px 6px; }
+
+/* Dashboard header: padding adapts to mobile */
+.dashboard-header { padding: 12px 24px; padding-left: max(24px, calc(env(safe-area-inset-left) + 60px)); }
+@media (max-width: 900px) {
+  .user-menu-trigger { padding: 4px; border: none !important; }
+  .help-fab { display: none !important; }
+  .dashboard-header { padding: 10px 14px; padding-left: max(14px, calc(env(safe-area-inset-left) + 56px)); gap: 8px !important; }
+}
+
 @media (max-width: 900px) {
   .hide-mobile {
     display: none !important;

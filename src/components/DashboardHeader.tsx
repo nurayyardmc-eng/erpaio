@@ -33,13 +33,11 @@ export default function DashboardHeader({ email, name }: Props) {
   const title = TITLES[pathname] ?? "Dashboard";
 
   return (
-    <header style={{
+    <header className="dashboard-header" style={{
       background: "rgba(250,250,248,0.85)",
       backdropFilter: "blur(12px)",
       WebkitBackdropFilter: "blur(12px)",
       borderBottom: `1px solid ${colors.border}`,
-      padding: "12px 24px",
-      paddingLeft: "max(24px, calc(env(safe-area-inset-left) + 60px))",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -49,27 +47,31 @@ export default function DashboardHeader({ email, name }: Props) {
       top: 0,
       zIndex: 10,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <Link href="/" aria-label="Ana sayfa" style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 20, minWidth: 0 }}>
+        <Link href="/" aria-label="Ana sayfa" style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Logo size={36} variant="mark" />
         </Link>
-        <div style={{ width: 1, height: 24, background: "rgba(10,10,10,0.08)" }} />
+        <div className="hide-mobile" style={{ width: 1, height: 24, background: "rgba(10,10,10,0.08)" }} />
         <div style={{
           fontFamily: "var(--font-playfair), Georgia, serif",
           fontSize: 20,
           fontWeight: 400,
           color: colors.text,
           letterSpacing: -0.5,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         }}>
           {title}
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
         <button
           onClick={() => {
             window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
           }}
           aria-label="Komut paleti aç"
+          className="hide-mobile"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -85,7 +87,7 @@ export default function DashboardHeader({ email, name }: Props) {
           }}
         >
           <Search size={14} />
-          <span className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
             Ara
             <kbd style={{
               fontSize: 10,

@@ -19,7 +19,7 @@ export default function HelpFab() {
   }, [open]);
 
   return (
-    <div ref={ref} style={{
+    <div ref={ref} className="help-fab" style={{
       position: "fixed",
       bottom: 20,
       right: 20,

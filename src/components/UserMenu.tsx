@@ -60,6 +60,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
     <div ref={ref} style={{ position: "relative" }}>
       <button
         onClick={() => setOpen(!open)}
+        className="user-menu-trigger"
         style={{
           display: "flex",
           alignItems: "center",
@@ -67,7 +68,6 @@ export default function UserMenu({ email, name }: UserMenuProps) {
           background: "transparent",
           border: `1px solid ${colors.border}`,
           borderRadius: 999,
-          padding: "6px 14px 6px 6px",
           cursor: "pointer",
         }}
       >
@@ -83,6 +83,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
           justifyContent: "center",
           fontSize: 11,
           fontWeight: 700,
+          flexShrink: 0,
         }}>
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -91,10 +92,12 @@ export default function UserMenu({ email, name }: UserMenuProps) {
             initials
           )}
         </span>
-        <span style={{ fontSize: 13, color: colors.text, fontWeight: 500 }}>
+        <span className="user-menu-name hide-mobile" style={{ fontSize: 13, color: colors.text, fontWeight: 500 }}>
           {displayName || displayEmail.split("@")[0]}
         </span>
-        <ChevronDown size={14} color={colors.textMuted} />
+        <span className="hide-mobile" style={{ display: "flex", alignItems: "center" }}>
+          <ChevronDown size={14} color={colors.textMuted} />
+        </span>
       </button>
 
       {open && (
