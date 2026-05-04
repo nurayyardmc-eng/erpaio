@@ -23,11 +23,19 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
-    if (!email.trim() || !password) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) return;
+
+    // Email format kontrolü — backend'e gitmeden anla
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError("Geçerli bir email adresi girin.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      await login(email.trim(), password);
+      await login(cleanEmail, password);
       onLoginSuccess();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Giriş başarısız.");

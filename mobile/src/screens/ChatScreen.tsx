@@ -306,26 +306,37 @@ export default function ChatScreen({ route, navigation }: Props) {
         </View>
 
         {item.results.length > 0 && (
-          <ScrollView horizontal style={styles.tableScroll} showsHorizontalScrollIndicator>
-            <View>
-              <View style={styles.tableHeader}>
-                {item.columns.map((c) => (
-                  <Text key={c} style={[styles.tableCell, styles.tableHeaderCell]}>
-                    {c}
-                  </Text>
-                ))}
-              </View>
-              {item.results.slice(0, 50).map((row, ri) => (
-                <View key={ri} style={styles.tableRow}>
+          <>
+            <ScrollView horizontal style={styles.tableScroll} showsHorizontalScrollIndicator>
+              <View>
+                <View style={styles.tableHeader}>
                   {item.columns.map((c) => (
-                    <Text key={c} style={styles.tableCell} numberOfLines={1}>
-                      {String(row[c] ?? "")}
+                    <Text key={c} style={[styles.tableCell, styles.tableHeaderCell]}>
+                      {c}
                     </Text>
                   ))}
                 </View>
-              ))}
-            </View>
-          </ScrollView>
+                {item.results.slice(0, 50).map((row, ri) => (
+                  <View key={ri} style={styles.tableRow}>
+                    {item.columns.map((c) => (
+                      <Text key={c} style={styles.tableCell} numberOfLines={1}>
+                        {String(row[c] ?? "")}
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+            {item.results.length > 50 && (
+              <Text style={styles.rowLimitNote}>
+                {item.results.length} satırdan ilk 50&apos;si gösteriliyor.
+                {item.total && item.total > item.results.length
+                  ? ` (Toplam ${item.total})`
+                  : ""}
+                {" "}Tamamı için CSV/Excel olarak paylaşın.
+              </Text>
+            )}
+          </>
         )}
 
         {item.messageId && (
@@ -493,6 +504,14 @@ const styles = StyleSheet.create({
     maxWidth: 200,
   },
   tableHeaderCell: { color: colors.accent, fontWeight: "600" },
+  rowLimitNote: {
+    color: colors.textDim,
+    fontFamily: font,
+    fontSize: 11,
+    fontStyle: "italic",
+    marginTop: spacing(1),
+    paddingHorizontal: spacing(1),
+  },
   feedbackRow: { flexDirection: "row", alignItems: "center", gap: spacing(2), marginTop: spacing(2) },
   feedbackBtn: {
     borderColor: colors.border,

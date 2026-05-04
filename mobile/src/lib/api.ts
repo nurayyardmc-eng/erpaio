@@ -5,6 +5,8 @@ const BASE_URL =
 
 const TOKEN_KEY = "erpaio_api_token";
 
+const DEFAULT_TIMEOUT_MS = 15_000;
+
 export async function getToken(): Promise<string | null> {
   return SecureStore.getItemAsync(TOKEN_KEY);
 }
@@ -23,13 +25,23 @@ export class ApiError extends Error {
   }
 }
 
-export interface ApiOptions extends Omit<RequestInit, "body"> {
+export interface ApiOptions extends Omit<RequestInit, "body" | "signal"> {
   body?: unknown;
   authenticated?: boolean;
+  timeoutMs?: number;
+}
+
+// 401 olduğunda dispatch edilir — App.tsx dinleyip logout yapar.
+// React Native global EventTarget yok, basit bir callback registry kullanıyoruz.
+type UnauthorizedHandler = () => void;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(h: UnauthorizedHandler | null): void {
+  unauthorizedHandler = h;
 }
 
 export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Promise<T> {
-  const { authenticated = true, body, headers, ...rest } = opts;
+  const { authenticated = true, body, headers, timeoutMs = DEFAULT_TIMEOUT_MS, ...rest } = opts;
   const finalHeaders: Record<string, string> = {
     Accept: "application/json",
     ...((headers as Record<string, string>) ?? {}),
@@ -46,11 +58,26 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
     bodyToSend = JSON.stringify(body);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...rest,
-    headers: finalHeaders,
-    body: bodyToSend,
-  });
+  // AbortController — fetch'e timeout uygula
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...rest,
+      headers: finalHeaders,
+      body: bodyToSend,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      throw new ApiError(0, "İstek zaman aşımına uğradı (timeout).");
+    }
+    throw new ApiError(0, "Ağ hatası. İnternet bağlantınızı kontrol edin.");
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   let parsed: unknown;
   const text = await res.text();
@@ -65,6 +92,13 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
       parsed && typeof parsed === "object" && "error" in parsed
         ? String((parsed as { error: unknown }).error)
         : `HTTP ${res.status}`;
+
+    // 401 → token geçersiz/süresi dolmuş, otomatik logout
+    if (res.status === 401 && authenticated) {
+      void clearToken();
+      unauthorizedHandler?.();
+    }
+
     throw new ApiError(res.status, err, parsed);
   }
 

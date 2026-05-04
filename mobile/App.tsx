@@ -1,19 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer, DarkTheme } from "@react-navigation/native";
+import { NavigationContainer, DarkTheme, NavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import ChatStackNav from "./src/screens/ChatStackNav";
 import AlertsScreen from "./src/screens/AlertsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
-import { getToken, clearToken } from "./src/lib/api";
+import { getToken, clearToken, setUnauthorizedHandler } from "./src/lib/api";
 import { logout as authLogout } from "./src/lib/auth";
 import { registerForPush } from "./src/lib/push";
 import { authenticate, isBiometricEnabled, isBiometricSupported } from "./src/lib/biometric";
@@ -75,6 +76,16 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
 export default function App() {
   const [authState, setAuthState] = useState<"loading" | "biometric" | "authed" | "guest">("loading");
   const [biometricFailed, setBiometricFailed] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const navRef = useRef<NavigationContainerRef<Record<string, object | undefined>>>(null);
+
+  // 401 handler — token geçersiz/expired olduğunda otomatik logout
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setAuthState("guest");
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -103,11 +114,42 @@ export default function App() {
     void registerForPush().catch(() => {});
   }, [authState]);
 
-  const handleLogout = async () => {
-    await authLogout().catch(async () => {
-      await clearToken();
+  // Push notification tap handler — bildirime tıklayınca ilgili ekrana git
+  useEffect(() => {
+    if (authState !== "authed") return;
+
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as
+        | { alertId?: string; type?: string; sessionId?: string }
+        | undefined;
+
+      // Alert bildirimi → Alerts tab
+      if (data?.alertId || data?.type === "anomaly") {
+        navRef.current?.navigate("Tabs", { screen: "Alerts" });
+        return;
+      }
+
+      // Sohbet bildirimi → Chat tab
+      if (data?.sessionId) {
+        navRef.current?.navigate("Tabs", { screen: "Chat" });
+        return;
+      }
     });
-    setAuthState("guest");
+
+    return () => subscription.remove();
+  }, [authState]);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await authLogout();
+    } catch {
+      await clearToken();
+    } finally {
+      setLoggingOut(false);
+      setAuthState("guest");
+    }
   };
 
   const retryBiometric = async () => {
@@ -117,7 +159,9 @@ export default function App() {
     else setBiometricFailed(true);
   };
 
-  const skipBiometric = async () => {
+  // "Şifre ile gir" → token'ı silip Login ekranına gönder
+  // (eski davranışla aynı sonuç ama isim daha doğru: kullanıcı tekrar şifre girer)
+  const passwordLogin = async () => {
     await clearToken();
     setAuthState("guest");
   };
@@ -137,14 +181,14 @@ export default function App() {
                 <TouchableOpacity onPress={retryBiometric} style={biometricBtn}>
                   <Text style={{ color: colors.accent, fontFamily: font, fontSize: 13 }}>Tekrar Dene</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={skipBiometric}>
-                  <Text style={{ color: colors.textDim, fontFamily: font, fontSize: 11 }}>Şifre ile gir</Text>
+                <TouchableOpacity onPress={passwordLogin}>
+                  <Text style={{ color: colors.textDim, fontFamily: font, fontSize: 11 }}>Şifre ile giriş yap</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
         ) : (
-          <NavigationContainer theme={navTheme}>
+          <NavigationContainer theme={navTheme} ref={navRef}>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               {authState === "guest" ? (
                 <Stack.Screen name="Login">
@@ -168,7 +212,7 @@ const styles = StyleSheet.create({
 });
 
 const biometricBtn = {
-  background: colors.accentMuted,
+  backgroundColor: colors.accentMuted,
   borderColor: colors.accentBorder,
   borderWidth: 1,
   borderRadius: 6,
