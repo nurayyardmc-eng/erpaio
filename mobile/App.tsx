@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+// Expo Go SDK 54 + react-native-screens v4 + New Architecture'da
+// "expected boolean, got string" hatası için screens optimization'ını kapatıyoruz.
+// Dev build / production'da bu satır kaldırılabilir (performans için).
+import { enableScreens } from "react-native-screens";
+enableScreens(false);
 import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
