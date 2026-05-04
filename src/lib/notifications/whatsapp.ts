@@ -1,24 +1,42 @@
 import twilio from "twilio";
+import * as Sentry from "@sentry/nextjs";
+import { childLogger } from "@/lib/observability/logger";
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID!,
-  process.env.TWILIO_AUTH_TOKEN!,
-);
+const log = childLogger({ component: "whatsapp" });
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
 export interface SendOptions {
   to?: string;
 }
 
-export async function sendWhatsApp(message: string, options: SendOptions = {}): Promise<void> {
+export async function sendWhatsApp(message: string, options: SendOptions = {}): Promise<{ ok: boolean }> {
+  if (!client) {
+    log.warn({}, "Twilio credentials not set; WhatsApp skipped");
+    return { ok: false };
+  }
+
   const toNumber = options.to ?? process.env.TWILIO_WHATSAPP_TO;
   if (!toNumber) {
-    throw new Error("WhatsApp alıcı numarası tanımlı değil (tenant.whatsappTo veya TWILIO_WHATSAPP_TO).");
+    log.warn({}, "WhatsApp alıcı numarası tanımlı değil (tenant.whatsappTo veya TWILIO_WHATSAPP_TO)");
+    return { ok: false };
   }
-  await client.messages.create({
-    from: process.env.TWILIO_WHATSAPP_FROM!,
-    to: toNumber,
-    body: message,
-  });
+
+  try {
+    await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_FROM!,
+      to: toNumber,
+      body: message,
+    });
+    log.info({ to: toNumber }, "WhatsApp sent");
+    return { ok: true };
+  } catch (err) {
+    log.error({ err, to: toNumber }, "WhatsApp send failed");
+    Sentry.captureException(err, { tags: { component: "whatsapp" } });
+    return { ok: false };
+  }
 }
 
 export function formatAlert(alert: {

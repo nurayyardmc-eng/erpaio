@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { CheckCircle2, Lock, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
@@ -37,10 +38,14 @@ function ResetPasswordInner() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tokenInvalid, setTokenInvalid] = useState(false);
   const [ok, setOk] = useState(false);
 
   useEffect(() => {
-    if (!token) setError("Geçersiz link.");
+    if (!token) {
+      setError("Geçersiz link.");
+      setTokenInvalid(true);
+    }
   }, [token]);
 
   const submit = async (e: React.FormEvent) => {
@@ -60,6 +65,10 @@ function ResetPasswordInner() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Hata.");
+        // Backend mesajı "Link geçersiz veya süresi dolmuş." → token-invalid CTA
+        if (typeof data.error === "string" && /geçersiz|süresi/i.test(data.error)) {
+          setTokenInvalid(true);
+        }
         setLoading(false);
         return;
       }
@@ -152,22 +161,44 @@ function ResetPasswordInner() {
                 <AlertCircle size={16} /> {error}
               </div>
             )}
-            <button
-              type="submit"
-              disabled={loading || !token}
-              style={{
-                width: "100%",
-                background: colors.brand,
-                border: "none",
-                borderRadius: 10,
-                padding: 12,
-                color: colors.textInverse,
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              {loading ? "Kaydediliyor..." : "Şifreyi Değiştir"}
-            </button>
+            {tokenInvalid ? (
+              <Link
+                href="/forgot-password"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  background: colors.brand,
+                  border: "none",
+                  borderRadius: 10,
+                  padding: 12,
+                  color: colors.textInverse,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textAlign: "center",
+                  textDecoration: "none",
+                  boxSizing: "border-box",
+                }}
+              >
+                Yeni şifre sıfırlama linki iste →
+              </Link>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading || !token}
+                style={{
+                  width: "100%",
+                  background: colors.brand,
+                  border: "none",
+                  borderRadius: 10,
+                  padding: 12,
+                  color: colors.textInverse,
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                {loading ? "Kaydediliyor..." : "Şifreyi Değiştir"}
+              </button>
+            )}
           </form>
         )}
       </div>
