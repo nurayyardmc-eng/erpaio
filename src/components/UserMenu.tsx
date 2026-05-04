@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronDown, LogOut, Settings, Shield } from "lucide-react";
+import { ChevronDown, LogOut, Settings, Shield, HelpCircle } from "lucide-react";
 import { colors } from "@/lib/theme";
 
 async function manualSignOut() {
@@ -125,6 +125,14 @@ export default function UserMenu({ email, name }: UserMenuProps) {
           >
             <Shield size={15} color={colors.textMuted} />
             Güvenlik
+          </Link>
+          <Link
+            href="/help"
+            onClick={() => setOpen(false)}
+            style={menuItemStyle}
+          >
+            <HelpCircle size={15} color={colors.textMuted} />
+            Yardım
           </Link>
 
           <button
