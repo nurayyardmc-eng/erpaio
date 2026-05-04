@@ -619,23 +619,23 @@ export default function ChatPage() {
                           )}
                           <span style={{ flex: 1 }} />
                           {!msg.editing && (
-                            <button onClick={() => startEdit(i)} title="Düzenle" style={iconBtnSmall}>
+                            <button onClick={() => startEdit(i)} title="Düzenle" aria-label="SQL düzenle" style={iconBtnSmall}>
                               <Pencil size={12} />
                             </button>
                           )}
                           {msg.results.length > 0 && (
                             <>
-                              <button onClick={() => exportCsv(msg)} title="CSV indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <button onClick={() => exportCsv(msg)} title="CSV indir" aria-label="CSV olarak indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
                                 <Download size={12} /> CSV
                               </button>
-                              <button onClick={() => exportXlsx(msg)} title="Excel indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <button onClick={() => exportXlsx(msg)} title="Excel indir" aria-label="Excel olarak indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
                                 <FileSpreadsheet size={12} /> XLSX
                               </button>
                               {!msg.explanation && msg.question && (
                                 <button
                                   onClick={() => fetchExplain(i, msg)}
                                   disabled={msg.explainLoading}
-                                  title="AI yorumu"
+                                  title="AI yorumu" aria-label="AI ile sonucu açıkla"
                                   style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}
                                 >
                                   <Sparkles size={12} />
@@ -737,7 +737,7 @@ export default function ChatPage() {
                           <button
                             onClick={() => submitFeedback(i, msg.messageId!, 1)}
                             disabled={msg.feedback !== null}
-                            aria-label="thumbs-up"
+                            aria-label="Faydalı (beğen)"
                             style={{
                               background: msg.feedback === 1 ? "#D1FAE5" : "transparent",
                               border: `1px solid ${msg.feedback === 1 ? "#10B981" : "#E5E7EB"}`,
@@ -755,7 +755,7 @@ export default function ChatPage() {
                           <button
                             onClick={() => submitFeedback(i, msg.messageId!, -1)}
                             disabled={msg.feedback !== null}
-                            aria-label="thumbs-down"
+                            aria-label="Faydasız (beğenme)"
                             style={{
                               background: msg.feedback === -1 ? "#FEE2E2" : "transparent",
                               border: `1px solid ${msg.feedback === -1 ? "#EF4444" : "#E5E7EB"}`,

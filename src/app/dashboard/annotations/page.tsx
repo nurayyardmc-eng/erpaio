@@ -76,7 +76,7 @@ export default function AnnotationsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANNOTATIONS</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ŞEMA AÇIKLAMALARI</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Şema Açıklamaları</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Müşteri-özgü tablo/kolon açıklamaları ekleyin — ERPAIO bu bilgilere

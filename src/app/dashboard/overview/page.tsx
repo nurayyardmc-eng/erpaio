@@ -35,7 +35,7 @@ export default function OverviewPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · OVERVIEW</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANLIK METRİKLER</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Anlık Metrikler</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24 }}>
         Pre-computed — saatlik/günlük cron snapshotlarından, sıfır bekleme.

@@ -71,7 +71,7 @@ export default function AuditPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · AUDIT</div>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · AKTİVİTE LOGU</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Aktivite Logu</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
         Tenant&apos;ınızda çalıştırılan tüm sohbet sorguları. KVKK gereği erişim hakkı.
