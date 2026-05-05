@@ -88,9 +88,10 @@ export default function SettingsScreen({ onLogout }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bgSubtle, paddingTop: 50 }}>
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{
           padding: spacing(5),
-          paddingBottom: 200, // tab bar (84px) + safe area + ekstra
+          paddingBottom: 200,
         }}
         showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"

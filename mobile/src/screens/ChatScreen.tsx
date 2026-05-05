@@ -433,8 +433,8 @@ export default function ChatScreen({ route, navigation }: Props) {
               <TouchableOpacity
                 onPress={() => {
                   // Tab navigator parent → Menü tab → Connections screen
-                  const parent = navigation.getParent();
-                  parent?.navigate("Menü" as never, { screen: "Connections" } as never);
+                  const parent = navigation.getParent() as { navigate: (name: string, params?: unknown) => void } | undefined;
+                  parent?.navigate("Menü", { screen: "Connections" });
                 }}
                 style={{
                   backgroundColor: colors.brand,

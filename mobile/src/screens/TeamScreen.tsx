@@ -29,6 +29,7 @@ export default function TeamScreen({ navigation }: Props) {
         onBack={() => navigation.goBack()}
       />
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
       >
