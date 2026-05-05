@@ -86,13 +86,11 @@ export default function SettingsScreen({ onLogout }: Props) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bgSubtle }} edges={["top"]}>
+    <View style={{ flex: 1, backgroundColor: colors.bgSubtle, paddingTop: 50 }}>
       <ScrollView
-        style={{ flex: 1 }}
         contentContainerStyle={{
           padding: spacing(5),
-          paddingBottom: spacing(40), // tab bar (84px) + alt boşluk
-          flexGrow: 1,
+          paddingBottom: 200, // tab bar (84px) + safe area + ekstra
         }}
         showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
@@ -247,7 +245,7 @@ export default function SettingsScreen({ onLogout }: Props) {
         <Text style={styles.logoutBtnText}>Çıkış Yap</Text>
       </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
