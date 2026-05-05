@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-// Expo Go SDK 54 + react-native-screens v4 + New Architecture'da
-// "expected boolean, got string" hatası için screens optimization'ını kapatıyoruz.
-// Dev build / production'da bu satır kaldırılabilir (performans için).
-import { enableScreens } from "react-native-screens";
-enableScreens(false);
-import { NavigationContainer, DarkTheme } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { QueryClient } from "@tanstack/react-query";
@@ -43,14 +38,15 @@ const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
 const navTheme = {
-  ...DarkTheme,
+  ...DefaultTheme,
   colors: {
-    ...DarkTheme.colors,
+    ...DefaultTheme.colors,
     background: colors.bg,
-    card: colors.surface,
+    card: colors.card,
     text: colors.text,
-    primary: colors.accent,
+    primary: colors.brand,
     border: colors.border,
+    notification: colors.error,
   },
 };
 
@@ -58,16 +54,22 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
   return (
     <Tabs.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: colors.surface },
-        headerTitleStyle: { color: colors.text, fontFamily: font, fontSize: 14 },
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        tabBarLabelStyle: { fontFamily: font, fontSize: 10 },
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textDim,
+        headerStyle: { backgroundColor: colors.bg, borderBottomColor: colors.border, borderBottomWidth: 1 },
+        headerTitleStyle: { color: colors.text, fontFamily: font, fontSize: 16, fontWeight: "600" },
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+          paddingTop: 6,
+          height: 84,
+        },
+        tabBarLabelStyle: { fontFamily: font, fontSize: 11, fontWeight: "500" },
+        tabBarActiveTintColor: colors.brand,
+        tabBarInactiveTintColor: colors.textSubtle,
       }}
     >
-      <Tabs.Screen name="Chat" component={ChatStackNav} options={{ headerShown: false }} />
-      <Tabs.Screen name="Alerts" component={AlertsScreen} options={{ headerShown: false }} />
+      <Tabs.Screen name="Sohbet" component={ChatStackNav} options={{ headerShown: false }} />
+      <Tabs.Screen name="Bildirimler" component={AlertsScreen} options={{ headerShown: false }} />
       <Tabs.Screen
         name="Ayarlar"
         children={() => <SettingsScreen onLogout={onLogout} />}
@@ -147,10 +149,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
-        <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+        <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
         {authState === "loading" || authState === "biometric" ? (
           <View style={styles.loader}>
-            <ActivityIndicator color={colors.accent} />
+            <ActivityIndicator color={colors.brand} />
             {biometricFailed && (
               <View style={styles.biometricFailedBox}>
                 <Text style={styles.biometricErrorText}>Doğrulama başarısız.</Text>
@@ -184,17 +186,15 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  loader: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
+  loader: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgSubtle },
   biometricFailedBox: { marginTop: 24, alignItems: "center", gap: 12 },
-  biometricErrorText: { color: colors.danger, fontFamily: font, fontSize: 12 },
+  biometricErrorText: { color: colors.error, fontFamily: font, fontSize: 13, fontWeight: "500" },
   biometricBtn: {
-    backgroundColor: colors.accentMuted,
-    borderColor: colors.accentBorder,
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    backgroundColor: colors.brand,
+    borderRadius: 100,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
-  biometricBtnText: { color: colors.accent, fontFamily: font, fontSize: 13 },
-  biometricLink: { color: colors.textDim, fontFamily: font, fontSize: 11 },
+  biometricBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 14, fontWeight: "600" },
+  biometricLink: { color: colors.textMuted, fontFamily: font, fontSize: 13, textDecorationLine: "underline" },
 });

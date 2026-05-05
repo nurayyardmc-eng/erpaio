@@ -38,13 +38,20 @@
         {
           "color": "#00E5FF"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {
         "projectId": "75dbff10-0b84-4eca-9ad7-62916a209c04"
       }
     },
-    "owner": "erpaio"
+    "owner": "erpaio",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/75dbff10-0b84-4eca-9ad7-62916a209c04"
+    }
   }
 }

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -10,7 +11,8 @@ import {
   View,
 } from "react-native";
 import { login } from "../lib/auth";
-import { colors, font, radius, spacing } from "../lib/theme";
+import Logo from "../components/Logo";
+import { colors, font, radius, shadow } from "../lib/theme";
 
 interface Props {
   onLoginSuccess: () => void;
@@ -26,7 +28,6 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
     const cleanEmail = email.trim();
     if (!cleanEmail || !password) return;
 
-    // Email format kontrolü — backend'e gitmeden anla
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       setError("Geçerli bir email adresi girin.");
       return;
@@ -49,48 +50,70 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.root}
     >
-      <View style={styles.card}>
-        <Text style={styles.brand}>ERPAIO</Text>
-        <Text style={styles.title}>Giriş Yap</Text>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <View style={styles.logoWrap}>
+            <Logo size={96} variant="full" />
+          </View>
 
-        <Text style={styles.label}>EMAIL</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          placeholder="admin@example.com"
-          placeholderTextColor={colors.textDim}
-          style={styles.input}
-          editable={!loading}
-        />
+          <Text style={styles.title}>Giriş Yap</Text>
+          <Text style={styles.subtitle}>Hesabına devam et</Text>
 
-        <Text style={styles.label}>ŞİFRE</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholder="••••••••"
-          placeholderTextColor={colors.textDim}
-          style={styles.input}
-          editable={!loading}
-        />
+          <View style={styles.field}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              placeholder="ornek@firma.com"
+              placeholderTextColor={colors.textSubtle}
+              style={styles.input}
+              editable={!loading}
+            />
+          </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
+          <View style={styles.field}>
+            <Text style={styles.label}>Şifre</Text>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholder="••••••••"
+              placeholderTextColor={colors.textSubtle}
+              style={styles.input}
+              editable={!loading}
+            />
+          </View>
 
-        <TouchableOpacity
-          onPress={submit}
-          disabled={loading || !email || !password}
-          style={[styles.button, (loading || !email || !password) && styles.buttonDisabled]}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.accent} />
-          ) : (
-            <Text style={styles.buttonText}>Giriş Yap →</Text>
+          {error && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
           )}
-        </TouchableOpacity>
-      </View>
+
+          <TouchableOpacity
+            onPress={submit}
+            disabled={loading || !email || !password}
+            style={[styles.button, (loading || !email || !password) && styles.buttonDisabled]}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.textInverse} />
+            ) : (
+              <Text style={styles.buttonText}>Giriş Yap</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.bottomRow}>
+            <Text style={styles.bottomText}>Hesabın yok mu?</Text>
+            <TouchableOpacity disabled>
+              <Text style={[styles.bottomLink, { opacity: 0.5 }]}> Kayıt Ol</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -98,73 +121,107 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.bgSubtle,
+  },
+  scroll: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: spacing(5),
+    padding: 16,
   },
   card: {
     width: "100%",
-    maxWidth: 360,
-    backgroundColor: colors.surface,
+    maxWidth: 400,
+    backgroundColor: colors.card,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radius.xl,
-    padding: spacing(8),
+    padding: 32,
+    ...shadow.sm,
   },
-  brand: {
-    color: colors.accent,
-    fontFamily: font,
-    fontSize: 10,
-    letterSpacing: 3,
-    marginBottom: spacing(2),
+  logoWrap: {
+    marginBottom: 24,
+    alignItems: "center",
   },
   title: {
     color: colors.text,
+    fontSize: 24,
+    fontWeight: "700",
+    letterSpacing: -0.5,
     fontFamily: font,
-    fontSize: 20,
-    marginBottom: spacing(6),
-    fontWeight: "600",
+    marginBottom: 4,
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontFamily: font,
+    marginBottom: 24,
+  },
+  field: {
+    marginBottom: 14,
   },
   label: {
-    color: colors.textDim,
+    fontSize: 13,
+    fontWeight: "500",
+    color: colors.text,
+    marginBottom: 6,
     fontFamily: font,
-    fontSize: 11,
-    marginBottom: spacing(1.5),
-    marginTop: spacing(2),
   },
   input: {
     backgroundColor: colors.bg,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radius.md,
-    padding: spacing(3),
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     color: colors.text,
+    fontSize: 14,
     fontFamily: font,
-    fontSize: 13,
   },
-  error: {
-    color: colors.danger,
+  errorBox: {
+    backgroundColor: colors.errorSoft,
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 14,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 13,
+    fontWeight: "500",
     fontFamily: font,
-    fontSize: 12,
-    marginTop: spacing(3),
   },
   button: {
-    marginTop: spacing(6),
-    backgroundColor: colors.accentMuted,
-    borderColor: colors.accentBorder,
-    borderWidth: 1,
+    backgroundColor: colors.brand,
     borderRadius: radius.md,
-    padding: spacing(3),
+    paddingVertical: 13,
     alignItems: "center",
+    marginTop: 6,
   },
   buttonDisabled: {
     opacity: 0.4,
   },
   buttonText: {
-    color: colors.accent,
+    color: colors.textInverse,
+    fontSize: 14,
+    fontWeight: "600",
     fontFamily: font,
+  },
+  bottomRow: {
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bottomText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontFamily: font,
+  },
+  bottomLink: {
+    color: colors.brand,
     fontSize: 13,
     fontWeight: "600",
+    fontFamily: font,
   },
 });
