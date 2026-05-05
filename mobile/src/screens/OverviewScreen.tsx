@@ -23,7 +23,7 @@ export default function OverviewScreen({ navigation }: Props) {
         onBack={() => navigation.goBack()}
       />
       <ScrollView
-        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20) }}
+        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40) }}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
       >
         {q.isLoading ? (

@@ -54,7 +54,7 @@ export default function ConnectionsScreen({ navigation }: Props) {
           data={q.data ?? []}
           keyExtractor={(c) => c.id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20), flexGrow: 1 }}
+          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
               title="Henüz bağlantı yok"

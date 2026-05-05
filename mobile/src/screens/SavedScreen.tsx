@@ -51,7 +51,7 @@ export default function SavedScreen({ navigation }: Props) {
           data={q.data?.queries ?? []}
           keyExtractor={(s) => s.id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20), flexGrow: 1 }}
+          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
               title="Henüz kayıtlı sorgu yok"

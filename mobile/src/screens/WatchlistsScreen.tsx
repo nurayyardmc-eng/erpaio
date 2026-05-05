@@ -51,7 +51,7 @@ export default function WatchlistsScreen({ navigation }: Props) {
           data={q.data?.watchlists ?? []}
           keyExtractor={(w) => w.id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20), flexGrow: 1 }}
+          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
           ListEmptyComponent={<EmptyState title="Watchlist yok" description="Web'den ekleyebilirsin." />}
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
         />

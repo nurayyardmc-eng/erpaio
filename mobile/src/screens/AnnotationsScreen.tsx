@@ -45,7 +45,7 @@ export default function AnnotationsScreen({ navigation }: Props) {
           data={q.data?.annotations ?? []}
           keyExtractor={(a) => a.id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20), flexGrow: 1 }}
+          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
               title="Henüz açıklama yok"

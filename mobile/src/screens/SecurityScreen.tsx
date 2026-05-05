@@ -56,7 +56,7 @@ export default function SecurityScreen({ navigation }: Props) {
         description="İki faktörlü doğrulama (MFA) ayarları."
         onBack={() => navigation.goBack()}
       />
-      <ScrollView contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20) }}>
+      <ScrollView contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40) }}>
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>İki Faktörlü Doğrulama</Text>
 

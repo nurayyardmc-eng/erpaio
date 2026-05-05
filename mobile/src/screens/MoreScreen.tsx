@@ -51,11 +51,12 @@ export default function MoreScreen({ navigation }: Props) {
     <SafeAreaView style={styles.root} edges={["top"]}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20) }}
+        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
+        showsVerticalScrollIndicator={true}
       >
         <View style={{ marginBottom: spacing(5) }}>
           <Text style={styles.brand}>ERPAIO · MENÜ</Text>
-          <Text style={styles.pageTitle}>Daha</Text>
+          <Text style={styles.pageTitle}>Menü</Text>
         </View>
 
         {GROUPS.map((group) => (

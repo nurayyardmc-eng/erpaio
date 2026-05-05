@@ -75,7 +75,7 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
     >
       <Tabs.Screen name="Sohbet" component={ChatStackNav} options={{ headerShown: false }} />
       <Tabs.Screen name="Bildirimler" component={AlertsScreen} options={{ headerShown: false }} />
-      <Tabs.Screen name="Daha" component={MoreStackNav} options={{ headerShown: false }} />
+      <Tabs.Screen name="Menü" component={MoreStackNav} options={{ headerShown: false }} />
       <Tabs.Screen
         name="Ayarlar"
         children={() => <SettingsScreen onLogout={onLogout} />}

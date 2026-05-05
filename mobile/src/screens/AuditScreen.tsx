@@ -44,7 +44,7 @@ export default function AuditScreen({ navigation }: Props) {
           data={q.data?.entries ?? []}
           keyExtractor={(e) => e.id}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: spacing(20), flexGrow: 1 }}
+          contentContainerStyle={{ paddingBottom: spacing(40), flexGrow: 1 }}
           ListEmptyComponent={<EmptyState title="Henüz aktivite yok" description="Kullanıcı aktiviteleri burada görünür." />}
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
         />

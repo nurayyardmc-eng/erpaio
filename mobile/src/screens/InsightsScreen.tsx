@@ -43,7 +43,7 @@ export default function InsightsScreen({ navigation }: Props) {
         description="Sorgulardan otomatik öğrenilen ilişkiler + profile dışı tablolar."
         onBack={() => navigation.goBack()}
       />
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20) }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40) }}>
         {connsQuery.isError ? (
           <ErrorState onRetry={() => connsQuery.refetch()} />
         ) : activeConns.length === 0 ? (

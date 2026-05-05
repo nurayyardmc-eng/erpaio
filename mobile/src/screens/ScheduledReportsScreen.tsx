@@ -54,7 +54,7 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
           data={q.data?.reports ?? []}
           keyExtractor={(r) => r.id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(20), flexGrow: 1 }}
+          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
           ListEmptyComponent={<EmptyState title="Planlı rapor yok" description="Web'den ekleyebilirsin." />}
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
         />
