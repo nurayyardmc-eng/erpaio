@@ -18,6 +18,8 @@ import { logout as authLogout } from "./src/lib/auth";
 import { registerForPush } from "./src/lib/push";
 import { authenticate, isBiometricEnabled, isBiometricSupported } from "./src/lib/biometric";
 import { colors, font } from "./src/lib/theme";
+import Toaster from "./src/components/Toast";
+import ConfirmHost from "./src/components/Confirm";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,6 +182,8 @@ export default function App() {
             </Stack.Navigator>
           </NavigationContainer>
         )}
+        <Toaster />
+        <ConfirmHost />
       </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
