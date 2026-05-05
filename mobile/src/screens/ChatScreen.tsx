@@ -419,13 +419,37 @@ export default function ChatScreen({ route, navigation }: Props) {
         data={messages}
         keyExtractor={(_, i) => `m-${i}`}
         renderItem={renderMessage}
-        contentContainerStyle={{ padding: spacing(3), paddingBottom: spacing(8) }}
+        contentContainerStyle={{ padding: spacing(3), paddingBottom: spacing(8), flexGrow: 1 }}
         ListEmptyComponent={
-          <Text style={styles.placeholder}>
-            {selectedConn
-              ? "Veritabanına bir Türkçe soru yaz, SQL üretip cevap getireceğim."
-              : "Önce bir aktif ERP bağlantısı eklenmeli."}
-          </Text>
+          selectedConn ? (
+            <Text style={styles.placeholder}>
+              Veritabanına bir Türkçe soru yaz, SQL üretip cevap getireceğim.
+            </Text>
+          ) : (
+            <View style={{ alignItems: "center", paddingTop: spacing(10), gap: spacing(3) }}>
+              <Text style={styles.placeholder}>
+                Sorgu yapmak için önce bir ERP bağlantısı ekleyin.
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  // Tab navigator parent → Menü tab → Connections screen
+                  const parent = navigation.getParent();
+                  parent?.navigate("Menü" as never, { screen: "Connections" } as never);
+                }}
+                style={{
+                  backgroundColor: colors.brand,
+                  paddingHorizontal: spacing(5),
+                  paddingVertical: spacing(2.5),
+                  borderRadius: radius.full,
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={{ color: colors.textInverse, fontFamily: font, fontSize: 14, fontWeight: "600" }}>
+                  ERP Bağlantısı Ekle →
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )
         }
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
       />
