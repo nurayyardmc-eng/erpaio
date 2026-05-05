@@ -88,8 +88,14 @@ export default function SettingsScreen({ onLogout }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bgSubtle }} edges={["top"]}>
       <ScrollView
-        style={styles.root}
-        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(12) }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          padding: spacing(5),
+          paddingBottom: spacing(40), // tab bar (84px) + alt boşluk
+          flexGrow: 1,
+        }}
+        showsVerticalScrollIndicator={true}
+        keyboardShouldPersistTaps="handled"
       >
       <View style={{ marginBottom: spacing(5) }}>
         <Text style={styles.brand}>ERPAIO · AYARLAR</Text>
