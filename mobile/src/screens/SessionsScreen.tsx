@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useFocusEffect } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { getSessions, type SessionListItem } from "../lib/chat";
@@ -54,7 +54,7 @@ export default function SessionsScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <View style={styles.header}>
         <View>
           <Text style={styles.brand}>ERPAIO · SOHBET</Text>
@@ -98,7 +98,7 @@ export default function SessionsScreen({ navigation }: Props) {
           contentContainerStyle={{ paddingVertical: spacing(1), flexGrow: 1 }}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

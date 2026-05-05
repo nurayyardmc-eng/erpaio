@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import type { MoreStackParamList } from "./MoreStackNav";
@@ -48,10 +48,10 @@ const GROUPS: MenuGroup[] = [
 
 export default function MoreScreen({ navigation }: Props) {
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
+        contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
         showsVerticalScrollIndicator={true}
       >
         <View style={{ marginBottom: spacing(5) }}>
@@ -79,7 +79,7 @@ export default function MoreScreen({ navigation }: Props) {
           </View>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

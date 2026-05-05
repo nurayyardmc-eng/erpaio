@@ -1,5 +1,5 @@
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useQuery } from "@tanstack/react-query";
 import { getAudit, type AuditEntry } from "../lib/dashboard";
 import { colors, font, fontMono, radius, spacing } from "../lib/theme";
@@ -28,7 +28,7 @@ export default function AuditScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
         brand="ERPAIO · AUDIT"
         title="Aktivite Logu"
@@ -44,12 +44,12 @@ export default function AuditScreen({ navigation }: Props) {
           data={q.data?.entries ?? []}
           keyExtractor={(e) => e.id}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: spacing(40), flexGrow: 1 }}
+          contentContainerStyle={{ paddingBottom: 200, flexGrow: 1 }}
           ListEmptyComponent={<EmptyState title="Henüz aktivite yok" description="Kullanıcı aktiviteleri burada görünür." />}
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

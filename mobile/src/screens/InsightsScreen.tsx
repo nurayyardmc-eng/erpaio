@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useQuery } from "@tanstack/react-query";
 import { getConnections, getInsights } from "../lib/dashboard";
 import { colors, font, fontMono, radius, spacing } from "../lib/theme";
@@ -36,14 +36,14 @@ export default function InsightsScreen({ navigation }: Props) {
   const activeConns = (connsQuery.data ?? []).filter((c) => c.status === "active");
 
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
         brand="ERPAIO · ANALİZ"
         title="Şema Analizi"
         description="Sorgulardan otomatik öğrenilen ilişkiler + profile dışı tablolar."
         onBack={() => navigation.goBack()}
       />
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40) }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}>
         {connsQuery.isError ? (
           <ErrorState onRetry={() => connsQuery.refetch()} />
         ) : activeConns.length === 0 ? (
@@ -93,7 +93,7 @@ export default function InsightsScreen({ navigation }: Props) {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

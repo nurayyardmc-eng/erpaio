@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { api } from "../lib/api";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -49,14 +49,14 @@ export default function SecurityScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
         brand="ERPAIO · GÜVENLİK"
         title="Güvenlik"
         description="İki faktörlü doğrulama (MFA) ayarları."
         onBack={() => navigation.goBack()}
       />
-      <ScrollView contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40) }}>
+      <ScrollView contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}>
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>İki Faktörlü Doğrulama</Text>
 
@@ -93,7 +93,7 @@ export default function SecurityScreen({ navigation }: Props) {
           <Text style={styles.linkText}>erpaio.vercel.app/dashboard/security</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

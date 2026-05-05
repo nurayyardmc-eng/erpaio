@@ -1,5 +1,5 @@
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useQuery } from "@tanstack/react-query";
 import { getTeam } from "../lib/dashboard";
 import { colors, font, radius, spacing } from "../lib/theme";
@@ -21,7 +21,7 @@ export default function TeamScreen({ navigation }: Props) {
   const q = useQuery({ queryKey: ["team"], queryFn: getTeam });
 
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
         brand="ERPAIO · TAKIM"
         title="Takım"
@@ -29,7 +29,7 @@ export default function TeamScreen({ navigation }: Props) {
         onBack={() => navigation.goBack()}
       />
       <ScrollView
-        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40) }}
+        contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
       >
         {q.isLoading ? (
@@ -76,7 +76,7 @@ export default function TeamScreen({ navigation }: Props) {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

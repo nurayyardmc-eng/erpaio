@@ -1,5 +1,5 @@
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useQuery } from "@tanstack/react-query";
 import { getMetrics } from "../lib/dashboard";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
@@ -15,7 +15,7 @@ export default function OverviewScreen({ navigation }: Props) {
   const q = useQuery({ queryKey: ["metrics"], queryFn: getMetrics });
 
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
         brand="ERPAIO · METRİKLER"
         title="Anlık Metrikler"
@@ -23,7 +23,7 @@ export default function OverviewScreen({ navigation }: Props) {
         onBack={() => navigation.goBack()}
       />
       <ScrollView
-        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40) }}
+        contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
       >
         {q.isLoading ? (
@@ -45,7 +45,7 @@ export default function OverviewScreen({ navigation }: Props) {
           </View>
         ) : null}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

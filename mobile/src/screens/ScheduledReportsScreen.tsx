@@ -1,5 +1,5 @@
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useQuery } from "@tanstack/react-query";
 import { getScheduledReports, type ScheduledReport } from "../lib/dashboard";
 import { colors, font, radius, spacing } from "../lib/theme";
@@ -38,7 +38,7 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.root} edges={["top"]}>
+    <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
         brand="ERPAIO · RAPORLAR"
         title="Planlı Raporlar"
@@ -54,12 +54,12 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
           data={q.data?.reports ?? []}
           keyExtractor={(r) => r.id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(40), flexGrow: 1 }}
+          contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
           ListEmptyComponent={<EmptyState title="Planlı rapor yok" description="Web'den ekleyebilirsin." />}
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
