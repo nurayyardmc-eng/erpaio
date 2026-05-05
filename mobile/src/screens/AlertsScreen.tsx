@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -11,13 +10,16 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acknowledgeAlert, getAlerts, type Alert } from "../lib/alerts";
-import { colors, font, radius, spacing } from "../lib/theme";
+import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
+import EmptyState from "../components/EmptyState";
+import ErrorState from "../components/ErrorState";
+import { SkeletonList } from "../components/Skeleton";
 
 const SEVERITY: Record<Alert["severity"], { color: string; label: string }> = {
-  critical: { color: "#FF3B30", label: "CRITICAL" },
-  high: { color: "#FF9500", label: "HIGH" },
-  medium: { color: "#FFD740", label: "MEDIUM" },
-  low: { color: "#00E5FF", label: "LOW" },
+  critical: { color: "#EF4444", label: "KRİTİK" },
+  high: { color: "#F59E0B", label: "YÜKSEK" },
+  medium: { color: "#F59E0B", label: "ORTA" },
+  low: { color: "#737373", label: "DÜŞÜK" },
 };
 
 export default function AlertsScreen() {
@@ -45,7 +47,7 @@ export default function AlertsScreen() {
     return (
       <View style={[styles.card, { borderLeftColor: sev.color }]}>
         <View style={styles.row}>
-          <View style={[styles.sevBadge, { backgroundColor: `${sev.color}30`, borderColor: sev.color }]}>
+          <View style={[styles.sevBadge, { backgroundColor: `${sev.color}1A` }]}>
             <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
           </View>
           {item.module && <Text style={styles.module}>{item.module}</Text>}
@@ -61,6 +63,7 @@ export default function AlertsScreen() {
               onPress={() => ackMutation.mutate(item.id)}
               disabled={ackMutation.isPending}
               style={styles.ackBtn}
+              activeOpacity={0.7}
             >
               <Text style={styles.ackBtnText}>Okundu</Text>
             </TouchableOpacity>
@@ -74,12 +77,14 @@ export default function AlertsScreen() {
     <View style={styles.root}>
       <View style={styles.header}>
         <Text style={styles.brand}>ERPAIO · BİLDİRİMLER</Text>
+        <Text style={styles.headerTitle}>Bildirimler</Text>
         <View style={styles.tabs}>
           {(["open", "acknowledged"] as const).map((k) => (
             <TouchableOpacity
               key={k}
               onPress={() => setFilter(k)}
               style={[styles.tab, filter === k && styles.tabActive]}
+              activeOpacity={0.7}
             >
               <Text style={[styles.tabText, filter === k && styles.tabTextActive]}>
                 {k === "open" ? "Açık" : "Okundu"}
@@ -90,25 +95,35 @@ export default function AlertsScreen() {
       </View>
 
       {alertsQuery.isLoading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: spacing(8) }} />
+        <View style={{ padding: spacing(4) }}>
+          <SkeletonList count={3} height={100} gap={10} />
+        </View>
       ) : alertsQuery.isError ? (
-        <Text style={styles.error}>Yüklenemedi: {(alertsQuery.error as Error).message}</Text>
+        <View style={{ padding: spacing(4) }}>
+          <ErrorState onRetry={() => alertsQuery.refetch()} />
+        </View>
       ) : (
         <FlatList
           data={alertsQuery.data ?? []}
           keyExtractor={(a) => a.id}
           renderItem={renderAlert}
-          contentContainerStyle={{ padding: spacing(3) }}
+          contentContainerStyle={{ padding: spacing(4), flexGrow: 1 }}
           ListEmptyComponent={
-            <Text style={styles.empty}>
-              {filter === "open" ? "✅ Açık bildirim yok." : "Okundu bildirim yok."}
-            </Text>
+            <EmptyState
+              icon="🔔"
+              title={filter === "open" ? "Açık bildirim yok" : "Okundu bildirim yok"}
+              description={
+                filter === "open"
+                  ? "Anomaly detector saatlik çalışıyor. Önemli olaylar burada gözükür."
+                  : "Henüz okuduğun bildirim yok."
+              }
+            />
           }
           refreshControl={
             <RefreshControl
               refreshing={alertsQuery.isRefetching}
               onRefresh={() => alertsQuery.refetch()}
-              tintColor={colors.accent}
+              tintColor={colors.brand}
             />
           }
         />
@@ -119,32 +134,87 @@ export default function AlertsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  header: { padding: spacing(3), borderBottomColor: colors.border, borderBottomWidth: 1 },
-  brand: { color: colors.accent, fontFamily: font, fontSize: 9, letterSpacing: 3, marginBottom: spacing(2) },
+  header: {
+    paddingHorizontal: spacing(5),
+    paddingTop: spacing(5),
+    paddingBottom: spacing(4),
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+  },
+  brand: {
+    color: colors.textSubtle,
+    fontFamily: font,
+    fontSize: 10,
+    letterSpacing: 3,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  headerTitle: {
+    color: colors.text,
+    fontFamily: fontSerif,
+    fontSize: 24,
+    fontWeight: "400",
+    letterSpacing: -0.5,
+    marginBottom: spacing(3),
+  },
   tabs: { flexDirection: "row", gap: spacing(2) },
-  tab: { paddingHorizontal: spacing(3), paddingVertical: spacing(1.5), borderColor: colors.border, borderWidth: 1, borderRadius: radius.md },
-  tabActive: { borderColor: colors.accent, backgroundColor: colors.accentMuted },
-  tabText: { color: colors.textMuted, fontFamily: font, fontSize: 11 },
-  tabTextActive: { color: colors.accent },
+  tab: {
+    paddingHorizontal: spacing(3.5),
+    paddingVertical: spacing(2),
+    borderColor: colors.borderStrong,
+    borderWidth: 1,
+    borderRadius: radius.full,
+  },
+  tabActive: { borderColor: colors.brand, backgroundColor: colors.brand },
+  tabText: { color: colors.textMuted, fontFamily: font, fontSize: 12, fontWeight: "500" },
+  tabTextActive: { color: colors.textInverse },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderColor: colors.border,
     borderWidth: 1,
     borderLeftWidth: 3,
     borderRadius: radius.lg,
-    padding: spacing(3),
+    padding: spacing(4),
+    marginBottom: spacing(3),
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2),
     marginBottom: spacing(2),
   },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing(2), marginBottom: spacing(1) },
-  sevBadge: { borderWidth: 1, borderRadius: radius.sm, paddingHorizontal: spacing(1.5), paddingVertical: 1 },
-  sevText: { fontFamily: font, fontSize: 9, letterSpacing: 1 },
-  module: { color: colors.textDim, fontFamily: font, fontSize: 9 },
-  title: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "600", marginBottom: spacing(1) },
-  desc: { color: colors.textMuted, fontFamily: font, fontSize: 11, marginBottom: spacing(1.5) },
-  footer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing(1) },
-  timestamp: { color: colors.textDim, fontFamily: font, fontSize: 10 },
-  ackBtn: { backgroundColor: colors.borderSoft, borderColor: colors.borderSoft, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing(3), paddingVertical: spacing(1) },
-  ackBtnText: { color: colors.textMuted, fontFamily: font, fontSize: 10 },
-  empty: { color: colors.textDim, fontFamily: font, fontSize: 12, textAlign: "center", marginTop: spacing(10) },
-  error: { color: colors.danger, fontFamily: font, fontSize: 12, textAlign: "center", marginTop: spacing(8), paddingHorizontal: spacing(4) },
+  sevBadge: {
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing(2),
+    paddingVertical: 2,
+  },
+  sevText: { fontFamily: font, fontSize: 10, letterSpacing: 1, fontWeight: "700" },
+  module: { color: colors.textSubtle, fontFamily: font, fontSize: 11 },
+  title: {
+    color: colors.text,
+    fontFamily: font,
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: spacing(1),
+  },
+  desc: {
+    color: colors.textMuted,
+    fontFamily: font,
+    fontSize: 13,
+    marginBottom: spacing(2),
+    lineHeight: 20,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  timestamp: { color: colors.textSubtle, fontFamily: font, fontSize: 11 },
+  ackBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3.5),
+    paddingVertical: spacing(1.5),
+  },
+  ackBtnText: { color: colors.text, fontFamily: font, fontSize: 12, fontWeight: "500" },
 });

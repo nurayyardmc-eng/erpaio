@@ -14,7 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
 import { isBiometricSupported, isBiometricEnabled, setBiometricEnabled } from "../lib/biometric";
-import { colors, font, radius, spacing } from "../lib/theme";
+import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
+import { showToast } from "../components/Toast";
 
 interface Props {
   onLogout: () => void;
@@ -78,14 +79,17 @@ export default function SettingsScreen({ onLogout }: Props) {
   if (!draft) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color={colors.accent} />
+        <ActivityIndicator color={colors.brand} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing(4), paddingBottom: spacing(10) }}>
-      <Text style={styles.brand}>ERPAIO · AYARLAR</Text>
+    <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(12) }}>
+      <View style={{ marginBottom: spacing(5) }}>
+        <Text style={styles.brand}>ERPAIO · AYARLAR</Text>
+        <Text style={styles.pageTitle}>Ayarlar</Text>
+      </View>
 
       <Section title="Hesap">
         <Field label="Tenant Adı">
@@ -178,7 +182,7 @@ export default function SettingsScreen({ onLogout }: Props) {
 
       <Section title="ERP Bağlantıları">
         {connQuery.isLoading ? (
-          <ActivityIndicator color={colors.accent} />
+          <ActivityIndicator color={colors.brand} />
         ) : (
           <View>
             {(connQuery.data ?? []).map((c: Connection) => (
@@ -255,82 +259,118 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing(2) }}>
-      <Text style={{ color: colors.text, fontFamily: font, fontSize: 12 }}>{label}</Text>
+    <View style={{
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing(3),
+    }}>
+      <Text style={{ color: colors.text, fontFamily: font, fontSize: 14, flex: 1 }}>{label}</Text>
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ false: colors.border, true: colors.accentBorder }}
-        thumbColor={value ? colors.accent : colors.textDim}
+        trackColor={{ false: colors.bgMuted, true: colors.brand }}
+        thumbColor={colors.card}
+        ios_backgroundColor={colors.bgMuted}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  loader: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
-  brand: { color: colors.accent, fontFamily: font, fontSize: 9, letterSpacing: 3, marginBottom: spacing(4) },
+  root: { flex: 1, backgroundColor: colors.bgSubtle },
+  loader: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgSubtle },
+  brand: {
+    color: colors.textSubtle,
+    fontFamily: font,
+    fontSize: 10,
+    letterSpacing: 3,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  pageTitle: {
+    color: colors.text,
+    fontFamily: fontSerif,
+    fontSize: 28,
+    fontWeight: "400",
+    letterSpacing: -0.5,
+  },
   section: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radius.lg,
-    padding: spacing(3),
+    padding: spacing(5),
     marginBottom: spacing(3),
   },
-  sectionTitle: { color: colors.accent, fontFamily: font, fontSize: 12, marginBottom: spacing(3), fontWeight: "600" },
-  label: { color: colors.textDim, fontFamily: font, fontSize: 9, letterSpacing: 1, marginBottom: spacing(1) },
+  sectionTitle: {
+    color: colors.text,
+    fontFamily: font,
+    fontSize: 15,
+    marginBottom: spacing(4),
+    fontWeight: "600",
+  },
+  label: {
+    color: colors.textSubtle,
+    fontFamily: font,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    fontWeight: "600",
+    marginBottom: spacing(1.5),
+  },
   input: {
     backgroundColor: colors.bg,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radius.md,
-    padding: spacing(2),
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2.5),
     color: colors.text,
     fontFamily: font,
-    fontSize: 12,
+    fontSize: 14,
   },
   sevChip: {
-    backgroundColor: colors.bg,
-    borderColor: colors.border,
+    backgroundColor: "transparent",
+    borderColor: colors.borderStrong,
     borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing(3),
-    paddingVertical: spacing(1.5),
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3.5),
+    paddingVertical: spacing(2),
   },
-  sevChipActive: { borderColor: colors.accent, backgroundColor: colors.accentMuted },
-  sevChipText: { color: colors.textMuted, fontFamily: font, fontSize: 11 },
-  sevChipTextActive: { color: colors.accent },
+  sevChipActive: { borderColor: colors.brand, backgroundColor: colors.brand },
+  sevChipText: { color: colors.textMuted, fontFamily: font, fontSize: 13, fontWeight: "500" },
+  sevChipTextActive: { color: colors.textInverse },
   saveBtn: {
-    backgroundColor: colors.accentMuted,
-    borderColor: colors.accentBorder,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing(5),
-    paddingVertical: spacing(2.5),
+    backgroundColor: colors.brand,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(6),
+    paddingVertical: spacing(3),
   },
-  saveBtnText: { color: colors.accent, fontFamily: font, fontSize: 12, fontWeight: "600" },
+  saveBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 14, fontWeight: "600" },
   connRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: spacing(2),
-    borderBottomColor: colors.border,
+    paddingVertical: spacing(3),
+    borderBottomColor: colors.borderSubtle,
     borderBottomWidth: 1,
   },
-  connName: { color: colors.text, fontFamily: font, fontSize: 12 },
-  connHost: { color: colors.textDim, fontFamily: font, fontSize: 10 },
-  connStatus: { borderRadius: radius.sm, paddingHorizontal: spacing(2), paddingVertical: 2 },
-  muted: { color: colors.textDim, fontFamily: font, fontSize: 11 },
-  link: { color: colors.accent, fontFamily: font, fontSize: 12, paddingVertical: 6 },
+  connName: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "500" },
+  connHost: { color: colors.textSubtle, fontFamily: font, fontSize: 12, marginTop: 2 },
+  connStatus: { borderRadius: radius.full, paddingHorizontal: spacing(2.5), paddingVertical: 4 },
+  muted: { color: colors.textSubtle, fontFamily: font, fontSize: 13 },
+  link: {
+    color: colors.brand,
+    fontFamily: font,
+    fontSize: 14,
+    fontWeight: "500",
+    paddingVertical: 8,
+  },
   logoutBtn: {
     marginTop: spacing(4),
-    backgroundColor: "rgba(255,107,107,0.1)",
-    borderColor: "rgba(255,107,107,0.3)",
-    borderWidth: 1,
+    backgroundColor: colors.errorSoft,
     borderRadius: radius.md,
-    padding: spacing(3),
+    padding: spacing(4),
     alignItems: "center",
   },
-  logoutBtnText: { color: colors.danger, fontFamily: font, fontSize: 12 },
+  logoutBtnText: { color: colors.error, fontFamily: font, fontSize: 14, fontWeight: "600" },
 });
