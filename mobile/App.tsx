@@ -10,6 +10,8 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import LoginScreen from "./src/screens/LoginScreen";
+import SignupScreen from "./src/screens/SignupScreen";
+import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import ChatStackNav from "./src/screens/ChatStackNav";
 import AlertsScreen from "./src/screens/AlertsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -171,9 +173,28 @@ export default function App() {
           <NavigationContainer theme={navTheme}>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               {authState === "guest" ? (
-                <Stack.Screen name="Login">
-                  {() => <LoginScreen onLoginSuccess={() => setAuthState("authed")} />}
-                </Stack.Screen>
+                <>
+                  <Stack.Screen name="Login">
+                    {(props) => (
+                      <LoginScreen
+                        onLoginSuccess={() => setAuthState("authed")}
+                        onGoToSignup={() => props.navigation.navigate("Signup")}
+                        onGoToForgot={() => props.navigation.navigate("ForgotPassword")}
+                      />
+                    )}
+                  </Stack.Screen>
+                  <Stack.Screen name="Signup">
+                    {(props) => (
+                      <SignupScreen
+                        onSuccess={() => setAuthState("authed")}
+                        onBack={() => props.navigation.goBack()}
+                      />
+                    )}
+                  </Stack.Screen>
+                  <Stack.Screen name="ForgotPassword">
+                    {(props) => <ForgotPasswordScreen onBack={() => props.navigation.goBack()} />}
+                  </Stack.Screen>
+                </>
               ) : (
                 <Stack.Screen name="Tabs">
                   {() => <TabsRoot onLogout={handleLogout} />}

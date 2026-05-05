@@ -46,3 +46,26 @@ export async function getMe(): Promise<{ user: MobileUser } | null> {
     return null;
   }
 }
+
+export interface SignupParams {
+  email: string;
+  password: string;
+  name?: string;
+  tenantName: string;
+}
+
+export async function signup(params: SignupParams): Promise<void> {
+  await api("/api/auth/signup", {
+    method: "POST",
+    authenticated: false,
+    body: params,
+  });
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await api("/api/auth/forgot-password", {
+    method: "POST",
+    authenticated: false,
+    body: { email },
+  });
+}

@@ -16,9 +16,11 @@ import { colors, font, radius, shadow } from "../lib/theme";
 
 interface Props {
   onLoginSuccess: () => void;
+  onGoToSignup?: () => void;
+  onGoToForgot?: () => void;
 }
 
-export default function LoginScreen({ onLoginSuccess }: Props) {
+export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -87,6 +89,12 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
             />
           </View>
 
+          {onGoToForgot && (
+            <TouchableOpacity onPress={onGoToForgot} style={styles.forgotWrap}>
+              <Text style={styles.forgotLink}>Şifremi unuttum</Text>
+            </TouchableOpacity>
+          )}
+
           {error && (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>{error}</Text>
@@ -106,12 +114,14 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
             )}
           </TouchableOpacity>
 
-          <View style={styles.bottomRow}>
-            <Text style={styles.bottomText}>Hesabın yok mu?</Text>
-            <TouchableOpacity disabled>
-              <Text style={[styles.bottomLink, { opacity: 0.5 }]}> Kayıt Ol</Text>
-            </TouchableOpacity>
-          </View>
+          {onGoToSignup && (
+            <View style={styles.bottomRow}>
+              <Text style={styles.bottomText}>Hesabın yok mu?</Text>
+              <TouchableOpacity onPress={onGoToSignup}>
+                <Text style={styles.bottomLink}> Kayıt Ol</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -176,6 +186,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: colors.text,
     fontSize: 14,
+    fontFamily: font,
+  },
+  forgotWrap: {
+    alignItems: "flex-end",
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  forgotLink: {
+    color: colors.brand,
+    fontSize: 13,
+    fontWeight: "500",
     fontFamily: font,
   },
   errorBox: {
