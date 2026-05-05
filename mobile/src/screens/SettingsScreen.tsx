@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
@@ -85,7 +86,11 @@ export default function SettingsScreen({ onLogout }: Props) {
   }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(12) }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bgSubtle }} edges={["top"]}>
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={{ padding: spacing(5), paddingBottom: spacing(12) }}
+      >
       <View style={{ marginBottom: spacing(5) }}>
         <Text style={styles.brand}>ERPAIO · AYARLAR</Text>
         <Text style={styles.pageTitle}>Ayarlar</Text>
@@ -235,7 +240,8 @@ export default function SettingsScreen({ onLogout }: Props) {
       <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
         <Text style={styles.logoutBtnText}>Çıkış Yap</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

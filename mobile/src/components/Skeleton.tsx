@@ -3,7 +3,7 @@ import { Animated, ViewStyle } from "react-native";
 import { colors } from "../lib/theme";
 
 interface Props {
-  width?: number | string;
+  width?: number | `${number}%` | "auto";
   height?: number;
   borderRadius?: number;
   style?: ViewStyle;
@@ -38,7 +38,7 @@ export default function Skeleton({ width = "100%", height = 16, borderRadius = 8
     <Animated.View
       style={[
         {
-          width: width as Animated.WithAnimatedValue<number | string>,
+          width,
           height,
           borderRadius,
           backgroundColor: colors.bgSubtle,

@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
@@ -228,12 +229,12 @@ export default function ChatScreen({ route, navigation }: Props) {
       </View>
     ) : item.status === "loading" ? (
       <View style={styles.msgRow}>
-        <ActivityIndicator color={colors.accent} />
+        <ActivityIndicator color={colors.brand} />
         <Text style={styles.dimText}>SQL üretiliyor...</Text>
       </View>
     ) : item.status === "error" ? (
       <View style={[styles.msgRow, styles.errorBubble]}>
-        <Text style={styles.errorText}>❌ {item.content}</Text>
+        <Text style={styles.errorText}>{item.content}</Text>
       </View>
     ) : (
       <View style={styles.msgRow}>
@@ -293,11 +294,11 @@ export default function ChatScreen({ route, navigation }: Props) {
               <Text style={styles.sqlText}>{item.sql}</Text>
               <View style={{ flexDirection: "row", gap: spacing(2), marginTop: spacing(1.5) }}>
                 <TouchableOpacity onPress={() => startEdit(index)} style={iconBtnStyle}>
-                  <Text style={iconTextStyle}>✎ Düzenle</Text>
+                  <Text style={iconTextStyle}>Düzenle</Text>
                 </TouchableOpacity>
                 {item.results.length > 0 && (
                   <TouchableOpacity onPress={() => shareResult(item)} style={iconBtnStyle}>
-                    <Text style={iconTextStyle}>📤 Paylaş</Text>
+                    <Text style={iconTextStyle}>Paylaş</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -347,22 +348,36 @@ export default function ChatScreen({ route, navigation }: Props) {
               onPress={() => submitFeedback(index, item.messageId!, 1)}
               style={[
                 styles.feedbackBtn,
-                item.feedback === 1 && { borderColor: colors.success, backgroundColor: "rgba(105,255,71,0.15)" },
+                item.feedback === 1 && { borderColor: colors.success, backgroundColor: colors.successSoft },
                 item.feedback === -1 && { opacity: 0.3 },
               ]}
             >
-              <Text style={{ color: item.feedback === 1 ? colors.success : colors.textDim, fontSize: 14 }}>👍</Text>
+              <Text style={{
+                color: item.feedback === 1 ? colors.success : colors.textMuted,
+                fontSize: 12,
+                fontWeight: "500",
+                fontFamily: font,
+              }}>
+                Evet
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               disabled={item.feedback !== null}
               onPress={() => submitFeedback(index, item.messageId!, -1)}
               style={[
                 styles.feedbackBtn,
-                item.feedback === -1 && { borderColor: colors.danger, backgroundColor: "rgba(255,107,107,0.15)" },
+                item.feedback === -1 && { borderColor: colors.error, backgroundColor: colors.errorSoft },
                 item.feedback === 1 && { opacity: 0.3 },
               ]}
             >
-              <Text style={{ color: item.feedback === -1 ? colors.danger : colors.textDim, fontSize: 14 }}>👎</Text>
+              <Text style={{
+                color: item.feedback === -1 ? colors.error : colors.textMuted,
+                fontSize: 12,
+                fontWeight: "500",
+                fontFamily: font,
+              }}>
+                Hayır
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -372,11 +387,12 @@ export default function ChatScreen({ route, navigation }: Props) {
   const activeConns = (connQuery.data ?? []).filter((c) => c.status === "active");
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.root}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-    >
+    <SafeAreaView style={styles.root} edges={["top"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Geçmiş</Text>
@@ -433,7 +449,8 @@ export default function ChatScreen({ route, navigation }: Props) {
           <Text style={styles.sendBtnText}>{loading ? "..." : "→"}</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

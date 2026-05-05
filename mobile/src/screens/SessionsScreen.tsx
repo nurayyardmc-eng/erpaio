@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { getSessions, type SessionListItem } from "../lib/chat";
@@ -53,7 +54,7 @@ export default function SessionsScreen({ navigation }: Props) {
   );
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root} edges={["top"]}>
       <View style={styles.header}>
         <View>
           <Text style={styles.brand}>ERPAIO · SOHBET</Text>
@@ -83,7 +84,6 @@ export default function SessionsScreen({ navigation }: Props) {
           renderItem={renderItem}
           ListEmptyComponent={
             <EmptyState
-              icon="💬"
               title="Henüz sohbet yok"
               description="Yukarıdaki + Yeni butonuyla ilk sohbetini başlat."
             />
@@ -98,7 +98,7 @@ export default function SessionsScreen({ navigation }: Props) {
           contentContainerStyle={{ paddingVertical: spacing(1), flexGrow: 1 }}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

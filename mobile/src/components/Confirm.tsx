@@ -63,11 +63,6 @@ export default function ConfirmHost() {
     >
       <View style={styles.backdrop}>
         <View style={styles.dialog}>
-          {top.destructive && (
-            <View style={styles.warningIcon}>
-              <Text style={styles.warningText}>⚠</Text>
-            </View>
-          )}
           <Text style={styles.title}>{top.title}</Text>
           <Text style={styles.message}>{top.message}</Text>
           <View style={styles.buttonRow}>

@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from "react-native";
-import { colors, fontSerif } from "../lib/theme";
+import { View } from "react-native";
+import Svg, { G, Path } from "react-native-svg";
+import { colors } from "../lib/theme";
 
 interface Props {
   size?: number;
@@ -8,45 +9,50 @@ interface Props {
 }
 
 /**
- * ERPAIO logo — text + simple bars amblem.
- * - "full": ERPAIO yazısı + amblem bars
- * - "mark": sadece amblem bars (ikon)
- *
- * SVG yerine RN View'lar ile çiziyoruz (ek paket gerekmez).
+ * ERPAIO logo — web'deki SVG ile birebir aynı.
+ * Path data: /public/logo.svg (full) ve /public/logo-mark.svg (mark).
  */
 export default function Logo({ size = 96, variant = "full", inverse = false }: Props) {
   const color = inverse ? colors.textInverse : colors.brand;
-  const barHeight = Math.max(2, size * 0.022);
-  const barRadius = barHeight / 2;
-  const markWidth = size * 0.22;
 
-  const bars = (
-    <View style={{ width: markWidth, gap: barHeight * 1.6, alignItems: "flex-end" }}>
-      <View style={{ width: markWidth, height: barHeight, backgroundColor: color, borderRadius: barRadius }} />
-      <View style={{ width: markWidth * 0.5, height: barHeight, backgroundColor: color, borderRadius: barRadius }} />
-      <View style={{ width: markWidth, height: barHeight, backgroundColor: color, borderRadius: barRadius }} />
-      <View style={{ width: markWidth * 0.4, height: barHeight, backgroundColor: color, borderRadius: barRadius }} />
-      <View style={{ width: markWidth * 0.85, height: barHeight, backgroundColor: color, borderRadius: barRadius }} />
-    </View>
-  );
-
-  if (variant === "mark") {
-    return <View>{bars}</View>;
+  // Full logo: 1254 x 1254 viewBox, height ~ size, width = ~size * 2.5 (yatay logo)
+  if (variant === "full") {
+    const width = size * 2.6;
+    return (
+      <View>
+        <Svg width={width} height={size} viewBox="0 0 1254 1254">
+          <G transform="translate(0, 1254) scale(0.1, -0.1)" fill={color}>
+            {/* Bars (5 yatay çizgi) */}
+            <Path d="M5740 9779 c-160 -33 -217 -276 -89 -383 69 -59 14 -56 1091 -56 613 0 1006 4 1028 10 19 5 52 24 74 42 114 94 98 289 -31 365 l-47 27 -998 1 c-548 0 -1011 -3 -1028 -6z" />
+            <Path d="M5262 8889 c-75 -37 -113 -104 -113 -200 -1 -96 60 -181 150 -208 48 -14 800 -15 851 -1 48 13 106 63 131 113 17 32 20 54 17 113 -3 61 -8 79 -34 116 -16 23 -48 53 -69 65 -40 22 -43 23 -465 23 -413 0 -426 -1 -468 -21z" />
+            <Path d="M4870 8024 c-171 -74 -168 -327 5 -405 38 -18 95 -19 1106 -19 l1065 0 55 28 c70 35 108 89 116 163 7 72 -10 132 -53 179 -68 75 22 70 -1181 70 -940 -1 -1082 -3 -1113 -16z" />
+            <Path d="M5283 7154 c-90 -39 -146 -152 -124 -249 14 -64 64 -125 124 -154 42 -20 58 -21 441 -21 270 0 411 4 437 11 186 56 202 328 24 410 -37 17 -71 19 -455 18 -331 -1 -421 -3 -447 -15z" />
+            <Path d="M5730 6284 c-96 -42 -149 -158 -120 -264 16 -58 89 -133 145 -149 28 -8 323 -11 980 -11 l940 0 50 24 c85 39 125 104 125 204 0 80 -47 154 -122 193 -36 18 -72 19 -1000 19 -838 -1 -968 -3 -998 -16z" />
+            {/* ERPAIO yazısı */}
+            <Path d="M8861 5230 c-130 -28 -225 -76 -305 -154 -148 -145 -211 -344 -171 -541 46 -228 197 -394 421 -461 92 -28 278 -26 369 5 136 45 236 120 309 229 157 237 131 556 -62 751 -118 119 -233 169 -409 176 -59 2 -128 0 -152 -5z m277 -244 c67 -34 124 -93 159 -164 26 -52 28 -66 28 -172 0 -106 -2 -120 -29 -177 -34 -75 -95 -134 -174 -171 -48 -23 -70 -27 -142 -26 -120 1 -208 45 -281 141 -88 116 -90 346 -4 459 82 107 165 146 305 141 69 -3 95 -9 138 -31z" />
+            <Path d="M3157 5213 c-4 -4 -7 -262 -7 -575 l1 -568 434 0 435 0 0 105 0 105 -304 0 -305 0 -6 43 c-3 23 -5 80 -3 127 l3 85 265 5 265 5 3 102 3 103 -268 2 -268 3 -3 80 c-2 44 0 99 3 123 l6 42 289 0 289 0 6 33 c3 17 4 66 1 107 l-5 75 -414 3 c-227 1 -417 -1 -420 -5z" />
+            <Path d="M4278 5214 c-5 -4 -8 -263 -8 -576 l0 -568 125 0 125 0 2 178 3 177 110 3 111 3 119 -180 120 -181 148 0 c81 0 147 2 147 5 0 2 -61 90 -136 195 -75 105 -135 192 -133 194 2 2 28 16 57 32 30 15 65 41 78 57 118 140 122 402 9 535 -40 46 -133 96 -210 113 -58 13 -656 25 -667 13z m632 -234 c64 -35 82 -76 77 -166 -3 -53 -10 -79 -26 -103 -40 -56 -69 -64 -251 -71 -91 -4 -171 -5 -178 -2 -10 4 -13 44 -11 181 1 97 4 180 6 184 3 5 80 7 172 5 155 -3 169 -5 211 -28z" />
+            <Path d="M5510 5217 c-3 -3 -4 -262 -2 -576 l2 -571 125 0 125 0 0 160 0 160 133 0 c277 1 425 59 499 197 58 107 65 298 16 404 -48 105 -127 169 -254 205 -47 14 -118 18 -349 21 -159 3 -292 3 -295 0z m581 -230 c86 -38 124 -126 101 -236 -13 -61 -38 -93 -97 -124 -34 -19 -60 -22 -187 -25 l-148 -4 0 207 0 207 148 -4 c106 -4 157 -9 183 -21z" />
+            <Path d="M6946 5193 c-23 -45 -441 -1010 -477 -1100 l-9 -23 128 0 128 0 49 120 49 120 266 0 267 0 51 -117 51 -118 130 -3 131 -3 -26 58 c-14 32 -56 130 -94 218 -37 88 -94 219 -125 290 -31 72 -87 202 -125 290 -38 88 -82 190 -99 228 l-31 67 -125 0 -124 0 -15 -27z m229 -465 l83 -203 -170 -3 c-94 -1 -173 0 -176 2 -2 3 28 83 68 178 40 95 79 188 87 207 8 18 17 31 20 28 3 -3 42 -97 88 -209z" />
+            <Path d="M7880 4645 l0 -575 125 0 124 0 -2 573 -2 572 -122 3 -123 3 0 -576z" />
+          </G>
+        </Svg>
+      </View>
+    );
   }
 
+  // Mark: sadece bars (square viewBox 290 200 500 500)
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: size * 0.06 }}>
-      <Text style={[styles.text, { color, fontSize: size * 0.32, letterSpacing: size * 0.012 }]}>
-        ERPAIO
-      </Text>
-      {bars}
+    <View>
+      <Svg width={size} height={size} viewBox="290 200 500 500">
+        <G transform="translate(0, 1254) scale(0.1, -0.1)" fill={color}>
+          <Path d="M5740 9779 c-160 -33 -217 -276 -89 -383 69 -59 14 -56 1091 -56 613 0 1006 4 1028 10 19 5 52 24 74 42 114 94 98 289 -31 365 l-47 27 -998 1 c-548 0 -1011 -3 -1028 -6z" />
+          <Path d="M5262 8889 c-75 -37 -113 -104 -113 -200 -1 -96 60 -181 150 -208 48 -14 800 -15 851 -1 48 13 106 63 131 113 17 32 20 54 17 113 -3 61 -8 79 -34 116 -16 23 -48 53 -69 65 -40 22 -43 23 -465 23 -413 0 -426 -1 -468 -21z" />
+          <Path d="M4870 8024 c-171 -74 -168 -327 5 -405 38 -18 95 -19 1106 -19 l1065 0 55 28 c70 35 108 89 116 163 7 72 -10 132 -53 179 -68 75 22 70 -1181 70 -940 -1 -1082 -3 -1113 -16z" />
+          <Path d="M5283 7154 c-90 -39 -146 -152 -124 -249 14 -64 64 -125 124 -154 42 -20 58 -21 441 -21 270 0 411 4 437 11 186 56 202 328 24 410 -37 17 -71 19 -455 18 -331 -1 -421 -3 -447 -15z" />
+          <Path d="M5730 6284 c-96 -42 -149 -158 -120 -264 16 -58 89 -133 145 -149 28 -8 323 -11 980 -11 l940 0 50 24 c85 39 125 104 125 204 0 80 -47 154 -122 193 -36 18 -72 19 -1000 19 -838 -1 -968 -3 -998 -16z" />
+        </G>
+      </Svg>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  text: {
-    fontFamily: fontSerif,
-    fontWeight: "400",
-  },
-});

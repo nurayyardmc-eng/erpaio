@@ -12,9 +12,6 @@ interface Props {
 export default function ErrorState({ message, onRetry }: Props) {
   return (
     <View style={styles.root}>
-      <View style={styles.iconBox}>
-        <Text style={styles.iconText}>⚠</Text>
-      </View>
       <Text style={styles.title}>Veri yüklenemedi</Text>
       <Text style={styles.description}>
         {message ?? "Bağlantı sorunu olabilir. Lütfen tekrar deneyin."}

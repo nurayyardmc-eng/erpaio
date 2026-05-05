@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acknowledgeAlert, getAlerts, type Alert } from "../lib/alerts";
@@ -74,7 +75,7 @@ export default function AlertsScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.brand}>ERPAIO · BİLDİRİMLER</Text>
         <Text style={styles.headerTitle}>Bildirimler</Text>
@@ -110,7 +111,6 @@ export default function AlertsScreen() {
           contentContainerStyle={{ padding: spacing(4), flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
-              icon="🔔"
               title={filter === "open" ? "Açık bildirim yok" : "Okundu bildirim yok"}
               description={
                 filter === "open"
@@ -128,7 +128,7 @@ export default function AlertsScreen() {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
