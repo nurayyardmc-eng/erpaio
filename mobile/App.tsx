@@ -15,6 +15,7 @@ import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import ChatStackNav from "./src/screens/ChatStackNav";
 import AlertsScreen from "./src/screens/AlertsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
+import MoreStackNav from "./src/screens/MoreStackNav";
 import { getToken, clearToken, setUnauthorizedHandler } from "./src/lib/api";
 import { logout as authLogout } from "./src/lib/auth";
 import { registerForPush } from "./src/lib/push";
@@ -74,6 +75,7 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
     >
       <Tabs.Screen name="Sohbet" component={ChatStackNav} options={{ headerShown: false }} />
       <Tabs.Screen name="Bildirimler" component={AlertsScreen} options={{ headerShown: false }} />
+      <Tabs.Screen name="Daha" component={MoreStackNav} options={{ headerShown: false }} />
       <Tabs.Screen
         name="Ayarlar"
         children={() => <SettingsScreen onLogout={onLogout} />}
