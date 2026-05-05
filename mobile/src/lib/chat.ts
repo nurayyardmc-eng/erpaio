@@ -12,6 +12,8 @@ export interface SessionListItem {
   title: string;
   messageCount: number;
   createdAt: string;
+  pinned?: boolean;
+  archivedAt?: string | null;
 }
 
 export interface ServerMessage {
@@ -53,6 +55,17 @@ export async function getSession(
 
 export async function deleteSession(id: string): Promise<void> {
   await api(`/api/chat/sessions/${id}`, { method: "DELETE" });
+}
+
+export async function getSessionsByView(view: "active" | "archived" = "active"): Promise<SessionListItem[]> {
+  return api<SessionListItem[]>(`/api/chat/sessions?view=${view}`);
+}
+
+export async function patchSession(
+  id: string,
+  data: { pinned?: boolean; archivedAt?: string | null; title?: string },
+): Promise<void> {
+  await api(`/api/chat/sessions/${id}`, { method: "PATCH", body: data });
 }
 
 export async function sendQuestion(
