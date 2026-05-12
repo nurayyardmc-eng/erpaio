@@ -24,6 +24,7 @@ import { authenticate, isBiometricEnabled, isBiometricSupported } from "./src/li
 import { colors, font } from "./src/lib/theme";
 import Toaster from "./src/components/Toast";
 import ConfirmHost from "./src/components/Confirm";
+import KvkkConsent from "./src/components/KvkkConsent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -232,6 +233,7 @@ export default function App() {
         )}
         <Toaster />
         <ConfirmHost />
+        <KvkkConsent />
       </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
