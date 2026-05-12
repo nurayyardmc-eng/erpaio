@@ -24,8 +24,9 @@ import {
   type ChatResponse,
   type Connection,
 } from "../lib/chat";
+import { getMe } from "../lib/auth";
 import { shareCsv } from "../lib/share";
-import { colors, font, radius, spacing } from "../lib/theme";
+import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import type { ChatStackParamList } from "./SessionsScreen";
 
 interface UserMsg { role: "user"; content: string }
@@ -58,6 +59,13 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+
+  useEffect(() => {
+    getMe().then((d) => {
+      if (d?.user) setUserName(d.user.name || d.user.email.split("@")[0]);
+    }).catch(() => {});
+  }, []);
   const listRef = useRef<FlatList<Msg>>(null);
 
   const connQuery = useQuery({ queryKey: ["connections"], queryFn: getConnections });
@@ -394,11 +402,12 @@ export default function ChatScreen({ route, navigation }: Props) {
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← Geçmiş</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Sessions")} style={styles.historyBtn} activeOpacity={0.7}>
+          <Text style={styles.historyIcon}>≡</Text>
+          <Text style={styles.historyText}>Geçmiş</Text>
         </TouchableOpacity>
         {activeConns.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1, marginLeft: spacing(2) }}>
             {activeConns.map((c: Connection) => (
               <TouchableOpacity
                 key={c.id}
@@ -421,35 +430,35 @@ export default function ChatScreen({ route, navigation }: Props) {
         renderItem={renderMessage}
         contentContainerStyle={{ padding: spacing(3), paddingBottom: spacing(8), flexGrow: 1 }}
         ListEmptyComponent={
-          selectedConn ? (
-            <Text style={styles.placeholder}>
-              Veritabanına bir Türkçe soru yaz, SQL üretip cevap getireceğim.
+          <View style={styles.welcomeWrap}>
+            <Text style={styles.welcomeTitle}>
+              {userName ? (
+                <>
+                  Merhaba <Text style={styles.welcomeName}>{userName}</Text>,{"\n"}
+                  size nasıl yardımcı olabilirim?
+                </>
+              ) : (
+                <>Size nasıl yardımcı olabilirim?</>
+              )}
             </Text>
-          ) : (
-            <View style={{ alignItems: "center", paddingTop: spacing(10), gap: spacing(3) }}>
-              <Text style={styles.placeholder}>
-                Sorgu yapmak için önce bir ERP bağlantısı ekleyin.
-              </Text>
+            <Text style={styles.welcomeDesc}>
+              {selectedConn
+                ? "Veritabanınıza doğal Türkçe ile soru sorun. Yapay zeka SQL üretir, sonucu yorumlayarak gösterir."
+                : "Başlamak için önce bir ERP bağlantısı eklemeniz gerekiyor."}
+            </Text>
+            {!selectedConn && (
               <TouchableOpacity
                 onPress={() => {
-                  // Tab navigator parent → Menü tab → Connections screen
                   const parent = navigation.getParent() as { navigate: (name: string, params?: unknown) => void } | undefined;
                   parent?.navigate("Menü", { screen: "Connections" });
                 }}
-                style={{
-                  backgroundColor: colors.brand,
-                  paddingHorizontal: spacing(5),
-                  paddingVertical: spacing(2.5),
-                  borderRadius: radius.full,
-                }}
+                style={styles.welcomeBtn}
                 activeOpacity={0.85}
               >
-                <Text style={{ color: colors.textInverse, fontFamily: font, fontSize: 14, fontWeight: "600" }}>
-                  ERP Bağlantısı Ekle →
-                </Text>
+                <Text style={styles.welcomeBtnText}>ERP Bağlantısı Ekle →</Text>
               </TouchableOpacity>
-            </View>
-          )
+            )}
+          </View>
         }
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
       />
@@ -489,6 +498,57 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backText: { color: colors.brand, fontFamily: font, fontSize: 13, fontWeight: "500" },
+  historyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: spacing(2.5),
+    paddingVertical: spacing(2),
+  },
+  historyIcon: { color: colors.text, fontSize: 22, fontWeight: "300" },
+  historyText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "500" },
+  welcomeWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing(6),
+    paddingVertical: spacing(10),
+    gap: spacing(4),
+  },
+  welcomeTitle: {
+    color: colors.text,
+    fontFamily: fontSerif,
+    fontSize: 32,
+    fontWeight: "400",
+    letterSpacing: -1,
+    lineHeight: 40,
+    textAlign: "center",
+  },
+  welcomeName: {
+    fontStyle: "italic",
+    color: colors.text,
+  },
+  welcomeDesc: {
+    color: colors.textMuted,
+    fontFamily: font,
+    fontSize: 15,
+    lineHeight: 23,
+    textAlign: "center",
+    maxWidth: 360,
+  },
+  welcomeBtn: {
+    marginTop: spacing(2),
+    backgroundColor: colors.brand,
+    paddingHorizontal: spacing(5),
+    paddingVertical: spacing(3),
+    borderRadius: radius.full,
+  },
+  welcomeBtnText: {
+    color: colors.textInverse,
+    fontFamily: font,
+    fontSize: 14,
+    fontWeight: "600",
+  },
   connChip: {
     backgroundColor: colors.bg,
     borderColor: colors.border,

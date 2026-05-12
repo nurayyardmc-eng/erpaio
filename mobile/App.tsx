@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { MessageSquare, Bell, Menu, Settings } from "lucide-react-native";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
@@ -73,13 +74,37 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
         tabBarInactiveTintColor: colors.textSubtle,
       }}
     >
-      <Tabs.Screen name="Sohbet" component={ChatStackNav} options={{ headerShown: false }} />
-      <Tabs.Screen name="Bildirimler" component={AlertsScreen} options={{ headerShown: false }} />
-      <Tabs.Screen name="Menü" component={MoreStackNav} options={{ headerShown: false }} />
+      <Tabs.Screen
+        name="Sohbet"
+        component={ChatStackNav}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} strokeWidth={1.75} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Bildirimler"
+        component={AlertsScreen}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Bell size={size} color={color} strokeWidth={1.75} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Menü"
+        component={MoreStackNav}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Menu size={size} color={color} strokeWidth={1.75} />,
+        }}
+      />
       <Tabs.Screen
         name="Ayarlar"
         children={() => <SettingsScreen onLogout={onLogout} />}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} strokeWidth={1.75} />,
+        }}
       />
     </Tabs.Navigator>
   );
