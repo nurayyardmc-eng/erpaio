@@ -99,7 +99,14 @@ export default function SessionsScreen({ navigation }: Props) {
           {item.messageCount} mesaj · {new Date(item.createdAt).toLocaleDateString("tr-TR")}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => setMenuFor(item)} style={styles.menuBtn} activeOpacity={0.6}>
+      <TouchableOpacity
+        onPress={() => setMenuFor(item)}
+        style={styles.menuBtn}
+        activeOpacity={0.6}
+        accessibilityRole="button"
+        accessibilityLabel="Sohbet menüsü"
+        accessibilityHint="Sabitle, arşivle veya sil"
+      >
         <Text style={styles.menuDots}>⋯</Text>
       </TouchableOpacity>
     </View>

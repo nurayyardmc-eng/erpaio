@@ -402,7 +402,13 @@ export default function ChatScreen({ route, navigation }: Props) {
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("Sessions")} style={styles.historyBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Sessions")}
+          style={styles.historyBtn}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Sohbet geçmişi"
+        >
           <Text style={styles.historyIcon}>≡</Text>
           <Text style={styles.historyText}>Geçmiş</Text>
         </TouchableOpacity>
@@ -473,11 +479,16 @@ export default function ChatScreen({ route, navigation }: Props) {
           style={styles.input}
           multiline
           onSubmitEditing={send}
+          accessibilityLabel="Sorgu giriş alanı"
+          accessibilityHint="ERP veritabanınıza Türkçe soru yazın"
         />
         <TouchableOpacity
           onPress={send}
           disabled={!input.trim() || loading || !selectedConn}
           style={[styles.sendBtn, (!input.trim() || loading || !selectedConn) && { opacity: 0.4 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Soruyu gönder"
+          accessibilityState={{ disabled: !input.trim() || loading || !selectedConn }}
         >
           <Text style={styles.sendBtnText}>{loading ? "..." : "→"}</Text>
         </TouchableOpacity>

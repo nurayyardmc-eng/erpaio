@@ -84,6 +84,7 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
+              accessibilityLabel="İsim"
             />
           </View>
 
@@ -141,6 +142,9 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
               (loading || !email || !password || !tenantName) && styles.buttonDisabled,
             ]}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Hesap oluştur"
+            accessibilityState={{ disabled: loading || !email || !password || !tenantName }}
           >
             {loading ? (
               <ActivityIndicator color={colors.textInverse} />

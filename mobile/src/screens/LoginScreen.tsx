@@ -73,6 +73,8 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
+              accessibilityLabel="Email adresi"
+              accessibilityHint="Hesabınızın email adresini girin"
             />
           </View>
 
@@ -86,11 +88,18 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
+              accessibilityLabel="Şifre"
+              accessibilityHint="Hesabınızın şifresini girin"
             />
           </View>
 
           {onGoToForgot && (
-            <TouchableOpacity onPress={onGoToForgot} style={styles.forgotWrap}>
+            <TouchableOpacity
+              onPress={onGoToForgot}
+              style={styles.forgotWrap}
+              accessibilityRole="link"
+              accessibilityLabel="Şifremi unuttum"
+            >
               <Text style={styles.forgotLink}>Şifremi unuttum</Text>
             </TouchableOpacity>
           )}
@@ -106,6 +115,9 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
             disabled={loading || !email || !password}
             style={[styles.button, (loading || !email || !password) && styles.buttonDisabled]}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Giriş yap"
+            accessibilityState={{ disabled: loading || !email || !password }}
           >
             {loading ? (
               <ActivityIndicator color={colors.textInverse} />
@@ -117,7 +129,7 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
           {onGoToSignup && (
             <View style={styles.bottomRow}>
               <Text style={styles.bottomText}>Hesabın yok mu?</Text>
-              <TouchableOpacity onPress={onGoToSignup}>
+              <TouchableOpacity onPress={onGoToSignup} accessibilityRole="link" accessibilityLabel="Kayıt ol">
                 <Text style={styles.bottomLink}> Kayıt Ol</Text>
               </TouchableOpacity>
             </View>

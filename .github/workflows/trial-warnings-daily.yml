@@ -1,0 +1,25 @@
+name: Daily Trial Warnings
+
+on:
+  schedule:
+    # Her gün 09:00 UTC (Türkiye saatiyle 12:00)
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call trial-warnings endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET secret is not set in repo settings"
+            exit 1
+          fi
+          curl -fsS -X GET \
+            --max-time 120 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://erpaio.vercel.app/api/cron/trial-warnings
