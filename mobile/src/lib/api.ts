@@ -5,7 +5,8 @@ const BASE_URL =
 
 const TOKEN_KEY = "erpaio_api_token";
 
-const DEFAULT_TIMEOUT_MS = 15_000;
+// 30s — Vercel function cold start ~5-15s + DB query ~2-5s + buffer
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 export async function getToken(): Promise<string | null> {
   return SecureStore.getItemAsync(TOKEN_KEY);
