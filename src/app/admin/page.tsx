@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface AdminTenant {
   id: string;
@@ -50,9 +51,24 @@ export default function AdminPage() {
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
       <div style={{ color: "#F59E0B", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ADMIN</div>
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Tenant Yönetimi</h1>
-      <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24 }}>
+      <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 16 }}>
         Sistem geneli görünüm — tüm tenant&apos;lar.
       </p>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+        <Link href="/admin/cron-runs" style={{
+          padding: "6px 12px",
+          borderRadius: 100,
+          background: "#FFFFFF",
+          border: "1px solid #E5E7EB",
+          color: "#0F172A",
+          fontSize: 12,
+          fontWeight: 500,
+          textDecoration: "none",
+        }}>
+          Cron Runs →
+        </Link>
+      </div>
 
       {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
