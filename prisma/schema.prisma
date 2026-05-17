@@ -35,6 +35,7 @@ model Tenant {
   alerts               Alert[]
   baselines            AnomalyBaseline[]
   queryCache           QueryCache[]
+  consentLogs          ConsentLog[]
 }
 
 model User {
@@ -57,6 +58,7 @@ model User {
   apiTokens        ApiToken[]
   pushTokens       PushToken[]
   recoveryCodes    MfaRecoveryCode[]
+  consentLogs      ConsentLog[]
 }
 
 model MfaRecoveryCode {
@@ -68,6 +70,30 @@ model MfaRecoveryCode {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// KVKK / GDPR consent audit log.
+/// Tüm onay/red ve geri alma işlemleri burada tutulur. Kullanıcı silinse bile
+/// kayıt korunur (User foreign key SetNull) — md. 7 silinme hakkı + denetim
+/// dengesi için retention 2+ yıl.
+model ConsentLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  tenantId     String?
+  email        String? // user silindikten sonra audit için
+  consentType  String // "kvkk_signup" | "kvkk_marketing" | "kvkk_cookies" | "terms" | "privacy"
+  action       String // "granted" | "withdrawn"
+  documentVer  String? // örn. "v1.2" — TOS/Privacy versiyon takip
+  ipAddress    String?
+  userAgent    String?
+  context      String? // ek bilgi: route, app version, vb.
+  createdAt    DateTime @default(now())
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([tenantId, createdAt])
+  @@index([consentType, createdAt])
 }
 
 model ErpConnection {

@@ -6,12 +6,17 @@ import { rateLimit } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
+import { recordConsent, consentContextFromRequest } from "@/lib/auth/consent";
 
 const BodySchema = z.object({
   email: z.string().email().max(200),
   password: z.string().min(8).max(200),
   name: z.string().min(1).max(80).optional(),
   tenantName: z.string().min(1).max(120),
+  // KVKK/Privacy/Terms onayı — frontend signup formundan gelir
+  acceptedTerms: z.boolean().refine((v) => v === true, "Kullanım koşulları onayı gerekli."),
+  acceptedPrivacy: z.boolean().refine((v) => v === true, "KVKK aydınlatma metni onayı gerekli."),
+  documentVer: z.string().max(20).optional(),
 });
 
 // Email enumeration brute force koruması — IP başına saatte 3 deneme
@@ -80,6 +85,46 @@ export async function POST(req: Request) {
   });
 
   log.info({ tenantId: tenant.id, userId: tenant.users[0].id }, "Signup completed");
+
+  // KVKK/Privacy/Terms onayını append-only consent log'a yaz (md. 5 + md. 7).
+  const { ipAddress, userAgent } = consentContextFromRequest(req);
+  const userId = tenant.users[0].id;
+  const docVer = body.data.documentVer ?? "v1";
+  await Promise.all([
+    recordConsent({
+      userId,
+      tenantId: tenant.id,
+      email,
+      consentType: "kvkk_signup",
+      action: "granted",
+      documentVer: docVer,
+      ipAddress,
+      userAgent,
+      context: "signup",
+    }),
+    recordConsent({
+      userId,
+      tenantId: tenant.id,
+      email,
+      consentType: "terms",
+      action: "granted",
+      documentVer: docVer,
+      ipAddress,
+      userAgent,
+      context: "signup",
+    }),
+    recordConsent({
+      userId,
+      tenantId: tenant.id,
+      email,
+      consentType: "privacy",
+      action: "granted",
+      documentVer: docVer,
+      ipAddress,
+      userAgent,
+      context: "signup",
+    }),
+  ]);
 
   const verifyToken = randomBytes(32).toString("hex");
   const tokenHash = createHash("sha256").update(verifyToken).digest("hex");

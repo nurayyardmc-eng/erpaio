@@ -9,18 +9,29 @@ import { colors } from "@/lib/theme";
 export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "", name: "", tenantName: "" });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!acceptedTerms || !acceptedPrivacy) {
+      setError("Kullanım Koşulları ve KVKK aydınlatma metnini onaylamanız gerekiyor.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          acceptedTerms,
+          acceptedPrivacy,
+          documentVer: "v1",
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -103,6 +114,32 @@ export default function SignupPage() {
             />
           </Field>
 
+          {/* KVKK md. 5 + GDPR Art. 7 — explicit, separated consent */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14, marginTop: 6 }}>
+            <ConsentCheckbox
+              checked={acceptedTerms}
+              onChange={setAcceptedTerms}
+            >
+              <Link href="/terms" target="_blank" style={{ color: colors.text, textDecoration: "underline" }}>
+                Kullanım Koşulları
+              </Link>
+              &apos;nı okudum ve kabul ediyorum.
+            </ConsentCheckbox>
+            <ConsentCheckbox
+              checked={acceptedPrivacy}
+              onChange={setAcceptedPrivacy}
+            >
+              <Link href="/privacy" target="_blank" style={{ color: colors.text, textDecoration: "underline" }}>
+                KVKK Aydınlatma Metni
+              </Link>
+              {" "}ve{" "}
+              <Link href="/privacy" target="_blank" style={{ color: colors.text, textDecoration: "underline" }}>
+                Gizlilik Politikası
+              </Link>
+              &apos;nı okudum, kişisel verilerimin işlenmesine açık rıza veriyorum.
+            </ConsentCheckbox>
+          </div>
+
           {error && (
             <div style={{
               background: colors.errorSoft,
@@ -122,7 +159,7 @@ export default function SignupPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !acceptedTerms || !acceptedPrivacy}
             style={{
               width: "100%",
               background: colors.brand,
@@ -133,6 +170,8 @@ export default function SignupPage() {
               fontSize: 14,
               fontWeight: 600,
               marginTop: 8,
+              opacity: loading || !acceptedTerms || !acceptedPrivacy ? 0.6 : 1,
+              cursor: loading || !acceptedTerms || !acceptedPrivacy ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
@@ -142,12 +181,45 @@ export default function SignupPage() {
         <div style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: colors.textMuted }}>
           Hesabın var mı? <Link href="/login" style={{ color: colors.brand, fontWeight: 600 }}>Giriş Yap</Link>
         </div>
-        <div style={{ marginTop: 16, textAlign: "center", fontSize: 11, color: colors.textSubtle, lineHeight: 1.6 }}>
-          Devam ederek <Link href="/terms" style={{ color: colors.textMuted }}>Kullanım Koşulları</Link> ve{" "}
-          <Link href="/privacy" style={{ color: colors.textMuted }}>Gizlilik Politikası</Link>&apos;nı kabul edersiniz.
-        </div>
       </div>
     </div>
+  );
+}
+
+function ConsentCheckbox({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label style={{
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 10,
+      fontSize: 12,
+      lineHeight: 1.5,
+      color: colors.textMuted,
+      cursor: "pointer",
+    }}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{
+          marginTop: 2,
+          width: 16,
+          height: 16,
+          accentColor: colors.brand,
+          cursor: "pointer",
+          flexShrink: 0,
+        }}
+      />
+      <span>{children}</span>
+    </label>
   );
 }
 
