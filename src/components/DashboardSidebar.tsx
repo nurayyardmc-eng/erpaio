@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -20,50 +20,52 @@ import {
   X,
 } from "lucide-react";
 import Logo from "@/components/Logo";
+import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 
 interface NavItem { href: string; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>; }
 
-const navGroups: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Günlük",
-    items: [
-      { href: "/dashboard/chat", label: "Sohbet", Icon: MessageSquare },
-      { href: "/dashboard/overview", label: "Metrikler", Icon: BarChart3 },
-      { href: "/dashboard/saved", label: "Kayıtlı", Icon: Bookmark },
-      { href: "/dashboard/alerts", label: "Bildirimler", Icon: Bell },
-    ],
-  },
-  {
-    label: "Kurulum",
-    items: [
-      { href: "/dashboard/connections", label: "Bağlantılar", Icon: Database },
-      { href: "/dashboard/annotations", label: "Açıklamalar", Icon: FileText },
-      { href: "/dashboard/watchlists", label: "Watchlists", Icon: Eye },
-    ],
-  },
-  {
-    label: "Analiz",
-    items: [
-      { href: "/dashboard/insights", label: "Analiz", Icon: TrendingUp },
-      { href: "/dashboard/scheduled-reports", label: "Raporlar", Icon: Send },
-      { href: "/dashboard/audit", label: "Audit", Icon: ScrollText },
-    ],
-  },
-  {
-    label: "Admin",
-    items: [
-      { href: "/dashboard/team", label: "Takım", Icon: Users },
-      { href: "/dashboard/security", label: "Güvenlik", Icon: Shield },
-      { href: "/dashboard/settings", label: "Ayarlar", Icon: SettingsIcon },
-    ],
-  },
-];
-
 export default function DashboardSidebar() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
+
+  const navGroups: { label: string; items: NavItem[] }[] = useMemo(() => [
+    {
+      label: t.sidebar.groupDaily,
+      items: [
+        { href: "/dashboard/chat", label: t.sidebar.navChat, Icon: MessageSquare },
+        { href: "/dashboard/overview", label: t.sidebar.navOverview, Icon: BarChart3 },
+        { href: "/dashboard/saved", label: t.sidebar.navSaved, Icon: Bookmark },
+        { href: "/dashboard/alerts", label: t.sidebar.navAlerts, Icon: Bell },
+      ],
+    },
+    {
+      label: t.sidebar.groupSetup,
+      items: [
+        { href: "/dashboard/connections", label: t.sidebar.navConnections, Icon: Database },
+        { href: "/dashboard/annotations", label: t.sidebar.navAnnotations, Icon: FileText },
+        { href: "/dashboard/watchlists", label: t.sidebar.navWatchlists, Icon: Eye },
+      ],
+    },
+    {
+      label: t.sidebar.groupAnalysis,
+      items: [
+        { href: "/dashboard/insights", label: t.sidebar.navInsights, Icon: TrendingUp },
+        { href: "/dashboard/scheduled-reports", label: t.sidebar.navReports, Icon: Send },
+        { href: "/dashboard/audit", label: t.sidebar.navAudit, Icon: ScrollText },
+      ],
+    },
+    {
+      label: t.sidebar.groupAdmin,
+      items: [
+        { href: "/dashboard/team", label: t.sidebar.navTeam, Icon: Users },
+        { href: "/dashboard/security", label: t.sidebar.navSecurity, Icon: Shield },
+        { href: "/dashboard/settings", label: t.sidebar.navSettings, Icon: SettingsIcon },
+      ],
+    },
+  ], [t]);
 
   useEffect(() => {
     const handler = () => setMobileOpen(true);
@@ -75,7 +77,7 @@ export default function DashboardSidebar() {
     <>
       <Link
         href="/dashboard/chat"
-        title="Yeni Sohbet"
+        title={t.sidebar.newChat}
         onClick={() => setMobileOpen(false)}
         onMouseEnter={() => setHoveredHref("__new__")}
         onMouseLeave={() => setHoveredHref(null)}
@@ -93,7 +95,7 @@ export default function DashboardSidebar() {
         }}
       >
         <Plus size={18} strokeWidth={2.5} />
-        {hoveredHref === "__new__" && <Tooltip>Yeni Sohbet</Tooltip>}
+        {hoveredHref === "__new__" && <Tooltip>{t.sidebar.newChat}</Tooltip>}
       </Link>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", width: "100%", alignItems: "center" }}>

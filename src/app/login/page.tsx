@@ -4,11 +4,21 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Mail, Lock, AlertCircle, ShieldCheck } from "lucide-react";
 import Logo from "@/components/Logo";
+import { I18nProvider, useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 
 type Step = "credentials" | "mfa";
 
 export default function LoginPage() {
+  return (
+    <I18nProvider>
+      <LoginPageInner />
+    </I18nProvider>
+  );
+}
+
+function LoginPageInner() {
+  const { t: dict } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
@@ -35,8 +45,6 @@ export default function LoginPage() {
     try {
       const result = await attemptLogin();
       if (result?.error) {
-        // NextAuth v5: custom errors thrown in authorize() come back as `code` or
-        // embedded in `error`. Match either.
         const errStr = result.error ?? "";
         const codeStr = result.code ?? "";
         if (codeStr === "MFA_REQUIRED" || /MFA_REQUIRED/i.test(errStr)) {
@@ -45,17 +53,17 @@ export default function LoginPage() {
           return;
         }
         if (codeStr === "ACCOUNT_LOCKED" || /ACCOUNT_LOCKED/i.test(errStr)) {
-          setError("Hesap geçici olarak kilitlendi (15 dk).");
+          setError(dict.login.errLocked);
           setLoading(false);
           return;
         }
-        setError("Email veya şifre hatalı.");
+        setError(dict.login.errInvalid);
         setLoading(false);
         return;
       }
       window.location.href = "/dashboard";
     } catch {
-      setError("Giriş başarısız. Lütfen tekrar deneyin.");
+      setError(dict.login.errNetwork);
       setLoading(false);
     }
   };
@@ -68,13 +76,13 @@ export default function LoginPage() {
     try {
       const result = await attemptLogin(totpCode.trim());
       if (result?.error) {
-        setError(useRecovery ? "Kurtarma kodu geçersiz veya kullanılmış." : "Doğrulama kodu yanlış.");
+        setError(useRecovery ? dict.login.errRecoveryInvalid : dict.login.errMfaInvalid);
         setLoading(false);
         return;
       }
       window.location.href = "/dashboard";
     } catch {
-      setError("Doğrulama başarısız.");
+      setError(dict.login.errMfaInvalid);
       setLoading(false);
     }
   };
@@ -102,21 +110,21 @@ export default function LoginPage() {
           <Logo size={96} variant="full" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 8px", fontWeight: 700, letterSpacing: -0.5 }}>
-          {step === "mfa" ? "İki Faktörlü Doğrulama" : "Giriş Yap"}
+          {step === "mfa" ? dict.login.titleMfa : dict.login.titleLogin}
         </h1>
         <p style={{ color: colors.textMuted, fontSize: 14, marginBottom: 28 }}>
           {step === "mfa"
             ? useRecovery
-              ? "Kurtarma kodunu gir (XXXX-XXXX)"
-              : "Authenticator app'inden 6 haneli kodu gir"
-            : "Hesabına devam et"}
+              ? dict.login.descMfaRecovery
+              : dict.login.descMfaTotp
+            : dict.login.descContinue}
         </p>
 
         <form onSubmit={handleSubmit}>
           {step === "credentials" ? (
             <>
               <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Email</label>
+                <label style={labelStyle}>{dict.login.email}</label>
                 <div style={{ position: "relative" }}>
                   <Mail size={16} style={iconStyle} />
                   <input
@@ -131,7 +139,7 @@ export default function LoginPage() {
               </div>
 
               <div style={{ marginBottom: 8 }}>
-                <label style={labelStyle}>Şifre</label>
+                <label style={labelStyle}>{dict.login.password}</label>
                 <div style={{ position: "relative" }}>
                   <Lock size={16} style={iconStyle} />
                   <input
@@ -147,14 +155,14 @@ export default function LoginPage() {
 
               <div style={{ marginBottom: 20, fontSize: 13, textAlign: "right" }}>
                 <Link href="/forgot-password" style={{ color: colors.brand, fontWeight: 500 }}>
-                  Şifremi unuttum
+                  {dict.login.forgotPassword}
                 </Link>
               </div>
             </>
           ) : (
             <>
               <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>{useRecovery ? "Kurtarma Kodu" : "Doğrulama Kodu"}</label>
+                <label style={labelStyle}>{useRecovery ? dict.login.labelRecovery : dict.login.labelTotp}</label>
                 <div style={{ position: "relative" }}>
                   <ShieldCheck size={16} style={iconStyle} />
                   <input
@@ -204,7 +212,7 @@ export default function LoginPage() {
                     fontFamily: "inherit",
                   }}
                 >
-                  {useRecovery ? "Authenticator kodu kullan" : "Kurtarma kodu kullan"}
+                  {useRecovery ? dict.login.toggleUseTotp : dict.login.toggleUseRecovery}
                 </button>
               </div>
             </>
@@ -243,11 +251,11 @@ export default function LoginPage() {
           >
             {loading
               ? step === "mfa"
-                ? "Doğrulanıyor..."
-                : "Giriş yapılıyor..."
+                ? dict.login.submitVerifying
+                : dict.login.submitLoggingIn
               : step === "mfa"
-              ? "Doğrula"
-              : "Giriş Yap"}
+              ? dict.login.submitMfa
+              : dict.login.submitLogin}
           </button>
 
           {step === "mfa" && (
@@ -269,13 +277,13 @@ export default function LoginPage() {
                 fontFamily: "inherit",
               }}
             >
-              ← Email/şifreye geri dön
+              {dict.login.backToCredentials}
             </button>
           )}
 
           {step === "credentials" && (
             <div style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: colors.textMuted }}>
-              Hesabın yok mu? <Link href="/signup" style={{ color: colors.brand, fontWeight: 600 }}>Kayıt Ol</Link>
+              {dict.login.noAccount} <Link href="/signup" style={{ color: colors.brand, fontWeight: 600 }}>{dict.login.signupCta}</Link>
             </div>
           )}
         </form>

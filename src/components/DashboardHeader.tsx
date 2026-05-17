@@ -1,27 +1,13 @@
 "use client";
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
+import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
-
-const TITLES: Record<string, string> = {
-  "/dashboard/chat": "Sohbet",
-  "/dashboard/overview": "Anlık Metrikler",
-  "/dashboard/saved": "Kayıtlı Sorgular",
-  "/dashboard/alerts": "Bildirimler",
-  "/dashboard/connections": "ERP Bağlantıları",
-  "/dashboard/annotations": "Şema Açıklamaları",
-  "/dashboard/watchlists": "Watchlists",
-  "/dashboard/insights": "Şema Analizi",
-  "/dashboard/scheduled-reports": "Planlı Raporlar",
-  "/dashboard/audit": "Aktivite Logu",
-  "/dashboard/team": "Takım",
-  "/dashboard/security": "Güvenlik",
-  "/dashboard/settings": "Ayarlar",
-};
 
 interface Props {
   email: string;
@@ -29,8 +15,26 @@ interface Props {
 }
 
 export default function DashboardHeader({ email, name }: Props) {
+  const { t } = useI18n();
   const pathname = usePathname();
-  const title = TITLES[pathname] ?? "Dashboard";
+
+  const titles = useMemo<Record<string, string>>(() => ({
+    "/dashboard/chat": t.header.titleChat,
+    "/dashboard/overview": t.header.titleOverview,
+    "/dashboard/saved": t.header.titleSaved,
+    "/dashboard/alerts": t.header.titleAlerts,
+    "/dashboard/connections": t.header.titleConnections,
+    "/dashboard/annotations": t.header.titleAnnotations,
+    "/dashboard/watchlists": t.header.titleWatchlists,
+    "/dashboard/insights": t.header.titleInsights,
+    "/dashboard/scheduled-reports": t.header.titleReports,
+    "/dashboard/audit": t.header.titleAudit,
+    "/dashboard/team": t.header.titleTeam,
+    "/dashboard/security": t.header.titleSecurity,
+    "/dashboard/settings": t.header.titleSettings,
+  }), [t]);
+
+  const title = titles[pathname] ?? t.header.titleDashboard;
 
   return (
     <header className="dashboard-header" style={{
@@ -50,7 +54,7 @@ export default function DashboardHeader({ email, name }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 20, minWidth: 0 }}>
         <Link
           href="/"
-          aria-label="Ana sayfa"
+          aria-label={t.header.homeLabel}
           onClick={(e) => {
             // Mobilde amblem = menü tetikleyici (navigation yerine sidebar aç)
             if (typeof window !== "undefined" && window.innerWidth <= 900) {
