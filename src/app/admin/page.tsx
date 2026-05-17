@@ -57,6 +57,7 @@ export default function AdminPage() {
 
       <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
         {([
+          { href: "/admin/health-scores", label: "Health Scores" },
           { href: "/admin/cron-runs", label: "Cron Runs" },
           { href: "/admin/activity", label: "Activity Log" },
           { href: "/admin/key-history", label: "Encryption Keys" },
