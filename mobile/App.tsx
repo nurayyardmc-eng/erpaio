@@ -116,6 +116,9 @@ export default function App() {
   const [authState, setAuthState] = useState<"loading" | "biometric" | "authed" | "guest">("loading");
   const [biometricFailed, setBiometricFailed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  // Multi-device: logout sırasında server'a sadece BU cihazın push token'ını
+  // gönderelim, diğer cihazların push kaydını silmesin.
+  const [pushToken, setPushToken] = useState<string | null>(null);
 
   // 401 handler — token geçersiz/expired olduğunda otomatik logout
   useEffect(() => {
@@ -151,17 +154,23 @@ export default function App() {
     if (authState !== "authed") return;
     // Expo Go SDK 53+ push notifications kısıtlı — dev client'ta tam çalışır.
     // Hata fırlatsa bile uygulamayı çökertme.
-    registerForPush().catch(() => {});
+    registerForPush()
+      .then((token) => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (token) setPushToken(token);
+      })
+      .catch(() => {});
   }, [authState]);
 
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
     try {
-      await authLogout();
+      await authLogout(pushToken);
     } catch {
       await clearToken();
     } finally {
+      setPushToken(null);
       setLoggingOut(false);
       setAuthState("guest");
     }

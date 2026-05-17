@@ -19,6 +19,7 @@ const ONE_DAY_MS = 24 * 60 * 60_000;
  * - CronRun: 90 gün. Cron health dashboard'a yetecek geçmiş, sonsuz değil.
  * - PasswordResetToken: 7 gün (expired olanlar). Token zaten 1 saat geçerli.
  * - EmailVerificationToken: 30 gün (expired). 24 saat geçerli.
+ * - Alert (resolved/acked): 180 gün. status="open" Alert'ler asla silinmez.
  *
  * SAKLI TUTULANLAR (silinmiyor):
  * - ConsentLog: KVKK md. 7 + 11 audit trail, kalıcı.
@@ -26,13 +27,15 @@ const ONE_DAY_MS = 24 * 60 * 60_000;
  *   temizleme yok — büyürse manuel ya da ayrı policy.)
  * - MfaRecoveryCode: zaten consumeRecoveryCode kullandıktan sonra usedAt set
  *   ediliyor; user silinince cascade.
- * - Tenant/User/Alert vs.: business data, manuel.
+ * - Alert (open): kullanıcı işleme alana kadar tutulur.
+ * - Tenant/User: business data, manuel.
  */
 const RETENTION = {
   processedWebhookDays: 30,
   cronRunDays: 90,
   passwordResetTokenExpiredDays: 7,
   emailVerificationTokenExpiredDays: 30,
+  resolvedAlertDays: 180,
 } as const;
 
 export async function GET(req: NextRequest) {
@@ -94,6 +97,19 @@ export async function GET(req: NextRequest) {
         where: { expiresAt: { lt: before } },
       });
       results.emailVerificationToken = r.count;
+      totalDeleted += r.count;
+    }
+
+    // Alert — sadece resolved/acked olanlar, open alert'ler kalıcı.
+    {
+      const before = new Date(now - RETENTION.resolvedAlertDays * ONE_DAY_MS);
+      const r = await prisma.alert.deleteMany({
+        where: {
+          createdAt: { lt: before },
+          status: { in: ["resolved", "acked"] },
+        },
+      });
+      results.alertResolved = r.count;
       totalDeleted += r.count;
     }
   } catch (err) {

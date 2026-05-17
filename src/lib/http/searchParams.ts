@@ -17,9 +17,14 @@
 import { z, type ZodError, type ZodTypeAny } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 
+// Validation messages stay in English (locale-neutral) — they're rare path:
+// frontends validate first, and zodErrorResponse passes the message verbatim
+// for both tr/en. Real i18n needs a full Zod issue → catalog mapper; out of
+// scope for this helper.
+
 /** Number coercion with bounds + default. Rejects NaN/Infinity. */
 export function zNumber(opts?: { min?: number; max?: number; default?: number; int?: boolean }) {
-  let s: z.ZodType<number> = z.coerce.number().refine(Number.isFinite, "Geçerli sayı değil");
+  let s: z.ZodType<number> = z.coerce.number().refine(Number.isFinite, "Invalid number");
   if (opts?.int) s = (s as z.ZodNumber).int();
   if (opts?.min !== undefined) s = (s as z.ZodNumber).min(opts.min);
   if (opts?.max !== undefined) s = (s as z.ZodNumber).max(opts.max);
@@ -34,7 +39,7 @@ export function zBoolean(opts?: { default?: boolean }) {
   const s = z
     .string()
     .transform((v) => v.toLowerCase())
-    .refine((v) => ["true", "false", "1", "0"].includes(v), "true|false bekleniyor")
+    .refine((v) => ["true", "false", "1", "0"].includes(v), "Expected boolean (true|false|1|0)")
     .transform((v) => v === "true" || v === "1");
   if (opts?.default !== undefined) {
     return s.default(opts.default);
@@ -46,13 +51,13 @@ export function zBoolean(opts?: { default?: boolean }) {
 export function zIsoDate() {
   return z
     .string()
-    .refine((v) => !Number.isNaN(Date.parse(v)), "Geçerli ISO tarih değil")
+    .refine((v) => !Number.isNaN(Date.parse(v)), "Invalid ISO date")
     .transform((v) => new Date(v));
 }
 
 /** Cursor-style cuid identifier (or sufficiently restrictive token). */
 export function zCuid() {
-  return z.string().min(1).max(48).regex(/^[a-z0-9_-]+$/i, "Geçersiz id");
+  return z.string().min(1).max(48).regex(/^[a-z0-9_-]+$/i, "Invalid id");
 }
 
 /**
@@ -97,7 +102,11 @@ export async function parseJsonBody<S extends ZodTypeAny>(req: Request, schema: 
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");
-  const msg = issue?.message ?? "Geçersiz veri";
+  // Fallback msg English; specific issue.message yine de TR olabilir (refine
+  // çağrılarındaki custom message'lar). User-facing message i18n catalog
+  // üzerinden değil, Zod issue üzerinden geliyor — frontend validate-before-
+  // submit pattern'ı bu sayfayı nadir görür.
+  const msg = issue?.message ?? "Invalid input";
   return localizedError(req, 400, {
     tr: field ? `${field}: ${msg}` : msg,
     en: field ? `${field}: ${msg}` : msg,

@@ -29,9 +29,18 @@ export async function login(email: string, password: string): Promise<MobileUser
   return res.user;
 }
 
-export async function logout(): Promise<void> {
+/**
+ * Logout — bu cihazın API token'ını revoke et + push token kaydını sil.
+ * `pushToken` parametresi varsa server yalnızca bu cihazın push token'ını
+ * siler (multi-device kullanıcı diğer cihazlarda push almaya devam eder).
+ * Yoksa kullanıcının TÜM push token'ları silinir.
+ */
+export async function logout(pushToken?: string | null): Promise<void> {
   try {
-    await api("/api/auth/mobile-logout", { method: "POST" });
+    await api("/api/auth/mobile-logout", {
+      method: "POST",
+      body: pushToken ? { token: pushToken } : undefined,
+    });
   } catch {
     // ignore — local clear yine de yapılır
   }
