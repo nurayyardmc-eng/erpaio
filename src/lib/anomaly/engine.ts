@@ -117,6 +117,7 @@ export async function runAnomalyDetectionForTenant(
           }
 
           sendPushToTenant(tenantId, {
+            category: "anomaly",
             title: `${anomaly.severity.toUpperCase()} · ${alert.title}`,
             body: alert.description ?? alert.title,
             data: { alertId: alert.id, severity: alert.severity, type: "anomaly" },

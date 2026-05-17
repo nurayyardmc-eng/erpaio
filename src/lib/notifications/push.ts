@@ -32,9 +32,49 @@ interface ExpoPushResponse {
   errors?: { code: string; message: string }[];
 }
 
+/**
+ * Push notification kategori taksonomisi.
+ * - `alerts`: manuel alert oluşturma (POST /api/alerts)
+ * - `anomaly`: anomaly detection engine (lib/anomaly/engine.ts)
+ * - `watchlists`: watchlist eşik tetikleyici (cron/watchlists)
+ *
+ * Kullanıcı her kategoriyi ayrı toggle'layabilir (KVKK md. 11 + GDPR Art. 21).
+ */
+export type PushCategory = "alerts" | "anomaly" | "watchlists";
+
+/**
+ * Kategori → User column eşlemesi.
+ * Kategori eklerken hem `PushCategory` union'a hem buraya ekle + schema'da
+ * `pushPref*` Boolean ekle.
+ *
+ * Exposed for testing — buildPushTokenWhere helper'ı bunu kullanır.
+ */
+export const PREF_COLUMN: Record<PushCategory, "pushPrefAlerts" | "pushPrefAnomaly" | "pushPrefWatchlists"> = {
+  alerts: "pushPrefAlerts",
+  anomaly: "pushPrefAnomaly",
+  watchlists: "pushPrefWatchlists",
+};
+
+/**
+ * PushToken sorgusunun where clause'ını oluşturur. Kategori undefined ise
+ * filtre boş → legacy davranış (tüm tokenlar). Kategori varsa ilgili User
+ * prefini true olanları filtreler.
+ *
+ * Exposed for testing — sendPushToTenant production caller'ı.
+ */
+export function buildPushTokenWhere(tenantId: string, category?: PushCategory) {
+  if (!category) return { tenantId };
+  return { tenantId, user: { [PREF_COLUMN[category]]: true } };
+}
+
 export interface PushNotificationOptions {
   title: string;
   body: string;
+  /**
+   * Kategori — kullanıcı bu kategoriyi opt-out etmişse cihazına push gitmez.
+   * Backwards-compat: undefined → eski davranış (tüm tokenlara gönderir).
+   */
+  category?: PushCategory;
   data?: Record<string, unknown>;
   channelId?: string;
 }
@@ -99,15 +139,17 @@ export async function sendPushToTenant(
   tenantId: string,
   options: PushNotificationOptions,
 ): Promise<{ sent: number; failed: number }> {
-  const log = childLogger({ component: "push", tenantId });
+  const log = childLogger({ component: "push", tenantId, category: options.category });
 
+  // Per-user opt-out filtresi: PushToken → User JOIN + pref kolonu = true.
+  // Kategori belirtilmemişse legacy davranış: tüm tokenlara gönder.
   const tokens = await prisma.pushToken.findMany({
-    where: { tenantId },
+    where: buildPushTokenWhere(tenantId, options.category),
     select: { id: true, token: true, platform: true },
   });
 
   if (tokens.length === 0) {
-    log.debug({}, "No push tokens for tenant");
+    log.debug({}, "No push tokens for tenant (after pref filter)");
     return { sent: 0, failed: 0 };
   }
 
@@ -174,6 +216,7 @@ export async function sendPushToTenant(
       sent: totalSent,
       failed: totalFailed,
       chunks: messageChunks.length,
+      category: options.category ?? null,
     },
     error: totalFailed > 0 ? `${totalFailed}/${tokens.length} push delivery failed` : null,
   });

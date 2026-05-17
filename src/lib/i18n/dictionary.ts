@@ -160,6 +160,18 @@ export interface Dictionary {
     accountSecurity: string;
     accountSecurityDescription: string;
     accountSecurityLink: string;
+    notifPrefsTitle: string;
+    notifPrefsDescription: string;
+    notifPrefsAlerts: string;
+    notifPrefsAlertsDesc: string;
+    notifPrefsAnomaly: string;
+    notifPrefsAnomalyDesc: string;
+    notifPrefsWatchlists: string;
+    notifPrefsWatchlistsDesc: string;
+    notifPrefsSaved: string;
+    notifPrefsSaveError: string;
+    notifPrefsToggleOn: string;
+    notifPrefsToggleOff: string;
     dangerZone: string;
     dangerZoneDescription: string;
     deleteAccount: string;

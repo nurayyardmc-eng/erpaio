@@ -68,6 +68,13 @@ export interface Dictionary {
     linkPrivacy: string;
     linkTerms: string;
     linkSupport: string;
+    notifPrefsTitle: string;
+    notifPrefsDescription: string;
+    notifPrefsAlerts: string;
+    notifPrefsAnomaly: string;
+    notifPrefsWatchlists: string;
+    notifPrefsSaved: string;
+    notifPrefsSaveError: string;
   };
   menu: {
     title: string;

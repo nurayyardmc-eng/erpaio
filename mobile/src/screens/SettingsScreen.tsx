@@ -13,6 +13,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
+import {
+  getMyNotificationPrefs,
+  updateMyNotificationPrefs,
+  type NotificationPrefs,
+} from "../lib/dashboard";
 import { isBiometricSupported, isBiometricEnabled, setBiometricEnabled } from "../lib/biometric";
 import { useI18n } from "../lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "../lib/i18n/dictionary";
@@ -241,6 +246,8 @@ export default function SettingsScreen({ onLogout }: Props) {
         </Section>
       )}
 
+      <NotificationPrefsSection />
+
       <Section title={t.settings.language}>
         <Text style={[styles.muted, { marginBottom: spacing(3) }]}>{t.settings.languageHint}</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing(2) }}>
@@ -283,6 +290,72 @@ export default function SettingsScreen({ onLogout }: Props) {
       </TouchableOpacity>
       </ScrollView>
     </View>
+  );
+}
+
+/**
+ * Per-user push opt-in (KVKK md. 11 + GDPR Art. 21).
+ * Web /dashboard/settings'teki aynı section'ın mobile karşılığı.
+ */
+function NotificationPrefsSection() {
+  const { t } = useI18n();
+  const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
+  const [saving, setSaving] = useState<keyof NotificationPrefs | null>(null);
+
+  useEffect(() => {
+    void getMyNotificationPrefs()
+      .then((d) => setPrefs(d.prefs))
+      .catch(() => {
+        // Sessizce başarısız — sayfa açılışında load failure'ı kullanıcıyı
+        // yıldırmasın; pull-to-refresh ile tekrar denenebilir.
+      });
+  }, []);
+
+  const toggle = async (key: keyof NotificationPrefs) => {
+    if (!prefs || saving) return;
+    const next = !prefs[key];
+    const prev = prefs;
+    setPrefs({ ...prefs, [key]: next });
+    setSaving(key);
+    try {
+      const d = await updateMyNotificationPrefs({ [key]: next });
+      setPrefs(d.prefs);
+      showToast(t.settings.notifPrefsSaved, "success");
+    } catch {
+      setPrefs(prev); // revert
+      showToast(t.settings.notifPrefsSaveError, "error");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  return (
+    <Section title={t.settings.notifPrefsTitle}>
+      <Text style={[styles.muted, { marginBottom: spacing(3), lineHeight: 18 }]}>
+        {t.settings.notifPrefsDescription}
+      </Text>
+      {prefs === null ? (
+        <ActivityIndicator color={colors.brand} />
+      ) : (
+        <>
+          <ToggleRow
+            label={t.settings.notifPrefsAlerts}
+            value={prefs.alerts}
+            onChange={() => toggle("alerts")}
+          />
+          <ToggleRow
+            label={t.settings.notifPrefsAnomaly}
+            value={prefs.anomaly}
+            onChange={() => toggle("anomaly")}
+          />
+          <ToggleRow
+            label={t.settings.notifPrefsWatchlists}
+            value={prefs.watchlists}
+            onChange={() => toggle("watchlists")}
+          />
+        </>
+      )}
+    </Section>
   );
 }
 

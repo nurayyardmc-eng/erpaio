@@ -38,6 +38,7 @@ const ACTION_LABELS_TR: Record<string, string> = {
   "ip_allowlist.remove": "IP allowlist silme",
   "api_token.create": "API token oluşturma",
   "api_token.revoke": "API token iptali",
+  "notification.prefs.update": "Bildirim tercihleri güncellendi",
 };
 
 const ACTION_LABELS_EN: Record<string, string> = {
@@ -61,6 +62,7 @@ const ACTION_LABELS_EN: Record<string, string> = {
   "ip_allowlist.remove": "IP allowlist removed",
   "api_token.create": "API token created",
   "api_token.revoke": "API token revoked",
+  "notification.prefs.update": "Notification preferences updated",
 };
 
 export default function ActivityPage() {

@@ -63,6 +63,11 @@ model User {
   totpEnabled      Boolean            @default(false)
   failedLoginCount Int                @default(0)
   lockedUntil      DateTime?
+  // Push notification per-category opt-in (KVKK md. 11 + GDPR Art. 21 right to object).
+  // Default true (opt-in) → mevcut davranış ile geriye uyumlu.
+  pushPrefAlerts     Boolean         @default(true)
+  pushPrefAnomaly    Boolean         @default(true)
+  pushPrefWatchlists Boolean         @default(true)
   createdAt        DateTime           @default(now())
   tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions             ChatSession[]

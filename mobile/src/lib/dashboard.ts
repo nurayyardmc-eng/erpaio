@@ -238,6 +238,26 @@ export async function getMyConsents(): Promise<{ consents: MyConsentEntry[] }> {
   return api(`/api/me/consents`);
 }
 
+// ============= Push notification per-user prefs =============
+export interface NotificationPrefs {
+  alerts: boolean;
+  anomaly: boolean;
+  watchlists: boolean;
+}
+
+export async function getMyNotificationPrefs(): Promise<{ prefs: NotificationPrefs }> {
+  return api(`/api/me/notification-prefs`);
+}
+
+export async function updateMyNotificationPrefs(
+  partial: Partial<NotificationPrefs>,
+): Promise<{ prefs: NotificationPrefs }> {
+  return api(`/api/me/notification-prefs`, {
+    method: "PATCH",
+    body: partial,
+  });
+}
+
 // ============= Overview Metrics =============
 export interface DashboardMetrics {
   todayQueries: number;

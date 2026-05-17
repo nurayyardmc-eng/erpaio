@@ -99,6 +99,7 @@ export async function GET(req: NextRequest) {
         }
 
         void sendPushToTenant(w.tenantId, {
+          category: "watchlists",
           title: `Watch: ${w.name}`,
           body: msg,
           data: { watchlistId: w.id },

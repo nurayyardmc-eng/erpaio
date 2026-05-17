@@ -103,6 +103,7 @@ export const RATE_LIMITS = {
   PASSWORD_CHANGE: { prefix: "pwd-change", max: 5, windowMs: 60 * 60_000 }, // 5/saat / user
   CONSENTS_READ: { prefix: "consents", max: 30, windowMs: 60_000 }, // 30/dk / user
   PUSH_TOKEN_REGISTER: { prefix: "push-reg", max: 10, windowMs: 60_000 }, // 10/dk / user (mobile launch'larda yeniden register'ı kapsar)
+  NOTIFICATION_PREFS: { prefix: "notif-pref", max: 30, windowMs: 60_000 }, // 30/dk / user (GET ve PATCH ortak; UI toggle spam'i için bolca pay var)
   ADMIN_READ: { prefix: "admin-r", max: 60, windowMs: 60_000 }, // 60/dk / sysadmin
   ADMIN_WRITE: { prefix: "admin-w", max: 20, windowMs: 60_000 }, // 20/dk / sysadmin
 } as const;

@@ -471,6 +471,8 @@ export default function SettingsPage() {
             </div>
           </Section>
 
+          <NotificationPrefsSection t={t} />
+
           <Section title={t.settings.accountSecurity}>
             <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>
               {t.settings.accountSecurityDescription}
@@ -670,6 +672,109 @@ function DangerZone({ t }: { t: Dictionary }) {
         </>
       )}
     </section>
+  );
+}
+
+interface PushPrefs {
+  alerts: boolean;
+  anomaly: boolean;
+  watchlists: boolean;
+}
+
+/**
+ * Per-user push notification opt-in. KVKK md. 11 + GDPR Art. 21.
+ * GET'le yükle, her toggle değişiminde PATCH — optimistic update + revert on error.
+ */
+function NotificationPrefsSection({ t }: { t: Dictionary }) {
+  const [prefs, setPrefs] = useState<PushPrefs | null>(null);
+  const [saving, setSaving] = useState<keyof PushPrefs | null>(null);
+
+  useEffect(() => {
+    fetch("/api/me/notification-prefs")
+      .then(async (r) => {
+        if (r.ok) {
+          const d = await r.json();
+          setPrefs(d.prefs);
+        }
+      })
+      .catch(() => {
+        // Sessizce başarısız — kullanıcı sayfayı yenilediğinde tekrar yüklenir.
+      });
+  }, []);
+
+  const toggle = async (key: keyof PushPrefs) => {
+    if (!prefs || saving) return;
+    const next = !prefs[key];
+    const optimistic = { ...prefs, [key]: next };
+    setPrefs(optimistic);
+    setSaving(key);
+    try {
+      const res = await fetch("/api/me/notification-prefs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: next }),
+      });
+      if (!res.ok) {
+        setPrefs(prefs); // revert
+        showToast(t.settings.notifPrefsSaveError, "error");
+      } else {
+        const d = await res.json();
+        setPrefs(d.prefs);
+        showToast(t.settings.notifPrefsSaved, "success");
+      }
+    } catch {
+      setPrefs(prefs); // revert
+      showToast(t.settings.notifPrefsSaveError, "error");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const rows: { key: keyof PushPrefs; label: string; desc: string }[] = [
+    { key: "alerts", label: t.settings.notifPrefsAlerts, desc: t.settings.notifPrefsAlertsDesc },
+    { key: "anomaly", label: t.settings.notifPrefsAnomaly, desc: t.settings.notifPrefsAnomalyDesc },
+    { key: "watchlists", label: t.settings.notifPrefsWatchlists, desc: t.settings.notifPrefsWatchlistsDesc },
+  ];
+
+  return (
+    <Section title={t.settings.notifPrefsTitle}>
+      <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+        {t.settings.notifPrefsDescription}
+      </p>
+      {prefs === null ? (
+        <p style={{ color: colors.textMuted, fontSize: 13, margin: 0 }}>{t.common.loading}</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {rows.map((r) => (
+            <div
+              key={r.key}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 16,
+                padding: "12px 0",
+                borderBottom: `1px solid ${colors.border}`,
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: colors.text, fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
+                  {r.label}
+                </div>
+                <div style={{ color: colors.textMuted, fontSize: 12, lineHeight: 1.5 }}>
+                  {r.desc}
+                </div>
+              </div>
+              <Toggle
+                label={prefs[r.key] ? t.settings.notifPrefsToggleOn : t.settings.notifPrefsToggleOff}
+                checked={prefs[r.key]}
+                onChange={() => toggle(r.key)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </Section>
   );
 }
 

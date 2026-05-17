@@ -93,6 +93,7 @@ export async function POST(req: Request) {
     }
 
     sendPushToTenant(session.user.tenantId, {
+      category: "alerts",
       title: `${alert.severity.toUpperCase()} · ${alert.title}`,
       body: alert.description ?? alert.title,
       data: { alertId: alert.id, severity: alert.severity, type: alert.type },

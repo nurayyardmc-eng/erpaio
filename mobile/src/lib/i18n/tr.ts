@@ -57,6 +57,14 @@ export const tr: Dictionary = {
     linkPrivacy: "Gizlilik Politikası →",
     linkTerms: "Kullanım Koşulları →",
     linkSupport: "support@erpaio.com →",
+    notifPrefsTitle: "Bildirim Tercihlerim",
+    notifPrefsDescription:
+      "Bu cihaza hangi push bildirimlerini almak istediğini seç. Tenant ayarlarındaki WhatsApp/email gönderimleri ayrıdır.",
+    notifPrefsAlerts: "Manuel uyarılar",
+    notifPrefsAnomaly: "Anomali algılama",
+    notifPrefsWatchlists: "Watchlist tetikleyicileri",
+    notifPrefsSaved: "Bildirim tercihi kaydedildi.",
+    notifPrefsSaveError: "Bildirim tercihi kaydedilemedi.",
   },
   menu: {
     title: "Menü",

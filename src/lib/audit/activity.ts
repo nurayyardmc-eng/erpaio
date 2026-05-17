@@ -28,7 +28,8 @@ export type ActivityAction =
   | "ip_allowlist.add"
   | "ip_allowlist.remove"
   | "api_token.create"
-  | "api_token.revoke";
+  | "api_token.revoke"
+  | "notification.prefs.update";
 
 export interface RecordActivityInput {
   userId?: string | null;
