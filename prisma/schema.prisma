@@ -500,3 +500,17 @@ model QueryCache {
   @@unique([tenantId, questionHash])
   @@index([tenantId, lastUsedAt(sort: Desc)])
 }
+
+/// Webhook idempotency log — external provider'lar (Stripe) retry yapar.
+/// Aynı event.id ikinci kez geldiğinde handler body'si tekrar çalışmasın.
+/// Provider event.id'leri unique olduğu için bu kayıt yeterli.
+model ProcessedWebhook {
+  /// Provider'ın olay kimliği (ör. Stripe evt_xxx). PK = idempotency anahtarı.
+  id          String   @id
+  provider    String // "stripe" — gelecekte başka provider eklenirse ayırt etmek için
+  eventType   String
+  processedAt DateTime @default(now())
+
+  @@index([processedAt])
+  @@index([provider, eventType])
+}

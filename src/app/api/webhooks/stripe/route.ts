@@ -68,6 +68,21 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid signature." }, { status: 400 });
   }
 
+  // Idempotency guard — Stripe retries failed deliveries. Without this we'd
+  // re-run the handler body (re-send welcome emails, re-fire side effects).
+  // Insert-first semantics: at-most-once side effects. If handler crashes
+  // mid-flight, Stripe's retry will see the duplicate and skip. To force a
+  // replay (rare ops scenario), sysadmin deletes the ProcessedWebhook row.
+  try {
+    await prisma.processedWebhook.create({
+      data: { id: event.id, provider: "stripe", eventType: event.type },
+    });
+  } catch {
+    // Unique constraint violation → already processed. Acknowledge to Stripe.
+    log.info({ eventId: event.id, type: event.type }, "Duplicate webhook — skipped");
+    return Response.json({ received: true, duplicate: true });
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
