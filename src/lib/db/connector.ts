@@ -12,6 +12,8 @@ type AnyPool = sql.ConnectionPool | PgPool;
 interface PoolEntry {
   pool: AnyPool;
   kind: "mssql" | "postgres";
+  /** Cached on first connect — slow-query log için runtime extra prisma query yok. */
+  tenantId: string;
   lastUsedAt: number;
 }
 
@@ -119,9 +121,57 @@ export async function getPoolEntry(connectionId: string): Promise<PoolEntry> {
     (pool as sql.ConnectionPool).on("error", () => pools.delete(connectionId));
   }
 
-  const entry: PoolEntry = { pool, kind, lastUsedAt: Date.now() };
+  const entry: PoolEntry = { pool, kind, tenantId: conn.tenantId, lastUsedAt: Date.now() };
   pools.set(connectionId, entry);
   return entry;
+}
+
+/**
+ * Eşik aşımı — bunun üzerindeki sorgular SlowQueryLog'a yazılır.
+ * 3 saniye keyfî bir başlangıç değeri; production telemetrisinden sonra
+ * ayarlanabilir (env override için ileride: SLOW_QUERY_THRESHOLD_MS).
+ */
+export const SLOW_QUERY_THRESHOLD_MS = 3000;
+
+/**
+ * SQL'i log için kısalt: max 500 char + tek satıra çek (newline → space).
+ * Pure function — test edilir. Boş/whitespace-only girdi "" döner.
+ */
+export function truncateSqlForLog(sql: string, max: number = 500): string {
+  const collapsed = sql.replace(/\s+/g, " ").trim();
+  if (!collapsed) return "";
+  return collapsed.length > max ? collapsed.slice(0, max - 1) + "…" : collapsed;
+}
+
+/**
+ * Best-effort slow query insert. queryERP fail-fast hot path'i blocklamasın
+ * diye fire-and-forget — log fail Sentry'ye düşer.
+ */
+function recordSlowQuery(input: {
+  tenantId: string;
+  connectionId: string;
+  sql: string;
+  durationMs: number;
+  ok: boolean;
+  errorMessage?: string | null;
+}): void {
+  void prisma.slowQueryLog
+    .create({
+      data: {
+        tenantId: input.tenantId,
+        connectionId: input.connectionId,
+        sqlSnippet: truncateSqlForLog(input.sql),
+        durationMs: input.durationMs,
+        ok: input.ok,
+        errorMessage: input.errorMessage ?? null,
+      },
+    })
+    .catch((err) => {
+      log.warn({ err, connectionId: input.connectionId }, "slowQueryLog insert failed");
+      Sentry.captureException(err, {
+        tags: { component: "db-connector", subsystem: "slow-query-log" },
+      });
+    });
 }
 
 export async function getPool(connectionId: string): Promise<sql.ConnectionPool> {
@@ -134,10 +184,43 @@ export async function getPool(connectionId: string): Promise<sql.ConnectionPool>
 
 export async function queryERP(connectionId: string, sqlStr: string): Promise<Record<string, unknown>[]> {
   const entry = await getPoolEntry(connectionId);
-  if (entry.kind === "postgres") {
-    const result = await (entry.pool as PgPool).query(sqlStr);
-    return result.rows as Record<string, unknown>[];
+  const startedAt = Date.now();
+
+  // Hot path: try → ölç → eşiği aşıyorsa fire-and-forget log. Error path da
+  // log'lanır (errorMessage doldurulur) — slow + failing query'leri görmek
+  // admin debug için kritik.
+  try {
+    let rows: Record<string, unknown>[];
+    if (entry.kind === "postgres") {
+      const result = await (entry.pool as PgPool).query(sqlStr);
+      rows = result.rows as Record<string, unknown>[];
+    } else {
+      const result = await (entry.pool as sql.ConnectionPool).request().query(sqlStr);
+      rows = result.recordset as Record<string, unknown>[];
+    }
+    const durationMs = Date.now() - startedAt;
+    if (durationMs >= SLOW_QUERY_THRESHOLD_MS) {
+      recordSlowQuery({
+        tenantId: entry.tenantId,
+        connectionId,
+        sql: sqlStr,
+        durationMs,
+        ok: true,
+      });
+    }
+    return rows;
+  } catch (err) {
+    const durationMs = Date.now() - startedAt;
+    if (durationMs >= SLOW_QUERY_THRESHOLD_MS) {
+      recordSlowQuery({
+        tenantId: entry.tenantId,
+        connectionId,
+        sql: sqlStr,
+        durationMs,
+        ok: false,
+        errorMessage: err instanceof Error ? err.message.slice(0, 500) : String(err).slice(0, 500),
+      });
+    }
+    throw err;
   }
-  const result = await (entry.pool as sql.ConnectionPool).request().query(sqlStr);
-  return result.recordset as Record<string, unknown>[];
 }

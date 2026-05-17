@@ -47,6 +47,7 @@ model Tenant {
   customMetrics        CustomMetric[]
   schemaAnnotations    SchemaAnnotation[]
   notificationLogs     NotificationLog[]
+  slowQueries          SlowQueryLog[]
 }
 
 model User {
@@ -158,6 +159,7 @@ model ErpConnection {
   watchlists       Watchlist[]
   tableEmbeddings  TableEmbedding[]
   customMetrics    CustomMetric[]
+  slowQueries      SlowQueryLog[]
 }
 
 model SchemaCache {
@@ -544,3 +546,30 @@ model ProcessedWebhook {
   @@index([processedAt])
   @@index([provider, eventType])
 }
+
+/// ERP query observability — eşiği aşan (varsayılan 3000ms) sorgular için
+/// trace kaydı. Admin dashboard'da slow query analizi için kullanılır.
+///
+/// connectionId nullable: bağlantı silinmiş olabilir (SetNull). tenantId
+/// her zaman dolu — caller queryERP() içinde PoolEntry cache'inden geçirir,
+/// runtime extra prisma query yok.
+///
+/// sqlSnippet truncated (max 500 char) — full SQL log şişirir + PII riski
+/// (WHERE customer_email = '...'). Snippet sanitize edilir (newline collapse).
+model SlowQueryLog {
+  id           String   @id @default(cuid())
+  tenantId     String
+  connectionId String?
+  sqlSnippet   String   @db.Text
+  durationMs   Int
+  ok           Boolean
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  connection ErpConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([durationMs])
+}
+
