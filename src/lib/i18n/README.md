@@ -48,3 +48,38 @@ hardcoded — incremental migrasyon planı:
 
 `mobile/src/lib/i18n/` aynı yapıyı AsyncStorage ile barındırır. Anahtarları
 senkronize tutun — değişiklik yaparken iki taraftaki dictionary'i de güncelleyin.
+
+## Server-side i18n (`server.ts`)
+
+API route'larında `Accept-Language` + `erpaio_lang` cookie'ye saygılı hata
+mesajları için:
+
+```ts
+import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
+
+export async function POST(req: Request) {
+  const session = await getAuth(req);
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  // Endpoint-specific message:
+  if (someError) {
+    return localizedError(req, 400, {
+      tr: "Bu kayıt zaten var.",
+      en: "This record already exists.",
+    });
+  }
+
+  // Raw access if you need to interpolate:
+  const m = serverMessages(req);
+  return Response.json({ message: m.api.notFound });
+}
+```
+
+`jsonError` — paylaşılan katalog anahtarı (api/auth/validation namespace'leri).
+`localizedError` — bu endpoint'e özel mesaj. Katalog şişmesin diye genel
+olmayanları inline tut.
+
+Locale resolution sırası:
+1. `erpaio_lang` cookie (web client'ından gelir)
+2. `Accept-Language` header (mobile + standart tarayıcılar)
+3. `DEFAULT_LOCALE` (tr)

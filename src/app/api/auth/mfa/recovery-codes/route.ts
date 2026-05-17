@@ -4,10 +4,11 @@ import {
   generateRecoveryCodes,
   recoveryCodeStatus,
 } from "@/lib/auth/recovery";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const status = await recoveryCodeStatus(session.user.id);
   return Response.json(status);
@@ -20,17 +21,17 @@ export async function GET(req: Request) {
  */
 export async function POST(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { totpEnabled: true },
   });
   if (!user?.totpEnabled) {
-    return Response.json(
-      { error: "Önce MFA'yı etkinleştirin." },
-      { status: 400 },
-    );
+    return localizedError(req, 400, {
+      tr: "Önce MFA'yı etkinleştirin.",
+      en: "Enable MFA first.",
+    });
   }
 
   const codes = await generateRecoveryCodes(session.user.id);
