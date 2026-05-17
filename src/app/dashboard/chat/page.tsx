@@ -264,10 +264,11 @@ export default function ChatPage() {
     downloadCsv(`erpaio-${ts}.csv`, csv);
   };
 
-  const exportXlsx = (msg: AssistantSuccessMsg) => {
+  const exportXlsx = async (msg: AssistantSuccessMsg) => {
     if (msg.results.length === 0) return;
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    downloadXlsx(`erpaio-${ts}.xlsx`, msg.results, msg.columns);
+    // xlsx lazy-loaded — first click takes ~200ms for chunk fetch, then cached.
+    await downloadXlsx(`erpaio-${ts}.xlsx`, msg.results, msg.columns);
   };
 
   const fetchExplain = async (idx: number, msg: AssistantSuccessMsg) => {

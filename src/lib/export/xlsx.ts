@@ -1,6 +1,16 @@
-import * as XLSX from "xlsx";
+// XLSX export — xlsx paketi ~5 MB. Dashboard sayfalarına bundle olarak girmesin
+// diye lazy import. Sadece kullanıcı "XLSX indir" butonuna basınca yüklenir.
 
-export function rowsToXlsxBlob(rows: Record<string, unknown>[], columns: string[]): Blob {
+/**
+ * Generate XLSX blob from rows. Async because xlsx is dynamically imported
+ * (5+ MB savings on first-load JS for dashboard pages).
+ */
+export async function rowsToXlsxBlob(
+  rows: Record<string, unknown>[],
+  columns: string[],
+): Promise<Blob> {
+  const XLSX = await import("xlsx");
+
   const ws = XLSX.utils.json_to_sheet(rows, { header: columns });
 
   ws["!cols"] = columns.map((col) => {
@@ -20,8 +30,12 @@ export function rowsToXlsxBlob(rows: Record<string, unknown>[], columns: string[
   });
 }
 
-export function downloadXlsx(filename: string, rows: Record<string, unknown>[], columns: string[]): void {
-  const blob = rowsToXlsxBlob(rows, columns);
+export async function downloadXlsx(
+  filename: string,
+  rows: Record<string, unknown>[],
+  columns: string[],
+): Promise<void> {
+  const blob = await rowsToXlsxBlob(rows, columns);
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
