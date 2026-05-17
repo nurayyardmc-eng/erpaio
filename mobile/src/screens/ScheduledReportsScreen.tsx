@@ -10,20 +10,26 @@ import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
+import type { Dictionary } from "../lib/i18n/dictionary";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
 interface Props { navigation: NativeStackNavigationProp<MoreStackParamList, "ScheduledReports">; }
 
-const SCHEDULE_LABEL: Record<string, string> = {
-  hourly: "Saatlik",
-  daily_06: "Günlük 06:00",
-  daily_18: "Günlük 18:00",
-  weekly_monday: "Haftalık (Pazartesi)",
-  monthly_first: "Aylık (1.gün)",
-};
+function buildScheduleLabel(t: Dictionary): Record<string, string> {
+  return {
+    hourly: t.scheduledReports.schedHourly,
+    daily_06: t.scheduledReports.schedDaily06,
+    daily_18: t.scheduledReports.schedDaily18,
+    weekly_monday: t.scheduledReports.schedWeeklyMonday,
+    monthly_first: t.scheduledReports.schedMonthlyFirst,
+  };
+}
 
 export default function ScheduledReportsScreen({ navigation }: Props) {
+  const { t } = useI18n();
+  const SCHEDULE_LABEL = buildScheduleLabel(t);
   const queryClient = useQueryClient();
   const q = useQuery({ queryKey: ["scheduled-reports"], queryFn: getScheduledReports });
   const [menuFor, setMenuFor] = useState<ScheduledReport | null>(null);
@@ -32,7 +38,7 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
     mutationFn: (id: string) => deleteScheduledReport(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-reports"] });
-      showToast("Rapor silindi", "success");
+      showToast(t.scheduledReports.deletedToast, "success");
     },
     onError: (e: Error) => showToast(e.message, "error"),
   });
@@ -40,9 +46,9 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
   const onDelete = async (r: ScheduledReport) => {
     setMenuFor(null);
     const ok = await confirmDialog({
-      title: "Raporu sil?",
-      message: `"${r.name}" kalıcı olarak silinecek.`,
-      confirmLabel: "Sil",
+      title: t.scheduledReports.deleteConfirmTitle,
+      message: `"${r.name}"${t.scheduledReports.deleteConfirmMessageSuffix}`,
+      confirmLabel: t.scheduledReports.deleteConfirmYes,
       destructive: true,
     });
     if (!ok) return;
@@ -55,7 +61,7 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={styles.name}>{item.name}</Text>
-            {!item.enabled && <Text style={styles.disabled}>· devre dışı</Text>}
+            {!item.enabled && <Text style={styles.disabled}>{t.scheduledReports.disabledSuffix}</Text>}
           </View>
         </View>
         <TouchableOpacity
@@ -63,7 +69,7 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
           style={styles.menuBtn}
           activeOpacity={0.6}
           accessibilityRole="button"
-          accessibilityLabel="Rapor menüsü"
+          accessibilityLabel={t.scheduledReports.menuA11y}
         >
           <Text style={styles.menuDots}>⋯</Text>
         </TouchableOpacity>
@@ -71,7 +77,7 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
       <Text style={styles.question}>{item.question}</Text>
       <Text style={styles.meta}>{SCHEDULE_LABEL[item.schedule] ?? item.schedule} · {item.emailTo}</Text>
       {item.lastRunAt && (
-        <Text style={styles.timestamp}>Son çalışma: {new Date(item.lastRunAt).toLocaleString("tr-TR")}</Text>
+        <Text style={styles.timestamp}>{t.scheduledReports.lastRunLabel}{new Date(item.lastRunAt).toLocaleString("tr-TR")}</Text>
       )}
     </View>
   );
@@ -79,9 +85,9 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · RAPORLAR"
-        title="Planlı Raporlar"
-        description="Otomatik email gönderilen periyodik raporlar."
+        brand={t.scheduledReports.brand}
+        title={t.scheduledReports.title}
+        description={t.scheduledReports.description}
         onBack={() => navigation.goBack()}
         right={
           <TouchableOpacity
@@ -89,9 +95,9 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
             style={styles.addBtn}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Yeni planlı rapor"
+            accessibilityLabel={t.scheduledReports.addA11y}
           >
-            <Text style={styles.addBtnText}>+ Yeni</Text>
+            <Text style={styles.addBtnText}>{t.scheduledReports.addLabel}</Text>
           </TouchableOpacity>
         }
       />
@@ -107,8 +113,8 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
-              title="Planlı rapor yok"
-              description='Yukarıdaki "+ Yeni" butonuyla periyodik email raporu oluşturun.'
+              title={t.scheduledReports.emptyTitle}
+              description={t.scheduledReports.emptyDesc}
             />
           }
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
@@ -121,10 +127,10 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.name}</Text>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.error }]}>Sil</Text>
+                <Text style={[styles.sheetText, { color: colors.error }]}>{t.common.delete}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMenuFor(null)} style={[styles.sheetItem, styles.sheetCancel]} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.textMuted }]}>İptal</Text>
+                <Text style={[styles.sheetText, { color: colors.textMuted }]}>{t.common.cancel}</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

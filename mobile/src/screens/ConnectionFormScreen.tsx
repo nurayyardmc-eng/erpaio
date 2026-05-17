@@ -15,6 +15,8 @@ import { createConnection, type CreateConnectionInput } from "../lib/dashboard";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
+import type { Dictionary } from "../lib/i18n/dictionary";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -22,14 +24,18 @@ interface Props {
   navigation: NativeStackNavigationProp<MoreStackParamList, "ConnectionForm">;
 }
 
-const ERP_TYPES: Array<{ id: CreateConnectionInput["erpType"]; label: string; desc: string; defaultPort: number }> = [
-  { id: "nebim_v3", label: "Nebim V3", desc: "MS SQL Server tabanlı", defaultPort: 1433 },
-  { id: "dynamics365", label: "Dynamics 365", desc: "Microsoft ERP", defaultPort: 1433 },
-  { id: "sap", label: "SAP", desc: "Hana / Oracle adapter", defaultPort: 1433 },
-  { id: "postgres", label: "PostgreSQL / Odoo", desc: "Open-source DB", defaultPort: 5432 },
-];
+function buildErpTypes(t: Dictionary): Array<{ id: CreateConnectionInput["erpType"]; label: string; desc: string; defaultPort: number }> {
+  return [
+    { id: "nebim_v3", label: "Nebim V3", desc: t.connectionForm.typeNebimDesc, defaultPort: 1433 },
+    { id: "dynamics365", label: "Dynamics 365", desc: t.connectionForm.typeDynamicsDesc, defaultPort: 1433 },
+    { id: "sap", label: "SAP", desc: t.connectionForm.typeSapDesc, defaultPort: 1433 },
+    { id: "postgres", label: "PostgreSQL / Odoo", desc: t.connectionForm.typePostgresDesc, defaultPort: 5432 },
+  ];
+}
 
 export default function ConnectionFormScreen({ navigation }: Props) {
+  const { t } = useI18n();
+  const ERP_TYPES = buildErpTypes(t);
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CreateConnectionInput>({
     erpType: "postgres",
@@ -46,7 +52,7 @@ export default function ConnectionFormScreen({ navigation }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dash-connections"] });
       queryClient.invalidateQueries({ queryKey: ["connections"] });
-      showToast("Bağlantı oluşturuldu", "success");
+      showToast(t.connectionForm.createdToast, "success");
       navigation.goBack();
     },
     onError: (e: Error) => {
@@ -57,7 +63,7 @@ export default function ConnectionFormScreen({ navigation }: Props) {
   const onSubmit = () => {
     setError(null);
     if (!form.host || !form.dbName || !form.username || !form.password) {
-      setError("Tüm alanları doldurun.");
+      setError(t.connectionForm.errAllRequired);
       return;
     }
     mutation.mutate(form);
@@ -71,9 +77,9 @@ export default function ConnectionFormScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · YENİ BAĞLANTI"
-        title="ERP Bağlantısı Ekle"
-        description="Read-only kullanıcı önerilir. Şifre AES-256-GCM ile şifrelenir."
+        brand={t.connectionForm.brand}
+        title={t.connectionForm.title}
+        description={t.connectionForm.description}
         onBack={() => navigation.goBack()}
       />
       <KeyboardAvoidingView
@@ -86,7 +92,7 @@ export default function ConnectionFormScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.sectionTitle}>ERP Tipi</Text>
+          <Text style={styles.sectionTitle}>{t.connectionForm.sectionErpType}</Text>
           <View style={styles.typeGrid}>
             {ERP_TYPES.map((t) => {
               const active = form.erpType === t.id;
@@ -107,9 +113,9 @@ export default function ConnectionFormScreen({ navigation }: Props) {
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Bağlantı Bilgileri</Text>
+          <Text style={styles.sectionTitle}>{t.connectionForm.sectionConnection}</Text>
 
-          <Field label="Host / IP">
+          <Field label={t.connectionForm.fieldHost}>
             <TextInput
               value={form.host}
               onChangeText={(v) => setForm({ ...form, host: v })}
@@ -118,11 +124,11 @@ export default function ConnectionFormScreen({ navigation }: Props) {
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.input}
-              accessibilityLabel="Host veya IP adresi"
+              accessibilityLabel={t.connectionForm.fieldHostA11y}
             />
           </Field>
 
-          <Field label="Port">
+          <Field label={t.connectionForm.fieldPort}>
             <TextInput
               value={String(form.port)}
               onChangeText={(v) => setForm({ ...form, port: parseInt(v.replace(/\D/g, ""), 10) || 0 })}
@@ -130,11 +136,11 @@ export default function ConnectionFormScreen({ navigation }: Props) {
               placeholder="1433"
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
-              accessibilityLabel="Port numarası"
+              accessibilityLabel={t.connectionForm.fieldPortA11y}
             />
           </Field>
 
-          <Field label="Veritabanı Adı">
+          <Field label={t.connectionForm.fieldDbName}>
             <TextInput
               value={form.dbName}
               onChangeText={(v) => setForm({ ...form, dbName: v })}
@@ -143,11 +149,11 @@ export default function ConnectionFormScreen({ navigation }: Props) {
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.input}
-              accessibilityLabel="Veritabanı adı"
+              accessibilityLabel={t.connectionForm.fieldDbNameA11y}
             />
           </Field>
 
-          <Field label="Kullanıcı Adı">
+          <Field label={t.connectionForm.fieldUsername}>
             <TextInput
               value={form.username}
               onChangeText={(v) => setForm({ ...form, username: v })}
@@ -156,11 +162,11 @@ export default function ConnectionFormScreen({ navigation }: Props) {
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.input}
-              accessibilityLabel="Kullanıcı adı"
+              accessibilityLabel={t.connectionForm.fieldUsernameA11y}
             />
           </Field>
 
-          <Field label="Şifre">
+          <Field label={t.connectionForm.fieldPassword}>
             <TextInput
               value={form.password}
               onChangeText={(v) => setForm({ ...form, password: v })}
@@ -168,13 +174,13 @@ export default function ConnectionFormScreen({ navigation }: Props) {
               placeholder="••••••••"
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
-              accessibilityLabel="Şifre"
-              accessibilityHint="Şifreniz AES-256-GCM ile şifrelenerek saklanır"
+              accessibilityLabel={t.connectionForm.fieldPasswordA11y}
+              accessibilityHint={t.connectionForm.fieldPasswordHint}
             />
           </Field>
 
           <Text style={styles.securityNote}>
-            🔒 Şifre AES-256-GCM ile şifrelenir. Sadece SELECT yetkisi olan kullanıcı önerilir.
+            {t.connectionForm.securityNote}
           </Text>
 
           {error && (
@@ -189,13 +195,13 @@ export default function ConnectionFormScreen({ navigation }: Props) {
             style={[styles.submitBtn, mutation.isPending && { opacity: 0.5 }]}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Bağlantıyı kaydet"
+            accessibilityLabel={t.connectionForm.submitA11y}
             accessibilityState={{ disabled: mutation.isPending }}
           >
             {mutation.isPending ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.submitText}>Kaydet</Text>
+              <Text style={styles.submitText}>{t.common.save}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

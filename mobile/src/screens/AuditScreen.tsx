@@ -2,17 +2,19 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { useQuery } from "@tanstack/react-query";
 import { getAudit, type AuditEntry } from "../lib/dashboard";
-import { colors, font, fontMono, radius, spacing } from "../lib/theme";
+import { colors, font, fontMono, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
 interface Props { navigation: NativeStackNavigationProp<MoreStackParamList, "Audit">; }
 
 export default function AuditScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const q = useQuery({ queryKey: ["audit"], queryFn: () => getAudit(50) });
 
   const renderItem = ({ item }: { item: AuditEntry }) => (
@@ -21,7 +23,7 @@ export default function AuditScreen({ navigation }: Props) {
         <Text style={styles.action}>{item.action}</Text>
         <Text style={styles.resource}>{item.resource}</Text>
         <Text style={styles.meta}>
-          {item.user?.email ?? "system"} · {new Date(item.createdAt).toLocaleString("tr-TR")}
+          {item.user?.email ?? t.audit.systemUser} · {new Date(item.createdAt).toLocaleString("tr-TR")}
         </Text>
       </View>
     </View>
@@ -30,9 +32,9 @@ export default function AuditScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · AUDIT"
-        title="Aktivite Logu"
-        description="Son 50 tenant aktivitesi (login, query, settings change)."
+        brand={t.audit.brand}
+        title={t.audit.title}
+        description={t.audit.description}
         onBack={() => navigation.goBack()}
       />
       {q.isLoading ? (
@@ -45,7 +47,7 @@ export default function AuditScreen({ navigation }: Props) {
           keyExtractor={(e) => e.id}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 200, flexGrow: 1 }}
-          ListEmptyComponent={<EmptyState title="Henüz aktivite yok" description="Kullanıcı aktiviteleri burada görünür." />}
+          ListEmptyComponent={<EmptyState title={t.audit.emptyTitle} description={t.audit.emptyDesc} />}
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
         />
       )}

@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createWatchlist, getConnections, type CreateWatchlistInput } from "../lib/dashboard";
-import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
+import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -31,6 +32,7 @@ const OPS: Array<{ id: CreateWatchlistInput["thresholdOp"]; label: string }> = [
 ];
 
 export default function WatchlistFormScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const connsQuery = useQuery({ queryKey: ["connections"], queryFn: getConnections });
 
@@ -44,7 +46,9 @@ export default function WatchlistFormScreen({ navigation }: Props) {
 
   const activeConns = (connsQuery.data ?? []).filter((c) => c.status === "active");
 
+  // Default-select first active connection. Guarded — runs once per mount.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!connectionId && activeConns[0]) setConnectionId(activeConns[0].id);
   }, [activeConns, connectionId]);
 
@@ -60,7 +64,7 @@ export default function WatchlistFormScreen({ navigation }: Props) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watchlists"] });
-      showToast("Watchlist oluşturuldu", "success");
+      showToast(t.watchlistForm.createdToast, "success");
       navigation.goBack();
     },
     onError: (e: Error) => setError(e.message),
@@ -69,12 +73,12 @@ export default function WatchlistFormScreen({ navigation }: Props) {
   const onSubmit = () => {
     setError(null);
     if (!name.trim() || !question.trim() || !connectionId) {
-      setError("İsim, soru ve bağlantı zorunlu.");
+      setError(t.watchlistForm.errRequired);
       return;
     }
     const val = parseFloat(thresholdVal);
     if (Number.isNaN(val)) {
-      setError("Eşik değer geçerli bir sayı olmalı.");
+      setError(t.watchlistForm.errInvalidThreshold);
       return;
     }
     mutation.mutate();
@@ -83,9 +87,9 @@ export default function WatchlistFormScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · YENİ WATCHLIST"
-        title="Watchlist Ekle"
-        description="Sorgu sonucu eşiği geçince otomatik email uyarısı."
+        brand={t.watchlistForm.brand}
+        title={t.watchlistForm.title}
+        description={t.watchlistForm.description}
         onBack={() => navigation.goBack()}
       />
       <KeyboardAvoidingView
@@ -98,34 +102,34 @@ export default function WatchlistFormScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Field label="İsim *">
+          <Field label={t.watchlistForm.fieldName}>
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Kritik stok uyarısı"
+              placeholder={t.watchlistForm.fieldNamePlaceholder}
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
-              accessibilityLabel="Watchlist ismi"
+              accessibilityLabel={t.watchlistForm.fieldNameA11y}
             />
           </Field>
 
-          <Field label="Soru (Türkçe) *">
+          <Field label={t.watchlistForm.fieldQuestion}>
             <TextInput
               value={question}
               onChangeText={setQuestion}
-              placeholder="Kritik stoktaki ürün sayısı"
+              placeholder={t.watchlistForm.fieldQuestionPlaceholder}
               placeholderTextColor={colors.textSubtle}
               multiline
               numberOfLines={3}
               style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]}
-              accessibilityLabel="Watchlist sorusu"
-              accessibilityHint="AI bu soruyu SQL'e çevirir, sonucu eşik ile karşılaştırır"
+              accessibilityLabel={t.watchlistForm.fieldQuestionA11y}
+              accessibilityHint={t.watchlistForm.fieldQuestionHint}
             />
           </Field>
 
-          <Field label="ERP Bağlantısı *">
+          <Field label={t.watchlistForm.fieldConnection}>
             {activeConns.length === 0 ? (
-              <Text style={styles.muted}>Aktif bağlantı yok. Önce ERP bağlantısı ekleyin.</Text>
+              <Text style={styles.muted}>{t.watchlistForm.noActiveConnections}</Text>
             ) : (
               <View style={styles.chipRow}>
                 {activeConns.map((c) => {
@@ -147,7 +151,7 @@ export default function WatchlistFormScreen({ navigation }: Props) {
             )}
           </Field>
 
-          <Field label="Eşik Operatörü">
+          <Field label={t.watchlistForm.fieldOperator}>
             <View style={styles.chipRow}>
               {OPS.map((op) => {
                 const active = thresholdOp === op.id;
@@ -159,7 +163,7 @@ export default function WatchlistFormScreen({ navigation }: Props) {
                     activeOpacity={0.7}
                     accessibilityRole="radio"
                     accessibilityState={{ selected: active }}
-                    accessibilityLabel={`Eşik operatörü ${op.label}`}
+                    accessibilityLabel={`${t.watchlistForm.operatorA11yPrefix}${op.label}`}
                   >
                     <Text style={[styles.chipText, active && styles.chipTextActive, { fontSize: 16 }]}>{op.label}</Text>
                   </TouchableOpacity>
@@ -168,29 +172,29 @@ export default function WatchlistFormScreen({ navigation }: Props) {
             </View>
           </Field>
 
-          <Field label="Eşik Değer *">
+          <Field label={t.watchlistForm.fieldThreshold}>
             <TextInput
               value={thresholdVal}
               onChangeText={setThresholdVal}
-              placeholder="10"
+              placeholder={t.watchlistForm.fieldThresholdPlaceholder}
               placeholderTextColor={colors.textSubtle}
               keyboardType="decimal-pad"
               style={styles.input}
-              accessibilityLabel="Eşik değer"
+              accessibilityLabel={t.watchlistForm.fieldThresholdA11y}
             />
           </Field>
 
-          <Field label="Email Alıcı (opsiyonel)">
+          <Field label={t.watchlistForm.fieldEmail}>
             <TextInput
               value={emailTo}
               onChangeText={setEmailTo}
-              placeholder="alerts@firma.com (boş = tenant default)"
+              placeholder={t.watchlistForm.fieldEmailPlaceholder}
               placeholderTextColor={colors.textSubtle}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.input}
-              accessibilityLabel="Email alıcı"
+              accessibilityLabel={t.watchlistForm.fieldEmailA11y}
             />
           </Field>
 
@@ -206,12 +210,12 @@ export default function WatchlistFormScreen({ navigation }: Props) {
             style={[styles.submitBtn, (mutation.isPending || activeConns.length === 0) && { opacity: 0.5 }]}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Watchlist'i kaydet"
+            accessibilityLabel={t.watchlistForm.submitA11y}
           >
             {mutation.isPending ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.submitText}>Kaydet</Text>
+              <Text style={styles.submitText}>{t.common.save}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

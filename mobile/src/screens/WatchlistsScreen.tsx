@@ -10,6 +10,7 @@ import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -18,6 +19,7 @@ interface Props { navigation: NativeStackNavigationProp<MoreStackParamList, "Wat
 const OP_LABEL: Record<string, string> = { lt: "<", lte: "≤", gt: ">", gte: "≥", eq: "=" };
 
 export default function WatchlistsScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const q = useQuery({ queryKey: ["watchlists"], queryFn: getWatchlists });
   const [menuFor, setMenuFor] = useState<Watchlist | null>(null);
@@ -26,7 +28,7 @@ export default function WatchlistsScreen({ navigation }: Props) {
     mutationFn: (id: string) => deleteWatchlist(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watchlists"] });
-      showToast("Watchlist silindi", "success");
+      showToast(t.watchlists.deletedToast, "success");
     },
     onError: (e: Error) => showToast(e.message, "error"),
   });
@@ -34,9 +36,9 @@ export default function WatchlistsScreen({ navigation }: Props) {
   const onDelete = async (w: Watchlist) => {
     setMenuFor(null);
     const ok = await confirmDialog({
-      title: "Watchlist sil?",
-      message: `"${w.name}" kalıcı olarak silinecek.`,
-      confirmLabel: "Sil",
+      title: t.watchlists.deleteConfirmTitle,
+      message: `"${w.name}"${t.watchlists.deleteConfirmMessageSuffix}`,
+      confirmLabel: t.watchlists.deleteConfirmYes,
       destructive: true,
     });
     if (!ok) return;
@@ -49,7 +51,7 @@ export default function WatchlistsScreen({ navigation }: Props) {
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={styles.name}>{item.name}</Text>
-            {!item.enabled && <Text style={styles.disabled}>· devre dışı</Text>}
+            {!item.enabled && <Text style={styles.disabled}>{t.watchlists.disabledSuffix}</Text>}
           </View>
         </View>
         <TouchableOpacity
@@ -57,18 +59,18 @@ export default function WatchlistsScreen({ navigation }: Props) {
           style={styles.menuBtn}
           activeOpacity={0.6}
           accessibilityRole="button"
-          accessibilityLabel="Watchlist menüsü"
+          accessibilityLabel={t.watchlists.menuA11y}
         >
           <Text style={styles.menuDots}>⋯</Text>
         </TouchableOpacity>
       </View>
       <Text style={styles.question}>{item.question}</Text>
       <Text style={styles.threshold}>
-        Eşik: {OP_LABEL[item.thresholdOp] ?? item.thresholdOp} {item.thresholdVal}
-        {item.lastValue !== null ? ` · son değer: ${item.lastValue}` : ""}
+        {t.watchlists.thresholdLabel}{OP_LABEL[item.thresholdOp] ?? item.thresholdOp} {item.thresholdVal}
+        {item.lastValue !== null ? `${t.watchlists.lastValueLabel}${item.lastValue}` : ""}
       </Text>
       {item.lastCheckedAt && (
-        <Text style={styles.timestamp}>Son kontrol: {new Date(item.lastCheckedAt).toLocaleString("tr-TR")}</Text>
+        <Text style={styles.timestamp}>{t.watchlists.lastCheckedLabel}{new Date(item.lastCheckedAt).toLocaleString("tr-TR")}</Text>
       )}
     </View>
   );
@@ -76,9 +78,9 @@ export default function WatchlistsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · WATCHLIST"
-        title="Watchlists"
-        description="Eşik değer aşıldığında otomatik email uyarısı."
+        brand={t.watchlists.brand}
+        title={t.watchlists.title}
+        description={t.watchlists.description}
         onBack={() => navigation.goBack()}
         right={
           <TouchableOpacity
@@ -86,9 +88,9 @@ export default function WatchlistsScreen({ navigation }: Props) {
             style={styles.addBtn}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Yeni watchlist"
+            accessibilityLabel={t.watchlists.addA11y}
           >
-            <Text style={styles.addBtnText}>+ Yeni</Text>
+            <Text style={styles.addBtnText}>{t.watchlists.addLabel}</Text>
           </TouchableOpacity>
         }
       />
@@ -104,8 +106,8 @@ export default function WatchlistsScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
-              title="Watchlist yok"
-              description='Yukarıdaki "+ Yeni" butonuyla eşik tabanlı uyarı oluşturun.'
+              title={t.watchlists.emptyTitle}
+              description={t.watchlists.emptyDesc}
             />
           }
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
@@ -118,10 +120,10 @@ export default function WatchlistsScreen({ navigation }: Props) {
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.name}</Text>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.error }]}>Sil</Text>
+                <Text style={[styles.sheetText, { color: colors.error }]}>{t.common.delete}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMenuFor(null)} style={[styles.sheetItem, styles.sheetCancel]} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.textMuted }]}>İptal</Text>
+                <Text style={[styles.sheetText, { color: colors.textMuted }]}>{t.common.cancel}</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

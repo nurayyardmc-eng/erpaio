@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { login } from "../lib/auth";
 import Logo from "../components/Logo";
+import { useI18n } from "../lib/i18n/context";
 import { colors, font, radius, shadow } from "../lib/theme";
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot }: Props) {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
     if (!cleanEmail || !password) return;
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setError("Geçerli bir email adresi girin.");
+      setError(t.login.errInvalidEmail);
       return;
     }
 
@@ -41,7 +43,7 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
       await login(cleanEmail, password);
       onLoginSuccess();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Giriş başarısız.");
+      setError(e instanceof Error ? e.message : t.login.errFailed);
     } finally {
       setLoading(false);
     }
@@ -58,28 +60,28 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
             <Logo size={96} variant="full" />
           </View>
 
-          <Text style={styles.title}>Giriş Yap</Text>
-          <Text style={styles.subtitle}>Hesabına devam et</Text>
+          <Text style={styles.title}>{t.login.title}</Text>
+          <Text style={styles.subtitle}>{t.login.subtitle}</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t.login.emailLabel}</Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
-              placeholder="ornek@firma.com"
+              placeholder={t.login.emailPlaceholder}
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
-              accessibilityLabel="Email adresi"
-              accessibilityHint="Hesabınızın email adresini girin"
+              accessibilityLabel={t.login.emailA11y}
+              accessibilityHint={t.login.emailHint}
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Şifre</Text>
+            <Text style={styles.label}>{t.login.passwordLabel}</Text>
             <TextInput
               value={password}
               onChangeText={setPassword}
@@ -88,8 +90,8 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
-              accessibilityLabel="Şifre"
-              accessibilityHint="Hesabınızın şifresini girin"
+              accessibilityLabel={t.login.passwordA11y}
+              accessibilityHint={t.login.passwordHint}
             />
           </View>
 
@@ -98,9 +100,9 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
               onPress={onGoToForgot}
               style={styles.forgotWrap}
               accessibilityRole="link"
-              accessibilityLabel="Şifremi unuttum"
+              accessibilityLabel={t.login.forgotLink}
             >
-              <Text style={styles.forgotLink}>Şifremi unuttum</Text>
+              <Text style={styles.forgotLink}>{t.login.forgotLink}</Text>
             </TouchableOpacity>
           )}
 
@@ -116,21 +118,21 @@ export default function LoginScreen({ onLoginSuccess, onGoToSignup, onGoToForgot
             style={[styles.button, (loading || !email || !password) && styles.buttonDisabled]}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel="Giriş yap"
+            accessibilityLabel={t.login.submitA11y}
             accessibilityState={{ disabled: loading || !email || !password }}
           >
             {loading ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.buttonText}>Giriş Yap</Text>
+              <Text style={styles.buttonText}>{t.login.submit}</Text>
             )}
           </TouchableOpacity>
 
           {onGoToSignup && (
             <View style={styles.bottomRow}>
-              <Text style={styles.bottomText}>Hesabın yok mu?</Text>
-              <TouchableOpacity onPress={onGoToSignup} accessibilityRole="link" accessibilityLabel="Kayıt ol">
-                <Text style={styles.bottomLink}> Kayıt Ol</Text>
+              <Text style={styles.bottomText}>{t.login.noAccount}</Text>
+              <TouchableOpacity onPress={onGoToSignup} accessibilityRole="link" accessibilityLabel={t.login.signupLinkA11y}>
+                <Text style={styles.bottomLink}>{t.login.signupLink}</Text>
               </TouchableOpacity>
             </View>
           )}

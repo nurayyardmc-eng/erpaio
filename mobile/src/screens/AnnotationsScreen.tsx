@@ -10,6 +10,7 @@ import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function AnnotationsScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const q = useQuery({ queryKey: ["annotations"], queryFn: getAnnotations });
   const [menuFor, setMenuFor] = useState<Annotation | null>(null);
@@ -26,7 +28,7 @@ export default function AnnotationsScreen({ navigation }: Props) {
     mutationFn: (a: Annotation) => deleteAnnotation(a.tableName, a.columnName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["annotations"] });
-      showToast("Açıklama silindi", "success");
+      showToast(t.annotations.deletedToast, "success");
     },
     onError: (e: Error) => showToast(e.message, "error"),
   });
@@ -35,9 +37,9 @@ export default function AnnotationsScreen({ navigation }: Props) {
     setMenuFor(null);
     const target = `${a.tableName}${a.columnName ? `.${a.columnName}` : ""}`;
     const ok = await confirmDialog({
-      title: "Açıklamayı sil?",
-      message: `${target} açıklaması kaldırılacak.`,
-      confirmLabel: "Sil",
+      title: t.annotations.deleteConfirmTitle,
+      message: `${target}${t.annotations.deleteConfirmMessageSuffix}`,
+      confirmLabel: t.annotations.deleteConfirmYes,
       destructive: true,
     });
     if (!ok) return;
@@ -50,7 +52,7 @@ export default function AnnotationsScreen({ navigation }: Props) {
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>
             {item.tableName}{item.columnName ? `.${item.columnName}` : ""}
-            {item.hidden && <Text style={styles.hidden}> · gizli</Text>}
+            {item.hidden && <Text style={styles.hidden}>{t.annotations.hiddenSuffix}</Text>}
           </Text>
           {item.description && <Text style={styles.desc}>{item.description}</Text>}
           <Text style={styles.timestamp}>{new Date(item.updatedAt).toLocaleString("tr-TR")}</Text>
@@ -60,7 +62,7 @@ export default function AnnotationsScreen({ navigation }: Props) {
           style={styles.menuBtn}
           activeOpacity={0.6}
           accessibilityRole="button"
-          accessibilityLabel="Açıklama menüsü"
+          accessibilityLabel={t.annotations.menuA11y}
         >
           <Text style={styles.menuDots}>⋯</Text>
         </TouchableOpacity>
@@ -71,9 +73,9 @@ export default function AnnotationsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · ŞEMA"
-        title="Açıklamalar"
-        description="Müşteri-özgü tablo/kolon notları. AI bunları SQL üretirken kullanır."
+        brand={t.annotations.brand}
+        title={t.annotations.title}
+        description={t.annotations.description}
         onBack={() => navigation.goBack()}
         right={
           <TouchableOpacity
@@ -81,9 +83,9 @@ export default function AnnotationsScreen({ navigation }: Props) {
             style={styles.addBtn}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Yeni açıklama ekle"
+            accessibilityLabel={t.annotations.addA11y}
           >
-            <Text style={styles.addBtnText}>+ Yeni</Text>
+            <Text style={styles.addBtnText}>{t.annotations.addLabel}</Text>
           </TouchableOpacity>
         }
       />
@@ -99,8 +101,8 @@ export default function AnnotationsScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
-              title="Henüz açıklama yok"
-              description='Yukarıdaki "+ Yeni" butonuyla tablo veya kolon açıklaması ekleyin. AI Türkçe iş mantığını daha iyi anlar.'
+              title={t.annotations.emptyTitle}
+              description={t.annotations.emptyDesc}
             />
           }
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
@@ -116,10 +118,10 @@ export default function AnnotationsScreen({ navigation }: Props) {
                 {menuFor.tableName}{menuFor.columnName ? `.${menuFor.columnName}` : ""}
               </Text>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.error }]}>Sil</Text>
+                <Text style={[styles.sheetText, { color: colors.error }]}>{t.common.delete}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMenuFor(null)} style={[styles.sheetItem, styles.sheetCancel]} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.textMuted }]}>İptal</Text>
+                <Text style={[styles.sheetText, { color: colors.textMuted }]}>{t.common.cancel}</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

@@ -6,20 +6,22 @@ import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import ErrorState from "../components/ErrorState";
 import Skeleton from "../components/Skeleton";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
 interface Props { navigation: NativeStackNavigationProp<MoreStackParamList, "Overview">; }
 
 export default function OverviewScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const q = useQuery({ queryKey: ["metrics"], queryFn: getMetrics });
 
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · METRİKLER"
-        title="Anlık Metrikler"
-        description="Son 24 saat ve hafta özeti."
+        brand={t.overview.brand}
+        title={t.overview.title}
+        description={t.overview.description}
         onBack={() => navigation.goBack()}
       />
       <ScrollView
@@ -37,12 +39,12 @@ export default function OverviewScreen({ navigation }: Props) {
           <ErrorState onRetry={() => q.refetch()} />
         ) : q.data ? (
           <View style={styles.grid}>
-            <Stat label="Bugün Sorgu" value={q.data.todayQueries.toString()} />
-            <Stat label="Bu Hafta" value={q.data.weekQueries.toString()} />
-            <Stat label="Cache Hit" value={`%${(q.data.cacheHitRate * 100).toFixed(0)}`} />
-            <Stat label="Ort. Latency" value={`${q.data.avgLatencyMs}ms`} />
-            <Stat label="Aktif Bağlantı" value={q.data.activeConnections.toString()} />
-            <Stat label="Açık Bildirim" value={q.data.openAlerts.toString()} accent={q.data.openAlerts > 0 ? colors.warning : undefined} />
+            <Stat label={t.overview.statTodayQueries} value={q.data.todayQueries.toString()} />
+            <Stat label={t.overview.statWeekQueries} value={q.data.weekQueries.toString()} />
+            <Stat label={t.overview.statCacheHit} value={`%${(q.data.cacheHitRate * 100).toFixed(0)}`} />
+            <Stat label={t.overview.statAvgLatency} value={`${q.data.avgLatencyMs}ms`} />
+            <Stat label={t.overview.statActiveConnections} value={q.data.activeConnections.toString()} />
+            <Stat label={t.overview.statOpenAlerts} value={q.data.openAlerts.toString()} accent={q.data.openAlerts > 0 ? colors.warning : undefined} />
           </View>
         ) : null}
       </ScrollView>

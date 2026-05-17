@@ -6,6 +6,7 @@ import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -18,14 +19,15 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 export default function TeamScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const q = useQuery({ queryKey: ["team"], queryFn: getTeam });
 
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · TAKIM"
-        title="Takım"
-        description="Tenant kullanıcıları ve bekleyen davetler."
+        brand={t.team.brand}
+        title={t.team.title}
+        description={t.team.description}
         onBack={() => navigation.goBack()}
       />
       <ScrollView
@@ -41,13 +43,13 @@ export default function TeamScreen({ navigation }: Props) {
           <>
             {(q.data?.invitations ?? []).length > 0 && (
               <View style={[styles.section, { marginBottom: spacing(4) }]}>
-                <Text style={styles.sectionTitle}>Bekleyen Davetler ({q.data?.invitations.length})</Text>
+                <Text style={styles.sectionTitle}>{t.team.pendingInvitations} ({q.data?.invitations.length})</Text>
                 {q.data?.invitations.map((inv) => (
                   <View key={inv.id} style={styles.row}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.email}>{inv.email}</Text>
                       <Text style={styles.meta}>
-                        {inv.role} · {new Date(inv.expiresAt).toLocaleDateString("tr-TR")} sona erer
+                        {inv.role} · {new Date(inv.expiresAt).toLocaleDateString("tr-TR")}{t.team.invitationExpires}
                       </Text>
                     </View>
                   </View>
@@ -56,13 +58,13 @@ export default function TeamScreen({ navigation }: Props) {
             )}
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Kullanıcılar ({q.data?.users.length ?? 0})</Text>
+              <Text style={styles.sectionTitle}>{t.team.usersHeader} ({q.data?.users.length ?? 0})</Text>
               {q.data?.users.map((u) => (
                 <View key={u.id} style={styles.row}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.email}>
                       {u.email}
-                      {u.totpEnabled && <Text style={styles.mfa}> · MFA</Text>}
+                      {u.totpEnabled && <Text style={styles.mfa}>{t.team.mfaTag}</Text>}
                     </Text>
                     <Text style={styles.meta}>{u.name ?? "—"}</Text>
                   </View>

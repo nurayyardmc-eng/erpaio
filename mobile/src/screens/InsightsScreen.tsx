@@ -8,6 +8,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -16,13 +17,17 @@ interface Props {
 }
 
 export default function InsightsScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const [connId, setConnId] = useState<string | null>(null);
 
   const connsQuery = useQuery({ queryKey: ["connections"], queryFn: getConnections });
 
+  // Default-pick first active connection when data loads. Guarded by !connId
+  // so it runs at most once per mount; no cascading re-render risk.
   useEffect(() => {
     if (!connId && connsQuery.data) {
       const active = connsQuery.data.filter((c) => c.status === "active");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (active[0]) setConnId(active[0].id);
     }
   }, [connsQuery.data, connId]);
@@ -38,47 +43,47 @@ export default function InsightsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · ANALİZ"
-        title="Şema Analizi"
-        description="Sorgulardan otomatik öğrenilen ilişkiler + profile dışı tablolar."
+        brand={t.insights.brand}
+        title={t.insights.title}
+        description={t.insights.description}
         onBack={() => navigation.goBack()}
       />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}>
         {connsQuery.isError ? (
           <ErrorState onRetry={() => connsQuery.refetch()} />
         ) : activeConns.length === 0 ? (
-          <EmptyState title="Aktif bağlantı yok" description="Şema analizi için ERP bağlantısı gerekli." />
+          <EmptyState title={t.insights.noActiveConnTitle} description={t.insights.noActiveConnDesc} />
         ) : !insightsQuery.data ? (
           <SkeletonList count={4} height={60} gap={8} />
         ) : (
           <>
             <Text style={styles.sectionTitle}>
-              Çıkarılmış İlişkiler ({insightsQuery.data.inferredForeignKeys.length})
+              {t.insights.sectionInferredFK} ({insightsQuery.data.inferredForeignKeys.length})
             </Text>
             <Text style={styles.sectionDesc}>
-              Başarılı sorgulardan tespit edilen JOIN pattern&apos;leri.
+              {t.insights.sectionInferredFKDesc}
             </Text>
             {insightsQuery.data.inferredForeignKeys.length === 0 ? (
-              <Text style={styles.muted}>Yeterli veri yok. 10+ sorgu sorduktan sonra tekrar bakın.</Text>
+              <Text style={styles.muted}>{t.insights.inferredFKEmpty}</Text>
             ) : (
               insightsQuery.data.inferredForeignKeys.slice(0, 25).map((fk, i) => (
                 <View key={i} style={styles.card}>
                   <Text style={styles.fkText}>
                     {fk.fromTable}.{fk.fromColumn} = {fk.toTable}.{fk.toColumn}
                   </Text>
-                  <Text style={styles.fkMeta}>{fk.occurrences}× kullanım</Text>
+                  <Text style={styles.fkMeta}>{fk.occurrences}{t.insights.occurrencesSuffix}</Text>
                 </View>
               ))
             )}
 
             <Text style={[styles.sectionTitle, { marginTop: spacing(5) }]}>
-              Profile Dışı ({insightsQuery.data.customItems.length})
+              {t.insights.sectionCustomItems} ({insightsQuery.data.customItems.length})
             </Text>
             <Text style={styles.sectionDesc}>
-              Müşteri-özgü tablolar / kolonlar. Annotation ekleyin.
+              {t.insights.sectionCustomItemsDesc}
             </Text>
             {insightsQuery.data.customItems.length === 0 ? (
-              <Text style={styles.muted}>Tüm tablolar profile ile eşleşiyor.</Text>
+              <Text style={styles.muted}>{t.insights.customItemsEmpty}</Text>
             ) : (
               insightsQuery.data.customItems.slice(0, 50).map((c, i) => (
                 <View key={i} style={styles.card}>

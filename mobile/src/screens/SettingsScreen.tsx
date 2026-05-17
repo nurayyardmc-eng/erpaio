@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
@@ -45,17 +44,19 @@ export default function SettingsScreen({ onLogout }: Props) {
   const toggleBiometric = async (v: boolean) => {
     await setBiometricEnabled(v);
     setBioEnabled(v);
-    setStatus({ kind: "ok", msg: v ? "Biyometrik aktif." : "Biyometrik kapatıldı." });
+    setStatus({ kind: "ok", msg: v ? t.settings.biometricOn : t.settings.biometricOff });
   };
 
+  // Seed draft from fetched tenant once. Guarded by !draft — runs once.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tenantQuery.data && !draft) setDraft(tenantQuery.data);
   }, [tenantQuery.data, draft]);
 
   useEffect(() => {
     if (!status) return;
-    const t = setTimeout(() => setStatus(null), 4000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setStatus(null), 4000);
+    return () => clearTimeout(timer);
   }, [status]);
 
   const save = async () => {
@@ -71,10 +72,10 @@ export default function SettingsScreen({ onLogout }: Props) {
         emailEnabled: draft.emailEnabled,
         alertMinSeverity: draft.alertMinSeverity,
       });
-      setStatus({ kind: "ok", msg: "Kaydedildi." });
+      setStatus({ kind: "ok", msg: t.settings.statusSaved });
       tenantQuery.refetch();
     } catch (e) {
-      setStatus({ kind: "err", msg: e instanceof Error ? e.message : "Kayıt başarısız." });
+      setStatus({ kind: "err", msg: e instanceof Error ? e.message : t.settings.statusSaveFailed });
     } finally {
       setSaving(false);
     }
@@ -100,32 +101,32 @@ export default function SettingsScreen({ onLogout }: Props) {
         keyboardShouldPersistTaps="handled"
       >
       <View style={{ marginBottom: spacing(5) }}>
-        <Text style={styles.brand}>ERPAIO · AYARLAR</Text>
-        <Text style={styles.pageTitle}>Ayarlar</Text>
+        <Text style={styles.brand}>{t.settings.brand}</Text>
+        <Text style={styles.pageTitle}>{t.settings.title}</Text>
       </View>
 
-      <Section title="Hesap">
-        <Field label="Tenant Adı">
+      <Section title={t.settings.sectionAccount}>
+        <Field label={t.settings.fieldTenantName}>
           <TextInput
             value={draft.name}
             onChangeText={(v) => setDraft({ ...draft, name: v })}
             style={styles.input}
           />
         </Field>
-        <Field label="Plan">
+        <Field label={t.settings.fieldPlan}>
           <Text style={[styles.input, { color: colors.cached, textTransform: "uppercase", letterSpacing: 1 }]}>
             {draft.plan}
           </Text>
         </Field>
       </Section>
 
-      <Section title="WhatsApp Bildirimleri">
+      <Section title={t.settings.sectionWhatsapp}>
         <ToggleRow
-          label="WhatsApp etkin"
+          label={t.settings.toggleWhatsappEnabled}
           value={draft.whatsappEnabled}
           onChange={(v) => setDraft({ ...draft, whatsappEnabled: v })}
         />
-        <Field label="Alıcı (whatsapp:+90...)">
+        <Field label={t.settings.fieldWhatsappRecipient}>
           <TextInput
             value={draft.whatsappTo ?? ""}
             onChangeText={(v) => setDraft({ ...draft, whatsappTo: v })}
@@ -138,13 +139,13 @@ export default function SettingsScreen({ onLogout }: Props) {
         </Field>
       </Section>
 
-      <Section title="Email Bildirimleri (yakında)">
+      <Section title={t.settings.sectionEmail}>
         <ToggleRow
-          label="Email etkin"
+          label={t.settings.toggleEmailEnabled}
           value={draft.emailEnabled}
           onChange={(v) => setDraft({ ...draft, emailEnabled: v })}
         />
-        <Field label="Alıcı email">
+        <Field label={t.settings.fieldEmailRecipient}>
           <TextInput
             value={draft.emailTo ?? ""}
             onChangeText={(v) => setDraft({ ...draft, emailTo: v })}
@@ -158,33 +159,40 @@ export default function SettingsScreen({ onLogout }: Props) {
         </Field>
       </Section>
 
-      <Section title="Alert Eşiği">
+      <Section title={t.settings.sectionAlertThreshold}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing(2) }}>
-          {(["low", "medium", "high", "critical"] as const).map((sev) => (
-            <TouchableOpacity
-              key={sev}
-              onPress={() => setDraft({ ...draft, alertMinSeverity: sev })}
-              style={[
-                styles.sevChip,
-                draft.alertMinSeverity === sev && styles.sevChipActive,
-              ]}
-            >
-              <Text
+          {(["low", "medium", "high", "critical"] as const).map((sev) => {
+            const sevLabel =
+              sev === "low" ? t.settings.sevLow
+              : sev === "medium" ? t.settings.sevMedium
+              : sev === "high" ? t.settings.sevHigh
+              : t.settings.sevCritical;
+            return (
+              <TouchableOpacity
+                key={sev}
+                onPress={() => setDraft({ ...draft, alertMinSeverity: sev })}
                 style={[
-                  styles.sevChipText,
-                  draft.alertMinSeverity === sev && styles.sevChipTextActive,
+                  styles.sevChip,
+                  draft.alertMinSeverity === sev && styles.sevChipActive,
                 ]}
               >
-                {sev}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.sevChipText,
+                    draft.alertMinSeverity === sev && styles.sevChipTextActive,
+                  ]}
+                >
+                  {sevLabel}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </Section>
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: spacing(3), marginTop: spacing(2) }}>
         <TouchableOpacity onPress={save} disabled={saving} style={styles.saveBtn}>
-          <Text style={styles.saveBtnText}>{saving ? "..." : "Kaydet"}</Text>
+          <Text style={styles.saveBtnText}>{saving ? "..." : t.common.save}</Text>
         </TouchableOpacity>
         {status && (
           <Text style={{ color: status.kind === "ok" ? colors.success : colors.danger, fontFamily: font, fontSize: 11 }}>
@@ -193,7 +201,7 @@ export default function SettingsScreen({ onLogout }: Props) {
         )}
       </View>
 
-      <Section title="ERP Bağlantıları">
+      <Section title={t.settings.sectionConnections}>
         {connQuery.isLoading ? (
           <ActivityIndicator color={colors.brand} />
         ) : (
@@ -217,16 +225,16 @@ export default function SettingsScreen({ onLogout }: Props) {
               </View>
             ))}
             {connQuery.data?.length === 0 && (
-              <Text style={styles.muted}>Bağlantı yok. Web&apos;den ekleyebilirsin.</Text>
+              <Text style={styles.muted}>{t.settings.connectionsEmpty}</Text>
             )}
           </View>
         )}
       </Section>
 
       {bioSupported && (
-        <Section title="Güvenlik">
+        <Section title={t.settings.sectionSecurity}>
           <ToggleRow
-            label="Biyometrik kilit (Face ID / Touch ID)"
+            label={t.settings.biometricLabel}
             value={bioEnabled}
             onChange={toggleBiometric}
           />
@@ -258,20 +266,20 @@ export default function SettingsScreen({ onLogout }: Props) {
         </View>
       </Section>
 
-      <Section title="Yasal">
+      <Section title={t.settings.sectionLegal}>
         <TouchableOpacity onPress={() => Linking.openURL("https://erpaio.vercel.app/privacy")}>
-          <Text style={styles.link}>Gizlilik Politikası →</Text>
+          <Text style={styles.link}>{t.settings.linkPrivacy}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => Linking.openURL("https://erpaio.vercel.app/terms")}>
-          <Text style={styles.link}>Kullanım Koşulları →</Text>
+          <Text style={styles.link}>{t.settings.linkTerms}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => Linking.openURL("mailto:support@erpaio.com")}>
-          <Text style={styles.link}>support@erpaio.com →</Text>
+          <Text style={styles.link}>{t.settings.linkSupport}</Text>
         </TouchableOpacity>
       </Section>
 
       <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
-        <Text style={styles.logoutBtnText}>Çıkış Yap</Text>
+        <Text style={styles.logoutBtnText}>{t.settings.logout}</Text>
       </TouchableOpacity>
       </ScrollView>
     </View>

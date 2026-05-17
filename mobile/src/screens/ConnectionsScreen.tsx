@@ -9,6 +9,7 @@ import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 import { useState } from "react";
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function ConnectionsScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const q = useQuery({ queryKey: ["dash-connections"], queryFn: getConnections });
   const [menuFor, setMenuFor] = useState<ErpConnection | null>(null);
@@ -27,7 +29,7 @@ export default function ConnectionsScreen({ navigation }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dash-connections"] });
       queryClient.invalidateQueries({ queryKey: ["connections"] });
-      showToast("Bağlantı silindi", "success");
+      showToast(t.connections.deletedToast, "success");
     },
     onError: (e: Error) => showToast(e.message, "error"),
   });
@@ -35,9 +37,9 @@ export default function ConnectionsScreen({ navigation }: Props) {
   const onDelete = async (item: ErpConnection) => {
     setMenuFor(null);
     const ok = await confirmDialog({
-      title: "Bağlantıyı sil?",
-      message: `${item.dbName} bağlantısı kalıcı olarak silinecek. Bağlı sohbetler etkilenebilir.`,
-      confirmLabel: "Sil",
+      title: t.connections.deleteConfirmTitle,
+      message: `${item.dbName}${t.connections.deleteConfirmMessageSuffix}`,
+      confirmLabel: t.connections.deleteConfirmYes,
       destructive: true,
     });
     if (!ok) return;
@@ -50,7 +52,7 @@ export default function ConnectionsScreen({ navigation }: Props) {
         <Text style={styles.dbName}>{item.dbName}</Text>
         <View style={[styles.statusBadge, item.status === "active" ? styles.statusActive : styles.statusError]}>
           <Text style={[styles.statusText, item.status === "active" ? styles.statusActiveText : styles.statusErrorText]}>
-            {item.status === "active" ? "AKTİF" : "HATA"}
+            {item.status === "active" ? t.connections.statusActive : t.connections.statusError}
           </Text>
         </View>
         <TouchableOpacity
@@ -58,7 +60,7 @@ export default function ConnectionsScreen({ navigation }: Props) {
           style={styles.menuBtn}
           activeOpacity={0.6}
           accessibilityRole="button"
-          accessibilityLabel="Bağlantı menüsü"
+          accessibilityLabel={t.connections.menuA11y}
         >
           <Text style={styles.menuDots}>⋯</Text>
         </TouchableOpacity>
@@ -67,7 +69,7 @@ export default function ConnectionsScreen({ navigation }: Props) {
       <Text style={styles.meta}>{item.erpType}{item.erpProfile ? ` · ${item.erpProfile}` : ""}</Text>
       {item.lastSchemaSyncAt && (
         <Text style={styles.meta}>
-          Son şema senkronu: {new Date(item.lastSchemaSyncAt).toLocaleString("tr-TR")}
+          {t.connections.lastSchemaSync}{new Date(item.lastSchemaSyncAt).toLocaleString("tr-TR")}
         </Text>
       )}
     </View>
@@ -76,9 +78,9 @@ export default function ConnectionsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · BAĞLANTILAR"
-        title="ERP Bağlantıları"
-        description="Read-only kullanıcı önerilir. Şifre AES-256-GCM ile saklanır."
+        brand={t.connections.brand}
+        title={t.connections.title}
+        description={t.connections.description}
         onBack={() => navigation.goBack()}
         right={
           <TouchableOpacity
@@ -86,9 +88,9 @@ export default function ConnectionsScreen({ navigation }: Props) {
             style={styles.addBtn}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Yeni bağlantı ekle"
+            accessibilityLabel={t.connections.addA11y}
           >
-            <Text style={styles.addBtnText}>+ Yeni</Text>
+            <Text style={styles.addBtnText}>{t.connections.addLabel}</Text>
           </TouchableOpacity>
         }
       />
@@ -104,8 +106,8 @@ export default function ConnectionsScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
-              title="Henüz bağlantı yok"
-              description='Yukarıdaki "+ Yeni" butonuyla ilk ERP bağlantınızı ekleyin.'
+              title={t.connections.emptyTitle}
+              description={t.connections.emptyDesc}
             />
           }
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}
@@ -123,10 +125,10 @@ export default function ConnectionsScreen({ navigation }: Props) {
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.dbName}</Text>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.error }]}>Sil</Text>
+                <Text style={[styles.sheetText, { color: colors.error }]}>{t.common.delete}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMenuFor(null)} style={[styles.sheetItem, styles.sheetCancel]} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.textMuted }]}>İptal</Text>
+                <Text style={[styles.sheetText, { color: colors.textMuted }]}>{t.common.cancel}</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

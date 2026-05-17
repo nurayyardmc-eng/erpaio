@@ -7,6 +7,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function SavedScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const q = useQuery({ queryKey: ["saved-queries"], queryFn: getSavedQueries });
 
   const renderItem = ({ item }: { item: SavedQuery }) => (
@@ -25,21 +27,21 @@ export default function SavedScreen({ navigation }: Props) {
       </View>
       <View style={styles.metaRow}>
         <Text style={[styles.meta, { color: item.reliability > 0.9 ? colors.success : item.reliability > 0.7 ? colors.warning : colors.error }]}>
-          %{(item.reliability * 100).toFixed(0)} güvenilir
+          %{(item.reliability * 100).toFixed(0)}{t.saved.reliabilitySuffix}
         </Text>
         <Text style={styles.meta}>·</Text>
-        <Text style={styles.meta}>{item.successCount} başarılı / {item.failCount} hata</Text>
+        <Text style={styles.meta}>{item.successCount} {t.saved.successLabel} / {item.failCount} {t.saved.failLabel}</Text>
       </View>
-      <Text style={styles.timestamp}>Son: {new Date(item.lastUsedAt).toLocaleDateString("tr-TR")}</Text>
+      <Text style={styles.timestamp}>{t.saved.lastUsedLabel}{new Date(item.lastUsedAt).toLocaleDateString("tr-TR")}</Text>
     </View>
   );
 
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · KAYITLI"
-        title="Kayıtlı Sorgular"
-        description="En az 2 kez başarıyla çalıştırılan sorgular. Cache'den hızlı yanıt."
+        brand={t.saved.brand}
+        title={t.saved.title}
+        description={t.saved.description}
         onBack={() => navigation.goBack()}
       />
       {q.isLoading ? (
@@ -54,8 +56,8 @@ export default function SavedScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
-              title="Henüz kayıtlı sorgu yok"
-              description="Sohbette başarılı sorgular otomatik cache'lenir."
+              title={t.saved.emptyTitle}
+              description={t.saved.emptyDesc}
             />
           }
           refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} />}

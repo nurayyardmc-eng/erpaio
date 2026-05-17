@@ -6,12 +6,14 @@ import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
 interface Props { navigation: NativeStackNavigationProp<MoreStackParamList, "Security">; }
 
 export default function SecurityScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,25 +26,25 @@ export default function SecurityScreen({ navigation }: Props) {
     }
   };
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  // Initial data fetch on mount — refresh() triggers fetch + setState.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { refresh(); }, []);
 
   const disable = async () => {
     const ok = await confirmDialog({
-      title: "MFA'yı kapat?",
-      message: "Hesabın daha az güvenli olur.",
-      confirmLabel: "Evet, kapat",
+      title: t.security.disableConfirmTitle,
+      message: t.security.disableConfirmMessage,
+      confirmLabel: t.security.disableConfirmYes,
       destructive: true,
     });
     if (!ok) return;
     setLoading(true);
     try {
       await api("/api/auth/mfa/setup", { method: "DELETE" });
-      showToast("MFA kapatıldı", "success");
+      showToast(t.security.mfaDisabledToast, "success");
       refresh();
     } catch {
-      showToast("İşlem başarısız", "error");
+      showToast(t.security.mfaDisableFailedToast, "error");
     } finally {
       setLoading(false);
     }
@@ -51,44 +53,43 @@ export default function SecurityScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · GÜVENLİK"
-        title="Güvenlik"
-        description="İki faktörlü doğrulama (MFA) ayarları."
+        brand={t.security.brand}
+        title={t.security.title}
+        description={t.security.description}
         onBack={() => navigation.goBack()}
       />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}>
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>İki Faktörlü Doğrulama</Text>
+          <Text style={styles.sectionTitle}>{t.security.sectionMfa}</Text>
 
           {enabled === null ? (
             <ActivityIndicator color={colors.brand} />
           ) : enabled ? (
             <>
               <View style={styles.activeBadge}>
-                <Text style={styles.activeText}>MFA AKTİF</Text>
+                <Text style={styles.activeText}>{t.security.mfaActiveBadge}</Text>
               </View>
               <Text style={styles.desc}>
-                Hesabın authenticator uygulaması ile korunuyor.
+                {t.security.mfaActiveDesc}
               </Text>
               <TouchableOpacity onPress={disable} disabled={loading} style={styles.dangerBtn} activeOpacity={0.8}>
-                <Text style={styles.dangerBtnText}>{loading ? "..." : "MFA'yı Kapat"}</Text>
+                <Text style={styles.dangerBtnText}>{loading ? "..." : t.security.mfaDisableBtn}</Text>
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <Text style={styles.warning}>MFA aktif değil.</Text>
+              <Text style={styles.warning}>{t.security.mfaInactive}</Text>
               <Text style={styles.desc}>
-                Authenticator app ile hesabını koru. Kurulum web&apos;den daha kolay:
-                erpaio.vercel.app/dashboard/security
+                {t.security.mfaInactiveDesc}
               </Text>
             </>
           )}
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>API Token Yönetimi</Text>
+          <Text style={styles.sectionTitle}>{t.security.sectionApiToken}</Text>
           <Text style={styles.desc}>
-            Mobile uygulaman için aktif token kullanıyor. Token yönetimi web tarafında:
+            {t.security.apiTokenDesc}
           </Text>
           <Text style={styles.linkText}>erpaio.vercel.app/dashboard/security</Text>
         </View>

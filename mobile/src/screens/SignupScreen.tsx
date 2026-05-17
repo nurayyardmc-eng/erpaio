@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { signup, login } from "../lib/auth";
 import Logo from "../components/Logo";
+import { useI18n } from "../lib/i18n/context";
 import { colors, font, fontSerif, radius, shadow } from "../lib/theme";
 import { showToast } from "../components/Toast";
 
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function SignupScreen({ onSuccess, onBack }: Props) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,11 +35,11 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
     if (!cleanEmail || !password || !tenantName.trim()) return;
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setError("Geçerli bir email adresi girin.");
+      setError(t.signup.errInvalidEmail);
       return;
     }
     if (password.length < 8) {
-      setError("Şifre en az 8 karakter olmalı.");
+      setError(t.signup.errShortPassword);
       return;
     }
 
@@ -52,10 +54,10 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
       });
       // Otomatik login
       await login(cleanEmail, password);
-      showToast("Hesap oluşturuldu, hoş geldiniz!", "success");
+      showToast(t.signup.welcomeToast, "success");
       onSuccess();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Kayıt başarısız.");
+      setError(e instanceof Error ? e.message : t.signup.errFailed);
     } finally {
       setLoading(false);
     }
@@ -72,31 +74,31 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
             <Logo size={80} variant="full" />
           </View>
 
-          <Text style={styles.title}>Kayıt Ol</Text>
-          <Text style={styles.subtitle}>14 gün ücretsiz Pro deneme</Text>
+          <Text style={styles.title}>{t.signup.title}</Text>
+          <Text style={styles.subtitle}>{t.signup.subtitle}</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>İsim (opsiyonel)</Text>
+            <Text style={styles.label}>{t.signup.nameLabel}</Text>
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Ali Yılmaz"
+              placeholder={t.signup.namePlaceholder}
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
-              accessibilityLabel="İsim"
+              accessibilityLabel={t.signup.nameA11y}
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t.signup.emailLabel}</Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
-              placeholder="ornek@firma.com"
+              placeholder={t.login.emailPlaceholder}
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
@@ -104,7 +106,7 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Şifre (en az 8 karakter)</Text>
+            <Text style={styles.label}>{t.signup.passwordLabel}</Text>
             <TextInput
               value={password}
               onChangeText={setPassword}
@@ -117,11 +119,11 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Şirket Adı</Text>
+            <Text style={styles.label}>{t.signup.tenantLabel}</Text>
             <TextInput
               value={tenantName}
               onChangeText={setTenantName}
-              placeholder="Firma Ltd."
+              placeholder={t.signup.tenantPlaceholder}
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
               editable={!loading}
@@ -143,20 +145,20 @@ export default function SignupScreen({ onSuccess, onBack }: Props) {
             ]}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel="Hesap oluştur"
+            accessibilityLabel={t.signup.submitA11y}
             accessibilityState={{ disabled: loading || !email || !password || !tenantName }}
           >
             {loading ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.buttonText}>Hesap Oluştur</Text>
+              <Text style={styles.buttonText}>{t.signup.submit}</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
-            <Text style={styles.bottomText}>Hesabın var mı?</Text>
+            <Text style={styles.bottomText}>{t.signup.hasAccount}</Text>
             <TouchableOpacity onPress={onBack}>
-              <Text style={styles.bottomLink}> Giriş Yap</Text>
+              <Text style={styles.bottomLink}>{t.signup.loginLink}</Text>
             </TouchableOpacity>
           </View>
         </View>

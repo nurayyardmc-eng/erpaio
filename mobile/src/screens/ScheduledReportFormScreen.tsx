@@ -15,6 +15,8 @@ import { createScheduledReport, getConnections, type CreateReportInput } from ".
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
+import type { Dictionary } from "../lib/i18n/dictionary";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -22,15 +24,19 @@ interface Props {
   navigation: NativeStackNavigationProp<MoreStackParamList, "ScheduledReportForm">;
 }
 
-const SCHEDULES: Array<{ id: CreateReportInput["schedule"]; label: string }> = [
-  { id: "hourly", label: "Saatlik" },
-  { id: "daily_06", label: "Günlük 06:00" },
-  { id: "daily_18", label: "Günlük 18:00" },
-  { id: "weekly_monday", label: "Haftalık (Pzt)" },
-  { id: "monthly_first", label: "Aylık (1.gün)" },
-];
+function buildSchedules(t: Dictionary): Array<{ id: CreateReportInput["schedule"]; label: string }> {
+  return [
+    { id: "hourly", label: t.scheduledReportForm.schedHourly },
+    { id: "daily_06", label: t.scheduledReportForm.schedDaily06 },
+    { id: "daily_18", label: t.scheduledReportForm.schedDaily18 },
+    { id: "weekly_monday", label: t.scheduledReportForm.schedWeeklyMondayShort },
+    { id: "monthly_first", label: t.scheduledReportForm.schedMonthlyFirst },
+  ];
+}
 
 export default function ScheduledReportFormScreen({ navigation }: Props) {
+  const { t } = useI18n();
+  const SCHEDULES = buildSchedules(t);
   const queryClient = useQueryClient();
   const connsQuery = useQuery({ queryKey: ["connections"], queryFn: getConnections });
 
@@ -43,7 +49,9 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
 
   const activeConns = (connsQuery.data ?? []).filter((c) => c.status === "active");
 
+  // Default-select first active connection. Guarded — runs once per mount.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!connectionId && activeConns[0]) setConnectionId(activeConns[0].id);
   }, [activeConns, connectionId]);
 
@@ -58,7 +66,7 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-reports"] });
-      showToast("Rapor oluşturuldu", "success");
+      showToast(t.scheduledReportForm.createdToast, "success");
       navigation.goBack();
     },
     onError: (e: Error) => setError(e.message),
@@ -67,7 +75,7 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
   const onSubmit = () => {
     setError(null);
     if (!name.trim() || !question.trim() || !connectionId || !emailTo.trim()) {
-      setError("Tüm zorunlu alanları doldurun.");
+      setError(t.scheduledReportForm.errAllRequired);
       return;
     }
     mutation.mutate();
@@ -76,9 +84,9 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · YENİ RAPOR"
-        title="Planlı Rapor Ekle"
-        description="Belirlediğiniz periyotta sorgu çalıştırılır, email ile gönderilir."
+        brand={t.scheduledReportForm.brand}
+        title={t.scheduledReportForm.title}
+        description={t.scheduledReportForm.description}
         onBack={() => navigation.goBack()}
       />
       <KeyboardAvoidingView
@@ -91,33 +99,33 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Field label="İsim *">
+          <Field label={t.scheduledReportForm.fieldName}>
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Günlük ciro raporu"
+              placeholder={t.scheduledReportForm.fieldNamePlaceholder}
               placeholderTextColor={colors.textSubtle}
               style={styles.input}
-              accessibilityLabel="Rapor ismi"
+              accessibilityLabel={t.scheduledReportForm.fieldNameA11y}
             />
           </Field>
 
-          <Field label="Soru (Türkçe) *">
+          <Field label={t.scheduledReportForm.fieldQuestion}>
             <TextInput
               value={question}
               onChangeText={setQuestion}
-              placeholder="Bugünkü toplam ciro"
+              placeholder={t.scheduledReportForm.fieldQuestionPlaceholder}
               placeholderTextColor={colors.textSubtle}
               multiline
               numberOfLines={3}
               style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]}
-              accessibilityLabel="Rapor sorusu"
+              accessibilityLabel={t.scheduledReportForm.fieldQuestionA11y}
             />
           </Field>
 
-          <Field label="ERP Bağlantısı *">
+          <Field label={t.scheduledReportForm.fieldConnection}>
             {activeConns.length === 0 ? (
-              <Text style={styles.muted}>Aktif bağlantı yok. Önce ERP bağlantısı ekleyin.</Text>
+              <Text style={styles.muted}>{t.scheduledReportForm.noActiveConnections}</Text>
             ) : (
               <View style={styles.chipRow}>
                 {activeConns.map((c) => {
@@ -139,7 +147,7 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
             )}
           </Field>
 
-          <Field label="Periyot">
+          <Field label={t.scheduledReportForm.fieldSchedule}>
             <View style={styles.chipRow}>
               {SCHEDULES.map((s) => {
                 const active = schedule === s.id;
@@ -159,17 +167,17 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
             </View>
           </Field>
 
-          <Field label="Email Alıcı *">
+          <Field label={t.scheduledReportForm.fieldEmail}>
             <TextInput
               value={emailTo}
               onChangeText={setEmailTo}
-              placeholder="alerts@firma.com"
+              placeholder={t.scheduledReportForm.fieldEmailPlaceholder}
               placeholderTextColor={colors.textSubtle}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.input}
-              accessibilityLabel="Email alıcı"
+              accessibilityLabel={t.scheduledReportForm.fieldEmailA11y}
             />
           </Field>
 
@@ -185,12 +193,12 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
             style={[styles.submitBtn, (mutation.isPending || activeConns.length === 0) && { opacity: 0.5 }]}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Raporu kaydet"
+            accessibilityLabel={t.scheduledReportForm.submitA11y}
           >
             {mutation.isPending ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.submitText}>Kaydet</Text>
+              <Text style={styles.submitText}>{t.common.save}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

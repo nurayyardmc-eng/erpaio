@@ -1,6 +1,8 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useI18n } from "../lib/i18n/context";
+import type { Dictionary } from "../lib/i18n/dictionary";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -13,40 +15,44 @@ interface MenuGroup {
   items: { route: keyof MoreStackParamList; label: string; description: string }[];
 }
 
-const GROUPS: MenuGroup[] = [
-  {
-    title: "Günlük",
-    items: [
-      { route: "Overview", label: "Anlık Metrikler", description: "Son 24 saat özeti" },
-      { route: "Saved", label: "Kayıtlı Sorgular", description: "Sık kullanılan sorgular" },
-    ],
-  },
-  {
-    title: "Kurulum",
-    items: [
-      { route: "Connections", label: "ERP Bağlantıları", description: "Veritabanı bağlantıları" },
-      { route: "Annotations", label: "Şema Açıklamaları", description: "Tablo / kolon notları" },
-      { route: "Watchlists", label: "Watchlists", description: "Eşik tabanlı uyarı" },
-    ],
-  },
-  {
-    title: "Analiz",
-    items: [
-      { route: "Insights", label: "Şema Analizi", description: "İlişki + custom item tespiti" },
-      { route: "ScheduledReports", label: "Planlı Raporlar", description: "Otomatik email raporları" },
-      { route: "Audit", label: "Aktivite Logu", description: "Tenant aktivite geçmişi" },
-    ],
-  },
-  {
-    title: "Yönetim",
-    items: [
-      { route: "Team", label: "Takım", description: "Üyeler ve davetler" },
-      { route: "Security", label: "Güvenlik", description: "MFA + IP allowlist" },
-    ],
-  },
-];
+function buildGroups(t: Dictionary): MenuGroup[] {
+  return [
+    {
+      title: t.menu.sectionDaily,
+      items: [
+        { route: "Overview", label: t.menu.overviewLabel, description: t.menu.overviewDesc },
+        { route: "Saved", label: t.menu.savedLabel, description: t.menu.savedDesc },
+      ],
+    },
+    {
+      title: t.menu.sectionSetup,
+      items: [
+        { route: "Connections", label: t.menu.connectionsLabel, description: t.menu.connectionsDesc },
+        { route: "Annotations", label: t.menu.annotationsLabel, description: t.menu.annotationsDesc },
+        { route: "Watchlists", label: t.menu.watchlistsLabel, description: t.menu.watchlistsDesc },
+      ],
+    },
+    {
+      title: t.menu.sectionAnalysis,
+      items: [
+        { route: "Insights", label: t.menu.insightsLabel, description: t.menu.insightsDesc },
+        { route: "ScheduledReports", label: t.menu.scheduledReportsLabel, description: t.menu.scheduledReportsDesc },
+        { route: "Audit", label: t.menu.auditLabel, description: t.menu.auditDesc },
+      ],
+    },
+    {
+      title: t.menu.sectionAdmin,
+      items: [
+        { route: "Team", label: t.menu.teamLabel, description: t.menu.teamDesc },
+        { route: "Security", label: t.menu.securityLabel, description: t.menu.securityDesc },
+      ],
+    },
+  ];
+}
 
 export default function MoreScreen({ navigation }: Props) {
+  const { t } = useI18n();
+  const groups = buildGroups(t);
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScrollView
@@ -55,11 +61,11 @@ export default function MoreScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={true}
       >
         <View style={{ marginBottom: spacing(5) }}>
-          <Text style={styles.brand}>ERPAIO · MENÜ</Text>
-          <Text style={styles.pageTitle}>Menü</Text>
+          <Text style={styles.brand}>{t.menu.brand}</Text>
+          <Text style={styles.pageTitle}>{t.menu.title}</Text>
         </View>
 
-        {GROUPS.map((group) => (
+        {groups.map((group) => (
           <View key={group.title} style={styles.group}>
             <Text style={styles.groupTitle}>{group.title}</Text>
             {group.items.map((item, i) => (

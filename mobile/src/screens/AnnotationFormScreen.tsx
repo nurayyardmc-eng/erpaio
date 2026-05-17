@@ -13,9 +13,10 @@ import {
 } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { upsertAnnotation } from "../lib/dashboard";
-import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
+import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function AnnotationFormScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [tableName, setTableName] = useState("");
   const [columnName, setColumnName] = useState("");
@@ -41,7 +43,7 @@ export default function AnnotationFormScreen({ navigation }: Props) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["annotations"] });
-      showToast("Açıklama kaydedildi", "success");
+      showToast(t.annotationForm.savedToast, "success");
       navigation.goBack();
     },
     onError: (e: Error) => setError(e.message),
@@ -50,7 +52,7 @@ export default function AnnotationFormScreen({ navigation }: Props) {
   const onSubmit = () => {
     setError(null);
     if (!tableName.trim()) {
-      setError("Tablo adı zorunlu.");
+      setError(t.annotationForm.errTableRequired);
       return;
     }
     mutation.mutate();
@@ -59,9 +61,9 @@ export default function AnnotationFormScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand="ERPAIO · YENİ AÇIKLAMA"
-        title="Şema Açıklaması Ekle"
-        description="AI sorgu üretirken bu notu kullanır. Müşteri-özgü tablolarda kritik."
+        brand={t.annotationForm.brand}
+        title={t.annotationForm.title}
+        description={t.annotationForm.description}
         onBack={() => navigation.goBack()}
       />
       <KeyboardAvoidingView
@@ -74,50 +76,50 @@ export default function AnnotationFormScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Field label="Tablo Adı *">
+          <Field label={t.annotationForm.fieldTable}>
             <TextInput
               value={tableName}
               onChangeText={setTableName}
-              placeholder="trFatura"
+              placeholder={t.annotationForm.fieldTablePlaceholder}
               placeholderTextColor={colors.textSubtle}
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.input}
-              accessibilityLabel="Tablo adı"
+              accessibilityLabel={t.annotationForm.fieldTableA11y}
             />
           </Field>
 
-          <Field label="Kolon Adı (opsiyonel)">
+          <Field label={t.annotationForm.fieldColumn}>
             <TextInput
               value={columnName}
               onChangeText={setColumnName}
-              placeholder="Boş = tablo seviyesi"
+              placeholder={t.annotationForm.fieldColumnPlaceholder}
               placeholderTextColor={colors.textSubtle}
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.input}
-              accessibilityLabel="Kolon adı"
+              accessibilityLabel={t.annotationForm.fieldColumnA11y}
             />
           </Field>
 
-          <Field label="Açıklama">
+          <Field label={t.annotationForm.fieldDescription}>
             <TextInput
               value={description}
               onChangeText={setDescription}
-              placeholder="Örn: Bu tabloda sadece e-ticaret faturaları var, mağaza satışları için trFaturaMagaza kullan."
+              placeholder={t.annotationForm.fieldDescriptionPlaceholder}
               placeholderTextColor={colors.textSubtle}
               multiline
               numberOfLines={4}
               style={[styles.input, { minHeight: 100, textAlignVertical: "top" }]}
-              accessibilityLabel="Açıklama"
+              accessibilityLabel={t.annotationForm.fieldDescriptionA11y}
             />
           </Field>
 
           <View style={styles.toggleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.toggleLabel}>Gizle</Text>
+              <Text style={styles.toggleLabel}>{t.annotationForm.toggleHiddenLabel}</Text>
               <Text style={styles.toggleDesc}>
-                AI bu tabloyu / kolonu kullanmasın
+                {t.annotationForm.toggleHiddenDesc}
               </Text>
             </View>
             <Switch
@@ -141,12 +143,12 @@ export default function AnnotationFormScreen({ navigation }: Props) {
             style={[styles.submitBtn, mutation.isPending && { opacity: 0.5 }]}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Açıklamayı kaydet"
+            accessibilityLabel={t.annotationForm.submitA11y}
           >
             {mutation.isPending ? (
               <ActivityIndicator color={colors.textInverse} />
             ) : (
-              <Text style={styles.submitText}>Kaydet</Text>
+              <Text style={styles.submitText}>{t.common.save}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
