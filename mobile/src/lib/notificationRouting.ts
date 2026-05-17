@@ -23,7 +23,7 @@
  */
 
 export type RoutingTarget =
-  | { tab: "Bildirimler" }
+  | { tab: "Bildirimler"; alertId?: string }
   | { tab: "Menü"; nestedRoute: "Watchlists" }
   | null;
 
@@ -32,7 +32,7 @@ export function routeFromNotificationData(data: unknown): RoutingTarget {
   const d = data as Record<string, unknown>;
 
   if (typeof d.alertId === "string" && d.alertId.length > 0) {
-    return { tab: "Bildirimler" };
+    return { tab: "Bildirimler", alertId: d.alertId };
   }
   if (typeof d.watchlistId === "string" && d.watchlistId.length > 0) {
     return { tab: "Menü", nestedRoute: "Watchlists" };

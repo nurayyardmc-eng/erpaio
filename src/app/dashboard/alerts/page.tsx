@@ -13,7 +13,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 type SeverityFilter = "all" | "critical" | "high" | "medium" | "low";
-type StatusFilter = "all" | "open" | "acknowledged";
+type StatusFilter = "all" | "open" | "acked";
 
 interface Alert {
   id: string;
@@ -54,12 +54,14 @@ export default function AlertsPage() {
   );
 
   const acknowledge = async (id: string) => {
+    // Server `acked`/`resolved` kabul ediyor — daha önce `acknowledged`
+    // gönderiyorduk, PATCH 400 dönüyordu. Fixed Track LLL.
     await fetch("/api/alerts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "acknowledged" }),
+      body: JSON.stringify({ id, status: "acked" }),
     });
-    setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: "acknowledged" } : a));
+    setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: "acked" } : a));
   };
 
   return (
@@ -81,7 +83,7 @@ export default function AlertsPage() {
           <span style={{ width: 1, background: "rgba(10,10,10,0.08)", margin: "0 4px" }} />
           <FilterPill label="Hepsi" active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
           <FilterPill label="Açık" active={statusFilter === "open"} onClick={() => setStatusFilter("open")} />
-          <FilterPill label="Okunmuş" active={statusFilter === "acknowledged"} onClick={() => setStatusFilter("acknowledged")} />
+          <FilterPill label="Okunmuş" active={statusFilter === "acked"} onClick={() => setStatusFilter("acked")} />
         </div>
       )}
 
@@ -133,8 +135,10 @@ export default function AlertsPage() {
               Okundu
             </button>
           )}
-          {alert.status === "acknowledged" && (
-            <span style={{ fontSize: 10, color: "#94A3B8" }}>Okundu</span>
+          {(alert.status === "acked" || alert.status === "resolved") && (
+            <span style={{ fontSize: 10, color: "#94A3B8" }}>
+              {alert.status === "resolved" ? "Çözüldü" : "Okundu"}
+            </span>
           )}
         </div>
       ))}

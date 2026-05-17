@@ -15,7 +15,7 @@ import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import ChatStackNav from "./src/screens/ChatStackNav";
-import AlertsScreen from "./src/screens/AlertsScreen";
+import AlertsStackNav from "./src/screens/AlertsStackNav";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import MoreStackNav from "./src/screens/MoreStackNav";
 import { getToken, clearToken, setUnauthorizedHandler } from "./src/lib/api";
@@ -95,7 +95,7 @@ function TabsRoot({ onLogout }: { onLogout: () => void }) {
       />
       <Tabs.Screen
         name="Bildirimler"
-        component={AlertsScreen}
+        component={AlertsStackNav}
         options={{
           headerShown: false,
           tabBarIcon: ({ color, size }) => <Bell size={size} color={color} strokeWidth={1.75} />,
@@ -213,7 +213,19 @@ export default function App() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nav = navigationRef as any;
         if (target.tab === "Bildirimler") {
-          nav.navigate("Tabs", { screen: "Bildirimler" });
+          // alertId varsa AlertsStack → AlertDetail'a derinleş; yoksa
+          // sadece tab'a (AlertsList default ekran) git.
+          if (target.alertId) {
+            nav.navigate("Tabs", {
+              screen: "Bildirimler",
+              params: {
+                screen: "AlertDetail",
+                params: { id: target.alertId },
+              },
+            });
+          } else {
+            nav.navigate("Tabs", { screen: "Bildirimler" });
+          }
         } else if (target.tab === "Menü") {
           nav.navigate("Tabs", {
             screen: "Menü",

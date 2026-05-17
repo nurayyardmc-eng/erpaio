@@ -23,9 +23,9 @@ describe("notifications/routing", () => {
       expect(routeFromNotificationData({ foo: "bar" })).toBeNull();
     });
 
-    it("alertId string → Bildirimler tab (alerts/anomaly path)", () => {
+    it("alertId string → Bildirimler tab + alertId for AlertDetail deep-link", () => {
       const t = routeFromNotificationData({ alertId: "alt_123", severity: "high" });
-      expect(t).toEqual({ tab: "Bildirimler" });
+      expect(t).toEqual({ tab: "Bildirimler", alertId: "alt_123" });
     });
 
     it("watchlistId string → Menü tab + Watchlists nested", () => {
@@ -35,7 +35,7 @@ describe("notifications/routing", () => {
 
     it("alertId takes precedence when both present (anomaly with linked alert wins)", () => {
       const t = routeFromNotificationData({ alertId: "alt_1", watchlistId: "wl_1" });
-      expect(t).toEqual({ tab: "Bildirimler" });
+      expect(t).toEqual({ tab: "Bildirimler", alertId: "alt_1" });
     });
 
     it("alertId empty string → null (no false-positive routing)", () => {

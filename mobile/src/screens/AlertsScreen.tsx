@@ -15,6 +15,12 @@ import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { AlertsStackParamList } from "./AlertsStackNav";
+
+interface Props {
+  navigation: NativeStackNavigationProp<AlertsStackParamList, "AlertsList">;
+}
 
 const SEVERITY: Record<Alert["severity"], { color: string; label: string }> = {
   critical: { color: "#EF4444", label: "KRİTİK" },
@@ -23,8 +29,8 @@ const SEVERITY: Record<Alert["severity"], { color: string; label: string }> = {
   low: { color: "#737373", label: "DÜŞÜK" },
 };
 
-export default function AlertsScreen() {
-  const [filter, setFilter] = useState<"open" | "acknowledged">("open");
+export default function AlertsScreen({ navigation }: Props) {
+  const [filter, setFilter] = useState<"open" | "acked">("open");
   const queryClient = useQueryClient();
 
   const alertsQuery = useQuery({
@@ -46,7 +52,11 @@ export default function AlertsScreen() {
   const renderAlert = ({ item }: { item: Alert }) => {
     const sev = SEVERITY[item.severity] ?? SEVERITY.low;
     return (
-      <View style={[styles.card, { borderLeftColor: sev.color }]}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("AlertDetail", { id: item.id })}
+        activeOpacity={0.7}
+        style={[styles.card, { borderLeftColor: sev.color }]}
+      >
         <View style={styles.row}>
           <View style={[styles.sevBadge, { backgroundColor: `${sev.color}1A` }]}>
             <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
@@ -61,7 +71,7 @@ export default function AlertsScreen() {
           </Text>
           {filter === "open" && (
             <TouchableOpacity
-              onPress={() => ackMutation.mutate(item.id)}
+              onPress={(e) => { e.stopPropagation(); ackMutation.mutate(item.id); }}
               disabled={ackMutation.isPending}
               style={styles.ackBtn}
               activeOpacity={0.7}
@@ -70,7 +80,7 @@ export default function AlertsScreen() {
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -80,7 +90,7 @@ export default function AlertsScreen() {
         <Text style={styles.brand}>ERPAIO · BİLDİRİMLER</Text>
         <Text style={styles.headerTitle}>Bildirimler</Text>
         <View style={styles.tabs}>
-          {(["open", "acknowledged"] as const).map((k) => (
+          {(["open", "acked"] as const).map((k) => (
             <TouchableOpacity
               key={k}
               onPress={() => setFilter(k)}
