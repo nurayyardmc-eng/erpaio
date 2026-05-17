@@ -327,6 +327,37 @@ export async function removeIpAllowlistEntry(id: string): Promise<{ ok: true }> 
   return api(`/api/security/allowlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+// ============= Slow query trace (tenant-scoped) =============
+export interface SlowQueryRow {
+  id: string;
+  connectionId: string | null;
+  sqlSnippet: string;
+  durationMs: number;
+  ok: boolean;
+  errorMessage: string | null;
+  createdAt: string;
+  connection: { erpType: string; host: string } | null;
+}
+
+export interface SlowQuerySummary {
+  count: number;
+  maxMs: number;
+  avgMs: number;
+}
+
+/**
+ * Owner/admin scope'lu — non-admin için 403. UI guard role check yapar
+ * (görüntülemeden önce çağırmayı keser).
+ */
+export async function getMySlowQueries(
+  params: { minMs?: number; limit?: number } = {},
+): Promise<{ rows: SlowQueryRow[]; summary: SlowQuerySummary }> {
+  const qs = new URLSearchParams();
+  qs.set("limit", String(params.limit ?? 100));
+  if (params.minMs && params.minMs > 0) qs.set("minMs", String(params.minMs));
+  return api(`/api/me/slow-queries?${qs.toString()}`);
+}
+
 // ============= KVKK md. 11 / GDPR Art. 17 — right to erasure =============
 /**
  * Tenant (hesap) silme talebi. Server `confirmation: 'HESABIMI SİL'` literal

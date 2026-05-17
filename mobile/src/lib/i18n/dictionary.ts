@@ -121,6 +121,8 @@ export interface Dictionary {
     securityDesc: string;
     ipAllowlistLabel: string;
     ipAllowlistDesc: string;
+    slowQueriesLabel: string;
+    slowQueriesDesc: string;
     activityLabel: string;
     activityDesc: string;
     consentsLabel: string;
@@ -429,6 +431,26 @@ export interface Dictionary {
     unnamedDevice: string;
     lastSeenLabel: string;
     addedLabel: string;
+  };
+  slowQueries: {
+    brand: string;
+    title: string;
+    description: string;
+    summary24hPrefix: string;
+    summary24hSeparator: string;
+    summary24hAvgPrefix: string;
+    summary24hEmpty: string;
+    emptyFiltered: string;
+    presetAll: string;
+    preset5s: string;
+    preset10s: string;
+    preset30s: string;
+    durationLabel: string;
+    erpLabel: string;
+    sqlLabel: string;
+    resultOk: string;
+    resultFail: string;
+    ownerOnly: string;
   };
   ipAllowlist: {
     brand: string;
