@@ -1,5 +1,6 @@
 import { getAuth } from "@/lib/auth/dual";
 import { jsonError } from "@/lib/i18n/server";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { listUserConsents } from "@/lib/auth/consent";
 
 /**
@@ -9,6 +10,9 @@ import { listUserConsents } from "@/lib/auth/consent";
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  const limit = await rateLimit(session.user.id, RATE_LIMITS.CONSENTS_READ);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
   const consents = await listUserConsents(session.user.id);
 

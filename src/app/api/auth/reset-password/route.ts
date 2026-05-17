@@ -4,6 +4,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const BodySchema = z.object({
   token: z.string().min(8),
@@ -14,8 +16,18 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
+  // Brute force koruması: IP başına saatte 5 deneme
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const limit = await rateLimit(ip, RATE_LIMITS.RESET_PASSWORD);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) {
+    return localizedError(req, 400, {
+      tr: body.error.issues[0]?.message ?? "Geçersiz veri",
+      en: body.error.issues[0]?.message ?? "Invalid data",
+    });
+  }
 
   const { token, password } = body.data;
   const log = childLogger({ component: "reset-password" });
@@ -24,7 +36,7 @@ export async function POST(req: Request) {
   const row = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
 
   if (!row || row.usedAt || row.expiresAt < new Date()) {
-    return Response.json({ error: "Link geçersiz veya süresi dolmuş." }, { status: 400 });
+    return jsonError(req, "auth.invalidToken", 400);
   }
 
   const passwordHash = await bcrypt.hash(password, 12);

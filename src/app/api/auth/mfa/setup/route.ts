@@ -5,10 +5,15 @@ import { prisma } from "@/lib/db/prisma";
 import { generateSecret, provisioningUri, verifyCode } from "@/lib/auth/totp";
 import { hasFeature } from "@/lib/plans";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  // MFA setup spam koruması: kullanıcı başına saatte 5 setup
+  const limit = await rateLimit(session.user.id, RATE_LIMITS.MFA_SETUP);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: session.user.tenantId },
@@ -38,6 +43,10 @@ const VerifySchema = z.object({ code: z.string().regex(/^\d{6}$/) });
 export async function PATCH(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  // TOTP brute force koruması: kullanıcı başına 5 dakikada 10 deneme
+  const limit = await rateLimit(session.user.id, RATE_LIMITS.MFA_VERIFY);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
   const body = VerifySchema.safeParse(await req.json());
   if (!body.success) {

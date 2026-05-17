@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { rateLimit } from "@/lib/rateLimit";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 
@@ -15,14 +15,8 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.id, {
-    prefix: "change-password",
-    max: 5,
-    windowMs: 60 * 60_000,
-  });
-  if (!limit.success) {
-    return localizedError(req, 429, { tr: "Çok fazla deneme. 1 saat sonra deneyin.", en: "Too many attempts. Try again in 1 hour." });
-  }
+  const limit = await rateLimit(session.user.id, RATE_LIMITS.PASSWORD_CHANGE);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
   const body = BodySchema.safeParse(await req.json());
   if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });

@@ -94,4 +94,12 @@ export const RATE_LIMITS = {
   CHAT_FEEDBACK: { prefix: "chat-fb", max: 60, windowMs: 60_000 },
   ALERT_CREATE: { prefix: "alert", max: 100, windowMs: 60_000 },
   CONNECTION_TEST: { prefix: "conn-test", max: 10, windowMs: 60_000 },
+  // --- Auth & security-critical (IP-based unless noted) ---
+  RESET_PASSWORD: { prefix: "reset-pwd", max: 5, windowMs: 60 * 60_000 }, // 5/saat
+  VERIFY_EMAIL: { prefix: "verify-em", max: 10, windowMs: 60 * 60_000 }, // 10/saat
+  MFA_SETUP: { prefix: "mfa-setup", max: 5, windowMs: 60 * 60_000 }, // 5/saat / user
+  MFA_VERIFY: { prefix: "mfa-verify", max: 10, windowMs: 5 * 60_000 }, // 10/5dk / user (brute force)
+  RECOVERY_GEN: { prefix: "rec-gen", max: 3, windowMs: 60 * 60_000 }, // 3/saat / user
+  PASSWORD_CHANGE: { prefix: "pwd-change", max: 5, windowMs: 60 * 60_000 }, // 5/saat / user
+  CONSENTS_READ: { prefix: "consents", max: 30, windowMs: 60_000 }, // 30/dk / user
 } as const;
