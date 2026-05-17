@@ -4,6 +4,7 @@ import { Download, ScrollText } from "lucide-react";
 import Pagination from "@/components/Pagination";
 import EmptyState from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
+import { useI18n } from "@/lib/i18n/context";
 
 interface AuditMessage {
   id: string;
@@ -22,6 +23,7 @@ interface AuditMessage {
 const PAGE_SIZE = 25;
 
 export default function AuditPage() {
+  const { t } = useI18n();
   const [messages, setMessages] = useState<AuditMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "user" | "assistant" | "errors">("all");
@@ -71,10 +73,10 @@ export default function AuditPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · AKTİVİTE LOGU</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Aktivite Logu</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.audit.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>{t.audit.title}</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
-        Tenant&apos;ınızda çalıştırılan tüm sohbet sorguları. KVKK gereği erişim hakkı.
+        {t.audit.description}
       </p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
@@ -93,7 +95,7 @@ export default function AuditPage() {
               fontFamily: "inherit",
             }}
           >
-            {f === "all" ? "Hepsi" : f === "user" ? "Sorular" : f === "assistant" ? "SQL" : "Hatalar"}
+            {f === "all" ? t.audit.filterAll : f === "user" ? t.audit.filterUser : f === "assistant" ? t.audit.filterAssistant : t.audit.filterErrors}
           </button>
         ))}
         <span style={{ flex: 1 }} />
@@ -114,7 +116,7 @@ export default function AuditPage() {
             gap: 6,
           }}
         >
-          <Download size={14} /> CSV indir
+          <Download size={14} /> {t.audit.exportCsv}
         </button>
       </div>
 
@@ -129,8 +131,8 @@ export default function AuditPage() {
       {!loading && messages.length === 0 && (
         <EmptyState
           icon={<ScrollText size={28} />}
-          title="Kayıt yok"
-          description="Bu filtrede henüz aktivite yok. Sohbet ekranında soru sorunca buraya işlenir."
+          title={t.audit.emptyTitle}
+          description={t.audit.emptyDesc}
         />
       )}
 
@@ -151,7 +153,7 @@ export default function AuditPage() {
             <span>·</span>
             <span style={{ color: m.role === "user" ? "#0A0A0A" : "#9C8AFF" }}>{m.role}</span>
             {m.latencyMs !== null && <><span>·</span><span>{m.latencyMs}ms</span></>}
-            {m.rowCount !== null && <><span>·</span><span>{m.rowCount} satır</span></>}
+            {m.rowCount !== null && <><span>·</span><span>{m.rowCount} {t.audit.rowsSuffix}</span></>}
           </div>
           <div style={{ color: m.role === "user" ? "#0F172A" : "#8EC8E8", whiteSpace: "pre-wrap", overflowWrap: "break-word" }}>
             {m.content}

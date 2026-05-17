@@ -2,6 +2,7 @@
 import { confirmDialog } from "@/components/Confirm";
 import ErrorState from "@/components/ErrorState";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface TeamUser {
   id: string;
@@ -21,6 +22,7 @@ interface PendingInvitation {
 }
 
 export default function TeamPage() {
+  const { t } = useI18n();
   const [users, setUsers] = useState<TeamUser[]>([]);
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,8 +54,8 @@ export default function TeamPage() {
   useEffect(refresh, []);
   useEffect(() => {
     if (!status) return;
-    const t = setTimeout(() => setStatus(null), 4000);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setStatus(null), 4000);
+    return () => clearTimeout(tm);
   }, [status]);
 
   const sendInvite = async (e: React.FormEvent) => {
@@ -67,9 +69,9 @@ export default function TeamPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "err", msg: data.error || "Hata" });
+        setStatus({ kind: "err", msg: data.error || t.common.error });
       } else {
-        setStatus({ kind: "ok", msg: "Davet gönderildi." });
+        setStatus({ kind: "ok", msg: t.team.successInvited });
         setInviteEmail("");
         refresh();
       }
@@ -88,7 +90,7 @@ export default function TeamPage() {
   };
 
   const removeUser = async (userId: string) => {
-    const _ok = await confirmDialog({ title: "Kullanıcıyı sil?", message: "Bu işlem geri alınamaz.", confirmLabel: "Evet, sil", destructive: true }); if (!_ok) return;
+    const _ok = await confirmDialog({ title: t.team.deleteUserConfirmTitle, message: t.team.deleteUserConfirmMessage, confirmLabel: t.team.deleteConfirmYes, destructive: true }); if (!_ok) return;
     await fetch(`/api/team?userId=${userId}`, { method: "DELETE" });
     refresh();
   };
@@ -100,14 +102,14 @@ export default function TeamPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · TAKIM</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>Takım Yönetimi</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.team.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>{t.team.title}</h1>
 
       <div style={card}>
-        <h2 style={sectionTitle}>Yeni Kullanıcı Davet Et</h2>
+        <h2 style={sectionTitle}>{t.team.inviteSection}</h2>
         <form onSubmit={sendInvite} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
           <div style={{ flex: 1 }}>
-            <label style={label}>EMAIL</label>
+            <label style={label}>{t.team.fieldEmail}</label>
             <input
               required type="email"
               value={inviteEmail}
@@ -116,14 +118,14 @@ export default function TeamPage() {
             />
           </div>
           <div>
-            <label style={label}>ROL</label>
+            <label style={label}>{t.team.fieldRole}</label>
             <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as "viewer" | "admin")} style={input}>
-              <option value="viewer">viewer</option>
-              <option value="admin">admin</option>
+              <option value="viewer">{t.team.roleViewer}</option>
+              <option value="admin">{t.team.roleAdmin}</option>
             </select>
           </div>
           <button type="submit" disabled={inviting} style={btnPrimary}>
-            {inviting ? "Gönderiliyor..." : "Davet Et"}
+            {inviting ? t.team.submitting : t.team.submit}
           </button>
         </form>
         {status && (
@@ -139,16 +141,16 @@ export default function TeamPage() {
 
       {!error && invitations.length > 0 && (
         <div style={card}>
-          <h2 style={sectionTitle}>Bekleyen Davetler ({invitations.length})</h2>
+          <h2 style={sectionTitle}>{t.team.pendingTitle} ({invitations.length})</h2>
           {invitations.map((inv) => (
             <div key={inv.id} style={row}>
               <div style={{ flex: 1 }}>
                 <div style={{ color: "#0F172A", fontSize: 12 }}>{inv.email}</div>
                 <div style={{ color: "#475569", fontSize: 10 }}>
-                  {inv.role} · {new Date(inv.expiresAt).toLocaleDateString("tr-TR")} tarihinde sona erer
+                  {inv.role} · {new Date(inv.expiresAt).toLocaleDateString("tr-TR")}{t.team.expiresOnSuffix}
                 </div>
               </div>
-              <button onClick={() => cancelInvite(inv.id)} style={btnDanger}>İptal</button>
+              <button onClick={() => cancelInvite(inv.id)} style={btnDanger}>{t.team.cancelInvite}</button>
             </div>
           ))}
         </div>
@@ -156,25 +158,25 @@ export default function TeamPage() {
 
       {!error && (
       <div style={card}>
-        <h2 style={sectionTitle}>Kullanıcılar ({users.length})</h2>
+        <h2 style={sectionTitle}>{t.team.usersTitle} ({users.length})</h2>
         {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
         {users.map((u) => (
           <div key={u.id} style={row}>
             <div style={{ flex: 1 }}>
               <div style={{ color: "#0F172A", fontSize: 12 }}>
-                {u.email} {u.totpEnabled && <span style={{ color: "#10B981", fontSize: 10, marginLeft: 8, fontWeight: 600, letterSpacing: 0.5 }}>MFA</span>}
+                {u.email} {u.totpEnabled && <span style={{ color: "#10B981", fontSize: 10, marginLeft: 8, fontWeight: 600, letterSpacing: 0.5 }}>{t.team.mfaBadge}</span>}
               </div>
               <div style={{ color: "#475569", fontSize: 10 }}>
                 {u.name ?? "—"} · {new Date(u.createdAt).toLocaleDateString("tr-TR")}
               </div>
             </div>
             <select value={u.role} onChange={(e) => updateRole(u.id, e.target.value)} style={{ ...input, width: "auto", marginRight: 8 }}>
-              <option value="viewer">viewer</option>
-              <option value="admin">admin</option>
-              <option value="owner">owner</option>
+              <option value="viewer">{t.team.roleViewer}</option>
+              <option value="admin">{t.team.roleAdmin}</option>
+              <option value="owner">{t.team.roleOwner}</option>
             </select>
             {u.role !== "owner" && (
-              <button onClick={() => removeUser(u.id)} style={btnDanger}>Sil</button>
+              <button onClick={() => removeUser(u.id)} style={btnDanger}>{t.team.delete}</button>
             )}
           </div>
         ))}

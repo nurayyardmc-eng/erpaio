@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Annotation {
   id: string;
@@ -14,6 +15,7 @@ interface Annotation {
 }
 
 export default function AnnotationsPage() {
+  const { t } = useI18n();
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -45,8 +47,8 @@ export default function AnnotationsPage() {
 
   useEffect(() => {
     if (!status) return;
-    const t = setTimeout(() => setStatus(null), 3000);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setStatus(null), 3000);
+    return () => clearTimeout(tm);
   }, [status]);
 
   const submit = async (e: React.FormEvent) => {
@@ -67,14 +69,14 @@ export default function AnnotationsPage() {
       });
       const d = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "err", msg: d.error || "Kayıt başarısız" });
+        setStatus({ kind: "err", msg: d.error || t.annotations.saveFailed });
       } else {
-        setStatus({ kind: "ok", msg: "Kaydedildi." });
+        setStatus({ kind: "ok", msg: t.annotations.successSaved });
         setForm({ tableName: "", columnName: "", description: "", hidden: false });
         refresh();
       }
     } catch (e) {
-      setStatus({ kind: "err", msg: e instanceof Error ? e.message : "Hata" });
+      setStatus({ kind: "err", msg: e instanceof Error ? e.message : t.common.error });
     } finally {
       setSaving(false);
     }
@@ -89,42 +91,39 @@ export default function AnnotationsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ŞEMA AÇIKLAMALARI</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Şema Açıklamaları</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.annotations.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>{t.annotations.title}</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
-        Müşteri-özgü tablo/kolon açıklamaları ekleyin — ERPAIO bu bilgilere
-        profile'dan da, canlı şemadan da ÖNCELİKLE bakar. ERP&apos;niz kirli/özelleşmiş
-        ise, &quot;trFatura aslında bizde sadece Online satışlar tutar&quot; gibi notlar
-        hallucination&apos;u önler.
+        {t.annotations.description}
       </p>
 
       <form onSubmit={submit} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, maxWidth: 600, marginBottom: 32 }}>
-        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#0A0A0A" }}>Yeni Açıklama</h2>
+        <h2 style={{ fontSize: 14, marginBottom: 16, color: "#0A0A0A" }}>{t.annotations.newAnnotation}</h2>
 
-        <Field label="Tablo adı (örn: trFatura)">
+        <Field label={t.annotations.fieldTable}>
           <input
             value={form.tableName}
             onChange={(e) => setForm({ ...form, tableName: e.target.value })}
-            placeholder="trFatura"
+            placeholder={t.annotations.fieldTablePlaceholder}
             style={inputStyle}
             required
           />
         </Field>
 
-        <Field label="Kolon adı (opsiyonel — sadece bu kolon için açıklama)">
+        <Field label={t.annotations.fieldColumn}>
           <input
             value={form.columnName}
             onChange={(e) => setForm({ ...form, columnName: e.target.value })}
-            placeholder="(boş bırak = tablo seviyesi)"
+            placeholder={t.annotations.fieldColumnPlaceholder}
             style={inputStyle}
           />
         </Field>
 
-        <Field label="Açıklama">
+        <Field label={t.annotations.fieldDescription}>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Örn: Bu tabloda sadece e-ticaret faturaları var, mağaza satışları için trFaturaMagaza kullan."
+            placeholder={t.annotations.fieldDescriptionPlaceholder}
             rows={3}
             style={{ ...inputStyle, resize: "vertical" }}
           />
@@ -136,7 +135,7 @@ export default function AnnotationsPage() {
             checked={form.hidden}
             onChange={(e) => setForm({ ...form, hidden: e.target.checked })}
           />
-          <span>Bu tabloyu/kolonu ERPAIO&apos;a gizle (kullanma)</span>
+          <span>{t.annotations.hideCheckbox}</span>
         </label>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -145,7 +144,7 @@ export default function AnnotationsPage() {
             disabled={saving}
             style={{ background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6, padding: "10px 20px", color: "#0A0A0A", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
-            {saving ? "Kaydediliyor..." : "Kaydet"}
+            {saving ? t.annotations.submitting : t.annotations.submit}
           </button>
           {status && (
             <span style={{ color: status.kind === "ok" ? "#10B981" : "#EF4444", fontSize: 11 }}>
@@ -155,7 +154,7 @@ export default function AnnotationsPage() {
         </div>
       </form>
 
-      <h2 style={{ fontSize: 14, color: "#94A3B8", marginBottom: 12 }}>Mevcut Açıklamalar ({annotations.length})</h2>
+      <h2 style={{ fontSize: 14, color: "#94A3B8", marginBottom: 12 }}>{t.annotations.existingTitle} ({annotations.length})</h2>
 
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
@@ -164,8 +163,8 @@ export default function AnnotationsPage() {
       {!loading && !error && annotations.length === 0 && (
         <EmptyState
           icon={<FileText size={28} />}
-          title="Henüz açıklama yok"
-          description="Tablo veya kolon açıklamaları ekleyin. AI bu bilgilerle Türkçe iş mantığını daha iyi anlar."
+          title={t.annotations.emptyTitle}
+          description={t.annotations.emptyDesc}
         />
       )}
 
@@ -175,7 +174,7 @@ export default function AnnotationsPage() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, color: "#0A0A0A", marginBottom: 4 }}>
                 {a.tableName}{a.columnName ? `.${a.columnName}` : ""}
-                {a.hidden && <span style={{ color: "#EF4444", marginLeft: 8 }}>⊘ gizli</span>}
+                {a.hidden && <span style={{ color: "#EF4444", marginLeft: 8 }}>{t.annotations.hiddenBadge}</span>}
               </div>
               {a.description && (
                 <div style={{ fontSize: 12, color: "#475569" }}>{a.description}</div>
@@ -188,7 +187,7 @@ export default function AnnotationsPage() {
               onClick={() => remove(a)}
               style={{ background: "transparent", border: "1px solid #EF444440", borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}
             >
-              Sil
+              {t.annotations.delete}
             </button>
           </div>
         </div>

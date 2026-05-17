@@ -3,6 +3,7 @@ import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 import { Eye } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Watchlist {
   id: string;
@@ -20,6 +21,7 @@ interface Watchlist {
 interface Connection { id: string; dbName: string; status: string }
 
 export default function WatchlistsPage() {
+  const { t } = useI18n();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,8 +52,8 @@ export default function WatchlistsPage() {
   useEffect(refresh, []);
   useEffect(() => {
     if (!status) return;
-    const t = setTimeout(() => setStatus(null), 4000);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setStatus(null), 4000);
+    return () => clearTimeout(tm);
   }, [status]);
 
   const submit = async (e: React.FormEvent) => {
@@ -69,9 +71,9 @@ export default function WatchlistsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "err", msg: data.error || "Hata" });
+        setStatus({ kind: "err", msg: data.error || t.common.error });
       } else {
-        setStatus({ kind: "ok", msg: "Watchlist eklendi." });
+        setStatus({ kind: "ok", msg: t.watchlists.successCreated });
         setForm({ ...form, name: "", question: "", thresholdVal: 0, emailTo: "" });
         refresh();
       }
@@ -81,34 +83,34 @@ export default function WatchlistsPage() {
   };
 
   const remove = async (id: string) => {
-    const _ok = await confirmDialog({ title: "Watchlist sil?", message: "Bu watchlist kalıcı olarak silinir.", confirmLabel: "Evet, sil", destructive: true }); if (!_ok) return;
+    const _ok = await confirmDialog({ title: t.watchlists.deleteConfirmTitle, message: t.watchlists.deleteConfirmMessage, confirmLabel: t.watchlists.deleteConfirmYes, destructive: true }); if (!_ok) return;
     await fetch(`/api/watchlists?id=${id}`, { method: "DELETE" });
     refresh();
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · WATCHLIST</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Eşik İzleme</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.watchlists.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>{t.watchlists.title}</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
-        Bir sorgunun sonucu eşiği aştığında otomatik alert + email + push notification. Günde bir kez kontrol edilir.
+        {t.watchlists.description}
       </p>
 
       <form onSubmit={submit} style={card}>
-        <h2 style={sectionTitle}>Yeni Watchlist</h2>
-        <Field label="ADI">
-          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Stok kritik altına düştü" style={input} />
+        <h2 style={sectionTitle}>{t.watchlists.newWatchlist}</h2>
+        <Field label={t.watchlists.fieldName}>
+          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t.watchlists.fieldNamePlaceholder} style={input} />
         </Field>
-        <Field label="SORU (önceden chat'te sorulmuş olmalı)">
-          <input required value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} placeholder="Mevcut stok adedi" style={input} />
+        <Field label={t.watchlists.fieldQuestion}>
+          <input required value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} placeholder={t.watchlists.fieldQuestionPlaceholder} style={input} />
         </Field>
-        <Field label="BAĞLANTI">
+        <Field label={t.watchlists.fieldConnection}>
           <select value={form.connectionId} onChange={(e) => setForm({ ...form, connectionId: e.target.value })} style={input}>
             {connections.map((c) => <option key={c.id} value={c.id}>{c.dbName}</option>)}
           </select>
         </Field>
         <div style={{ display: "flex", gap: 8 }}>
-          <Field label="OP">
+          <Field label={t.watchlists.fieldOp}>
             <select value={form.thresholdOp} onChange={(e) => setForm({ ...form, thresholdOp: e.target.value as typeof form.thresholdOp })} style={input}>
               <option value="lt">&lt;</option>
               <option value="lte">≤</option>
@@ -118,25 +120,25 @@ export default function WatchlistsPage() {
             </select>
           </Field>
           <div style={{ flex: 1 }}>
-            <Field label="EŞİK">
+            <Field label={t.watchlists.fieldThreshold}>
               <input required type="number" value={form.thresholdVal} onChange={(e) => setForm({ ...form, thresholdVal: Number(e.target.value) })} style={input} />
             </Field>
           </div>
         </div>
-        <Field label="EMAIL (opsiyonel)">
-          <input type="email" value={form.emailTo} onChange={(e) => setForm({ ...form, emailTo: e.target.value })} placeholder="boş = sadece push + alert" style={input} />
+        <Field label={t.watchlists.fieldEmail}>
+          <input type="email" value={form.emailTo} onChange={(e) => setForm({ ...form, emailTo: e.target.value })} placeholder={t.watchlists.fieldEmailPlaceholder} style={input} />
         </Field>
-        <button type="submit" disabled={saving} style={btnPrimary}>{saving ? "..." : "Ekle"}</button>
+        <button type="submit" disabled={saving} style={btnPrimary}>{saving ? t.watchlists.submitting : t.watchlists.submit}</button>
         {status && <span style={{ marginLeft: 12, color: status.kind === "ok" ? "#10B981" : "#EF4444", fontSize: 11 }}>{status.msg}</span>}
       </form>
 
-      <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>Mevcut Watchlists ({watchlists.length})</h2>
+      <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>{t.watchlists.existingTitle} ({watchlists.length})</h2>
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
       {!loading && watchlists.length === 0 && (
         <EmptyState
           icon={<Eye size={28} />}
-          title="Henüz watchlist yok"
-          description="Bir SQL sorgusunun sonucunu eşik değeriyle takip edin. Eşik aşıldığında bildirim alırsınız."
+          title={t.watchlists.emptyTitle}
+          description={t.watchlists.emptyDesc}
         />
       )}
       {watchlists.map((w) => (
@@ -146,12 +148,12 @@ export default function WatchlistsPage() {
               <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600 }}>{w.name}</div>
               <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{w.question}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
-                Tetikleme: <code style={{ color: "#0A0A0A" }}>{w.thresholdOp} {w.thresholdVal}</code>
-                {w.lastValue !== null && (<> · Son: <code style={{ color: w.triggeredAt ? "#F59E0B" : "#475569" }}>{w.lastValue}</code></>)}
+                {t.watchlists.triggerLabel}: <code style={{ color: "#0A0A0A" }}>{w.thresholdOp} {w.thresholdVal}</code>
+                {w.lastValue !== null && (<> · {t.watchlists.lastValueLabel}: <code style={{ color: w.triggeredAt ? "#F59E0B" : "#475569" }}>{w.lastValue}</code></>)}
                 {w.lastRunAt && <> · {new Date(w.lastRunAt).toLocaleString("tr-TR")}</>}
               </div>
             </div>
-            <button onClick={() => remove(w.id)} style={btnDanger}>Sil</button>
+            <button onClick={() => remove(w.id)} style={btnDanger}>{t.watchlists.delete}</button>
           </div>
         </div>
       ))}

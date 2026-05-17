@@ -2,6 +2,7 @@
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface SetupResp { secret: string; qr: string; uri: string }
 interface Session {
@@ -19,6 +20,7 @@ interface RecoveryStatus {
 }
 
 export default function SecurityPage() {
+  const { t } = useI18n();
   const [meEnabled, setMeEnabled] = useState<boolean | null>(null);
   const [setup, setSetup] = useState<SetupResp | null>(null);
   const [code, setCode] = useState("");
@@ -60,9 +62,9 @@ export default function SecurityPage() {
   const generateRecovery = async () => {
     if (recovery && recovery.total > 0) {
       const ok = await confirmDialog({
-        title: "Yeni kurtarma kodları oluştur?",
-        message: "Eski kodlar geçersiz olur. Yeni kodları güvenli bir yere kaydedin — bir daha gösterilmeyecek.",
-        confirmLabel: "Oluştur",
+        title: t.security.recoveryRotateConfirmTitle,
+        message: t.security.recoveryRotateConfirmMessage,
+        confirmLabel: t.security.recoveryRotateConfirmYes,
         destructive: true,
       });
       if (!ok) return;
@@ -72,7 +74,7 @@ export default function SecurityPage() {
       const res = await fetch("/api/auth/mfa/recovery-codes", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        showToast(data.error || "Hata", "error");
+        showToast(data.error || t.common.error, "error");
         return;
       }
       setRecoveryCodes(data.codes as string[]);
@@ -85,16 +87,16 @@ export default function SecurityPage() {
   const copyRecoveryCodes = () => {
     if (!recoveryCodes) return;
     void navigator.clipboard.writeText(recoveryCodes.join("\n"));
-    showToast("Kodlar panoya kopyalandı", "success");
+    showToast(t.security.recoveryCopiedToast, "success");
   };
 
   const downloadRecoveryCodes = () => {
     if (!recoveryCodes) return;
     const blob = new Blob(
       [
-        "ERPAIO MFA Kurtarma Kodları\n",
-        `Oluşturuldu: ${new Date().toLocaleString("tr-TR")}\n\n`,
-        "Her kod yalnızca BİR KEZ kullanılabilir. Güvenli bir yerde saklayın.\n\n",
+        `${t.security.recoveryFileHeader}\n`,
+        `${t.security.recoveryFileCreatedPrefix}${new Date().toLocaleString("tr-TR")}\n\n`,
+        `${t.security.recoveryFileNotice}\n\n`,
         recoveryCodes.join("\n"),
         "\n",
       ],
@@ -116,23 +118,23 @@ export default function SecurityPage() {
 
   const revokeSession = async (s: Session) => {
     if (s.isCurrent) {
-      showToast("Aktif oturumunuzu sonlandıramazsınız. Çıkış yapmak için Ayarlar sayfasını kullanın.", "error");
+      showToast(t.security.sessionRevokeCurrentBlocked, "error");
       return;
     }
     const ok = await confirmDialog({
-      title: "Oturumu sonlandır?",
-      message: `${s.name} cihazı uygulamadan çıkacak. Tekrar giriş yapması gerekecek.`,
-      confirmLabel: "Sonlandır",
+      title: t.security.sessionRevokeConfirmTitlePrefix,
+      message: `${s.name}${t.security.sessionRevokeConfirmMessage}`,
+      confirmLabel: t.security.sessionRevokeConfirmYes,
       destructive: true,
     });
     if (!ok) return;
 
     const res = await fetch(`/api/me/sessions?tokenId=${s.id}`, { method: "DELETE" });
     if (res.ok) {
-      showToast("Oturum sonlandırıldı", "success");
+      showToast(t.security.sessionRevokeOk, "success");
       loadSessions();
     } else {
-      showToast("İşlem başarısız", "error");
+      showToast(t.security.sessionRevokeFailed, "error");
     }
   };
 
@@ -142,7 +144,7 @@ export default function SecurityPage() {
     const res = await fetch("/api/auth/mfa/setup", { method: "POST" });
     const data = await res.json();
     if (!res.ok) {
-      setStatus({ kind: "err", msg: data.error || "Hata" });
+      setStatus({ kind: "err", msg: data.error || t.common.error });
       setLoading(false);
       return;
     }
@@ -160,11 +162,11 @@ export default function SecurityPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setStatus({ kind: "err", msg: data.error || "Kod yanlış" });
+      setStatus({ kind: "err", msg: data.error || t.security.setupCodeInvalid });
       setLoading(false);
       return;
     }
-    setStatus({ kind: "ok", msg: "MFA etkin." });
+    setStatus({ kind: "ok", msg: t.security.setupEnabledOk });
     setSetup(null);
     setCode("");
     refresh();
@@ -172,18 +174,18 @@ export default function SecurityPage() {
   };
 
   const disable = async () => {
-    const _ok = await confirmDialog({ title: "MFAyı kapat?", message: "Hesabın daha az güvenli olur.", confirmLabel: "Evet, kapat", destructive: true }); if (!_ok) return;
+    const _ok = await confirmDialog({ title: t.security.disableConfirmTitle, message: t.security.disableConfirmMessage, confirmLabel: t.security.disableConfirmYes, destructive: true }); if (!_ok) return;
     setLoading(true);
     await fetch("/api/auth/mfa/setup", { method: "DELETE" });
-    setStatus({ kind: "ok", msg: "MFA kapatıldı." });
+    setStatus({ kind: "ok", msg: t.security.disableOk });
     refresh();
     setLoading(false);
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · GÜVENLİK</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>İki Faktörlü Doğrulama (MFA)</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.security.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>{t.security.title}</h1>
 
       <div style={{ maxWidth: 520, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
         {meEnabled === null && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
@@ -201,29 +203,28 @@ export default function SecurityPage() {
               borderRadius: 999,
               marginBottom: 12,
               fontWeight: 500,
-            }}>MFA aktif</div>
+            }}>{t.security.mfaActive}</div>
             <p style={{ color: "#475569", fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
-              Hesabın iki faktörlü doğrulama ile korunuyor. Her girişte authenticator&apos;dan 6 haneli kod istenir.
+              {t.security.mfaActiveDesc}
             </p>
             <button
               onClick={disable}
               disabled={loading}
               style={btnDanger}
             >
-              MFA&apos;yı kapat
+              {t.security.mfaDisable}
             </button>
           </>
         )}
 
         {meEnabled === false && !setup && (
           <>
-            <div style={{ fontSize: 13, color: "#F59E0B", marginBottom: 12 }}>⚠ MFA aktif değil</div>
+            <div style={{ fontSize: 13, color: "#F59E0B", marginBottom: 12 }}>{t.security.mfaInactive}</div>
             <p style={{ color: "#475569", fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
-              Authenticator app (Google Authenticator, 1Password, Authy) kullanarak hesabını güçlendir.
-              Pro plan ve üzeri için kullanılabilir.
+              {t.security.mfaInactiveDesc}
             </p>
             <button onClick={beginSetup} disabled={loading} style={btnPrimary}>
-              {loading ? "Hazırlanıyor..." : "MFA Kurulumu Başlat"}
+              {loading ? t.security.mfaPreparing : t.security.mfaStartSetup}
             </button>
           </>
         )}
@@ -231,11 +232,11 @@ export default function SecurityPage() {
         {setup && (
           <div>
             <div style={{ fontSize: 12, color: "#475569", marginBottom: 12 }}>
-              <strong style={{ color: "#0F172A" }}>1. Adım:</strong> Authenticator app&apos;inle bu QR kodu tara.
+              <strong style={{ color: "#0F172A" }}>{t.security.setupStep1}</strong> {t.security.setupStep1Label}
             </div>
-            <img src={setup.qr} alt="QR" style={{ display: "block", margin: "12px auto", background: "#fff", padding: 8, borderRadius: 8 }} />
+            <img src={setup.qr} alt={t.security.setupQrAlt} style={{ display: "block", margin: "12px auto", background: "#fff", padding: 8, borderRadius: 8 }} />
             <details style={{ marginBottom: 16 }}>
-              <summary style={{ color: "#94A3B8", fontSize: 11, cursor: "pointer" }}>QR taranamıyorsa: manuel kod</summary>
+              <summary style={{ color: "#94A3B8", fontSize: 11, cursor: "pointer" }}>{t.security.setupManualCode}</summary>
               <code style={{ display: "block", marginTop: 8, padding: 8, background: "#F9FAFB", borderRadius: 4, fontSize: 11, color: "#0A0A0A", wordBreak: "break-all" }}>
                 {setup.secret}
               </code>
@@ -243,12 +244,12 @@ export default function SecurityPage() {
 
             <form onSubmit={verify}>
               <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
-                <strong style={{ color: "#0F172A" }}>2. Adım:</strong> App&apos;te görünen 6 haneli kodu gir.
+                <strong style={{ color: "#0F172A" }}>{t.security.setupStep2}</strong> {t.security.setupStep2Label}
               </div>
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="000000"
+                placeholder={t.security.setupCodePlaceholder}
                 maxLength={6}
                 inputMode="numeric"
                 autoComplete="one-time-code"
@@ -264,7 +265,7 @@ export default function SecurityPage() {
                 disabled={loading || code.length !== 6}
                 style={{ ...btnPrimary, marginTop: 12, width: "100%" }}
               >
-                {loading ? "Doğrulanıyor..." : "Doğrula ve Etkinleştir"}
+                {loading ? t.security.setupVerifying : t.security.setupVerify}
               </button>
             </form>
           </div>
@@ -280,44 +281,43 @@ export default function SecurityPage() {
       {/* MFA Kurtarma Kodları */}
       {meEnabled === true && (
         <div style={{ maxWidth: 520, marginTop: 32 }}>
-          <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>MFA Kurtarma Kodları</h2>
+          <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>{t.security.recoveryTitle}</h2>
           <p style={{ color: "#525252", fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
-            Authenticator app&apos;ini kaybedersen bu tek kullanımlık kodlarla giriş yapabilirsin.
-            Kodlar yalnızca bir kez gösterilir; güvenli bir yerde sakla.
+            {t.security.recoveryDescription}
           </p>
 
           <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 20 }}>
             {recovery && recovery.total > 0 ? (
               <>
                 <div style={{ fontSize: 13, color: "#0F172A", marginBottom: 4 }}>
-                  <strong>{recovery.remaining}</strong> / {recovery.total} kod kalan
+                  <strong>{recovery.remaining}</strong>{t.security.recoveryRemainingMid}{recovery.total}{t.security.recoveryRemainingSuffix}
                 </div>
                 {recovery.generatedAt && (
                   <div style={{ fontSize: 12, color: "#737373", marginBottom: 16 }}>
-                    Oluşturuldu: {new Date(recovery.generatedAt).toLocaleString("tr-TR")}
+                    {t.security.recoveryGeneratedPrefix}{new Date(recovery.generatedAt).toLocaleString("tr-TR")}
                   </div>
                 )}
                 {recovery.remaining <= 3 && recovery.remaining > 0 && (
                   <div style={{ fontSize: 12, color: "#F59E0B", marginBottom: 12 }}>
-                    ⚠ Az kod kaldı. Yenilemeyi düşün.
+                    {t.security.recoveryWarnLow}
                   </div>
                 )}
                 {recovery.remaining === 0 && (
                   <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 12 }}>
-                    ⚠ Tüm kodlar kullanıldı. Yeni set oluştur.
+                    {t.security.recoveryWarnExhausted}
                   </div>
                 )}
                 <button onClick={generateRecovery} disabled={recoveryLoading} style={btnDanger}>
-                  {recoveryLoading ? "Oluşturuluyor..." : "Yeni Kodlar Oluştur"}
+                  {recoveryLoading ? t.security.recoveryGenerating : t.security.recoveryGenerateNew}
                 </button>
               </>
             ) : (
               <>
                 <div style={{ fontSize: 13, color: "#F59E0B", marginBottom: 12 }}>
-                  ⚠ Henüz kurtarma kodun yok
+                  {t.security.recoveryNoneTitle}
                 </div>
                 <button onClick={generateRecovery} disabled={recoveryLoading} style={btnPrimary}>
-                  {recoveryLoading ? "Oluşturuluyor..." : "Kurtarma Kodlarını Oluştur"}
+                  {recoveryLoading ? t.security.recoveryGenerating : t.security.recoveryGenerateFirst}
                 </button>
               </>
             )}
@@ -338,9 +338,9 @@ export default function SecurityPage() {
               }}
             >
               <div style={{ background: "#FFFFFF", borderRadius: 16, padding: 24, maxWidth: 480, width: "100%" }}>
-                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600 }}>Kurtarma Kodların</h3>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600 }}>{t.security.recoveryModalTitle}</h3>
                 <p style={{ color: "#525252", fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
-                  Bu kodlar bir daha gösterilmeyecek. Şimdi indir veya kopyala. Her kod sadece bir kez kullanılabilir.
+                  {t.security.recoveryModalDescription}
                 </p>
                 <div
                   style={{
@@ -362,13 +362,13 @@ export default function SecurityPage() {
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button onClick={downloadRecoveryCodes} style={btnPrimary}>İndir (.txt)</button>
-                  <button onClick={copyRecoveryCodes} style={btnSecondary}>Kopyala</button>
+                  <button onClick={downloadRecoveryCodes} style={btnPrimary}>{t.security.recoveryDownload}</button>
+                  <button onClick={copyRecoveryCodes} style={btnSecondary}>{t.security.recoveryCopy}</button>
                   <button
                     onClick={() => setRecoveryCodes(null)}
                     style={{ ...btnSecondary, marginLeft: "auto" }}
                   >
-                    Kapat
+                    {t.security.recoveryClose}
                   </button>
                 </div>
               </div>
@@ -379,10 +379,9 @@ export default function SecurityPage() {
 
       {/* Aktif Oturumlar */}
       <div style={{ maxWidth: 520, marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>Aktif Oturumlar</h2>
+        <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>{t.security.sessionsTitle}</h2>
         <p style={{ color: "#525252", fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
-          Hesabınıza erişimi olan tüm cihazlar. Tanımadığınız bir oturum görüyorsanız sonlandırın
-          ve şifrenizi değiştirin.
+          {t.security.sessionsDescription}
         </p>
 
         <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
@@ -393,7 +392,7 @@ export default function SecurityPage() {
             </div>
           ) : sessions.length === 0 ? (
             <div style={{ padding: 24, textAlign: "center", color: "#737373", fontSize: 13 }}>
-              Aktif oturum yok.
+              {t.security.sessionsEmpty}
             </div>
           ) : (
             sessions.map((s, i) => (
@@ -418,16 +417,16 @@ export default function SecurityPage() {
                         borderRadius: 999,
                         fontWeight: 700,
                         letterSpacing: 1,
-                      }}>BU OTURUM</span>
+                      }}>{t.security.sessionsCurrent}</span>
                     )}
                   </div>
                   <div style={{ fontSize: 12, color: "#737373" }}>
                     {s.lastUsedAt
-                      ? `Son kullanım: ${new Date(s.lastUsedAt).toLocaleString("tr-TR")}`
-                      : "Henüz kullanılmadı"}
+                      ? `${t.security.sessionsLastUsed}${new Date(s.lastUsedAt).toLocaleString("tr-TR")}`
+                      : t.security.sessionsNeverUsed}
                   </div>
                   <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>
-                    Süre sonu: {new Date(s.expiresAt).toLocaleDateString("tr-TR")}
+                    {t.security.sessionsExpires}{new Date(s.expiresAt).toLocaleDateString("tr-TR")}
                   </div>
                 </div>
                 {!s.isCurrent && (
@@ -445,7 +444,7 @@ export default function SecurityPage() {
                       fontFamily: "inherit",
                     }}
                   >
-                    Sonlandır
+                    {t.security.sessionRevoke}
                   </button>
                 )}
               </div>

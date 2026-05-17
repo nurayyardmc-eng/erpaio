@@ -6,7 +6,7 @@ import Logo from "@/components/Logo";
 import { showToast } from "@/components/Toaster";
 import { confirmDialog } from "@/components/Confirm";
 import { useI18n } from "@/lib/i18n/context";
-import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n/dictionary";
+import { LOCALE_LABELS, SUPPORTED_LOCALES, type Dictionary, type Locale } from "@/lib/i18n/dictionary";
 import { colors } from "@/lib/theme";
 
 interface TenantSettings {
@@ -61,13 +61,13 @@ export default function SettingsPage() {
         }),
       });
       if (res.ok) {
-        showToast("Profil güncellendi", "success");
+        showToast(t.settings.profileSaved, "success");
       } else {
         const data = await res.json();
-        showToast(data.error || "Hata", "error");
+        showToast(data.error || t.common.error, "error");
       }
     } catch {
-      showToast("Ağ hatası", "error");
+      showToast(t.common.networkError, "error");
     } finally {
       setProfileSaving(false);
     }
@@ -77,7 +77,7 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 300_000) {
-      showToast("Dosya çok büyük (max 300KB)", "error");
+      showToast(t.settings.avatarTooLarge, "error");
       return;
     }
     const reader = new FileReader();
@@ -107,12 +107,12 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setStatus({ kind: "ok", msg: "Kaydedildi." });
+        setStatus({ kind: "ok", msg: t.common.saved });
       } else {
-        setStatus({ kind: "err", msg: data.error || "Kayıt başarısız." });
+        setStatus({ kind: "err", msg: data.error || t.settings.saveFailed });
       }
     } catch {
-      setStatus({ kind: "err", msg: "Ağ hatası." });
+      setStatus({ kind: "err", msg: t.common.networkError });
     } finally {
       setSaving(false);
     }
@@ -120,11 +120,11 @@ export default function SettingsPage() {
 
   const changePassword = async () => {
     if (pwd.next !== pwd.confirm) {
-      setPwdStatus({ kind: "err", msg: "Yeni şifreler eşleşmiyor." });
+      setPwdStatus({ kind: "err", msg: t.settings.passwordMismatch });
       return;
     }
     if (pwd.next.length < 8) {
-      setPwdStatus({ kind: "err", msg: "Yeni şifre en az 8 karakter olmalı." });
+      setPwdStatus({ kind: "err", msg: t.settings.passwordTooShort });
       return;
     }
     setPwdSaving(true);
@@ -137,13 +137,13 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setPwdStatus({ kind: "ok", msg: "Şifre güncellendi." });
+        setPwdStatus({ kind: "ok", msg: t.settings.passwordChanged });
         setPwd({ current: "", next: "", confirm: "" });
       } else {
-        setPwdStatus({ kind: "err", msg: data.error || "Hata." });
+        setPwdStatus({ kind: "err", msg: data.error || t.settings.passwordGenericError });
       }
     } catch {
-      setPwdStatus({ kind: "err", msg: "Ağ hatası." });
+      setPwdStatus({ kind: "err", msg: t.common.networkError });
     } finally {
       setPwdSaving(false);
     }
@@ -152,7 +152,7 @@ export default function SettingsPage() {
   if (!tenant) {
     return (
       <div style={{ minHeight: "100vh", background: colors.bgSubtle, color: colors.textMuted, padding: 40 }}>
-        Yükleniyor...
+        {t.settings.loading}
       </div>
     );
   }
@@ -174,14 +174,14 @@ export default function SettingsPage() {
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 32px" }}>
         <Link href="/dashboard" style={{ color: colors.textMuted, fontSize: 13, marginBottom: 16, display: "inline-block" }}>
-          ← Dashboard
+          {t.settings.backToDashboard}
         </Link>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.text, margin: "0 0 32px", letterSpacing: -0.5 }}>
-          Ayarlar
+          {t.settings.title}
         </h1>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <Section title="Profilim">
+          <Section title={t.settings.profile}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{
                 width: 64,
@@ -200,7 +200,7 @@ export default function SettingsPage() {
               }}>
                 {profile.avatarBase64 ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.avatarBase64} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={profile.avatarBase64} alt={t.settings.avatarAlt} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   (profile.name || profile.email).slice(0, 2).toUpperCase()
                 )}
@@ -217,7 +217,7 @@ export default function SettingsPage() {
                   color: colors.text,
                   fontWeight: 500,
                 }}>
-                  Avatar yükle
+                  {t.settings.avatarUpload}
                   <input type="file" accept="image/*" onChange={onAvatarChange} style={{ display: "none" }} />
                 </label>
                 {profile.avatarBase64 && (
@@ -225,27 +225,27 @@ export default function SettingsPage() {
                     onClick={() => setProfile({ ...profile, avatarBase64: null })}
                     style={{ marginLeft: 8, padding: "8px 12px", background: "transparent", border: "none", color: colors.error, fontSize: 12, cursor: "pointer" }}
                   >
-                    Kaldır
+                    {t.settings.avatarRemove}
                   </button>
                 )}
-                <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>JPG/PNG, max 300KB</div>
+                <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>{t.settings.avatarHint}</div>
               </div>
             </div>
 
-            <Field label="İsim">
+            <Field label={t.settings.profileName}>
               <input
                 value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                placeholder="Ali Yılmaz"
+                placeholder={t.settings.profileNamePlaceholder}
                 style={inputStyle}
               />
             </Field>
-            <Field label="Email">
+            <Field label={t.settings.profileEmail}>
               <div style={{ ...inputStyle, color: colors.textMuted, background: colors.bgSubtle }}>
                 {profile.email}
               </div>
               <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>
-                Email değiştirmek için <a href="mailto:support@erpaio.com" style={{ color: colors.text, textDecoration: "underline" }}>support@erpaio.com</a> ile iletişime geçin.
+                {t.settings.profileEmailChangeNote}
               </div>
             </Field>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -254,20 +254,20 @@ export default function SettingsPage() {
                 disabled={profileSaving}
                 style={primaryBtn}
               >
-                {profileSaving ? "Kaydediliyor..." : "Profilimi Kaydet"}
+                {profileSaving ? t.common.saving : t.settings.profileSave}
               </button>
             </div>
           </Section>
 
-          <Section title="Şirket">
-            <Field label="Tenant Adı">
+          <Section title={t.settings.company}>
+            <Field label={t.settings.tenantName}>
               <input
                 value={tenant.name}
                 onChange={(e) => setTenant({ ...tenant, name: e.target.value })}
                 style={inputStyle}
               />
             </Field>
-            <Field label="Plan">
+            <Field label={t.settings.plan}>
               <div style={{
                 ...inputStyle,
                 color: colors.brand,
@@ -313,52 +313,52 @@ export default function SettingsPage() {
             </div>
           </Section>
 
-          <Section title="WhatsApp Bildirimleri">
+          <Section title={t.settings.whatsapp}>
             <Toggle
-              label="WhatsApp etkin"
+              label={t.settings.whatsappEnabled}
               checked={tenant.whatsappEnabled}
               onChange={(v) => setTenant({ ...tenant, whatsappEnabled: v })}
             />
-            <Field label="Alıcı (whatsapp:+90...)">
+            <Field label={t.settings.whatsappTo}>
               <input
                 value={tenant.whatsappTo ?? ""}
                 onChange={(e) => setTenant({ ...tenant, whatsappTo: e.target.value })}
-                placeholder="whatsapp:+905555555555"
+                placeholder={t.settings.whatsappPlaceholder}
                 style={inputStyle}
                 disabled={!tenant.whatsappEnabled}
               />
             </Field>
           </Section>
 
-          <Section title="Email Bildirimleri">
+          <Section title={t.settings.email}>
             <Toggle
-              label="Email etkin"
+              label={t.settings.emailEnabled}
               checked={tenant.emailEnabled}
               onChange={(v) => setTenant({ ...tenant, emailEnabled: v })}
             />
-            <Field label="Alıcı email">
+            <Field label={t.settings.emailTo}>
               <input
                 type="email"
                 value={tenant.emailTo ?? ""}
                 onChange={(e) => setTenant({ ...tenant, emailTo: e.target.value })}
-                placeholder="alerts@firma.com"
+                placeholder={t.settings.emailPlaceholder}
                 style={inputStyle}
                 disabled={!tenant.emailEnabled}
               />
             </Field>
           </Section>
 
-          <Section title="Alert Eşiği">
-            <Field label="Minimum severity">
+          <Section title={t.settings.alertThreshold}>
+            <Field label={t.settings.alertSeverity}>
               <select
                 value={tenant.alertMinSeverity}
                 onChange={(e) => setTenant({ ...tenant, alertMinSeverity: e.target.value as TenantSettings["alertMinSeverity"] })}
                 style={inputStyle}
               >
-                <option value="low">low (her şey gönderilir)</option>
-                <option value="medium">medium</option>
-                <option value="high">high (önerilen)</option>
-                <option value="critical">critical (sadece kritik)</option>
+                <option value="low">{t.settings.severityLow}</option>
+                <option value="medium">{t.settings.severityMedium}</option>
+                <option value="high">{t.settings.severityHigh}</option>
+                <option value="critical">{t.settings.severityCritical}</option>
               </select>
             </Field>
           </Section>
@@ -369,7 +369,7 @@ export default function SettingsPage() {
               disabled={saving}
               style={primaryBtn}
             >
-              {saving ? "Kaydediliyor..." : "Kaydet"}
+              {saving ? t.common.saving : t.common.save}
             </button>
             {status && (
               <span style={{
@@ -382,14 +382,14 @@ export default function SettingsPage() {
             )}
           </div>
 
-          <Section title="Şifre Değiştir">
-            <Field label="Mevcut Şifre">
+          <Section title={t.settings.password}>
+            <Field label={t.settings.passwordCurrent}>
               <input type="password" value={pwd.current} onChange={(e) => setPwd({ ...pwd, current: e.target.value })} style={inputStyle} />
             </Field>
-            <Field label="Yeni Şifre (min 8 karakter)">
+            <Field label={t.settings.passwordNew}>
               <input type="password" value={pwd.next} onChange={(e) => setPwd({ ...pwd, next: e.target.value })} style={inputStyle} />
             </Field>
-            <Field label="Yeni Şifre (tekrar)">
+            <Field label={t.settings.passwordConfirm}>
               <input type="password" value={pwd.confirm} onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })} style={inputStyle} />
             </Field>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -398,7 +398,7 @@ export default function SettingsPage() {
                 disabled={pwdSaving || !pwd.current || !pwd.next || !pwd.confirm}
                 style={secondaryBtn}
               >
-                {pwdSaving ? "Güncelleniyor..." : "Şifre Değiştir"}
+                {pwdSaving ? t.settings.passwordChanging : t.settings.passwordChange}
               </button>
               {pwdStatus && (
                 <span style={{
@@ -412,9 +412,9 @@ export default function SettingsPage() {
             </div>
           </Section>
 
-          <Section title="Hesap Güvenliği">
+          <Section title={t.settings.accountSecurity}>
             <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>
-              İki faktörlü doğrulama (MFA), güven listesi (IP allowlist) ve API token yönetimi ayrı sayfada.
+              {t.settings.accountSecurityDescription}
             </p>
             <Link
               href="/dashboard/security"
@@ -430,18 +430,18 @@ export default function SettingsPage() {
                 textDecoration: "none",
               }}
             >
-              Güvenlik ayarlarına git →
+              {t.settings.accountSecurityLink}
             </Link>
           </Section>
 
-          <DangerZone />
+          <DangerZone t={t} />
         </div>
       </main>
     </div>
   );
 }
 
-function DangerZone() {
+function DangerZone({ t }: { t: Dictionary }) {
   const [showForm, setShowForm] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -449,10 +449,10 @@ function DangerZone() {
 
   const deleteAccount = async () => {
     const ok = await confirmDialog({
-      title: "Hesabı silmek üzeresiniz",
-      message: "Bu işlem GERİ ALINAMAZ. Tüm veriler (kullanıcılar, sohbetler, bağlantılar, alertler) kalıcı olarak silinir. Devam ediyor musunuz?",
-      confirmLabel: "Evet, sil",
-      cancelLabel: "Vazgeç",
+      title: t.settings.deleteAccountConfirmTitle,
+      message: t.settings.deleteAccountConfirmMessage,
+      confirmLabel: t.settings.deleteAccountConfirmYes,
+      cancelLabel: t.settings.deleteAccountConfirmCancel,
       destructive: true,
     });
     if (!ok) return;
@@ -466,13 +466,13 @@ function DangerZone() {
       });
       const data = await res.json();
       if (res.ok) {
-        showToast("Hesap silindi. Yönlendiriliyorsun…", "success");
+        showToast(t.settings.deleteAccountSuccess, "success");
         setTimeout(() => { window.location.href = "/"; }, 1500);
       } else {
-        showToast(data.error || "Hata", "error");
+        showToast(data.error || t.common.error, "error");
       }
     } catch {
-      showToast("Ağ hatası", "error");
+      showToast(t.common.networkError, "error");
     } finally {
       setDeleting(false);
     }
@@ -500,12 +500,11 @@ function DangerZone() {
         }}>
           <AlertTriangle size={16} color="#EF4444" />
         </div>
-        <h2 style={{ fontSize: 16, color: "#EF4444", margin: 0, fontWeight: 600 }}>Tehlikeli Bölge</h2>
+        <h2 style={{ fontSize: 16, color: "#EF4444", margin: 0, fontWeight: 600 }}>{t.settings.dangerZone}</h2>
       </div>
 
       <p style={{ color: colors.textMuted, fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-        Hesabımı silmek istiyorum. Bu işlem KVKK md. 7 silinme hakkı kapsamındadır.
-        Tüm veriler kaskat (cascade) olarak kalıcı silinir.
+        {t.settings.dangerZoneDescription}
       </p>
 
       {!showForm ? (
@@ -523,12 +522,12 @@ function DangerZone() {
             cursor: "pointer",
           }}
         >
-          Hesabı Sil
+          {t.settings.deleteAccount}
         </button>
       ) : (
         <>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: colors.text, marginBottom: 6 }}>Şifre</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: colors.text, marginBottom: 6 }}>{t.settings.deleteAccountPasswordLabel}</div>
             <input
               type="password"
               value={password}
@@ -548,12 +547,12 @@ function DangerZone() {
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 500, color: colors.text, marginBottom: 6 }}>
-              Onaylamak için &quot;<strong>HESABIMI SİL</strong>&quot; yazın
+              {t.settings.deleteAccountConfirmInputLabelPrefix}<strong>{t.settings.deleteAccountConfirmInputLabelHighlight}</strong>{t.settings.deleteAccountConfirmInputLabelSuffix}
             </div>
             <input
               value={confirmation}
               onChange={(e) => setConfirmation(e.target.value)}
-              placeholder="HESABIMI SİL"
+              placeholder={t.settings.deleteAccountConfirmInputPlaceholder}
               style={{
                 width: "100%",
                 background: colors.bg,
@@ -570,7 +569,7 @@ function DangerZone() {
           <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={deleteAccount}
-              disabled={deleting || !password || confirmation !== "HESABIMI SİL"}
+              disabled={deleting || !password || confirmation !== t.settings.deleteAccountConfirmInputPlaceholder}
               style={{
                 background: "#EF4444",
                 color: "#FFFFFF",
@@ -582,7 +581,7 @@ function DangerZone() {
                 cursor: "pointer",
               }}
             >
-              {deleting ? "Siliniyor…" : "Hesabımı Kalıcı Sil"}
+              {deleting ? t.settings.deleting : t.settings.deleteAccountFinal}
             </button>
             <button
               onClick={() => { setShowForm(false); setPassword(""); setConfirmation(""); }}
@@ -597,7 +596,7 @@ function DangerZone() {
                 cursor: "pointer",
               }}
             >
-              İptal
+              {t.common.cancel}
             </button>
           </div>
         </>

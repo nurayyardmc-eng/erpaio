@@ -25,6 +25,7 @@ import { detectChartHint, type ChartHint } from "@/lib/charts/detect";
 import MiniChart from "@/components/MiniChart";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Connection {
   id: string;
@@ -76,6 +77,7 @@ interface UserMsg { role: "user"; content: string }
 type Msg = UserMsg | AssistantLoadingMsg | AssistantErrorMsg | AssistantSuccessMsg | AssistantConfirmMsg;
 
 export default function ChatPage() {
+  const { t } = useI18n();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedConn, setSelectedConn] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -139,10 +141,10 @@ export default function ChatPage() {
       body: JSON.stringify({ pinned: !pinned }),
     });
     if (r.ok) {
-      showToast(pinned ? "Sabitleme kaldırıldı." : "Sohbet sabitlendi.");
+      showToast(pinned ? t.chat.pinToastOff : t.chat.pinToastOn);
       refreshHistory();
     } else {
-      showToast("İşlem başarısız.", "error");
+      showToast(t.chat.actionFailed, "error");
     }
   };
 
@@ -154,38 +156,38 @@ export default function ChatPage() {
       body: JSON.stringify({ archived: !isArchived }),
     });
     if (r.ok) {
-      showToast(isArchived ? "Sohbet geri alındı." : "Sohbet arşivlendi.");
+      showToast(isArchived ? t.chat.archiveToastOff : t.chat.archiveToastOn);
       if (sessionId === id) {
         setSessionId(null);
         setMessages([]);
       }
       refreshHistory();
     } else {
-      showToast("İşlem başarısız.", "error");
+      showToast(t.chat.actionFailed, "error");
     }
   };
 
   const deleteSession = async (id: string, title: string) => {
     setOpenMenu(null);
     const ok = await confirmDialog({
-      title: "Sohbeti sil",
-      message: `"${title}" sohbeti ve içindeki tüm mesajlar kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
-      confirmLabel: "Sil",
-      cancelLabel: "İptal",
+      title: t.chat.deleteConfirmTitle,
+      message: `${t.chat.deleteConfirmMessagePrefix}${title}${t.chat.deleteConfirmMessageSuffix}`,
+      confirmLabel: t.chat.deleteConfirmYes,
+      cancelLabel: t.chat.deleteConfirmCancel,
       destructive: true,
     });
     if (!ok) return;
 
     const r = await fetch(`/api/chat/sessions/${id}`, { method: "DELETE" });
     if (r.ok) {
-      showToast("Sohbet silindi.");
+      showToast(t.chat.deletedToast);
       if (sessionId === id) {
         setSessionId(null);
         setMessages([]);
       }
       refreshHistory();
     } else {
-      showToast("Silinemedi.", "error");
+      showToast(t.chat.deleteFailedToast, "error");
     }
   };
 
@@ -393,7 +395,7 @@ export default function ChatPage() {
     } catch (err) {
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", status: "error", content: err instanceof Error ? err.message : "SQL hatası." },
+        { role: "assistant", status: "error", content: err instanceof Error ? err.message : t.chat.genericSqlError },
       ]);
     } finally {
       setLoading(false);
@@ -449,7 +451,7 @@ export default function ChatPage() {
     } catch (err) {
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", status: "error", content: err instanceof Error ? err.message : "Hata." },
+        { role: "assistant", status: "error", content: err instanceof Error ? err.message : t.chat.genericRunError },
       ]);
     } finally {
       setLoading(false);
@@ -486,11 +488,11 @@ export default function ChatPage() {
         flexShrink: 0,
       }}>
         <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(10,10,10,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 11, color: "#737373", letterSpacing: 2, fontWeight: 600, textTransform: "uppercase" }}>Sohbet Geçmişi</div>
+          <div style={{ fontSize: 11, color: "#737373", letterSpacing: 2, fontWeight: 600, textTransform: "uppercase" }}>{t.chat.historyTitle}</div>
           <button
             onClick={newSession}
-            title="Yeni sohbet"
-            aria-label="Yeni sohbet başlat"
+            title={t.chat.newChatTitle}
+            aria-label={t.chat.newChatAria}
             style={{
               width: 28,
               height: 28,
@@ -526,7 +528,7 @@ export default function ChatPage() {
                 fontFamily: "inherit",
               }}
             >
-              {v === "active" ? "Aktif" : "Arşiv"}
+              {v === "active" ? t.chat.tabActive : t.chat.tabArchived}
             </button>
           ))}
         </div>
@@ -534,7 +536,7 @@ export default function ChatPage() {
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 156px)", padding: "8px" }}>
           {history.length === 0 && (
             <div style={{ color: "#737373", fontSize: 13, padding: "20px 12px", textAlign: "center" }}>
-              {historyView === "active" ? "Henüz sohbet yok." : "Arşivlenmiş sohbet yok."}
+              {historyView === "active" ? t.chat.emptyActive : t.chat.emptyArchived}
             </div>
           )}
           {history.map((s) => {
@@ -578,7 +580,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                   <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>
-                    {s.messageCount} mesaj · {new Date(s.createdAt).toLocaleDateString("tr-TR")}
+                    {s.messageCount} {t.chat.messagesSuffix} · {new Date(s.createdAt).toLocaleDateString("tr-TR")}
                   </div>
                 </button>
 
@@ -589,7 +591,7 @@ export default function ChatPage() {
                     setOpenMenu(openMenu === s.id ? null : s.id);
                   }}
                   className="session-menu-trigger"
-                  aria-label="Sohbet menüsü"
+                  aria-label={t.chat.sessionMenuAria}
                   style={{
                     width: 28,
                     minWidth: 28,
@@ -632,7 +634,7 @@ export default function ChatPage() {
                         style={menuItemStyle}
                       >
                         {s.pinned ? <PinOff size={14} /> : <Pin size={14} />}
-                        {s.pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
+                        {s.pinned ? t.chat.unpin : t.chat.pin}
                       </button>
                     )}
                     <button
@@ -640,7 +642,7 @@ export default function ChatPage() {
                       style={menuItemStyle}
                     >
                       {isArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-                      {isArchived ? "Arşivden çıkar" : "Arşivle"}
+                      {isArchived ? t.chat.unarchive : t.chat.archive}
                     </button>
                     <div style={{ height: 1, background: "rgba(10,10,10,0.06)", margin: "4px 0" }} />
                     <button
@@ -648,7 +650,7 @@ export default function ChatPage() {
                       style={{ ...menuItemStyle, color: "#EF4444" }}
                     >
                       <Trash2 size={14} />
-                      Sil
+                      {t.chat.delete}
                     </button>
                   </div>
                 )}
@@ -672,8 +674,8 @@ export default function ChatPage() {
         }}>
           <button
             onClick={() => setHistoryOpen((v) => !v)}
-            title={historyOpen ? "Geçmişi kapat" : "Geçmişi aç"}
-            aria-label={historyOpen ? "Geçmişi kapat" : "Geçmişi aç"}
+            title={historyOpen ? t.chat.historyClose : t.chat.historyOpen}
+            aria-label={historyOpen ? t.chat.historyClose : t.chat.historyOpen}
             className="hide-mobile"
             style={{
               width: 36,
@@ -734,12 +736,12 @@ export default function ChatPage() {
                 marginBottom: 16,
                 lineHeight: 1.2,
               }}>
-                {userName ? <>Merhaba <em style={{ fontStyle: "italic" }}>{userName}</em>,<br />size nasıl yardımcı olabilirim?</> : "Size nasıl yardımcı olabilirim?"}
+                {userName ? <>{t.chat.greetingPrefix}<em style={{ fontStyle: "italic" }}>{userName}</em>{t.chat.greetingSuffix}</> : t.chat.greetingFallback}
               </div>
               <p style={{ color: "#525252", fontSize: 15, margin: 0, maxWidth: 520, lineHeight: 1.6 }}>
                 {selectedConn
-                  ? "Veritabanınıza doğal Türkçe ile soru sorun. Yapay zeka SQL üretir, sonucu yorumlayarak gösterir."
-                  : "Başlamak için önce bir ERP bağlantısı eklemeniz gerekiyor."}
+                  ? t.chat.introWithConn
+                  : t.chat.introWithoutConn}
               </p>
               {!selectedConn && connections.length === 0 && (
                 <a
@@ -758,7 +760,7 @@ export default function ChatPage() {
                     textDecoration: "none",
                   }}
                 >
-                  ERP Bağlantısı Ekle →
+                  {t.chat.addErpConnectionCta}
                 </a>
               )}
             </div>
@@ -772,7 +774,7 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <div style={{ maxWidth: "85%", width: "100%" }}>
-                  {msg.status === "loading" && <div style={{ color: "#94A3B8", fontSize: 12 }}>SQL üretiliyor...</div>}
+                  {msg.status === "loading" && <div style={{ color: "#94A3B8", fontSize: 12 }}>{t.chat.sqlGenerating}</div>}
                   {msg.status === "error" && (
                     <div style={{ background: "#FEE2E2", border: "1px solid #EF444430", borderRadius: 8, padding: "10px 14px", color: "#EF4444", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
                       <AlertCircle size={16} /> {msg.content}
@@ -781,7 +783,7 @@ export default function ChatPage() {
                   {msg.status === "confirm" && (
                     <div style={{ background: "#F59E0B18", border: "1px solid #F59E0B40", borderRadius: 8, padding: 14 }}>
                       <div style={{ fontSize: 11, color: "#F59E0B", letterSpacing: 1, marginBottom: 8, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                        <AlertTriangle size={14} /> ONAY GEREKİYOR · CONFIDENCE %{Math.round(msg.confidence * 100)}
+                        <AlertTriangle size={14} /> {t.chat.confirmNeeded}{Math.round(msg.confidence * 100)}
                       </div>
                       {msg.ambiguity && (
                         <div style={{ color: "#F59E0B", fontSize: 12, marginBottom: 10 }}>
@@ -799,13 +801,13 @@ export default function ChatPage() {
                           onClick={() => confirmAndRun(i, msg.question)}
                           style={{ background: "#10B98120", border: "1px solid #10B981", borderRadius: 4, padding: "6px 14px", color: "#10B981", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
                         >
-                          Çalıştır
+                          {t.chat.runConfirmed}
                         </button>
                         <button
                           onClick={() => cancelConfirm(i)}
                           style={{ background: "transparent", border: "1px solid #E5E7EB", borderRadius: 4, padding: "6px 14px", color: "#475569", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}
                         >
-                          İptal
+                          {t.chat.cancelConfirmed}
                         </button>
                       </div>
                     </div>
@@ -814,35 +816,35 @@ export default function ChatPage() {
                     <div>
                       <div style={{ background: "#060A12", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12, marginBottom: 10 }}>
                         <div style={{ fontSize: 9, color: "#94A3B8", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                          <span>SQL · {msg.latencyMs}ms · {msg.total} satır</span>
+                          <span>SQL · {msg.latencyMs}ms · {msg.total} {t.chat.sqlMetaRowsSuffix}</span>
                           {msg.cacheHit && (
                             <span style={{ color: "#9C8AFF", border: "1px solid #9C8AFF40", borderRadius: 4, padding: "1px 6px", fontSize: 9, letterSpacing: 1, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}>
-                              <Zap size={9} strokeWidth={2.5} /> CACHED
+                              <Zap size={9} strokeWidth={2.5} /> {t.chat.cachedBadge}
                             </span>
                           )}
                           <span style={{ flex: 1 }} />
                           {!msg.editing && (
-                            <button onClick={() => startEdit(i)} title="Düzenle" aria-label="SQL düzenle" style={iconBtnSmall}>
+                            <button onClick={() => startEdit(i)} title={t.chat.editSqlTitle} aria-label={t.chat.editSqlAria} style={iconBtnSmall}>
                               <Pencil size={12} />
                             </button>
                           )}
                           {msg.results.length > 0 && (
                             <>
-                              <button onClick={() => exportCsv(msg)} title="CSV indir" aria-label="CSV olarak indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <button onClick={() => exportCsv(msg)} title={t.chat.csvDownloadTitle} aria-label={t.chat.csvDownloadAria} style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
                                 <Download size={12} /> CSV
                               </button>
-                              <button onClick={() => exportXlsx(msg)} title="Excel indir" aria-label="Excel olarak indir" style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <button onClick={() => exportXlsx(msg)} title={t.chat.xlsxDownloadTitle} aria-label={t.chat.xlsxDownloadAria} style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}>
                                 <FileSpreadsheet size={12} /> XLSX
                               </button>
                               {!msg.explanation && msg.question && (
                                 <button
                                   onClick={() => fetchExplain(i, msg)}
                                   disabled={msg.explainLoading}
-                                  title="AI yorumu" aria-label="AI ile sonucu açıkla"
+                                  title={t.chat.explainTitle} aria-label={t.chat.explainAria}
                                   style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}
                                 >
                                   <Sparkles size={12} />
-                                  {msg.explainLoading ? "..." : "Açıkla"}
+                                  {msg.explainLoading ? "..." : t.chat.explainLabel}
                                 </button>
                               )}
                             </>
@@ -866,10 +868,10 @@ export default function ChatPage() {
                             />
                             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                               <button onClick={() => runEditedSql(i)} disabled={loading} style={{ background: "#10B98120", border: "1px solid #10B981", borderRadius: 4, padding: "4px 10px", color: "#10B981", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>
-                                Çalıştır
+                                {t.chat.runEditedSql}
                               </button>
                               <button onClick={() => cancelEdit(i)} style={{ background: "transparent", border: "1px solid #E5E7EB", borderRadius: 4, padding: "4px 10px", color: "#94A3B8", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>
-                                İptal
+                                {t.chat.cancelEditSql}
                               </button>
                             </div>
                           </div>
@@ -901,7 +903,7 @@ export default function ChatPage() {
                       )}
                       {msg.explanation && (
                         <div style={{ background: "#9C8AFF15", border: "1px solid #9C8AFF40", borderRadius: 8, padding: 12, marginTop: 8 }}>
-                          <div style={{ fontSize: 9, color: "#9C8AFF", letterSpacing: 2, marginBottom: 6 }}>🤖 AI YORUMU</div>
+                          <div style={{ fontSize: 9, color: "#9C8AFF", letterSpacing: 2, marginBottom: 6 }}>{t.chat.aiExplanationLabel}</div>
                           <div style={{ fontSize: 12, color: "#0F172A", lineHeight: 1.6 }}>{msg.explanation}</div>
                         </div>
                       )}
@@ -912,7 +914,7 @@ export default function ChatPage() {
 
                       {msg.followUps && msg.followUps.length > 0 && (
                         <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          <span style={{ fontSize: 9, color: "#94A3B8", marginRight: 4, alignSelf: "center" }}>İLGİLİ:</span>
+                          <span style={{ fontSize: 9, color: "#94A3B8", marginRight: 4, alignSelf: "center" }}>{t.chat.relatedLabel}</span>
                           {msg.followUps.map((fu, fi) => (
                             <button
                               key={fi}
@@ -936,11 +938,11 @@ export default function ChatPage() {
 
                       {msg.messageId && (
                         <div style={{ marginTop: 8, display: "flex", gap: 6, alignItems: "center", fontSize: 10 }}>
-                          <span style={{ color: "#94A3B8", marginRight: 4 }}>Faydalı mı?</span>
+                          <span style={{ color: "#94A3B8", marginRight: 4 }}>{t.chat.feedbackPrompt}</span>
                           <button
                             onClick={() => submitFeedback(i, msg.messageId!, 1)}
                             disabled={msg.feedback !== null}
-                            aria-label="Faydalı (beğen)"
+                            aria-label={t.chat.feedbackHelpfulAria}
                             style={{
                               background: msg.feedback === 1 ? "#D1FAE5" : "transparent",
                               border: `1px solid ${msg.feedback === 1 ? "#10B981" : "#E5E7EB"}`,
@@ -958,7 +960,7 @@ export default function ChatPage() {
                           <button
                             onClick={() => submitFeedback(i, msg.messageId!, -1)}
                             disabled={msg.feedback !== null}
-                            aria-label="Faydasız (beğenme)"
+                            aria-label={t.chat.feedbackUnhelpfulAria}
                             style={{
                               background: msg.feedback === -1 ? "#FEE2E2" : "transparent",
                               border: `1px solid ${msg.feedback === -1 ? "#EF4444" : "#E5E7EB"}`,
@@ -998,7 +1000,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder={selectedConn ? "Veritabanınıza Türkçe soru sorun…" : "Önce bir ERP bağlantısı ekleyin"}
+            placeholder={selectedConn ? t.chat.inputPlaceholderReady : t.chat.inputPlaceholderNoConn}
             disabled={loading || !selectedConn}
             style={{ flex: 1, background: "#FAFAF8", border: "1px solid #E5E7EB", borderRadius: 100, padding: "12px 18px", color: "#0A0A0A", fontSize: 14, fontFamily: "inherit", outline: "none" }}
           />
@@ -1007,7 +1009,7 @@ export default function ChatPage() {
             disabled={loading || !input.trim() || !selectedConn}
             style={{ background: "#0A0A0A", border: "none", borderRadius: 100, padding: "0 24px", color: "#FAFAF8", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", minWidth: 64 }}
           >
-            {loading ? "…" : "Gönder"}
+            {loading ? t.chat.sendingButton : t.chat.sendButton}
           </button>
         </div>
       </div>

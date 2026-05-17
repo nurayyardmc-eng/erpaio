@@ -3,6 +3,8 @@ import { confirmDialog } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 import { Send } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import { useI18n } from "@/lib/i18n/context";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
 interface Report {
   id: string;
@@ -17,15 +19,22 @@ interface Report {
 
 interface Connection { id: string; dbName: string; status: string }
 
-const SCHEDULES: Record<string, string> = {
-  hourly: "Her saat",
-  daily_06: "Her gün 09:00",
-  daily_18: "Her gün 21:00",
-  weekly_monday: "Her Pazartesi 09:00",
-  monthly_first: "Her ayın 1'i 09:00",
-};
+const SCHEDULE_KEYS = ["hourly", "daily_06", "daily_18", "weekly_monday", "monthly_first"] as const;
+type ScheduleKey = (typeof SCHEDULE_KEYS)[number];
+
+function scheduleLabel(t: Dictionary, k: string): string {
+  switch (k) {
+    case "hourly": return t.scheduledReports.scheduleHourly;
+    case "daily_06": return t.scheduledReports.scheduleDaily06;
+    case "daily_18": return t.scheduledReports.scheduleDaily18;
+    case "weekly_monday": return t.scheduledReports.scheduleWeeklyMonday;
+    case "monthly_first": return t.scheduledReports.scheduleMonthlyFirst;
+    default: return k;
+  }
+}
 
 export default function ScheduledReportsPage() {
+  const { t } = useI18n();
   const [reports, setReports] = useState<Report[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +42,7 @@ export default function ScheduledReportsPage() {
     name: "",
     question: "",
     connectionId: "",
-    schedule: "daily_06" as keyof typeof SCHEDULES,
+    schedule: "daily_06" as ScheduleKey,
     emailTo: "",
   });
   const [saving, setSaving] = useState(false);
@@ -55,8 +64,8 @@ export default function ScheduledReportsPage() {
   useEffect(refresh, []);
   useEffect(() => {
     if (!status) return;
-    const t = setTimeout(() => setStatus(null), 4000);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setStatus(null), 4000);
+    return () => clearTimeout(tm);
   }, [status]);
 
   const submit = async (e: React.FormEvent) => {
@@ -69,9 +78,9 @@ export default function ScheduledReportsPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) setStatus({ kind: "err", msg: data.error || "Hata" });
+      if (!res.ok) setStatus({ kind: "err", msg: data.error || t.common.error });
       else {
-        setStatus({ kind: "ok", msg: "Rapor planlandı." });
+        setStatus({ kind: "ok", msg: t.scheduledReports.successCreated });
         setForm({ ...form, name: "", question: "", emailTo: "" });
         refresh();
       }
@@ -81,52 +90,51 @@ export default function ScheduledReportsPage() {
   };
 
   const remove = async (id: string) => {
-    const _ok = await confirmDialog({ title: "Raporu sil?", message: "Periyodik rapor kalıcı silinir.", confirmLabel: "Evet, sil", destructive: true }); if (!_ok) return;
+    const _ok = await confirmDialog({ title: t.scheduledReports.deleteConfirmTitle, message: t.scheduledReports.deleteConfirmMessage, confirmLabel: t.scheduledReports.deleteConfirmYes, destructive: true }); if (!_ok) return;
     await fetch(`/api/scheduled-reports?id=${id}`, { method: "DELETE" });
     refresh();
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · RAPOR</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Planlı Raporlar</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.scheduledReports.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>{t.scheduledReports.title}</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 700 }}>
-        Belirli bir soruyu seçtiğin sıklıkta çalıştırıp emailine gönderir. Soru
-        önce chat'te sorulmuş ve cache'lenmiş olmalı.
+        {t.scheduledReports.description}
       </p>
 
       <form onSubmit={submit} style={card}>
-        <h2 style={sectionTitle}>Yeni Rapor</h2>
-        <Field label="ADI">
-          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Haftalık satış özeti" style={input} />
+        <h2 style={sectionTitle}>{t.scheduledReports.newReport}</h2>
+        <Field label={t.scheduledReports.fieldName}>
+          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t.scheduledReports.fieldNamePlaceholder} style={input} />
         </Field>
-        <Field label="SORU">
-          <input required value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} placeholder="Bu hafta satış toplamı" style={input} />
+        <Field label={t.scheduledReports.fieldQuestion}>
+          <input required value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} placeholder={t.scheduledReports.fieldQuestionPlaceholder} style={input} />
         </Field>
-        <Field label="BAĞLANTI">
+        <Field label={t.scheduledReports.fieldConnection}>
           <select value={form.connectionId} onChange={(e) => setForm({ ...form, connectionId: e.target.value })} style={input}>
             {connections.map((c) => <option key={c.id} value={c.id}>{c.dbName}</option>)}
           </select>
         </Field>
-        <Field label="ZAMAN">
-          <select value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value as keyof typeof SCHEDULES })} style={input}>
-            {Object.entries(SCHEDULES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        <Field label={t.scheduledReports.fieldSchedule}>
+          <select value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value as ScheduleKey })} style={input}>
+            {SCHEDULE_KEYS.map((k) => <option key={k} value={k}>{scheduleLabel(t, k)}</option>)}
           </select>
         </Field>
-        <Field label="EMAIL">
+        <Field label={t.scheduledReports.fieldEmail}>
           <input required type="email" value={form.emailTo} onChange={(e) => setForm({ ...form, emailTo: e.target.value })} style={input} />
         </Field>
-        <button type="submit" disabled={saving} style={btnPrimary}>{saving ? "..." : "Planla"}</button>
+        <button type="submit" disabled={saving} style={btnPrimary}>{saving ? t.scheduledReports.submitting : t.scheduledReports.submit}</button>
         {status && <span style={{ marginLeft: 12, color: status.kind === "ok" ? "#10B981" : "#EF4444", fontSize: 11 }}>{status.msg}</span>}
       </form>
 
-      <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>Mevcut Raporlar ({reports.length})</h2>
+      <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>{t.scheduledReports.existingTitle} ({reports.length})</h2>
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
       {!loading && reports.length === 0 && (
         <EmptyState
           icon={<Send size={28} />}
-          title="Henüz planlı rapor yok"
-          description="Sık çalıştırdığınız sorguları planlı olarak email ile gönderin. Günlük, haftalık veya aylık programlanabilir."
+          title={t.scheduledReports.emptyTitle}
+          description={t.scheduledReports.emptyDesc}
         />
       )}
       {reports.map((r) => (
@@ -136,12 +144,12 @@ export default function ScheduledReportsPage() {
               <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600 }}>{r.name}</div>
               <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{r.question}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
-                {SCHEDULES[r.schedule] ?? r.schedule} · {r.emailTo}
-                {r.lastRunAt && <> · son: {new Date(r.lastRunAt).toLocaleString("tr-TR")}</>}
+                {scheduleLabel(t, r.schedule)} · {r.emailTo}
+                {r.lastRunAt && <> · {t.scheduledReports.lastRunPrefix}{new Date(r.lastRunAt).toLocaleString("tr-TR")}</>}
               </div>
               {r.lastError && <div style={{ color: "#EF4444", fontSize: 10, marginTop: 4 }}>⚠ {r.lastError}</div>}
             </div>
-            <button onClick={() => remove(r.id)} style={btnDanger}>Sil</button>
+            <button onClick={() => remove(r.id)} style={btnDanger}>{t.scheduledReports.delete}</button>
           </div>
         </div>
       ))}
