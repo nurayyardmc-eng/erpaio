@@ -227,6 +227,61 @@ export async function POST(req: Request) {
         }
         break;
       }
+      case "customer.subscription.paused": {
+        // Stripe: subscription paused by user/admin (no billing, no service).
+        // Tenant plan'ı starter'a düşür, audit ekle. Resume için
+        // subscription.resumed event'ini handle ediyoruz (aşağıda).
+        const sub = event.data.object;
+        const customerId = typeof sub.customer === "string" ? sub.customer : null;
+        const tenant = await findTenantByMetadataOrCustomer(sub.metadata, customerId);
+        if (tenant) {
+          await prisma.tenant.update({
+            where: { id: tenant.id },
+            data: { subscriptionStatus: "paused" },
+          });
+          log.info({ tenantId: tenant.id }, "Subscription paused");
+        }
+        break;
+      }
+      case "customer.subscription.resumed": {
+        const sub = event.data.object;
+        const customerId = typeof sub.customer === "string" ? sub.customer : null;
+        const tenant = await findTenantByMetadataOrCustomer(sub.metadata, customerId);
+        if (tenant) {
+          await prisma.tenant.update({
+            where: { id: tenant.id },
+            data: { subscriptionStatus: sub.status },
+          });
+          log.info({ tenantId: tenant.id, status: sub.status }, "Subscription resumed");
+        }
+        break;
+      }
+      case "customer.deleted": {
+        // Stripe customer silindi — tenant.stripeCustomerId temizle ki
+        // gelecek aboneliklerde stale referans olmasın. Tenant'ı silmiyoruz
+        // (KVKK silinme talebi için /api/tenant/delete ayrı bir flow).
+        const customer = event.data.object;
+        const customerId = typeof customer.id === "string" ? customer.id : null;
+        if (customerId) {
+          const result = await prisma.tenant.updateMany({
+            where: { stripeCustomerId: customerId },
+            data: { stripeCustomerId: null, stripeSubscriptionId: null, subscriptionStatus: "cancelled" },
+          });
+          log.info({ customerId, tenantsUpdated: result.count }, "Stripe customer deleted — cleared tenant refs");
+        }
+        break;
+      }
+      case "invoice.paid": {
+        // invoice.payment_succeeded zaten log'lanıyor. Bu event ek "paid"
+        // signal'i (manuel ödeme dahil); zenginleştirme için ayrı log.
+        const invoice = event.data.object;
+        const customerId = typeof invoice.customer === "string" ? invoice.customer : null;
+        log.info(
+          { customerId, amount: invoice.amount_paid, currency: invoice.currency, invoiceId: invoice.id },
+          "Invoice paid",
+        );
+        break;
+      }
       default:
         log.debug({ type: event.type }, "Unhandled event");
     }
