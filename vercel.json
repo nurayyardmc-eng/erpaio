@@ -8,11 +8,13 @@
   "crons": [
     { "path": "/api/cron/anomaly-detection?mode=daily", "schedule": "0 6 * * *" },
     { "path": "/api/cron/scheduled-reports", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/watchlists", "schedule": "0 6 * * *" }
+    { "path": "/api/cron/watchlists", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/cleanup", "schedule": "0 4 * * *" }
   ],
   "functions": {
     "src/app/api/cron/anomaly-detection/route.ts": { "maxDuration": 300 },
     "src/app/api/cron/scheduled-reports/route.ts": { "maxDuration": 300 },
-    "src/app/api/cron/watchlists/route.ts": { "maxDuration": 300 }
+    "src/app/api/cron/watchlists/route.ts": { "maxDuration": 300 },
+    "src/app/api/cron/cleanup/route.ts": { "maxDuration": 60 }
   }
 }
