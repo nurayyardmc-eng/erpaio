@@ -17,6 +17,23 @@ export async function getConnections(): Promise<ErpConnection[]> {
   return api("/api/connections");
 }
 
+export interface CreateConnectionInput {
+  erpType: "nebim_v3" | "sap" | "dynamics365" | "postgres";
+  host: string;
+  port: number;
+  dbName: string;
+  username: string;
+  password: string;
+}
+
+export async function createConnection(input: CreateConnectionInput): Promise<{ id: string }> {
+  return api("/api/connections", { method: "POST", body: input });
+}
+
+export async function deleteConnection(id: string): Promise<void> {
+  await api(`/api/connections/${id}`, { method: "DELETE" });
+}
+
 // ============= Saved Queries =============
 export interface SavedQuery {
   id: string;

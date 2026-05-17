@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MoreScreen from "./MoreScreen";
 import ConnectionsScreen from "./ConnectionsScreen";
+import ConnectionFormScreen from "./ConnectionFormScreen";
 import SavedScreen from "./SavedScreen";
 import AnnotationsScreen from "./AnnotationsScreen";
 import InsightsScreen from "./InsightsScreen";
@@ -16,6 +17,7 @@ export type MoreStackParamList = {
   Overview: undefined;
   Saved: undefined;
   Connections: undefined;
+  ConnectionForm: undefined;
   Annotations: undefined;
   Watchlists: undefined;
   Insights: undefined;
@@ -34,6 +36,7 @@ export default function MoreStackNav() {
       <Stack.Screen name="Overview" component={OverviewScreen} />
       <Stack.Screen name="Saved" component={SavedScreen} />
       <Stack.Screen name="Connections" component={ConnectionsScreen} />
+      <Stack.Screen name="ConnectionForm" component={ConnectionFormScreen} />
       <Stack.Screen name="Annotations" component={AnnotationsScreen} />
       <Stack.Screen name="Watchlists" component={WatchlistsScreen} />
       <Stack.Screen name="Insights" component={InsightsScreen} />
