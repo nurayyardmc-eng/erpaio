@@ -45,6 +45,7 @@ function buildGroups(t: Dictionary): MenuGroup[] {
       items: [
         { route: "Team", label: t.menu.teamLabel, description: t.menu.teamDesc },
         { route: "Security", label: t.menu.securityLabel, description: t.menu.securityDesc },
+        { route: "IpAllowlist", label: t.menu.ipAllowlistLabel, description: t.menu.ipAllowlistDesc },
       ],
     },
     {

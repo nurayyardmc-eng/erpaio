@@ -300,6 +300,33 @@ export async function revokeApiSession(id: string): Promise<{ ok: true }> {
   return api(`/api/me/sessions?tokenId=${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+// ============= IP allowlist (tenant security) =============
+export interface IpAllowlistEntry {
+  id: string;
+  tenantId: string;
+  cidr: string;
+  label: string | null;
+  createdAt: string;
+}
+
+export async function getIpAllowlist(): Promise<{ entries: IpAllowlistEntry[] }> {
+  return api(`/api/security/allowlist`);
+}
+
+export async function addIpAllowlistEntry(params: {
+  cidr: string;
+  label?: string;
+}): Promise<{ entry: IpAllowlistEntry }> {
+  return api(`/api/security/allowlist`, {
+    method: "POST",
+    body: params,
+  });
+}
+
+export async function removeIpAllowlistEntry(id: string): Promise<{ ok: true }> {
+  return api(`/api/security/allowlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
 // ============= KVKK md. 11 / GDPR Art. 17 — right to erasure =============
 /**
  * Tenant (hesap) silme talebi. Server `confirmation: 'HESABIMI SİL'` literal

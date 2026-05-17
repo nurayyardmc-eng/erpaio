@@ -119,6 +119,8 @@ export interface Dictionary {
     teamDesc: string;
     securityLabel: string;
     securityDesc: string;
+    ipAllowlistLabel: string;
+    ipAllowlistDesc: string;
     activityLabel: string;
     activityDesc: string;
     consentsLabel: string;
@@ -427,6 +429,32 @@ export interface Dictionary {
     unnamedDevice: string;
     lastSeenLabel: string;
     addedLabel: string;
+  };
+  ipAllowlist: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    addSectionTitle: string;
+    fieldCidr: string;
+    fieldCidrPlaceholder: string;
+    fieldLabel: string;
+    fieldLabelPlaceholder: string;
+    addBtn: string;
+    addingBtn: string;
+    addedToast: string;
+    addFailedToast: string;
+    invalidCidrError: string;
+    removeBtn: string;
+    removeConfirmTitle: string;
+    removeConfirmMessagePrefix: string;
+    removeConfirmMessageSuffix: string;
+    removeConfirmYes: string;
+    removedToast: string;
+    removeFailedToast: string;
+    unnamedLabel: string;
+    ownerOnly: string;
   };
   saved: {
     brand: string;
