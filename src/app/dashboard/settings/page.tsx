@@ -5,6 +5,8 @@ import { AlertTriangle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { showToast } from "@/components/Toaster";
 import { confirmDialog } from "@/components/Confirm";
+import { useI18n } from "@/lib/i18n/context";
+import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n/dictionary";
 import { colors } from "@/lib/theme";
 
 interface TenantSettings {
@@ -19,6 +21,7 @@ interface TenantSettings {
 }
 
 export default function SettingsPage() {
+  const { locale, setLocale, t } = useI18n();
   const [tenant, setTenant] = useState<TenantSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -277,6 +280,37 @@ export default function SettingsPage() {
                 {tenant.plan}
               </div>
             </Field>
+          </Section>
+
+          <Section title={t.settings.language}>
+            <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 8px" }}>
+              {t.settings.languageHint}
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {SUPPORTED_LOCALES.map((loc) => (
+                <button
+                  key={loc}
+                  type="button"
+                  onClick={() => {
+                    if (loc === locale) return;
+                    setLocale(loc as Locale);
+                    showToast(t.settings.languageSaved, "success");
+                  }}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 100,
+                    background: loc === locale ? colors.brand : colors.bg,
+                    color: loc === locale ? colors.textInverse : colors.text,
+                    border: `1px solid ${loc === locale ? colors.brand : colors.border}`,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  {LOCALE_LABELS[loc]}
+                </button>
+              ))}
+            </div>
           </Section>
 
           <Section title="WhatsApp Bildirimleri">

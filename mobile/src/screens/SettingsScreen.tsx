@@ -15,6 +15,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
 import { isBiometricSupported, isBiometricEnabled, setBiometricEnabled } from "../lib/biometric";
+import { useI18n } from "../lib/i18n/context";
+import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "../lib/i18n/dictionary";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import { showToast } from "../components/Toast";
 
@@ -23,6 +25,7 @@ interface Props {
 }
 
 export default function SettingsScreen({ onLogout }: Props) {
+  const { locale, setLocale, t } = useI18n();
   const tenantQuery = useQuery({ queryKey: ["tenant"], queryFn: getTenant });
   const connQuery = useQuery({ queryKey: ["connections"], queryFn: getConnections });
 
@@ -229,6 +232,31 @@ export default function SettingsScreen({ onLogout }: Props) {
           />
         </Section>
       )}
+
+      <Section title={t.settings.language}>
+        <Text style={[styles.muted, { marginBottom: spacing(3) }]}>{t.settings.languageHint}</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing(2) }}>
+          {SUPPORTED_LOCALES.map((loc) => (
+            <TouchableOpacity
+              key={loc}
+              onPress={() => {
+                if (loc === locale) return;
+                void setLocale(loc as Locale).then(() => {
+                  showToast(t.settings.languageSaved, "success");
+                });
+              }}
+              style={[
+                styles.sevChip,
+                locale === loc && styles.sevChipActive,
+              ]}
+            >
+              <Text style={[styles.sevChipText, locale === loc && styles.sevChipTextActive]}>
+                {LOCALE_LABELS[loc]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Section>
 
       <Section title="Yasal">
         <TouchableOpacity onPress={() => Linking.openURL("https://erpaio.vercel.app/privacy")}>

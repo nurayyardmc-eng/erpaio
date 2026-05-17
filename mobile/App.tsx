@@ -25,6 +25,7 @@ import { colors, font } from "./src/lib/theme";
 import Toaster from "./src/components/Toast";
 import ConfirmHost from "./src/components/Confirm";
 import KvkkConsent from "./src/components/KvkkConsent";
+import { I18nProvider } from "./src/lib/i18n/context";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -181,6 +182,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
+        <I18nProvider>
         <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
         {authState === "loading" || authState === "biometric" ? (
           <View style={styles.loader}>
@@ -234,6 +236,7 @@ export default function App() {
         <Toaster />
         <ConfirmHost />
         <KvkkConsent />
+        </I18nProvider>
       </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
