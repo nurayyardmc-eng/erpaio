@@ -4,7 +4,7 @@ const ServerEnvSchema = z.object({
   DATABASE_URL: z.string().url(),
   DIRECT_URL: z.string().url(),
   NEXTAUTH_SECRET: z.string().min(16),
-  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_URL: z.string().url().or(z.literal("")).optional(),
   ENCRYPTION_KEY: z
     .string()
     .regex(/^[0-9a-fA-F]{64}$/, "ENCRYPTION_KEY 64-char hex (32 byte) olmalı"),
@@ -16,12 +16,12 @@ const ServerEnvSchema = z.object({
   TWILIO_WHATSAPP_FROM: z.string().optional(),
   TWILIO_WHATSAPP_TO: z.string().optional(),
 
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().or(z.literal("")).optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
   SENTRY_ORG: z.string().optional(),
   SENTRY_PROJECT: z.string().optional(),
 
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_URL: z.string().url().or(z.literal("")).optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).optional(),
