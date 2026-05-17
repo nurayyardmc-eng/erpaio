@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 
 const CONSENT_KEY = "erpaio_cookie_consent";
 
 export default function CookieConsent() {
+  const { t } = useI18n();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -45,9 +47,9 @@ export default function CookieConsent() {
       }}>
         <div style={{ flex: 1, minWidth: 280 }}>
           <p style={{ color: colors.textMuted, fontSize: 13, margin: 0, lineHeight: 1.6 }}>
-            Bu site oturum açma için gerekli çerezleri kullanır (NextAuth). Üçüncü taraf reklam çerezi yok.{" "}
+            {t.cookieConsent.message}{" "}
             <Link href="/privacy" style={{ color: colors.brand, fontWeight: 500 }}>
-              Gizlilik Politikası
+              {t.cookieConsent.privacyLink}
             </Link>
           </p>
         </div>
@@ -64,7 +66,7 @@ export default function CookieConsent() {
             whiteSpace: "nowrap",
           }}
         >
-          Anladım
+          {t.cookieConsent.accept}
         </button>
       </div>
     </div>

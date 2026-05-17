@@ -16,6 +16,11 @@ export const tr: Dictionary = {
     yes: "Evet",
     no: "Hayır",
   },
+  cookieConsent: {
+    message: "Bu site oturum açma için gerekli çerezleri kullanır (NextAuth). Üçüncü taraf reklam çerezi yok.",
+    privacyLink: "Gizlilik Politikası",
+    accept: "Anladım",
+  },
   sidebar: {
     newChat: "Yeni Sohbet",
     groupDaily: "Günlük",

@@ -36,6 +36,11 @@ export interface Dictionary {
     yes: string;
     no: string;
   };
+  cookieConsent: {
+    message: string;
+    privacyLink: string;
+    accept: string;
+  };
   sidebar: {
     newChat: string;
     groupDaily: string;

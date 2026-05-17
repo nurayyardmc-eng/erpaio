@@ -3,6 +3,8 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Toaster from "@/components/Toaster";
 import ConfirmHost from "@/components/Confirm";
+import CookieConsent from "@/components/CookieConsent";
+import { I18nProvider } from "@/lib/i18n/context";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -180,9 +182,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        {children}
-        <Toaster />
-        <ConfirmHost />
+        <I18nProvider>
+          {children}
+          <Toaster />
+          <ConfirmHost />
+          <CookieConsent />
+        </I18nProvider>
       </body>
     </html>
   );

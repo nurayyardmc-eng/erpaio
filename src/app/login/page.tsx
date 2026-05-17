@@ -4,20 +4,13 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Mail, Lock, AlertCircle, ShieldCheck } from "lucide-react";
 import Logo from "@/components/Logo";
-import { I18nProvider, useI18n } from "@/lib/i18n/context";
+import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 
 type Step = "credentials" | "mfa";
 
+// I18nProvider root layout'tan geliyor — burada wrap'lemiyoruz.
 export default function LoginPage() {
-  return (
-    <I18nProvider>
-      <LoginPageInner />
-    </I18nProvider>
-  );
-}
-
-function LoginPageInner() {
   const { t: dict } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

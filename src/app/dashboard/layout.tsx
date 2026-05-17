@@ -4,26 +4,24 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import CommandPalette from "@/components/CommandPalette";
 import HelpFab from "@/components/HelpFab";
-import { I18nProvider } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 
+// I18nProvider root layout'tan geliyor — burada wrap'lemiyoruz.
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session) redirect("/login");
 
   return (
-    <I18nProvider>
-      <div style={{ display: "flex", minHeight: "100vh", background: colors.bg }}>
-        <DashboardSidebar />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <DashboardHeader email={session.user?.email ?? ""} name={session.user?.name} />
-          <main style={{ flex: 1, minWidth: 0, overflow: "auto" }}>
-            {children}
-          </main>
-        </div>
-        <CommandPalette />
-        <HelpFab />
+    <div style={{ display: "flex", minHeight: "100vh", background: colors.bg }}>
+      <DashboardSidebar />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <DashboardHeader email={session.user?.email ?? ""} name={session.user?.name} />
+        <main style={{ flex: 1, minWidth: 0, overflow: "auto" }}>
+          {children}
+        </main>
       </div>
-    </I18nProvider>
+      <CommandPalette />
+      <HelpFab />
+    </div>
   );
 }

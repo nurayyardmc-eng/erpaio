@@ -16,6 +16,11 @@ export const en: Dictionary = {
     yes: "Yes",
     no: "No",
   },
+  cookieConsent: {
+    message: "This site uses necessary cookies for authentication (NextAuth). No third-party advertising cookies.",
+    privacyLink: "Privacy Policy",
+    accept: "Got it",
+  },
   sidebar: {
     newChat: "New Chat",
     groupDaily: "Daily",
