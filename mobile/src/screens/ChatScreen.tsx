@@ -27,6 +27,7 @@ import {
 import { getMe } from "../lib/auth";
 import { shareCsv } from "../lib/share";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
+import { useI18n } from "../lib/i18n/context";
 import type { ChatStackParamList } from "./SessionsScreen";
 
 interface UserMsg { role: "user"; content: string }
@@ -54,6 +55,7 @@ interface Props {
 }
 
 export default function ChatScreen({ route, navigation }: Props) {
+  const { t } = useI18n();
   const initialSessionId = route.params?.sessionId;
   const [sessionId, setSessionId] = useState<string | undefined>(initialSessionId);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -139,7 +141,7 @@ export default function ChatScreen({ route, navigation }: Props) {
     } catch (e) {
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", status: "error", content: e instanceof Error ? e.message : "Hata." },
+        { role: "assistant", status: "error", content: e instanceof Error ? e.message : t.chat.errorGeneric },
       ]);
     } finally {
       setLoading(false);
@@ -407,7 +409,7 @@ export default function ChatScreen({ route, navigation }: Props) {
           style={styles.historyBtn}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="Sohbet geçmişi"
+          accessibilityLabel={t.chat.historyA11y}
         >
           <Text style={styles.historyIcon}>≡</Text>
           <Text style={styles.historyText}>Geçmiş</Text>
@@ -440,17 +442,12 @@ export default function ChatScreen({ route, navigation }: Props) {
             <Text style={styles.welcomeTitle}>
               {userName ? (
                 <>
-                  Merhaba <Text style={styles.welcomeName}>{userName}</Text>,{"\n"}
-                  size nasıl yardımcı olabilirim?
+                  {t.chat.welcomeGreetingPrefix}<Text style={styles.welcomeName}>{userName}</Text>{t.chat.welcomeGreetingSuffix}
                 </>
-              ) : (
-                <>Size nasıl yardımcı olabilirim?</>
-              )}
+              ) : null}
             </Text>
             <Text style={styles.welcomeDesc}>
-              {selectedConn
-                ? "Veritabanınıza doğal Türkçe ile soru sorun. Yapay zeka SQL üretir, sonucu yorumlayarak gösterir."
-                : "Başlamak için önce bir ERP bağlantısı eklemeniz gerekiyor."}
+              {selectedConn ? t.chat.welcomeHint : t.chat.noConnections}
             </Text>
             {!selectedConn && (
               <TouchableOpacity
@@ -461,7 +458,7 @@ export default function ChatScreen({ route, navigation }: Props) {
                 style={styles.welcomeBtn}
                 activeOpacity={0.85}
               >
-                <Text style={styles.welcomeBtnText}>ERP Bağlantısı Ekle →</Text>
+                <Text style={styles.welcomeBtnText}>{t.chat.selectConnection} →</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -473,21 +470,20 @@ export default function ChatScreen({ route, navigation }: Props) {
         <TextInput
           value={input}
           onChangeText={setInput}
-          placeholder={selectedConn ? "Soru yaz..." : "Bağlantı yok"}
+          placeholder={selectedConn ? t.chat.inputPlaceholderReady : t.chat.inputPlaceholderNoConn}
           placeholderTextColor={colors.textDim}
           editable={!loading && !!selectedConn}
           style={styles.input}
           multiline
           onSubmitEditing={send}
-          accessibilityLabel="Sorgu giriş alanı"
-          accessibilityHint="ERP veritabanınıza Türkçe soru yazın"
+          accessibilityLabel={t.chat.inputA11y}
         />
         <TouchableOpacity
           onPress={send}
           disabled={!input.trim() || loading || !selectedConn}
           style={[styles.sendBtn, (!input.trim() || loading || !selectedConn) && { opacity: 0.4 }]}
           accessibilityRole="button"
-          accessibilityLabel="Soruyu gönder"
+          accessibilityLabel={t.chat.sendA11y}
           accessibilityState={{ disabled: !input.trim() || loading || !selectedConn }}
         >
           <Text style={styles.sendBtnText}>{loading ? "..." : "→"}</Text>

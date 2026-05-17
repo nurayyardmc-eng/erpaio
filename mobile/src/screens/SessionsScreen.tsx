@@ -18,6 +18,7 @@ import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 export type ChatStackParamList = {
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function SessionsScreen({ navigation }: Props) {
+  const { t } = useI18n();
   const [view, setView] = useState<"active" | "archived">("active");
   const [menuFor, setMenuFor] = useState<SessionListItem | null>(null);
   const queryClient = useQueryClient();
@@ -59,7 +61,7 @@ export default function SessionsScreen({ navigation }: Props) {
     setMenuFor(null);
     patchMutation.mutate(
       { id: s.id, data: { pinned: !s.pinned } },
-      { onSuccess: () => showToast(s.pinned ? "Sabit kaldırıldı" : "Sabitlendi", "success") },
+      { onSuccess: () => showToast(s.pinned ? t.sessions.unpin : t.sessions.pin, "success") },
     );
   };
 
@@ -68,20 +70,20 @@ export default function SessionsScreen({ navigation }: Props) {
     const archived = !!s.archivedAt;
     patchMutation.mutate(
       { id: s.id, data: { archivedAt: archived ? null : new Date().toISOString() } },
-      { onSuccess: () => showToast(archived ? "Arşivden çıkarıldı" : "Arşivlendi", "success") },
+      { onSuccess: () => showToast(archived ? t.sessions.unarchive : t.sessions.archive, "success") },
     );
   };
 
   const onDelete = async (s: SessionListItem) => {
     setMenuFor(null);
     const ok = await confirmDialog({
-      title: "Sohbeti sil?",
-      message: "Bu sohbet ve tüm mesajları kalıcı olarak silinecek.",
-      confirmLabel: "Sil",
+      title: t.sessions.deleteConfirmTitle,
+      message: `${t.sessions.deleteConfirmMessagePrefix}${s.title ?? t.sessions.untitled}${t.sessions.deleteConfirmMessageSuffix}`,
+      confirmLabel: t.sessions.deleteConfirmYes,
       destructive: true,
     });
     if (!ok) return;
-    deleteMutation.mutate(s.id, { onSuccess: () => showToast("Sohbet silindi", "success") });
+    deleteMutation.mutate(s.id, { onSuccess: () => showToast(t.sessions.deleteOk, "success") });
   };
 
   const renderItem = ({ item }: { item: SessionListItem }) => (
@@ -104,8 +106,7 @@ export default function SessionsScreen({ navigation }: Props) {
         style={styles.menuBtn}
         activeOpacity={0.6}
         accessibilityRole="button"
-        accessibilityLabel="Sohbet menüsü"
-        accessibilityHint="Sabitle, arşivle veya sil"
+        accessibilityLabel={t.sessions.title}
       >
         <Text style={styles.menuDots}>⋯</Text>
       </TouchableOpacity>
@@ -116,15 +117,15 @@ export default function SessionsScreen({ navigation }: Props) {
     <View style={[styles.root, { paddingTop: 50 }]}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.brand}>ERPAIO · SOHBET</Text>
-          <Text style={styles.title}>Sohbetlerim</Text>
+          <Text style={styles.brand}>ERPAIO · CHAT</Text>
+          <Text style={styles.title}>{t.sessions.title}</Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate("Chat", {})}
           style={styles.newButton}
           activeOpacity={0.85}
         >
-          <Text style={styles.newButtonText}>+ Yeni</Text>
+          <Text style={styles.newButtonText}>+ {t.common.save === "Save" ? "New" : "Yeni"}</Text>
         </TouchableOpacity>
       </View>
 
@@ -137,7 +138,7 @@ export default function SessionsScreen({ navigation }: Props) {
             activeOpacity={0.7}
           >
             <Text style={[styles.filterText, view === v && styles.filterTextActive]}>
-              {v === "active" ? "Aktif" : "Arşiv"}
+              {v === "active" ? t.sessions.tabActive : t.sessions.tabArchived}
             </Text>
           </TouchableOpacity>
         ))}
@@ -158,12 +159,8 @@ export default function SessionsScreen({ navigation }: Props) {
           renderItem={renderItem}
           ListEmptyComponent={
             <EmptyState
-              title={view === "active" ? "Henüz sohbet yok" : "Arşivde sohbet yok"}
-              description={
-                view === "active"
-                  ? "Yukarıdaki + Yeni butonuyla ilk sohbetini başlat."
-                  : "Arşivlediğin sohbetler burada görünür."
-              }
+              title={view === "active" ? t.sessions.emptyActive : t.sessions.emptyArchived}
+              description={view === "active" ? t.sessions.emptyActive : t.sessions.emptyArchived}
             />
           }
           refreshControl={
@@ -186,18 +183,18 @@ export default function SessionsScreen({ navigation }: Props) {
             onPress={() => setMenuFor(null)}
           >
             <View style={styles.sheet}>
-              <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.title}</Text>
+              <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.title ?? t.sessions.untitled}</Text>
               <TouchableOpacity onPress={() => onPin(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
-                <Text style={styles.sheetText}>{menuFor.pinned ? "Sabit Kaldır" : "Sabitle"}</Text>
+                <Text style={styles.sheetText}>{menuFor.pinned ? t.sessions.unpin : t.sessions.pin}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => onArchive(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
-                <Text style={styles.sheetText}>{menuFor.archivedAt ? "Arşivden Çıkar" : "Arşivle"}</Text>
+                <Text style={styles.sheetText}>{menuFor.archivedAt ? t.sessions.unarchive : t.sessions.archive}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.error }]}>Sil</Text>
+                <Text style={[styles.sheetText, { color: colors.error }]}>{t.sessions.delete}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMenuFor(null)} style={[styles.sheetItem, styles.sheetCancel]} activeOpacity={0.6}>
-                <Text style={[styles.sheetText, { color: colors.textMuted }]}>İptal</Text>
+                <Text style={[styles.sheetText, { color: colors.textMuted }]}>{t.common.cancel}</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
