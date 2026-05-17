@@ -4,9 +4,12 @@ import ConnectionsScreen from "./ConnectionsScreen";
 import ConnectionFormScreen from "./ConnectionFormScreen";
 import SavedScreen from "./SavedScreen";
 import AnnotationsScreen from "./AnnotationsScreen";
+import AnnotationFormScreen from "./AnnotationFormScreen";
 import InsightsScreen from "./InsightsScreen";
 import WatchlistsScreen from "./WatchlistsScreen";
+import WatchlistFormScreen from "./WatchlistFormScreen";
 import ScheduledReportsScreen from "./ScheduledReportsScreen";
+import ScheduledReportFormScreen from "./ScheduledReportFormScreen";
 import TeamScreen from "./TeamScreen";
 import AuditScreen from "./AuditScreen";
 import SecurityScreen from "./SecurityScreen";
@@ -19,9 +22,12 @@ export type MoreStackParamList = {
   Connections: undefined;
   ConnectionForm: undefined;
   Annotations: undefined;
+  AnnotationForm: undefined;
   Watchlists: undefined;
+  WatchlistForm: undefined;
   Insights: undefined;
   ScheduledReports: undefined;
+  ScheduledReportForm: undefined;
   Team: undefined;
   Audit: undefined;
   Security: undefined;
@@ -38,9 +44,12 @@ export default function MoreStackNav() {
       <Stack.Screen name="Connections" component={ConnectionsScreen} />
       <Stack.Screen name="ConnectionForm" component={ConnectionFormScreen} />
       <Stack.Screen name="Annotations" component={AnnotationsScreen} />
+      <Stack.Screen name="AnnotationForm" component={AnnotationFormScreen} />
       <Stack.Screen name="Watchlists" component={WatchlistsScreen} />
+      <Stack.Screen name="WatchlistForm" component={WatchlistFormScreen} />
       <Stack.Screen name="Insights" component={InsightsScreen} />
       <Stack.Screen name="ScheduledReports" component={ScheduledReportsScreen} />
+      <Stack.Screen name="ScheduledReportForm" component={ScheduledReportFormScreen} />
       <Stack.Screen name="Team" component={TeamScreen} />
       <Stack.Screen name="Audit" component={AuditScreen} />
       <Stack.Screen name="Security" component={SecurityScreen} />

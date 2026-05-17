@@ -63,6 +63,23 @@ export async function getAnnotations(): Promise<{ annotations: Annotation[] }> {
   return api("/api/annotations");
 }
 
+export interface UpsertAnnotationInput {
+  tableName: string;
+  columnName?: string | null;
+  description?: string | null;
+  hidden?: boolean;
+}
+
+export async function upsertAnnotation(input: UpsertAnnotationInput): Promise<void> {
+  await api("/api/annotations", { method: "PUT", body: input });
+}
+
+export async function deleteAnnotation(tableName: string, columnName?: string | null): Promise<void> {
+  const params = new URLSearchParams({ tableName });
+  if (columnName) params.set("columnName", columnName);
+  await api(`/api/annotations?${params.toString()}`, { method: "DELETE" });
+}
+
 // ============= Insights =============
 export interface InferredFk {
   fromTable: string;
@@ -107,6 +124,23 @@ export async function getWatchlists(): Promise<{ watchlists: Watchlist[] }> {
   return api("/api/watchlists");
 }
 
+export interface CreateWatchlistInput {
+  name: string;
+  question: string;
+  connectionId: string;
+  thresholdOp: "lt" | "lte" | "gt" | "gte" | "eq";
+  thresholdVal: number;
+  emailTo?: string;
+}
+
+export async function createWatchlist(input: CreateWatchlistInput): Promise<{ id: string }> {
+  return api("/api/watchlists", { method: "POST", body: input });
+}
+
+export async function deleteWatchlist(id: string): Promise<void> {
+  await api(`/api/watchlists?id=${id}`, { method: "DELETE" });
+}
+
 // ============= Scheduled Reports =============
 export interface ScheduledReport {
   id: string;
@@ -121,6 +155,22 @@ export interface ScheduledReport {
 
 export async function getScheduledReports(): Promise<{ reports: ScheduledReport[] }> {
   return api("/api/scheduled-reports");
+}
+
+export interface CreateReportInput {
+  name: string;
+  question: string;
+  connectionId: string;
+  schedule: "hourly" | "daily_06" | "daily_18" | "weekly_monday" | "monthly_first";
+  emailTo: string;
+}
+
+export async function createScheduledReport(input: CreateReportInput): Promise<{ id: string }> {
+  return api("/api/scheduled-reports", { method: "POST", body: input });
+}
+
+export async function deleteScheduledReport(id: string): Promise<void> {
+  await api(`/api/scheduled-reports?id=${id}`, { method: "DELETE" });
 }
 
 // ============= Team =============
