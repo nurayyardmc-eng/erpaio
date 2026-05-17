@@ -65,6 +65,7 @@ export const en: Dictionary = {
     sectionSetup: "Setup",
     sectionAnalysis: "Analysis",
     sectionAdmin: "Admin",
+    sectionKvkk: "Privacy / Personal Data",
     overviewLabel: "Live Metrics",
     overviewDesc: "Last 24 hours summary",
     savedLabel: "Saved Queries",
@@ -85,6 +86,10 @@ export const en: Dictionary = {
     teamDesc: "Members and invitations",
     securityLabel: "Security",
     securityDesc: "MFA + IP allowlist",
+    activityLabel: "My Account Activity",
+    activityDesc: "Password, MFA, session history",
+    consentsLabel: "My Consents",
+    consentsDesc: "KVKK / terms / privacy approvals",
   },
   chat: {
     welcomeGreetingPrefix: "Hello ",
@@ -349,6 +354,27 @@ export const en: Dictionary = {
     systemUser: "system",
     emptyTitle: "No activity yet",
     emptyDesc: "User activities will appear here.",
+  },
+  activity: {
+    brand: "SECURITY ACTIVITY",
+    title: "Account Activity Log",
+    description:
+      "Audit trail of sensitive mutations on your account (password changes, MFA, sessions, profile updates). Provided under GDPR Art. 15 / KVKK md. 11 right of access.",
+    emptyTitle: "No activity recorded yet.",
+    colTime: "Time",
+    colAction: "Action",
+    colIp: "IP",
+  },
+  consents: {
+    brand: "CONSENT HISTORY",
+    title: "Consent History",
+    description:
+      "Audit trail of your Terms, KVKK notice, and Privacy Policy consents. Provided under GDPR Art. 15 / KVKK md. 11 right of access. These records are kept permanently for consent compliance.",
+    emptyTitle: "No consent records yet.",
+    colTime: "Time",
+    colType: "Document",
+    colAction: "Action",
+    colVersion: "Version",
   },
   saved: {
     brand: "ERPAIO · SAVED",

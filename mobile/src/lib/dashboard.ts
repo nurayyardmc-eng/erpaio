@@ -209,6 +209,35 @@ export async function getAudit(limit = 50): Promise<{ entries: AuditEntry[] }> {
   return api(`/api/audit?limit=${limit}`);
 }
 
+// ============= KVKK / GDPR — User's own activity (right of access) =============
+export interface MyActivityEntry {
+  id: string;
+  action: string;
+  target: string | null;
+  metadata: unknown;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export async function getMyActivity(limit = 100): Promise<{ activities: MyActivityEntry[] }> {
+  return api(`/api/me/activity?limit=${limit}`);
+}
+
+// ============= KVKK / GDPR — User's own consents (right of access) =============
+export interface MyConsentEntry {
+  id: string;
+  type: string;
+  action: string;
+  documentVer: string | null;
+  context: string | null;
+  createdAt: string;
+}
+
+export async function getMyConsents(): Promise<{ consents: MyConsentEntry[] }> {
+  return api(`/api/me/consents`);
+}
+
 // ============= Overview Metrics =============
 export interface DashboardMetrics {
   todayQueries: number;

@@ -76,6 +76,7 @@ export interface Dictionary {
     sectionSetup: string;
     sectionAnalysis: string;
     sectionAdmin: string;
+    sectionKvkk: string;
     overviewLabel: string;
     overviewDesc: string;
     savedLabel: string;
@@ -96,6 +97,10 @@ export interface Dictionary {
     teamDesc: string;
     securityLabel: string;
     securityDesc: string;
+    activityLabel: string;
+    activityDesc: string;
+    consentsLabel: string;
+    consentsDesc: string;
   };
   chat: {
     welcomeGreetingPrefix: string;
@@ -360,6 +365,25 @@ export interface Dictionary {
     systemUser: string;
     emptyTitle: string;
     emptyDesc: string;
+  };
+  activity: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    colTime: string;
+    colAction: string;
+    colIp: string;
+  };
+  consents: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    colTime: string;
+    colType: string;
+    colAction: string;
+    colVersion: string;
   };
   saved: {
     brand: string;

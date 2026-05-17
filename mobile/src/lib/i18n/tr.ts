@@ -65,6 +65,7 @@ export const tr: Dictionary = {
     sectionSetup: "Kurulum",
     sectionAnalysis: "Analiz",
     sectionAdmin: "Yönetim",
+    sectionKvkk: "KVKK / Kişisel Veriler",
     overviewLabel: "Anlık Metrikler",
     overviewDesc: "Son 24 saat özeti",
     savedLabel: "Kayıtlı Sorgular",
@@ -85,6 +86,10 @@ export const tr: Dictionary = {
     teamDesc: "Üyeler ve davetler",
     securityLabel: "Güvenlik",
     securityDesc: "MFA + IP allowlist",
+    activityLabel: "Hesap Aktivitem",
+    activityDesc: "Şifre, MFA, oturum geçmişim",
+    consentsLabel: "Onay Geçmişim",
+    consentsDesc: "KVKK / terms / privacy onaylarım",
   },
   chat: {
     welcomeGreetingPrefix: "Merhaba ",
@@ -349,6 +354,27 @@ export const tr: Dictionary = {
     systemUser: "system",
     emptyTitle: "Henüz aktivite yok",
     emptyDesc: "Kullanıcı aktiviteleri burada görünür.",
+  },
+  activity: {
+    brand: "GÜVENLİK AKTİVİTESİ",
+    title: "Hesap Aktivite Geçmişi",
+    description:
+      "Hesabınızdaki hassas mutasyonların (şifre değişimi, MFA, oturum, profil güncellemesi) audit kaydı. KVKK md. 11 işleme bilgi talep hakkı kapsamında size sunulur.",
+    emptyTitle: "Henüz aktivite kaydı yok.",
+    colTime: "Zaman",
+    colAction: "İşlem",
+    colIp: "IP",
+  },
+  consents: {
+    brand: "KVKK ONAY GEÇMİŞİ",
+    title: "Onay Geçmişi",
+    description:
+      "Kullanım Koşulları, KVKK aydınlatma metni ve gizlilik politikası onaylarınızın audit kaydı. KVKK md. 11 işleme bilgi talep hakkı kapsamında size sunulur. Bu kayıtlar consent denetimi için kalıcı tutulur.",
+    emptyTitle: "Henüz onay kaydı yok.",
+    colTime: "Zaman",
+    colType: "Belge",
+    colAction: "İşlem",
+    colVersion: "Versiyon",
   },
   saved: {
     brand: "ERPAIO · KAYITLI",

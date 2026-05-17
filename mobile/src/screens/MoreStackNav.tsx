@@ -14,6 +14,8 @@ import TeamScreen from "./TeamScreen";
 import AuditScreen from "./AuditScreen";
 import SecurityScreen from "./SecurityScreen";
 import OverviewScreen from "./OverviewScreen";
+import ActivityScreen from "./ActivityScreen";
+import ConsentsScreen from "./ConsentsScreen";
 
 export type MoreStackParamList = {
   More: undefined;
@@ -31,6 +33,8 @@ export type MoreStackParamList = {
   Team: undefined;
   Audit: undefined;
   Security: undefined;
+  Activity: undefined;
+  Consents: undefined;
 };
 
 const Stack = createNativeStackNavigator<MoreStackParamList>();
@@ -53,6 +57,8 @@ export default function MoreStackNav() {
       <Stack.Screen name="Team" component={TeamScreen} />
       <Stack.Screen name="Audit" component={AuditScreen} />
       <Stack.Screen name="Security" component={SecurityScreen} />
+      <Stack.Screen name="Activity" component={ActivityScreen} />
+      <Stack.Screen name="Consents" component={ConsentsScreen} />
     </Stack.Navigator>
   );
 }
