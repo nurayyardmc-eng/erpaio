@@ -76,7 +76,7 @@ export async function consumeRecoveryCode(
   let matchedId: string | null = null;
   for (const c of candidates) {
     // bcrypt.compare is constant-time per hash
-    // eslint-disable-next-line no-await-in-loop
+     
     const ok = await bcrypt.compare(normalized, c.codeHash);
     if (ok && !matchedId) matchedId = c.id;
   }
