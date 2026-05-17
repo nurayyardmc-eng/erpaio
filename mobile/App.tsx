@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MessageSquare, Bell, Menu, Settings } from "lucide-react-native";
@@ -9,6 +9,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
@@ -20,6 +21,7 @@ import MoreStackNav from "./src/screens/MoreStackNav";
 import { getToken, clearToken, setUnauthorizedHandler } from "./src/lib/api";
 import { logout as authLogout, refreshIfNeeded } from "./src/lib/auth";
 import { registerForPush } from "./src/lib/push";
+import { routeFromNotificationData } from "./src/lib/notificationRouting";
 import { authenticate, isBiometricEnabled, isBiometricSupported } from "./src/lib/biometric";
 import { colors, font } from "./src/lib/theme";
 import Toaster from "./src/components/Toast";
@@ -44,6 +46,13 @@ const persister = createAsyncStoragePersister({
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
+
+/**
+ * Global navigation ref — push notification tap handler buradan navigate eder.
+ * Component dışında oluşturuldu çünkü `addNotificationResponseReceivedListener`
+ * useEffect içinde çağrılır ama navigation hierarchy mount edildiğinde stabil olmalı.
+ */
+const navigationRef = createNavigationContainerRef();
 
 const navTheme = {
   ...DefaultTheme,
@@ -176,6 +185,58 @@ export default function App() {
     };
   }, [authState]);
 
+  // Push notification tap deep-link routing.
+  // authed olduğumuzda hem foreground/background listener'ı kuruyoruz hem de
+  // app cold-start ile açıldığında getLastNotificationResponseAsync ile son
+  // tapped notification'a backfill yapıyoruz. routeFromNotificationData pure
+  // helper (test'li); navigationRef tabsRoot mount edildikten sonra erişilebilir.
+  useEffect(() => {
+    if (authState !== "authed") return;
+
+    const handleResponse = (resp: Notifications.NotificationResponse | null) => {
+      if (!resp) return;
+      const data = resp.notification.request.content.data;
+      const target = routeFromNotificationData(data);
+      if (!target) return;
+      // navigationRef hemen ready olmayabilir — short retry. Cold-start
+      // path'inde navigation tree mount + ready arasında race var.
+      const tryNavigate = (attemptsLeft: number) => {
+        if (!navigationRef.isReady()) {
+          if (attemptsLeft > 0) {
+            setTimeout(() => tryNavigate(attemptsLeft - 1), 100);
+          }
+          return;
+        }
+        // navigationRef.navigate v7 overload sıkıştırıcı — TS narrowing two-arg
+        // form'u "never" yapar. Pratikte string + params object çalışır;
+        // type-assert with unknown intermediate to satisfy compiler.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const nav = navigationRef as any;
+        if (target.tab === "Bildirimler") {
+          nav.navigate("Tabs", { screen: "Bildirimler" });
+        } else if (target.tab === "Menü") {
+          nav.navigate("Tabs", {
+            screen: "Menü",
+            params: { screen: target.nestedRoute },
+          });
+        }
+      };
+      tryNavigate(10); // 10x100ms = 1s max wait
+    };
+
+    // App foreground'tayken bildirim tıklanırsa
+    const sub = Notifications.addNotificationResponseReceivedListener(handleResponse);
+
+    // App kapalıyken bildirim tıklanarak açıldıysa: cold-start backfill
+    void Notifications.getLastNotificationResponseAsync()
+      .then(handleResponse)
+      .catch(() => {
+        // Expo Go'da bu API yok / no-op
+      });
+
+    return () => sub.remove();
+  }, [authState]);
+
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
@@ -223,7 +284,7 @@ export default function App() {
             )}
           </View>
         ) : (
-          <NavigationContainer theme={navTheme}>
+          <NavigationContainer theme={navTheme} ref={navigationRef}>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               {authState === "guest" ? (
                 <>
