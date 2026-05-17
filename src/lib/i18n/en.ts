@@ -204,6 +204,19 @@ export const en: Dictionary = {
     linkLabel: "View account activity",
     linkDescription: "History of security events: password changes, MFA, sessions.",
   },
+  consents: {
+    brand: "CONSENT HISTORY",
+    title: "Consent History",
+    description:
+      "Audit trail of your Terms, KVKK notice, and Privacy Policy consents. Provided under GDPR Art. 15 / KVKK md. 11 right of access. These records are kept permanently for consent compliance.",
+    emptyTitle: "No consent records yet.",
+    colTime: "Time",
+    colType: "Document",
+    colAction: "Action",
+    colVersion: "Version",
+    linkLabel: "View consent history",
+    linkDescription: "Your KVKK, Terms of Service, and Privacy Policy consents.",
+  },
   scheduledReports: {
     breadcrumb: "ERPAIO · REPORTS",
     title: "Scheduled Reports",

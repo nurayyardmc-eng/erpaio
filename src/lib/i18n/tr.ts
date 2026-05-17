@@ -203,6 +203,19 @@ export const tr: Dictionary = {
     linkLabel: "Hesap aktivitelerini gör",
     linkDescription: "Şifre değişimi, MFA, oturum gibi güvenlik işlemlerinin geçmişi.",
   },
+  consents: {
+    brand: "KVKK ONAY GEÇMİŞİ",
+    title: "Onay Geçmişi",
+    description:
+      "Kullanım Koşulları, KVKK aydınlatma metni ve gizlilik politikası onaylarınızın audit kaydı. KVKK md. 11 işleme bilgi talep hakkı kapsamında size sunulur. Bu kayıtlar consent denetimi için kalıcı tutulur.",
+    emptyTitle: "Henüz onay kaydı yok.",
+    colTime: "Zaman",
+    colType: "Belge",
+    colAction: "İşlem",
+    colVersion: "Versiyon",
+    linkLabel: "Onay geçmişini gör",
+    linkDescription: "KVKK, terms of service ve privacy policy onay kayıtlarınız.",
+  },
   scheduledReports: {
     breadcrumb: "ERPAIO · RAPOR",
     title: "Planlı Raporlar",

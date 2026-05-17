@@ -475,22 +475,31 @@ export default function SettingsPage() {
             <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>
               {t.settings.accountSecurityDescription}
             </p>
-            <Link
-              href="/dashboard/security"
-              style={{
-                display: "inline-block",
-                padding: "10px 18px",
-                borderRadius: 100,
-                background: colors.bg,
-                border: `1px solid ${colors.border}`,
-                color: colors.text,
-                fontSize: 13,
-                fontWeight: 500,
-                textDecoration: "none",
-              }}
-            >
-              {t.settings.accountSecurityLink}
-            </Link>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {([
+                { href: "/dashboard/security", label: t.settings.accountSecurityLink },
+                { href: "/dashboard/activity", label: t.activity.linkLabel },
+                { href: "/dashboard/consents", label: t.consents.linkLabel },
+              ] as const).map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  style={{
+                    display: "inline-block",
+                    padding: "10px 18px",
+                    borderRadius: 100,
+                    background: colors.bg,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    textDecoration: "none",
+                  }}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
           </Section>
 
           <DangerZone t={t} />

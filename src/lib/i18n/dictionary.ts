@@ -216,6 +216,18 @@ export interface Dictionary {
     linkLabel: string;
     linkDescription: string;
   };
+  consents: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    colTime: string;
+    colType: string;
+    colAction: string;
+    colVersion: string;
+    linkLabel: string;
+    linkDescription: string;
+  };
   scheduledReports: {
     breadcrumb: string;
     title: string;
