@@ -152,14 +152,22 @@ export default function App() {
 
   useEffect(() => {
     if (authState !== "authed") return;
+    // Single-flight guard — rapid auth state churn (logout→login) tetiklenirse
+    // registerForPush'u iki kez paralel çağırmayalım. cleanup flag closure'a
+    // bağlı: effect re-run olursa eski çağrı setState yapmaz.
+    let cancelled = false;
     // Expo Go SDK 53+ push notifications kısıtlı — dev client'ta tam çalışır.
     // Hata fırlatsa bile uygulamayı çökertme.
     registerForPush()
       .then((token) => {
+        if (cancelled) return;
         // eslint-disable-next-line react-hooks/set-state-in-effect
         if (token) setPushToken(token);
       })
       .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [authState]);
 
   const handleLogout = async () => {

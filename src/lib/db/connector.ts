@@ -1,7 +1,11 @@
 import sql from "mssql";
 import { Pool as PgPool } from "pg";
+import * as Sentry from "@sentry/nextjs";
 import { decrypt } from "@/lib/crypto/encrypt";
 import { prisma } from "@/lib/db/prisma";
+import { childLogger } from "@/lib/observability/logger";
+
+const log = childLogger({ component: "db-connector" });
 
 type AnyPool = sql.ConnectionPool | PgPool;
 
@@ -14,24 +18,47 @@ interface PoolEntry {
 const pools = new Map<string, PoolEntry>();
 const POOL_IDLE_MS = 10 * 60 * 1000;
 const MAX_POOLS = 50;
+/** 40+/50 oranı approaching exhaustion sinyali. */
+const POOL_WARN_THRESHOLD = Math.floor(MAX_POOLS * 0.8);
 
 async function evictIdle() {
   const now = Date.now();
+  let evictedIdle = 0;
   for (const [id, entry] of pools) {
     if (now - entry.lastUsedAt > POOL_IDLE_MS) {
       pools.delete(id);
+      evictedIdle++;
       await closePool(entry).catch(() => {});
     }
   }
+
   if (pools.size > MAX_POOLS) {
+    // Cap exhausted — eviction LRU. Production'da bu durum tek tenant'ın
+    // pool'unu çalmaya yol açabilir (next request reconnect). Sentry warn.
+    const overflow = pools.size - MAX_POOLS;
+    log.warn(
+      { current: pools.size, max: MAX_POOLS, overflow, evictedIdle },
+      "ERP pool cap exceeded — LRU eviction kicking in",
+    );
+    Sentry.captureMessage("ERP pool cap exceeded", {
+      level: "warning",
+      tags: { component: "db-connector" },
+      extra: { current: pools.size, max: MAX_POOLS, overflow },
+    });
     const sorted = Array.from(pools.entries()).sort(
       (a, b) => a[1].lastUsedAt - b[1].lastUsedAt,
     );
-    const toEvict = sorted.slice(0, pools.size - MAX_POOLS);
+    const toEvict = sorted.slice(0, overflow);
     for (const [id, entry] of toEvict) {
       pools.delete(id);
       await closePool(entry).catch(() => {});
     }
+  } else if (pools.size >= POOL_WARN_THRESHOLD) {
+    // Approaching — soft warning, not an exception.
+    log.warn(
+      { current: pools.size, max: MAX_POOLS },
+      "ERP pool approaching cap (≥80%)",
+    );
   }
 }
 
