@@ -57,6 +57,24 @@ export const tr: Dictionary = {
     linkPrivacy: "Gizlilik Politikası →",
     linkTerms: "Kullanım Koşulları →",
     linkSupport: "support@erpaio.com →",
+    dangerZone: "Tehlikeli Bölge",
+    dangerZoneDescription:
+      "Hesabınızı silerseniz tenant'ınız, sohbet geçmişiniz, bağlantılarınız ve tüm kullanıcılar geri dönülmez şekilde silinir. KVKK md. 11 + GDPR Art. 17 (silinme hakkı) kapsamındadır. Yalnızca tenant sahibi (owner) silebilir.",
+    deleteAccountBtn: "Hesabımı Sil",
+    deleteAccountPasswordLabel: "Mevcut Şifre",
+    deleteAccountConfirmInputLabelPrefix: "Onaylamak için ",
+    deleteAccountConfirmInputLabelHighlight: "HESABIMI SİL",
+    deleteAccountConfirmInputLabelSuffix: " yazın",
+    deleteAccountConfirmInputPlaceholder: "HESABIMI SİL",
+    deleteAccountConfirmTitle: "Hesabı silmek istediğine emin misin?",
+    deleteAccountConfirmMessage:
+      "Bu işlem geri alınamaz. Tüm veriler (sohbetler, bağlantılar, takım) silinir.",
+    deleteAccountConfirmYes: "Evet, sil",
+    deleteAccountFinal: "Hesabımı Kalıcı Olarak Sil",
+    deleteAccountDeleting: "Siliniyor...",
+    deleteAccountSuccess: "Hesabınız silindi. Çıkış yapılıyor...",
+    deleteAccountOwnerOnly:
+      "Yalnızca tenant sahibi hesabı silebilir. Erişim için sahibe başvurun.",
     notifPrefsTitle: "Bildirim Tercihlerim",
     notifPrefsDescription:
       "Bu cihaza hangi push bildirimlerini almak istediğini seç. Tenant ayarlarındaki WhatsApp/email gönderimleri ayrıdır.",

@@ -300,6 +300,25 @@ export async function revokeApiSession(id: string): Promise<{ ok: true }> {
   return api(`/api/me/sessions?tokenId=${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+// ============= KVKK md. 11 / GDPR Art. 17 — right to erasure =============
+/**
+ * Tenant (hesap) silme talebi. Server `confirmation: 'HESABIMI SİL'` literal
+ * bekler — locale'den bağımsız sabit. Owner role gerektirir; aksi halde 403.
+ *
+ * Başarılı olursa: ConsentLog'a withdrawn yazılır + tenant cascade-delete
+ * + tüm kullanıcı verileri silinir. Mobile UI deleteTenant'tan sonra
+ * onLogout()'u tetiklemeli (token zaten geçersiz).
+ */
+export async function deleteTenant(params: {
+  password: string;
+  confirmation: string;
+}): Promise<{ ok: true; message?: string }> {
+  return api(`/api/tenant/delete`, {
+    method: "POST",
+    body: params,
+  });
+}
+
 // ============= Overview Metrics =============
 export interface DashboardMetrics {
   todayQueries: number;

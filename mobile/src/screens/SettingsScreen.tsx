@@ -16,8 +16,11 @@ import { getConnections, type Connection } from "../lib/chat";
 import {
   getMyNotificationPrefs,
   updateMyNotificationPrefs,
+  deleteTenant,
   type NotificationPrefs,
 } from "../lib/dashboard";
+import { getMe } from "../lib/auth";
+import { confirmDialog } from "../components/Confirm";
 import { isBiometricSupported, isBiometricEnabled, setBiometricEnabled } from "../lib/biometric";
 import { useI18n } from "../lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "../lib/i18n/dictionary";
@@ -285,10 +288,126 @@ export default function SettingsScreen({ onLogout }: Props) {
         </TouchableOpacity>
       </Section>
 
+      <DangerZoneSection onLogout={onLogout} />
+
       <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
         <Text style={styles.logoutBtnText}>{t.settings.logout}</Text>
       </TouchableOpacity>
       </ScrollView>
+    </View>
+  );
+}
+
+/**
+ * Tenant silme — KVKK md. 11 + GDPR Art. 17 (right to erasure) mobile parity.
+ * Yalnızca owner role görür. Form: password + literal "HESABIMI SİL" onay
+ * metni → confirmDialog → POST /api/tenant/delete → onLogout.
+ *
+ * Onay metni locale'den bağımsız sabit (Turkish phrase) çünkü server'da
+ * `z.literal("HESABIMI SİL")` ile kontrol ediliyor.
+ */
+function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
+  const { t } = useI18n();
+  const meQuery = useQuery({ queryKey: ["me-role"], queryFn: getMe });
+  const [showForm, setShowForm] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  if (meQuery.isLoading || !meQuery.data) return null;
+  const isOwner = meQuery.data.user.role === "owner";
+
+  const submit = async () => {
+    const ok = await confirmDialog({
+      title: t.settings.deleteAccountConfirmTitle,
+      message: t.settings.deleteAccountConfirmMessage,
+      confirmLabel: t.settings.deleteAccountConfirmYes,
+      destructive: true,
+    });
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await deleteTenant({ password, confirmation });
+      showToast(t.settings.deleteAccountSuccess, "success");
+      // Server token'ı revoke etti — local state'i temizleyip login'e dön.
+      // Slight delay so toast is visible before navigation.
+      setTimeout(onLogout, 1200);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t.common.error;
+      showToast(msg, "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const canSubmit = !!password && confirmation === t.settings.deleteAccountConfirmInputPlaceholder;
+
+  return (
+    <View style={styles.dangerSection}>
+      <Text style={styles.dangerTitle}>{t.settings.dangerZone}</Text>
+      <Text style={styles.dangerDesc}>{t.settings.dangerZoneDescription}</Text>
+      {!isOwner ? (
+        <Text style={styles.dangerOwnerOnly}>{t.settings.deleteAccountOwnerOnly}</Text>
+      ) : !showForm ? (
+        <TouchableOpacity
+          onPress={() => setShowForm(true)}
+          style={styles.dangerOutlineBtn}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.dangerOutlineBtnText}>{t.settings.deleteAccountBtn}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={{ gap: spacing(3) }}>
+          <Field label={t.settings.deleteAccountPasswordLabel}>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              placeholderTextColor={colors.textSubtle}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+            />
+          </Field>
+          <Field
+            label={`${t.settings.deleteAccountConfirmInputLabelPrefix}${t.settings.deleteAccountConfirmInputLabelHighlight}${t.settings.deleteAccountConfirmInputLabelSuffix}`}
+          >
+            <TextInput
+              value={confirmation}
+              onChangeText={setConfirmation}
+              placeholder={t.settings.deleteAccountConfirmInputPlaceholder}
+              placeholderTextColor={colors.textSubtle}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              style={[styles.input, { fontFamily: font, letterSpacing: 1 }]}
+            />
+          </Field>
+          <View style={{ flexDirection: "row", gap: spacing(2) }}>
+            <TouchableOpacity
+              onPress={submit}
+              disabled={!canSubmit || deleting}
+              style={[styles.dangerSolidBtn, (!canSubmit || deleting) && { opacity: 0.5 }]}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.dangerSolidBtnText}>
+                {deleting ? t.settings.deleteAccountDeleting : t.settings.deleteAccountFinal}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setShowForm(false);
+                setPassword("");
+                setConfirmation("");
+              }}
+              style={styles.cancelBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cancelBtnText}>{t.common.cancel}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -493,4 +612,62 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoutBtnText: { color: colors.error, fontFamily: font, fontSize: 14, fontWeight: "600" },
+  dangerSection: {
+    marginTop: spacing(4),
+    backgroundColor: colors.card,
+    borderColor: colors.error,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing(4),
+  },
+  dangerTitle: {
+    color: colors.error,
+    fontFamily: font,
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: spacing(2),
+  },
+  dangerDesc: {
+    color: colors.textMuted,
+    fontFamily: font,
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: spacing(3),
+  },
+  dangerOwnerOnly: {
+    color: colors.textSubtle,
+    fontFamily: font,
+    fontSize: 13,
+    fontStyle: "italic",
+    lineHeight: 18,
+  },
+  dangerOutlineBtn: {
+    alignSelf: "flex-start",
+    borderColor: colors.error,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2.5),
+  },
+  dangerOutlineBtnText: {
+    color: colors.error,
+    fontFamily: font,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  dangerSolidBtn: {
+    backgroundColor: colors.error,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2.5),
+  },
+  dangerSolidBtnText: { color: "#FFFFFF", fontFamily: font, fontSize: 13, fontWeight: "600" },
+  cancelBtn: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2.5),
+  },
+  cancelBtnText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "500" },
 });

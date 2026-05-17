@@ -53,6 +53,24 @@ export const en: Dictionary = {
     biometricLabel: "Biometric lock (Face ID / Touch ID)",
     biometricOn: "Biometric enabled.",
     biometricOff: "Biometric disabled.",
+    dangerZone: "Danger Zone",
+    dangerZoneDescription:
+      "Deleting your account will permanently remove your tenant, chat history, connections, and all users. This is irreversible. Provided under GDPR Art. 17 / KVKK md. 11 (right to erasure). Only the tenant owner can delete.",
+    deleteAccountBtn: "Delete My Account",
+    deleteAccountPasswordLabel: "Current Password",
+    deleteAccountConfirmInputLabelPrefix: "Type ",
+    deleteAccountConfirmInputLabelHighlight: "HESABIMI SİL",
+    deleteAccountConfirmInputLabelSuffix: " to confirm",
+    deleteAccountConfirmInputPlaceholder: "HESABIMI SİL",
+    deleteAccountConfirmTitle: "Permanently delete account?",
+    deleteAccountConfirmMessage:
+      "This cannot be undone. All data (chats, connections, team) will be deleted.",
+    deleteAccountConfirmYes: "Yes, delete",
+    deleteAccountFinal: "Delete My Account Permanently",
+    deleteAccountDeleting: "Deleting...",
+    deleteAccountSuccess: "Your account has been deleted. Signing out...",
+    deleteAccountOwnerOnly:
+      "Only the tenant owner can delete the account. Contact your owner for access.",
     notifPrefsTitle: "My Notification Preferences",
     notifPrefsDescription:
       "Choose which push notifications you want to receive on this device. WhatsApp/email delivery from tenant settings is separate.",
