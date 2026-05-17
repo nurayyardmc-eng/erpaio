@@ -118,6 +118,12 @@ export interface Dictionary {
     company: string;
     tenantName: string;
     plan: string;
+    usage: string;
+    usageDescription: string;
+    usageUsedSuffix: string;
+    usageRemainingSuffix: string;
+    usageResetPrefix: string;
+    usageWarning: string;
     language: string;
     languageHint: string;
     languageSaved: string;

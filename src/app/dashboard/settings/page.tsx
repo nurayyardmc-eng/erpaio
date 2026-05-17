@@ -33,6 +33,15 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({ name: "", email: "", avatarBase64: null as string | null });
   const [profileSaving, setProfileSaving] = useState(false);
 
+  // Token usage
+  const [usage, setUsage] = useState<{
+    used: number;
+    budget: number;
+    remaining: number;
+    percentUsed: number;
+    resetsOn: string;
+  } | null>(null);
+
   useEffect(() => {
     fetch("/api/tenant").then(async (r) => {
       if (r.ok) setTenant(await r.json());
@@ -46,6 +55,9 @@ export default function SettingsPage() {
           avatarBase64: d.user?.avatarBase64 ?? null,
         });
       }
+    });
+    fetch("/api/tenant/usage").then(async (r) => {
+      if (r.ok) setUsage(await r.json());
     });
   }, []);
 
@@ -281,6 +293,53 @@ export default function SettingsPage() {
               </div>
             </Field>
           </Section>
+
+          {usage && (
+            <Section title={t.settings.usage}>
+              <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>
+                {t.settings.usageDescription}
+              </p>
+              {/* Progress bar */}
+              <div style={{
+                height: 8,
+                borderRadius: 100,
+                background: colors.bgSubtle,
+                overflow: "hidden",
+                marginBottom: 12,
+              }}>
+                <div style={{
+                  width: `${usage.percentUsed}%`,
+                  height: "100%",
+                  background: usage.percentUsed >= 90 ? colors.error : usage.percentUsed >= 70 ? "#F59E0B" : colors.brand,
+                  transition: "width 0.3s ease",
+                }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: colors.text, marginBottom: 6 }}>
+                <span><strong>{formatTokens(usage.used)}</strong>{t.settings.usageUsedSuffix}</span>
+                <span style={{ color: colors.textMuted }}>
+                  <strong>{formatTokens(usage.remaining)}</strong>{t.settings.usageRemainingSuffix}
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: colors.textMuted }}>
+                {t.settings.usageResetPrefix}
+                {new Date(usage.resetsOn).toLocaleDateString("tr-TR")}
+              </div>
+              {usage.percentUsed >= 90 && (
+                <div style={{
+                  marginTop: 12,
+                  padding: "8px 12px",
+                  background: colors.errorSoft,
+                  border: `1px solid ${colors.error}`,
+                  borderRadius: 8,
+                  color: colors.error,
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}>
+                  {t.settings.usageWarning}
+                </div>
+              )}
+            </Section>
+          )}
 
           <Section title={t.settings.language}>
             <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 8px" }}>
@@ -698,3 +757,9 @@ const secondaryBtn: React.CSSProperties = {
   fontSize: 14,
   fontWeight: 600,
 };
+
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
+  return n.toLocaleString();
+}
