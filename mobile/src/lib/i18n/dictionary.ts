@@ -108,6 +108,8 @@ export interface Dictionary {
     activityDesc: string;
     consentsLabel: string;
     consentsDesc: string;
+    devicesLabel: string;
+    devicesDesc: string;
   };
   chat: {
     welcomeGreetingPrefix: string;
@@ -391,6 +393,25 @@ export interface Dictionary {
     colType: string;
     colAction: string;
     colVersion: string;
+  };
+  devices: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    revokeBtn: string;
+    revokingBtn: string;
+    revokeConfirmTitle: string;
+    revokeConfirmMessagePrefix: string;
+    revokeConfirmMessageSuffix: string;
+    revokeConfirmYes: string;
+    revokedToast: string;
+    revokeFailedToast: string;
+    thisDeviceBadge: string;
+    unnamedDevice: string;
+    lastSeenLabel: string;
+    addedLabel: string;
   };
   saved: {
     brand: string;

@@ -75,6 +75,27 @@ export async function registerForPush(): Promise<string | null> {
   return token;
 }
 
+/**
+ * Cihazın mevcut Expo push token'ını döner — backend'e re-register YAPMADAN.
+ * DevicesScreen "Bu cihaz" rozetini hesaplamak için kullanır.
+ *
+ * Expo Go'da veya simulator'de null döner — kullanıcıya rozet gösterilmez.
+ */
+export async function getCurrentPushToken(): Promise<string | null> {
+  if (isExpoGo || !Device.isDevice) return null;
+  try {
+    const existing = await Notifications.getPermissionsAsync();
+    if (existing.status !== "granted") return null;
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      (Constants.easConfig as { projectId?: string } | undefined)?.projectId;
+    const result = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+    return result.data;
+  } catch {
+    return null;
+  }
+}
+
 export async function unregisterPushToken(token: string): Promise<void> {
   if (isExpoGo) return;
   try {

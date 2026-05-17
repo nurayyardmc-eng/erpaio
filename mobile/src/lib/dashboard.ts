@@ -258,6 +258,30 @@ export async function updateMyNotificationPrefs(
   });
 }
 
+// ============= Device (push token) management =============
+export interface MyDevice {
+  id: string;
+  platform: string;
+  deviceName: string | null;
+  lastSeenAt: string;
+  createdAt: string;
+  isCurrent: boolean;
+}
+
+/**
+ * Mobile bu fonksiyonu çağırırken kendi `currentToken`'ını geçirir;
+ * server response'a `isCurrent: true` rozeti döner. Web çağrılarında
+ * `undefined` geçilir → tüm cihazlar `isCurrent: false`.
+ */
+export async function getMyDevices(currentToken?: string | null): Promise<{ devices: MyDevice[] }> {
+  const qs = currentToken ? `?currentToken=${encodeURIComponent(currentToken)}` : "";
+  return api(`/api/me/devices${qs}`);
+}
+
+export async function revokeMyDevice(id: string): Promise<{ ok: true }> {
+  return api(`/api/me/devices?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
 // ============= Overview Metrics =============
 export interface DashboardMetrics {
   todayQueries: number;

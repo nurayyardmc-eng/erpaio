@@ -240,6 +240,30 @@ export interface Dictionary {
     linkLabel: string;
     linkDescription: string;
   };
+  devices: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    colPlatform: string;
+    colDeviceName: string;
+    colLastSeen: string;
+    colCreatedAt: string;
+    colAction: string;
+    revokeBtn: string;
+    revokingBtn: string;
+    revokeConfirmTitle: string;
+    revokeConfirmMessagePrefix: string;
+    revokeConfirmMessageSuffix: string;
+    revokeConfirmYes: string;
+    revokedToast: string;
+    revokeFailedToast: string;
+    thisDeviceBadge: string;
+    unnamedDevice: string;
+    linkLabel: string;
+    linkDescription: string;
+  };
   scheduledReports: {
     breadcrumb: string;
     title: string;

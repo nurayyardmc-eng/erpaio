@@ -50,6 +50,7 @@ function buildGroups(t: Dictionary): MenuGroup[] {
     {
       title: t.menu.sectionKvkk,
       items: [
+        { route: "Devices", label: t.menu.devicesLabel, description: t.menu.devicesDesc },
         { route: "Activity", label: t.menu.activityLabel, description: t.menu.activityDesc },
         { route: "Consents", label: t.menu.consentsLabel, description: t.menu.consentsDesc },
       ],

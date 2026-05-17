@@ -480,6 +480,7 @@ export default function SettingsPage() {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {([
                 { href: "/dashboard/security", label: t.settings.accountSecurityLink },
+                { href: "/dashboard/devices", label: t.devices.linkLabel },
                 { href: "/dashboard/activity", label: t.activity.linkLabel },
                 { href: "/dashboard/consents", label: t.consents.linkLabel },
               ] as const).map((l) => (

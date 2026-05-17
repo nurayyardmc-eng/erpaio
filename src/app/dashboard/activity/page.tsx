@@ -39,6 +39,7 @@ const ACTION_LABELS_TR: Record<string, string> = {
   "api_token.create": "API token oluşturma",
   "api_token.revoke": "API token iptali",
   "notification.prefs.update": "Bildirim tercihleri güncellendi",
+  "push_token.revoke": "Cihaz (push) silindi",
 };
 
 const ACTION_LABELS_EN: Record<string, string> = {
@@ -63,6 +64,7 @@ const ACTION_LABELS_EN: Record<string, string> = {
   "api_token.create": "API token created",
   "api_token.revoke": "API token revoked",
   "notification.prefs.update": "Notification preferences updated",
+  "push_token.revoke": "Device (push) removed",
 };
 
 export default function ActivityPage() {
