@@ -174,6 +174,12 @@ export interface Dictionary {
     exportMd: string;
     exportFailed: string;
     exportEmpty: string;
+    searchPlaceholder: string;
+    searchAria: string;
+    searchClear: string;
+    searchMatchTitle: string;
+    searchEmpty: string;
+    searchEmptyDesc: string;
   };
   login: {
     title: string;

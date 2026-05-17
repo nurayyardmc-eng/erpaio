@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -6,6 +6,7 @@ import {
   Share,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -17,6 +18,8 @@ import {
   exportSessionMarkdown,
   getSessionsByView,
   patchSession,
+  searchChatSessions,
+  type ChatSearchResult,
   type SessionListItem,
 } from "../lib/chat";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
@@ -37,11 +40,67 @@ interface Props {
   navigation: NativeStackNavigationProp<ChatStackParamList, "Sessions">;
 }
 
+/**
+ * Search snippet'ini React node olarak render eder: eşleşen aralık bold +
+ * background highlight. matchStart -1 ise düz text döner. RN'de <mark> yok,
+ * inline <Text> styling kullanıyoruz.
+ */
+function renderHighlightedSnippetText(
+  text: string,
+  matchStart: number,
+  matchLength: number,
+): React.ReactNode {
+  if (matchStart < 0 || matchLength <= 0) return text;
+  const before = text.slice(0, matchStart);
+  const match = text.slice(matchStart, matchStart + matchLength);
+  const after = text.slice(matchStart + matchLength);
+  return (
+    <>
+      {before}
+      <Text style={searchHighlightStyle}>{match}</Text>
+      {after}
+    </>
+  );
+}
+
+const searchHighlightStyle = {
+  backgroundColor: "#FEF3C7",
+  color: "#0A0A0A",
+  fontWeight: "700" as const,
+};
+
 export default function SessionsScreen({ navigation }: Props) {
   const { t } = useI18n();
   const [view, setView] = useState<"active" | "archived">("active");
   const [menuFor, setMenuFor] = useState<SessionListItem | null>(null);
+  // Chat history search (UUU). 2+ char query → search mode'da liste değişir.
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchHits, setSearchHits] = useState<ChatSearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const queryClient = useQueryClient();
+
+  // Debounced search effect.
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
+      setSearchHits([]);
+      setSearchLoading(false);
+      return;
+    }
+    setSearchLoading(true);
+    const handle = setTimeout(() => {
+      searchChatSessions(trimmed, 20)
+        .then((d) => {
+          setSearchHits(d.results);
+          setSearchLoading(false);
+        })
+        .catch(() => {
+          setSearchHits([]);
+          setSearchLoading(false);
+        });
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
 
   const sessionsQuery = useQuery({
     queryKey: ["sessions", view],
@@ -153,22 +212,95 @@ export default function SessionsScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.filterRow}>
-        {(["active", "archived"] as const).map((v) => (
+      <View style={styles.searchRow}>
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder={t.sessions.searchPlaceholder}
+          placeholderTextColor={colors.textSubtle}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          accessibilityLabel={t.sessions.searchAria}
+          style={styles.searchInput}
+        />
+        {searchQuery.length > 0 && (
           <TouchableOpacity
-            key={v}
-            onPress={() => setView(v)}
-            style={[styles.filterChip, view === v && styles.filterChipActive]}
-            activeOpacity={0.7}
+            onPress={() => setSearchQuery("")}
+            accessibilityLabel={t.sessions.searchClear}
+            style={styles.searchClearBtn}
           >
-            <Text style={[styles.filterText, view === v && styles.filterTextActive]}>
-              {v === "active" ? t.sessions.tabActive : t.sessions.tabArchived}
-            </Text>
+            <Text style={styles.searchClearText}>×</Text>
           </TouchableOpacity>
-        ))}
+        )}
       </View>
 
-      {sessionsQuery.isLoading ? (
+      {/* Active/Archived chips — search mode'da gizlenir */}
+      {searchQuery.trim().length < 2 && (
+        <View style={styles.filterRow}>
+          {(["active", "archived"] as const).map((v) => (
+            <TouchableOpacity
+              key={v}
+              onPress={() => setView(v)}
+              style={[styles.filterChip, view === v && styles.filterChipActive]}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.filterText, view === v && styles.filterTextActive]}>
+                {v === "active" ? t.sessions.tabActive : t.sessions.tabArchived}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {searchQuery.trim().length >= 2 ? (
+        // Search mode — UUU
+        searchLoading ? (
+          <View style={{ padding: spacing(4) }}>
+            <SkeletonList count={3} height={70} gap={8} />
+          </View>
+        ) : (
+          <FlatList
+            data={searchHits}
+            keyExtractor={(h) => h.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery("");
+                  navigation.navigate("Chat", { sessionId: item.id, title: item.title ?? undefined });
+                }}
+                style={styles.row}
+                activeOpacity={0.7}
+              >
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: spacing(1) }}>
+                    <Text style={styles.rowTitle} numberOfLines={1}>
+                      {item.title ?? t.sessions.untitled}
+                    </Text>
+                    {item.matchType === "title" && (
+                      <View style={styles.searchBadge}>
+                        <Text style={styles.searchBadgeText}>{t.sessions.searchMatchTitle}</Text>
+                      </View>
+                    )}
+                  </View>
+                  {item.snippet && (
+                    <Text style={styles.searchSnippet} numberOfLines={2}>
+                      {renderHighlightedSnippetText(item.snippet, item.matchStart, item.matchLength)}
+                    </Text>
+                  )}
+                  <Text style={styles.rowMeta}>
+                    {item.messageCount} mesaj · {new Date(item.createdAt).toLocaleDateString("tr-TR")}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <EmptyState title={t.sessions.searchEmpty} description={t.sessions.searchEmptyDesc} />
+            }
+            contentContainerStyle={{ paddingVertical: spacing(1), paddingBottom: 200, flexGrow: 1 }}
+          />
+        )
+      ) : sessionsQuery.isLoading ? (
         <View style={{ padding: spacing(4) }}>
           <SkeletonList count={5} height={64} gap={8} />
         </View>
@@ -262,6 +394,51 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2.5),
   },
   newButtonText: { color: colors.textInverse, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing(5),
+    paddingBottom: spacing(3),
+    position: "relative",
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+    color: colors.text,
+    fontFamily: font,
+    fontSize: 13,
+  },
+  searchClearBtn: {
+    position: "absolute",
+    right: spacing(6),
+    padding: spacing(1),
+  },
+  searchClearText: { color: colors.textMuted, fontSize: 18, fontWeight: "300" },
+  searchBadge: {
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: spacing(1.5),
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  searchBadgeText: {
+    color: "#0A0A0A",
+    fontFamily: font,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  searchSnippet: {
+    color: colors.textMuted,
+    fontFamily: font,
+    fontSize: 11,
+    marginTop: 4,
+    lineHeight: 16,
+  },
   filterRow: {
     flexDirection: "row",
     gap: spacing(2),

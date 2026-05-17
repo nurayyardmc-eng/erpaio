@@ -167,6 +167,12 @@ export const en: Dictionary = {
     exportMd: "Share as Markdown",
     exportFailed: "Export failed.",
     exportEmpty: "This chat has no messages yet.",
+    searchPlaceholder: "Search chats...",
+    searchAria: "Search chat history",
+    searchClear: "Clear search",
+    searchMatchTitle: "TITLE",
+    searchEmpty: "No matching chats.",
+    searchEmptyDesc: "No title or message content matched your query.",
   },
   login: {
     title: "Sign In",

@@ -42,6 +42,36 @@ interface ChatSessionListItem {
   createdAt: string;
 }
 
+interface ChatSearchHit {
+  id: string;
+  title: string | null;
+  createdAt: string;
+  archivedAt: string | null;
+  messageCount: number;
+  matchType: "title" | "body";
+  snippet: string | null;
+  matchStart: number;
+  matchLength: number;
+}
+
+/**
+ * Snippet'te eşleşen kısımı bold + amber background ile vurgular.
+ * matchStart -1 ise düz text döner. Pure render — module level.
+ */
+function renderHighlightedSnippet(text: string, matchStart: number, matchLength: number): React.ReactNode {
+  if (matchStart < 0 || matchLength <= 0) return text;
+  const before = text.slice(0, matchStart);
+  const match = text.slice(matchStart, matchStart + matchLength);
+  const after = text.slice(matchStart + matchLength);
+  return (
+    <>
+      {before}
+      <mark style={{ background: "#FEF3C7", color: "#0A0A0A", padding: "0 2px", borderRadius: 2 }}>{match}</mark>
+      {after}
+    </>
+  );
+}
+
 interface AssistantSuccessMsg {
   role: "assistant";
   status: "success";
@@ -87,6 +117,10 @@ export default function ChatPage() {
   const [history, setHistory] = useState<ChatSessionListItem[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyView, setHistoryView] = useState<"active" | "archived">("active");
+  // Chat history search (UUU). Boş query → normal liste; >=2 char → search mode.
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchHits, setSearchHits] = useState<ChatSearchHit[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -122,6 +156,32 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Debounced search effect — query >=2 char → /api/chat/sessions/search.
+  // Boş veya tek char → search hits temizle (normal liste görünür).
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
+      setSearchHits([]);
+      setSearchLoading(false);
+      return;
+    }
+    setSearchLoading(true);
+    const handle = setTimeout(() => {
+      const qs = new URLSearchParams({ q: trimmed, limit: "20" });
+      fetch(`/api/chat/sessions/search?${qs.toString()}`)
+        .then(async (r) => (r.ok ? r.json() : { results: [] }))
+        .then((d: { results: ChatSearchHit[] }) => {
+          setSearchHits(d.results ?? []);
+          setSearchLoading(false);
+        })
+        .catch(() => {
+          setSearchHits([]);
+          setSearchLoading(false);
+        });
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
 
   const refreshHistory = async (view: "active" | "archived" = historyView) => {
     const r = await fetch(`/api/chat/sessions?view=${view}`);
@@ -486,7 +546,53 @@ export default function ChatPage() {
           >+</button>
         </div>
 
-        {/* Aktif / Arşiv toggle */}
+        {/* Sohbet arama (UUU) — query >=2 char olduğunda search mode'a geç. */}
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid rgba(10,10,10,0.06)" }}>
+          <div style={{ position: "relative" }}>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t.chat.searchPlaceholder}
+              aria-label={t.chat.searchAria}
+              style={{
+                width: "100%",
+                padding: "6px 28px 6px 10px",
+                fontSize: 12,
+                borderRadius: 6,
+                border: "1px solid rgba(10,10,10,0.12)",
+                background: "#FFFFFF",
+                color: "#0A0A0A",
+                fontFamily: "inherit",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                aria-label={t.chat.searchClear}
+                style={{
+                  position: "absolute",
+                  right: 4,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  color: "#94A3B8",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  padding: "2px 6px",
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Aktif / Arşiv toggle (search mode'da gizli) */}
+        {!searchQuery.trim() && (
         <div style={{ padding: "8px 12px", borderBottom: "1px solid rgba(10,10,10,0.06)", display: "flex", gap: 4 }}>
           {(["active", "archived"] as const).map((v) => (
             <button
@@ -509,14 +615,70 @@ export default function ChatPage() {
             </button>
           ))}
         </div>
+        )}
 
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 156px)", padding: "8px" }}>
-          {history.length === 0 && (
+          {/* Search results mode (UUU). Query >=2 char olduğunda hits dolar. */}
+          {searchQuery.trim().length >= 2 && (
+            <>
+              {searchLoading && (
+                <div style={{ color: "#737373", fontSize: 13, padding: "20px 12px", textAlign: "center" }}>
+                  {t.chat.searchSearching}
+                </div>
+              )}
+              {!searchLoading && searchHits.length === 0 && (
+                <div style={{ color: "#737373", fontSize: 13, padding: "20px 12px", textAlign: "center" }}>
+                  {t.chat.searchEmpty}
+                </div>
+              )}
+              {!searchLoading && searchHits.map((h) => {
+                const isCurrent = h.id === sessionId;
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => { loadSession(h.id); setSearchQuery(""); }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 12px",
+                      background: isCurrent ? "rgba(10,10,10,0.06)" : "transparent",
+                      border: "none",
+                      borderRadius: 8,
+                      marginBottom: 2,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      color: "#0A0A0A",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 500 }}>
+                      {h.title ?? t.chat.untitledSession}
+                      {h.matchType === "title" && (
+                        <span style={{ fontSize: 9, color: "#0A0A0A", background: "#FEF3C7", padding: "1px 5px", borderRadius: 3, letterSpacing: 0.5 }}>
+                          {t.chat.searchMatchTitle}
+                        </span>
+                      )}
+                    </div>
+                    {h.snippet && (
+                      <div style={{ fontSize: 11, color: "#525252", marginTop: 4, lineHeight: 1.4 }}>
+                        {renderHighlightedSnippet(h.snippet, h.matchStart, h.matchLength)}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 4 }}>
+                      {h.messageCount} {t.chat.messagesSuffix} · {new Date(h.createdAt).toLocaleDateString("tr-TR")}
+                    </div>
+                  </button>
+                );
+              })}
+            </>
+          )}
+
+          {/* Normal history list — search mode değilse */}
+          {searchQuery.trim().length < 2 && history.length === 0 && (
             <div style={{ color: "#737373", fontSize: 13, padding: "20px 12px", textAlign: "center" }}>
               {historyView === "active" ? t.chat.emptyActive : t.chat.emptyArchived}
             </div>
           )}
-          {history.map((s) => {
+          {searchQuery.trim().length < 2 && history.map((s) => {
             const isArchived = !!s.archivedAt;
             const isActive = s.id === sessionId;
             return (

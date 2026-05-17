@@ -68,6 +68,29 @@ export async function exportSessionMarkdown(id: string): Promise<string> {
   return api<string>(`/api/chat/sessions/${encodeURIComponent(id)}/export`);
 }
 
+// ============= Chat history search =============
+export interface ChatSearchResult {
+  id: string;
+  title: string | null;
+  createdAt: string;
+  archivedAt: string | null;
+  messageCount: number;
+  matchType: "title" | "body";
+  snippet: string | null;
+  matchStart: number;
+  matchLength: number;
+}
+
+export async function searchChatSessions(
+  query: string,
+  limit: number = 20,
+): Promise<{ q: string; results: ChatSearchResult[] }> {
+  const qs = new URLSearchParams();
+  qs.set("q", query);
+  qs.set("limit", String(limit));
+  return api(`/api/chat/sessions/search?${qs.toString()}`);
+}
+
 export async function getSessionsByView(view: "active" | "archived" = "active"): Promise<SessionListItem[]> {
   return api<SessionListItem[]>(`/api/chat/sessions?view=${view}`);
 }

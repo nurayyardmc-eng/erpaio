@@ -467,6 +467,13 @@ export interface Dictionary {
     delete: string;
     exportMd: string;
     exportMdTitle: string;
+    searchPlaceholder: string;
+    searchAria: string;
+    searchClear: string;
+    searchSearching: string;
+    searchEmpty: string;
+    searchMatchTitle: string;
+    untitledSession: string;
     pinToastOn: string;
     pinToastOff: string;
     archiveToastOn: string;

@@ -167,6 +167,12 @@ export const tr: Dictionary = {
     exportMd: "Markdown olarak paylaş",
     exportFailed: "Dışa aktarma başarısız.",
     exportEmpty: "Bu sohbette henüz mesaj yok.",
+    searchPlaceholder: "Sohbetlerde ara...",
+    searchAria: "Sohbet geçmişinde ara",
+    searchClear: "Aramayı temizle",
+    searchMatchTitle: "BAŞLIK",
+    searchEmpty: "Eşleşen sohbet yok.",
+    searchEmptyDesc: "Başlık veya mesaj içeriğinde aradığın kelime bulunamadı.",
   },
   login: {
     title: "Giriş Yap",
