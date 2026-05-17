@@ -5,6 +5,7 @@ const BASE_URL =
   process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "") ?? "https://erpaio.vercel.app";
 
 const TOKEN_KEY = "erpaio_api_token";
+const EXPIRES_KEY = "erpaio_api_token_expires_at"; // ISO 8601 string
 
 // 30s — Vercel function cold start ~5-15s + DB query ~2-5s + buffer
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -17,12 +18,23 @@ export async function getToken(): Promise<string | null> {
   return SecureStore.getItemAsync(TOKEN_KEY);
 }
 
-export async function setToken(token: string): Promise<void> {
+export async function setToken(token: string, expiresAt?: string): Promise<void> {
   await SecureStore.setItemAsync(TOKEN_KEY, token);
+  if (expiresAt) {
+    await SecureStore.setItemAsync(EXPIRES_KEY, expiresAt);
+  }
+}
+
+export async function getTokenExpiresAt(): Promise<Date | null> {
+  const iso = await SecureStore.getItemAsync(EXPIRES_KEY);
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 export async function clearToken(): Promise<void> {
   await SecureStore.deleteItemAsync(TOKEN_KEY);
+  await SecureStore.deleteItemAsync(EXPIRES_KEY).catch(() => {});
 }
 
 /** Client-side error code for translation. Server-side errors arrive in `body.error`. */

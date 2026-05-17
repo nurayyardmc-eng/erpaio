@@ -18,7 +18,7 @@ import AlertsScreen from "./src/screens/AlertsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import MoreStackNav from "./src/screens/MoreStackNav";
 import { getToken, clearToken, setUnauthorizedHandler } from "./src/lib/api";
-import { logout as authLogout } from "./src/lib/auth";
+import { logout as authLogout, refreshIfNeeded } from "./src/lib/auth";
 import { registerForPush } from "./src/lib/push";
 import { authenticate, isBiometricEnabled, isBiometricSupported } from "./src/lib/biometric";
 import { colors, font } from "./src/lib/theme";
@@ -165,6 +165,12 @@ export default function App() {
         if (token) setPushToken(token);
       })
       .catch(() => {});
+
+    // Token refresh — 90 günlük expiry'a 14 gün kalınca otomatik yenile.
+    // Best-effort, fail olursa kullanıcı 401 alırsa zaten /api/auth handler
+    // ile guest'e düşer (setUnauthorizedHandler).
+    refreshIfNeeded(14).catch(() => {});
+
     return () => {
       cancelled = true;
     };

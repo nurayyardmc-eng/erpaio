@@ -131,6 +131,30 @@ paths:
         "401": { description: Invalid credentials }
         "429": { description: Rate limited }
 
+  /api/auth/mobile-refresh:
+    post:
+      tags: [Auth]
+      summary: API token rotate (90 gün expiry'a yaklaşınca client otomatik çağırır)
+      description: |
+        Mevcut Bearer token'ı doğrular, yeni 90 günlük token üretir, eskisini
+        revoke eder (atomic transaction). Mobile client `expiresAt` <14 gün
+        kaldığında `refreshIfNeeded()` ile çağırır.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Yeni token + expiresAt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  expiresAt: { type: string, format: date-time }
+        "401": { description: Token invalid/revoked }
+        "403": { description: Session auth (cookie) bu endpoint'te desteklenmez }
+        "429": { description: Rate limited (5/saat/user) }
+
   /api/auth/mobile-logout:
     post:
       tags: [Auth]
