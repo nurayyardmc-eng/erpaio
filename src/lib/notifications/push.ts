@@ -3,6 +3,11 @@ import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+/**
+ * Expo Push API per-request limit. >100 mesaj tek POST'ta gönderirsek
+ * Expo "PUSH_TOO_MANY_EXPERIENCE_IDS" döner ve TÜM batch düşer.
+ */
+export const EXPO_PUSH_BATCH_SIZE = 100;
 
 interface ExpoMessage {
   to: string;
@@ -33,6 +38,62 @@ export interface PushNotificationOptions {
   channelId?: string;
 }
 
+/**
+ * Generic array chunker. Test edilebilir, side-effect'siz.
+ *
+ *   chunkArray([1,2,3,4,5], 2) → [[1,2], [3,4], [5]]
+ */
+export function chunkArray<T>(items: T[], size: number): T[][] {
+  if (size <= 0) throw new Error("chunk size must be positive");
+  if (items.length === 0) return [];
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+/**
+ * Tek bir Expo batch'i gönder + sonuçları ayrıştır.
+ * Exposed for testing; production caller'ı sendPushToTenant.
+ */
+export async function sendExpoBatch(
+  messages: ExpoMessage[],
+  tokens: { token: string }[],
+): Promise<{ sent: number; failed: number; invalidTokens: string[]; errors?: unknown }> {
+  const res = await fetch(EXPO_PUSH_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(messages),
+  });
+
+  const json = (await res.json()) as ExpoPushResponse;
+
+  if (json.errors && json.errors.length > 0) {
+    return { sent: 0, failed: tokens.length, invalidTokens: [], errors: json.errors };
+  }
+
+  let sent = 0;
+  let failed = 0;
+  const invalidTokens: string[] = [];
+
+  if (json.data) {
+    for (let i = 0; i < json.data.length; i++) {
+      const ticket = json.data[i];
+      if (ticket.status === "ok") {
+        sent++;
+      } else {
+        failed++;
+        if (ticket.details?.error === "DeviceNotRegistered" && tokens[i]) {
+          invalidTokens.push(tokens[i].token);
+        }
+      }
+    }
+  }
+
+  return { sent, failed, invalidTokens };
+}
+
 export async function sendPushToTenant(
   tenantId: string,
   options: PushNotificationOptions,
@@ -59,47 +120,45 @@ export async function sendPushToTenant(
     channelId: options.channelId ?? "default",
   }));
 
-  let sent = 0;
-  let failed = 0;
-  const invalidTokens: string[] = [];
+  // Expo Push API 100 mesaj/POST limit'i — büyük tenant'ları chunk'la gönder.
+  const messageChunks = chunkArray(messages, EXPO_PUSH_BATCH_SIZE);
+  const tokenChunks = chunkArray(tokens, EXPO_PUSH_BATCH_SIZE);
 
-  try {
-    const res = await fetch(EXPO_PUSH_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(messages),
-    });
+  let totalSent = 0;
+  let totalFailed = 0;
+  const allInvalidTokens: string[] = [];
 
-    const json = (await res.json()) as ExpoPushResponse;
-
-    if (json.errors && json.errors.length > 0) {
-      log.error({ errors: json.errors }, "Expo Push API errors");
-      Sentry.captureMessage("Expo Push API errors", { level: "warning", extra: { errors: json.errors, tenantId } });
-      failed = tokens.length;
-    } else if (json.data) {
-      for (let i = 0; i < json.data.length; i++) {
-        const ticket = json.data[i];
-        if (ticket.status === "ok") {
-          sent++;
-        } else {
-          failed++;
-          if (ticket.details?.error === "DeviceNotRegistered") {
-            invalidTokens.push(tokens[i].token);
-          }
-        }
+  for (let i = 0; i < messageChunks.length; i++) {
+    try {
+      const result = await sendExpoBatch(messageChunks[i], tokenChunks[i]);
+      totalSent += result.sent;
+      totalFailed += result.failed;
+      allInvalidTokens.push(...result.invalidTokens);
+      if (result.errors) {
+        log.error({ errors: result.errors, chunk: i }, "Expo Push API errors");
+        Sentry.captureMessage("Expo Push API errors", {
+          level: "warning",
+          extra: { errors: result.errors, tenantId, chunk: i },
+        });
       }
+    } catch (err) {
+      log.error({ err, chunk: i }, "Push chunk send failed");
+      Sentry.captureException(err, {
+        tags: { component: "push" },
+        extra: { tenantId, chunk: i },
+      });
+      totalFailed += tokenChunks[i].length;
     }
-
-    if (invalidTokens.length > 0) {
-      await prisma.pushToken.deleteMany({ where: { token: { in: invalidTokens } } });
-      log.info({ count: invalidTokens.length }, "Invalidated unregistered push tokens");
-    }
-  } catch (err) {
-    log.error({ err }, "Push send failed");
-    Sentry.captureException(err, { tags: { component: "push" }, extra: { tenantId } });
-    failed = tokens.length;
   }
 
-  log.info({ sent, failed, total: tokens.length, title: options.title }, "Push send");
-  return { sent, failed };
+  if (allInvalidTokens.length > 0) {
+    await prisma.pushToken.deleteMany({ where: { token: { in: allInvalidTokens } } });
+    log.info({ count: allInvalidTokens.length }, "Invalidated unregistered push tokens");
+  }
+
+  log.info(
+    { sent: totalSent, failed: totalFailed, total: tokens.length, chunks: messageChunks.length, title: options.title },
+    "Push send",
+  );
+  return { sent: totalSent, failed: totalFailed };
 }
