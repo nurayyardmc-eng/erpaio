@@ -26,6 +26,7 @@ export async function GET(
       module: true,
       evidence: true,
       status: true,
+      falsePositiveAt: true,
       createdAt: true,
     },
   });

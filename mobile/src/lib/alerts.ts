@@ -11,6 +11,8 @@ export interface Alert {
   module: string | null;
   evidence: unknown;
   status: AlertStatus;
+  /** Yanlış alarm işaretleme zamanı (null = işaretlenmedi). MMM. */
+  falsePositiveAt?: string | null;
   createdAt: string;
 }
 
@@ -38,5 +40,21 @@ export async function resolveAlert(id: string): Promise<void> {
   await api("/api/alerts", {
     method: "PATCH",
     body: { id, status: "resolved" },
+  });
+}
+
+/** Anomaly engine learning loop — bu alert'i yanlış alarm olarak işaretle. */
+export async function markAlertFalsePositive(id: string): Promise<void> {
+  await api(`/api/alerts/${encodeURIComponent(id)}/feedback`, {
+    method: "POST",
+    body: { action: "falsePositive" },
+  });
+}
+
+/** FP işaretini geri al — null'a çek (kullanıcı fikir değiştirdi). */
+export async function clearAlertFeedback(id: string): Promise<void> {
+  await api(`/api/alerts/${encodeURIComponent(id)}/feedback`, {
+    method: "POST",
+    body: { action: "clear" },
   });
 }

@@ -4,7 +4,9 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   acknowledgeAlert,
+  clearAlertFeedback,
   getAlert,
+  markAlertFalsePositive,
   resolveAlert,
   type Alert,
 } from "../lib/alerts";
@@ -33,7 +35,7 @@ const STATUS_LABEL_TR: Record<Alert["status"], string> = {
 export default function AlertDetailScreen({ route, navigation }: Props) {
   const { id } = route.params;
   const qc = useQueryClient();
-  const [acting, setActing] = useState<"ack" | "resolve" | null>(null);
+  const [acting, setActing] = useState<"ack" | "resolve" | "fp" | "clearFp" | null>(null);
 
   const q = useQuery({
     queryKey: ["alert", id],
@@ -62,6 +64,42 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
     try {
       await resolveAlert(id);
       showToast("Bildirim çözüldü.", "success");
+      void qc.invalidateQueries({ queryKey: ["alert", id] });
+      void qc.invalidateQueries({ queryKey: ["alerts"] });
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "İşlem başarısız.", "error");
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const onMarkFp = async () => {
+    const ok = await confirmDialog({
+      title: "Yanlış alarm olarak işaretle?",
+      message:
+        "Bu sinyali anomaly engine'in öğrenme döngüsüne gönderir. Engine, aynı türde tekrarlayan yanlış alarmları zamanla bastırmayı öğrenir.",
+      confirmLabel: "Evet, yanlış alarm",
+      destructive: false,
+    });
+    if (!ok) return;
+    setActing("fp");
+    try {
+      await markAlertFalsePositive(id);
+      showToast("Yanlış alarm olarak kaydedildi.", "success");
+      void qc.invalidateQueries({ queryKey: ["alert", id] });
+      void qc.invalidateQueries({ queryKey: ["alerts"] });
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "İşlem başarısız.", "error");
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const onClearFp = async () => {
+    setActing("clearFp");
+    try {
+      await clearAlertFeedback(id);
+      showToast("Yanlış alarm işareti kaldırıldı.", "success");
       void qc.invalidateQueries({ queryKey: ["alert", id] });
       void qc.invalidateQueries({ queryKey: ["alerts"] });
     } catch (e) {
@@ -154,6 +192,34 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* False positive feedback — her durumda görünür (open/acked/resolved).
+                Engine learning loop için sinyal toplama; suppression Track NNN'de. */}
+            <View style={styles.fpRow}>
+              {q.data.falsePositiveAt ? (
+                <TouchableOpacity
+                  onPress={onClearFp}
+                  disabled={acting !== null}
+                  style={[styles.fpClearBtn, acting !== null && { opacity: 0.5 }]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.fpClearBtnText}>
+                    {acting === "clearFp" ? "..." : "✓ Yanlış alarm olarak işaretlendi (geri al)"}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={onMarkFp}
+                  disabled={acting !== null}
+                  style={[styles.fpMarkBtn, acting !== null && { opacity: 0.5 }]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.fpMarkBtnText}>
+                    {acting === "fp" ? "..." : "Bu yanlış alarmdı"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </>
         )}
       </ScrollView>
@@ -190,7 +256,7 @@ function AlertHeader({ alert }: { alert: Alert }) {
   const sev = SEVERITY[alert.severity] ?? SEVERITY.low;
   return (
     <View style={[styles.headerCard, { borderLeftColor: sev.color }]}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing(2), marginBottom: spacing(2) }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing(2), marginBottom: spacing(2), flexWrap: "wrap" }}>
         <View style={[styles.sevBadge, { backgroundColor: `${sev.color}1A` }]}>
           <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
         </View>
@@ -212,6 +278,11 @@ function AlertHeader({ alert }: { alert: Alert }) {
             {STATUS_LABEL_TR[alert.status] ?? alert.status}
           </Text>
         </View>
+        {alert.falsePositiveAt && (
+          <View style={[styles.statusBadge, { backgroundColor: "#FEF3C7", borderColor: "#F59E0B", borderWidth: 1 }]}>
+            <Text style={[styles.statusText, { color: "#92400E" }]}>YANLIŞ ALARM</Text>
+          </View>
+        )}
       </View>
       <Text style={styles.title}>{alert.title}</Text>
     </View>
@@ -315,4 +386,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   secondaryBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "500" },
+  fpRow: { marginTop: spacing(3) },
+  fpMarkBtn: {
+    alignSelf: "flex-start",
+    borderColor: colors.borderStrong,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2),
+  },
+  fpMarkBtnText: { color: colors.textMuted, fontFamily: font, fontSize: 12, fontWeight: "500" },
+  fpClearBtn: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.warningSoft,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2),
+  },
+  fpClearBtnText: { color: colors.warning, fontFamily: font, fontSize: 12, fontWeight: "600" },
 });

@@ -211,9 +211,19 @@ model Alert {
   module      String?
   evidence    Json?
   status      String   @default("open")
+  /// Anomaly engine learning loop — kullanıcı bu alert'i yanlış alarm olarak
+  /// işaretlerse timestamp yazılır. null = işaretlenmedi. Engine'in benzer
+  /// metric'ler için baseline'ı suppressdetection için ileride okur.
+  falsePositiveAt   DateTime?
+  /// Hangi kullanıcı işaretledi (tenant içi attribution + farklı kullanıcıların
+  /// aynı şeye FP demesi engine için "weight: high" sinyali olabilir).
+  /// SetNull cascade kullanıcı silinince satır kalır.
+  falsePositiveBy   String?
   createdAt   DateTime @default(now())
   tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   notificationLogs  NotificationLog[]
+
+  @@index([tenantId, falsePositiveAt])
 }
 
 model AnomalyBaseline {

@@ -22,6 +22,7 @@ interface Alert {
   description: string | null;
   module: string | null;
   status: string;
+  falsePositiveAt?: string | null;
   createdAt: string;
 }
 
@@ -62,6 +63,22 @@ export default function AlertsPage() {
       body: JSON.stringify({ id, status: "acked" }),
     });
     setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: "acked" } : a));
+  };
+
+  /** Yanlış alarm toggle — Track MMM. Engine learning loop sinyali. */
+  const toggleFalsePositive = async (id: string, currentlyMarked: boolean) => {
+    const action = currentlyMarked ? "clear" : "falsePositive";
+    const res = await fetch(`/api/alerts/${encodeURIComponent(id)}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    if (!res.ok) return;
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.id === id ? { ...a, falsePositiveAt: currentlyMarked ? null : new Date().toISOString() } : a,
+      ),
+    );
   };
 
   return (
@@ -116,30 +133,53 @@ export default function AlertsPage() {
           alignItems: "center",
         }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
               <span style={{ fontSize: 9, color: SEVERITY_COLOR[alert.severity], background: `${SEVERITY_COLOR[alert.severity]}20`, padding: "2px 6px", borderRadius: 3, letterSpacing: 1 }}>
                 {alert.severity.toUpperCase()}
               </span>
               <span style={{ fontSize: 9, color: "#94A3B8" }}>{alert.module ?? "general"}</span>
+              {alert.falsePositiveAt && (
+                <span style={{ fontSize: 9, color: "#92400E", background: "#FEF3C7", border: "1px solid #F59E0B", padding: "2px 6px", borderRadius: 3, letterSpacing: 1 }}>
+                  YANLIŞ ALARM
+                </span>
+              )}
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{alert.title}</div>
             {alert.description && <div style={{ fontSize: 11, color: "#475569" }}>{alert.description}</div>}
             <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 6 }}>{new Date(alert.createdAt).toLocaleString("tr-TR")}</div>
           </div>
 
-          {alert.status === "open" && (
+          <div style={{ display: "flex", gap: 6, flexShrink: 0, flexDirection: "column", alignItems: "flex-end" }}>
+            {alert.status === "open" && (
+              <button
+                onClick={() => acknowledge(alert.id)}
+                style={{ background: "#E5E7EB", border: "1px solid #D1D5DB", borderRadius: 6, padding: "6px 12px", color: "#475569", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Okundu
+              </button>
+            )}
+            {(alert.status === "acked" || alert.status === "resolved") && (
+              <span style={{ fontSize: 10, color: "#94A3B8" }}>
+                {alert.status === "resolved" ? "Çözüldü" : "Okundu"}
+              </span>
+            )}
             <button
-              onClick={() => acknowledge(alert.id)}
-              style={{ background: "#E5E7EB", border: "1px solid #D1D5DB", borderRadius: 6, padding: "6px 12px", color: "#475569", fontSize: 10, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
+              onClick={() => toggleFalsePositive(alert.id, !!alert.falsePositiveAt)}
+              title={alert.falsePositiveAt ? "Yanlış alarm işaretini kaldır" : "Yanlış alarm olarak işaretle (engine öğrensin)"}
+              style={{
+                background: alert.falsePositiveAt ? "#FEF3C7" : "transparent",
+                border: `1px dashed ${alert.falsePositiveAt ? "#F59E0B" : "#94A3B8"}`,
+                borderRadius: 6,
+                padding: "4px 10px",
+                color: alert.falsePositiveAt ? "#92400E" : "#94A3B8",
+                fontSize: 10,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
             >
-              Okundu
+              {alert.falsePositiveAt ? "↶ FP geri al" : "Yanlış alarmdı"}
             </button>
-          )}
-          {(alert.status === "acked" || alert.status === "resolved") && (
-            <span style={{ fontSize: 10, color: "#94A3B8" }}>
-              {alert.status === "resolved" ? "Çözüldü" : "Okundu"}
-            </span>
-          )}
+          </div>
         </div>
       ))}
 

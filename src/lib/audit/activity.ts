@@ -30,7 +30,9 @@ export type ActivityAction =
   | "api_token.create"
   | "api_token.revoke"
   | "notification.prefs.update"
-  | "push_token.revoke";
+  | "push_token.revoke"
+  | "alert.feedback.false_positive"
+  | "alert.feedback.clear";
 
 export interface RecordActivityInput {
   userId?: string | null;
