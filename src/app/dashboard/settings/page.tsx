@@ -483,6 +483,7 @@ export default function SettingsPage() {
                 { href: "/dashboard/devices", label: t.devices.linkLabel },
                 { href: "/dashboard/activity", label: t.activity.linkLabel },
                 { href: "/dashboard/consents", label: t.consents.linkLabel },
+                { href: "/dashboard/slow-queries", label: t.slowQueries.linkLabel },
               ] as const).map((l) => (
                 <Link
                   key={l.href}

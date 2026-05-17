@@ -20,6 +20,8 @@ const ONE_DAY_MS = 24 * 60 * 60_000;
  * - PasswordResetToken: 7 gün (expired olanlar). Token zaten 1 saat geçerli.
  * - EmailVerificationToken: 30 gün (expired). 24 saat geçerli.
  * - Alert (resolved/acked): 180 gün. status="open" Alert'ler asla silinmez.
+ * - SlowQueryLog: 30 gün. Eşik üstü ERP query trace; perf inceleme için
+ *   son 30 gün yeterli, eski log noise yapar + tablo büyür.
  *
  * SAKLI TUTULANLAR (silinmiyor):
  * - ConsentLog: KVKK md. 7 + 11 audit trail, kalıcı.
@@ -37,6 +39,7 @@ const RETENTION = {
   emailVerificationTokenExpiredDays: 30,
   resolvedAlertDays: 180,
   notificationLogDays: 180,
+  slowQueryLogDays: 30,
 } as const;
 
 export async function GET(req: NextRequest) {
@@ -122,6 +125,17 @@ export async function GET(req: NextRequest) {
         where: { createdAt: { lt: before } },
       });
       results.notificationLog = r.count;
+      totalDeleted += r.count;
+    }
+
+    // SlowQueryLog — eşik üstü ERP query trace, 30 gün retention.
+    // Tenant silinince cascade ile zaten siliniyor; bu eski log retention'ı.
+    {
+      const before = new Date(now - RETENTION.slowQueryLogDays * ONE_DAY_MS);
+      const r = await prisma.slowQueryLog.deleteMany({
+        where: { createdAt: { lt: before } },
+      });
+      results.slowQueryLog = r.count;
       totalDeleted += r.count;
     }
   } catch (err) {

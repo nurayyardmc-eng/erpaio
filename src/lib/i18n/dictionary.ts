@@ -264,6 +264,29 @@ export interface Dictionary {
     linkLabel: string;
     linkDescription: string;
   };
+  slowQueries: {
+    brand: string;
+    title: string;
+    description: string;
+    summary24hPrefix: string;
+    summary24hSeparator: string;
+    summary24hAvgPrefix: string;
+    summary24hEmpty: string;
+    emptyFiltered: string;
+    presetAll: string;
+    preset5s: string;
+    preset10s: string;
+    preset30s: string;
+    colDuration: string;
+    colErp: string;
+    colSql: string;
+    colResult: string;
+    colTime: string;
+    resultOk: string;
+    resultFail: string;
+    linkLabel: string;
+    linkDescription: string;
+  };
   scheduledReports: {
     breadcrumb: string;
     title: string;
