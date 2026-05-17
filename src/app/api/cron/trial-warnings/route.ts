@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
 import { verifyCronAuth } from "@/lib/cron/auth";
+import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/observability/requestId";
@@ -98,6 +99,16 @@ export async function GET(req: NextRequest) {
 
   const log = childLogger({ component: "cron-trial-warnings", requestId });
 
+  const lock = await acquireCronLock("trial-warnings");
+  if (!lock.ok) {
+    log.warn({ existingRunId: lock.existingRunId }, "Skipping — another run is in progress");
+    return NextResponse.json(
+      { ok: true, skipped: true, reason: "duplicate", existingRunId: lock.existingRunId },
+      { status: 409, headers: { [REQUEST_ID_HEADER]: requestId } },
+    );
+  }
+  const cronRunId = lock.cronRunId;
+
   const tenants = await prisma.tenant.findMany({
     where: {
       plan: "starter",
@@ -172,6 +183,13 @@ export async function GET(req: NextRequest) {
     { event: "cron_done", tenantsChecked: tenants.length, sent, skipped, errors, durationMs },
     "Trial warnings cron complete",
   );
+
+  const finalStatus = errors === 0 ? "SUCCESS" : sent > 0 ? "PARTIAL_FAILURE" : "FAILED";
+  await finalizeCronRun(cronRunId, finalStatus, {
+    tenantsTotal: tenants.length,
+    tenantsOk: sent + skipped,
+    tenantsFail: errors,
+  });
 
   return NextResponse.json(
     {

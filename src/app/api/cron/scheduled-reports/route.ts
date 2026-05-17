@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyCronAuth } from "@/lib/cron/auth";
+import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
@@ -22,6 +23,13 @@ const SCHEDULE_FILTER: Record<string, () => boolean> = {
 export async function GET(req: NextRequest) {
   const auth = verifyCronAuth(req);
   if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: 401 });
+
+  const lock = await acquireCronLock("scheduled-reports");
+  if (!lock.ok) {
+    log.warn({ existingRunId: lock.existingRunId }, "Skipping — another run is in progress");
+    return NextResponse.json({ ok: true, skipped: true, reason: "duplicate", existingRunId: lock.existingRunId }, { status: 409 });
+  }
+  const cronRunId = lock.cronRunId;
 
   const reports = await prisma.scheduledReport.findMany({
     where: { enabled: true },
@@ -81,6 +89,13 @@ export async function GET(req: NextRequest) {
       Sentry.captureException(err, { tags: { component: "cron-reports", reportId: r.id } });
     }
   }
+
+  const finalStatus = failed === 0 ? "SUCCESS" : executed > 0 ? "PARTIAL_FAILURE" : "FAILED";
+  await finalizeCronRun(cronRunId, finalStatus, {
+    tenantsTotal: reports.length,
+    tenantsOk: executed,
+    tenantsFail: failed,
+  });
 
   return NextResponse.json({ ok: true, executed, failed, total: reports.length });
 }

@@ -1,6 +1,10 @@
-import { createHash, randomBytes } from "node:crypto";
 import { auth as nextAuth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
+import { jsonError } from "@/lib/i18n/server";
+import { hashApiToken } from "./apiToken";
+
+// Re-export so existing call sites (`import from "@/lib/auth/dual"`) keep working.
+export { generateApiToken, hashApiToken } from "./apiToken";
 
 export interface AuthedUser {
   id: string;
@@ -9,14 +13,6 @@ export interface AuthedUser {
   role: string;
   authMethod: "session" | "token";
   tokenId?: string;
-}
-
-export function generateApiToken(): string {
-  return randomBytes(32).toString("base64url");
-}
-
-export function hashApiToken(raw: string): string {
-  return createHash("sha256").update(raw).digest("hex");
 }
 
 export async function authenticate(req: Request): Promise<AuthedUser | null> {
@@ -66,9 +62,7 @@ export async function authenticate(req: Request): Promise<AuthedUser | null> {
 export async function requireAuth(req: Request): Promise<{ user: AuthedUser } | { error: Response }> {
   const user = await authenticate(req);
   if (!user) {
-    return {
-      error: Response.json({ error: "Yetkisiz." }, { status: 401 }),
-    };
+    return { error: jsonError(req, "api.unauthorized", 401) };
   }
   return { user };
 }

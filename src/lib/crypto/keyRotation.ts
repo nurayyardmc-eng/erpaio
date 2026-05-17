@@ -4,11 +4,19 @@ import { childLogger } from "@/lib/observability/logger";
 
 const log = childLogger({ component: "key-rotation" });
 
+/**
+ * Encryption key'i hash'le — DB'de plaintext key tutmamak için.
+ * SHA-256 hex output. Deterministic.
+ */
+export function hashEncryptionKey(raw: string): string {
+  return createHash("sha256").update(raw).digest("hex");
+}
+
 export async function registerCurrentKey(): Promise<{ version: number; isNew: boolean }> {
   const raw = process.env.ENCRYPTION_KEY;
   if (!raw) throw new Error("ENCRYPTION_KEY required");
 
-  const hash = createHash("sha256").update(raw).digest("hex");
+  const hash = hashEncryptionKey(raw);
 
   const existing = await prisma.encryptionKey.findFirst({
     where: { keyHashSha256: hash },
