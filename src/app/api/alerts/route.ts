@@ -78,7 +78,11 @@ export async function POST(req: Request) {
 
   if (tenant && shouldNotify(alert.severity, tenant.alertMinSeverity)) {
     if (tenant.whatsappEnabled) {
-      sendWhatsApp(formatAlert(alert), { to: tenant.whatsappTo ?? undefined }).catch((err) => {
+      sendWhatsApp(formatAlert(alert), {
+        to: tenant.whatsappTo ?? undefined,
+        tenantId: session.user.tenantId,
+        alertId: alert.id,
+      }).catch((err) => {
         const log = childLogger({ component: "alerts", alertId: alert.id });
         log.error({ err, severity: alert.severity }, "WhatsApp send failed");
         Sentry.captureException(err, {
@@ -106,6 +110,8 @@ export async function POST(req: Request) {
         to: tenant.emailTo,
         subject: `[ERPAIO ${alert.severity.toUpperCase()}] ${alert.title}`,
         html: alertEmailHtml({ severity: alert.severity, title: alert.title, description: alert.description }),
+        tenantId: session.user.tenantId,
+        alertId: alert.id,
       }).catch((err) => {
         const log = childLogger({ component: "alerts", alertId: alert.id });
         log.error({ err, severity: alert.severity }, "Alert email send failed");

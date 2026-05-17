@@ -46,6 +46,7 @@ model Tenant {
   npsResponses         NpsResponse[]
   customMetrics        CustomMetric[]
   schemaAnnotations    SchemaAnnotation[]
+  notificationLogs     NotificationLog[]
 }
 
 model User {
@@ -499,6 +500,27 @@ model QueryCache {
 
   @@unique([tenantId, questionHash])
   @@index([tenantId, lastUsedAt(sort: Desc)])
+}
+
+/// Notification delivery log — alert sender'larından (whatsapp/email/push/
+/// slack/teams/webhook) attempt sonucu burada loglanır. Sysadmin delivery
+/// health'i (success rate per channel) görebilir. Cleanup cron'da 180 gün.
+model NotificationLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  alertId   String? // bağlı alert (varsa)
+  channel   String // "whatsapp" | "email" | "push" | "slack" | "teams" | "webhook"
+  status    String // "sent" | "failed" | "skipped"
+  recipient String? // email adresi, whatsapp:+90..., token suffix vb.
+  error     String? // failed durumunda kısa mesaj (max 500)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([channel, status, createdAt])
+  @@index([alertId])
 }
 
 /// Webhook idempotency log — external provider'lar (Stripe) retry yapar.

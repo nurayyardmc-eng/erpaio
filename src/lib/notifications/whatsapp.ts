@@ -1,6 +1,7 @@
 import twilio from "twilio";
 import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
+import { recordNotification, maskRecipient } from "./log";
 
 const log = childLogger({ component: "whatsapp" });
 
@@ -10,17 +11,40 @@ const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
 export interface SendOptions {
   to?: string;
+  /** Delivery log için — varsa tenant + alert ile log'a yazılır. */
+  tenantId?: string;
+  alertId?: string;
 }
 
 export async function sendWhatsApp(message: string, options: SendOptions = {}): Promise<{ ok: boolean }> {
+  const toNumber = options.to ?? process.env.TWILIO_WHATSAPP_TO;
+
   if (!client) {
     log.warn({}, "Twilio credentials not set; WhatsApp skipped");
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "whatsapp",
+        status: "skipped",
+        recipient: maskRecipient("whatsapp", toNumber),
+        error: "Twilio credentials not configured",
+      });
+    }
     return { ok: false };
   }
 
-  const toNumber = options.to ?? process.env.TWILIO_WHATSAPP_TO;
   if (!toNumber) {
     log.warn({}, "WhatsApp alıcı numarası tanımlı değil (tenant.whatsappTo veya TWILIO_WHATSAPP_TO)");
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "whatsapp",
+        status: "skipped",
+        error: "Recipient not configured",
+      });
+    }
     return { ok: false };
   }
 
@@ -31,10 +55,29 @@ export async function sendWhatsApp(message: string, options: SendOptions = {}): 
       body: message,
     });
     log.info({ to: toNumber }, "WhatsApp sent");
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "whatsapp",
+        status: "sent",
+        recipient: maskRecipient("whatsapp", toNumber),
+      });
+    }
     return { ok: true };
   } catch (err) {
     log.error({ err, to: toNumber }, "WhatsApp send failed");
     Sentry.captureException(err, { tags: { component: "whatsapp" } });
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "whatsapp",
+        status: "failed",
+        recipient: maskRecipient("whatsapp", toNumber),
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
     return { ok: false };
   }
 }

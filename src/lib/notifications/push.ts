@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
+import { recordNotification } from "./log";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 /**
@@ -160,5 +161,22 @@ export async function sendPushToTenant(
     { sent: totalSent, failed: totalFailed, total: tokens.length, chunks: messageChunks.length, title: options.title },
     "Push send",
   );
+
+  // Tek aggregate row — her token için ayrı kayıt notification log'u
+  // büyütür ve delivery dashboard'unda gürültü yapar.
+  void recordNotification({
+    tenantId,
+    channel: "push",
+    status: totalFailed === 0 && totalSent > 0 ? "sent" : totalSent > 0 ? "failed" : "failed",
+    recipient: null, // tenant-wide broadcast, recipient yok
+    metadata: {
+      total: tokens.length,
+      sent: totalSent,
+      failed: totalFailed,
+      chunks: messageChunks.length,
+    },
+    error: totalFailed > 0 ? `${totalFailed}/${tokens.length} push delivery failed` : null,
+  });
+
   return { sent: totalSent, failed: totalFailed };
 }

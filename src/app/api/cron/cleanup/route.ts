@@ -36,6 +36,7 @@ const RETENTION = {
   passwordResetTokenExpiredDays: 7,
   emailVerificationTokenExpiredDays: 30,
   resolvedAlertDays: 180,
+  notificationLogDays: 180,
 } as const;
 
 export async function GET(req: NextRequest) {
@@ -110,6 +111,17 @@ export async function GET(req: NextRequest) {
         },
       });
       results.alertResolved = r.count;
+      totalDeleted += r.count;
+    }
+
+    // NotificationLog — delivery audit, 180 gün yeterli (alert resolved
+    // retention'la senkron).
+    {
+      const before = new Date(now - RETENTION.notificationLogDays * ONE_DAY_MS);
+      const r = await prisma.notificationLog.deleteMany({
+        where: { createdAt: { lt: before } },
+      });
+      results.notificationLog = r.count;
       totalDeleted += r.count;
     }
   } catch (err) {

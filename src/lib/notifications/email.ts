@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
 import { prisma } from "@/lib/db/prisma";
+import { recordNotification, maskRecipient } from "./log";
 
 const log = childLogger({ component: "email" });
 
@@ -39,11 +40,25 @@ export interface EmailOptions {
   text?: string;
   replyTo?: string;
   tenantId?: string;
+  /** Bağlı alert (varsa) — delivery log için. */
+  alertId?: string;
 }
 
 export async function sendEmail(options: EmailOptions): Promise<{ ok: boolean; id?: string }> {
+  const recipientStr = Array.isArray(options.to) ? options.to[0] : options.to;
+
   if (!client) {
     log.warn({}, "Resend API key not set; email skipped");
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "email",
+        status: "skipped",
+        recipient: maskRecipient("email", recipientStr),
+        error: "Resend API key not configured",
+      });
+    }
     return { ok: false };
   }
 
@@ -59,10 +74,30 @@ export async function sendEmail(options: EmailOptions): Promise<{ ok: boolean; i
       replyTo: options.replyTo,
     });
     log.info({ to: options.to, id: result.data?.id, from }, "Email sent");
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "email",
+        status: "sent",
+        recipient: maskRecipient("email", recipientStr),
+        metadata: result.data?.id ? { providerId: result.data.id } : null,
+      });
+    }
     return { ok: true, id: result.data?.id };
   } catch (err) {
     log.error({ err }, "Email send failed");
     Sentry.captureException(err, { tags: { component: "email" } });
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "email",
+        status: "failed",
+        recipient: maskRecipient("email", recipientStr),
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
     return { ok: false };
   }
 }
