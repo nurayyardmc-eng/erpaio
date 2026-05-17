@@ -2,11 +2,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+interface CronJobHealth {
+  runs: number;
+  failed: number;
+  lastRunAt: string | null;
+}
+
 interface HealthCheck {
   ok: boolean;
   version: string;
   env: string;
-  checks: { database: { ok: boolean; latencyMs: number; error?: string } };
+  checks: {
+    database: { ok: boolean; latencyMs: number; error?: string };
+    cron?: { ok: boolean; jobs: Record<string, CronJobHealth> };
+  };
   timestamp: string;
   uptimeMs: number;
 }
@@ -24,7 +33,9 @@ export default function StatusPage() {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = () => {
-    fetch("/api/health")
+    // ?deep=true: cron health'i de getir. 30s polling için ekstra DB query
+    // ucuz (last 24h CronRun zaten indexed).
+    fetch("/api/health?deep=true")
       .then((r) => r.json())
       .then((d: HealthCheck) => {
         setHealth(d);
@@ -71,8 +82,9 @@ export default function StatusPage() {
     },
     {
       name: "Cron Jobs",
-      description: "Anomaly detection — saatlik (GH Actions) + günlük (Vercel)",
-      status: "operational",
+      description: "Anomaly + scheduled-reports + watchlists + trial-warnings (GitHub Actions)",
+      status: cronStatusFromHealth(health),
+      message: cronMessageFromHealth(health),
     },
   ];
 
@@ -170,4 +182,27 @@ function labelFor(s: string): string {
 
 function summaryFor(s: string): string {
   return s === "operational" ? "Tüm sistemler normal." : s === "degraded" ? "Bazı servisler yavaş." : s === "outage" ? "Bir veya daha fazla servis kesintide." : "Servis durumu kontrol ediliyor...";
+}
+
+function cronStatusFromHealth(h: HealthCheck | null): ServiceStatus["status"] {
+  if (!h?.checks.cron) return "unknown";
+  const jobs = Object.values(h.checks.cron.jobs);
+  if (jobs.length === 0) return "degraded"; // no runs last 24h
+  const totalFailed = jobs.reduce((a, j) => a + j.failed, 0);
+  const totalRuns = jobs.reduce((a, j) => a + j.runs, 0);
+  if (totalRuns === 0) return "degraded";
+  const failRate = totalFailed / totalRuns;
+  if (failRate >= 0.5) return "outage";
+  if (failRate > 0) return "degraded";
+  return "operational";
+}
+
+function cronMessageFromHealth(h: HealthCheck | null): string | undefined {
+  if (!h?.checks.cron) return undefined;
+  const jobs = h.checks.cron.jobs;
+  const totalRuns = Object.values(jobs).reduce((a, j) => a + j.runs, 0);
+  const totalFailed = Object.values(jobs).reduce((a, j) => a + j.failed, 0);
+  if (totalRuns === 0) return "Son 24 saatte çalışan cron yok";
+  if (totalFailed > 0) return `Son 24h: ${totalRuns} run, ${totalFailed} başarısız`;
+  return `Son 24h: ${totalRuns} başarılı run`;
 }
