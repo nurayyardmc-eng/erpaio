@@ -56,20 +56,33 @@ export async function getMe(): Promise<{ user: MobileUser } | null> {
   }
 }
 
+// Single-flight refresh guard — concurrent caller'lar aynı in-flight Promise'i
+// bekler. App launch'ta refreshIfNeeded() çağrılır + kullanıcı hemen chat'e
+// gider; iki POST/api/auth/mobile-refresh paralel çıkmasın (server eski
+// token'ı revoke ederse ikinci çağrı 401 alır).
+let refreshPromise: Promise<{ token: string; expiresAt: string } | null> | null = null;
+
 /**
  * API token'ı yenile (90 günlük expiry'a yaklaşırken).
  * Server eski token'ı revoke eder, yeni token'ı döner — SecureStore'a yaz.
+ * Single-flight: concurrent çağrılar aynı promise'i paylaşır.
  */
 export async function refreshApiToken(): Promise<{ token: string; expiresAt: string } | null> {
-  try {
-    const res = await api<{ token: string; expiresAt: string }>("/api/auth/mobile-refresh", {
-      method: "POST",
-    });
-    await setToken(res.token, res.expiresAt);
-    return res;
-  } catch {
-    return null;
-  }
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    try {
+      const res = await api<{ token: string; expiresAt: string }>("/api/auth/mobile-refresh", {
+        method: "POST",
+      });
+      await setToken(res.token, res.expiresAt);
+      return res;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
 }
 
 /** Token kalan süresine bak; eşik altındaysa otomatik refresh. */
