@@ -59,6 +59,7 @@ export default function AdminPage() {
         {([
           { href: "/admin/health-scores", label: "Health Scores" },
           { href: "/admin/cron-runs", label: "Cron Runs" },
+          { href: "/admin/notifications", label: "Notifications" },
           { href: "/admin/activity", label: "Activity Log" },
           { href: "/admin/key-history", label: "Encryption Keys" },
         ] as const).map((l) => (
