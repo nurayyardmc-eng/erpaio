@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
 import { verifyCode } from "@/lib/auth/totp";
+import { consumeRecoveryCode, looksLikeRecoveryCode } from "@/lib/auth/recovery";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
@@ -43,7 +44,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (user.totpEnabled && user.totpSecretEnc) {
           const code = (credentials.totpCode as string | undefined) ?? "";
-          if (!verifyCode(user.totpSecretEnc, code)) {
+          // Recovery code path: XXXX-XXXX format — bypasses TOTP, consumes the code.
+          if (looksLikeRecoveryCode(code)) {
+            const ok = await consumeRecoveryCode(user.id, code);
+            if (!ok) throw new Error("MFA_REQUIRED");
+          } else if (!verifyCode(user.totpSecretEnc, code)) {
             throw new Error("MFA_REQUIRED");
           }
         }

@@ -12,6 +12,11 @@ interface Session {
   createdAt: string;
   isCurrent: boolean;
 }
+interface RecoveryStatus {
+  total: number;
+  remaining: number;
+  generatedAt: string | null;
+}
 
 export default function SecurityPage() {
   const [meEnabled, setMeEnabled] = useState<boolean | null>(null);
@@ -21,6 +26,9 @@ export default function SecurityPage() {
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [recovery, setRecovery] = useState<RecoveryStatus | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
 
   const refresh = () => {
     fetch("/api/me").then(r => r.json()).then(d => {
@@ -42,9 +50,68 @@ export default function SecurityPage() {
       .catch(() => setSessionsLoading(false));
   };
 
+  const loadRecovery = () => {
+    fetch("/api/auth/mfa/recovery-codes")
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((d: RecoveryStatus | null) => setRecovery(d))
+      .catch(() => {});
+  };
+
+  const generateRecovery = async () => {
+    if (recovery && recovery.total > 0) {
+      const ok = await confirmDialog({
+        title: "Yeni kurtarma kodları oluştur?",
+        message: "Eski kodlar geçersiz olur. Yeni kodları güvenli bir yere kaydedin — bir daha gösterilmeyecek.",
+        confirmLabel: "Oluştur",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    setRecoveryLoading(true);
+    try {
+      const res = await fetch("/api/auth/mfa/recovery-codes", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Hata", "error");
+        return;
+      }
+      setRecoveryCodes(data.codes as string[]);
+      loadRecovery();
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
+  const copyRecoveryCodes = () => {
+    if (!recoveryCodes) return;
+    void navigator.clipboard.writeText(recoveryCodes.join("\n"));
+    showToast("Kodlar panoya kopyalandı", "success");
+  };
+
+  const downloadRecoveryCodes = () => {
+    if (!recoveryCodes) return;
+    const blob = new Blob(
+      [
+        "ERPAIO MFA Kurtarma Kodları\n",
+        `Oluşturuldu: ${new Date().toLocaleString("tr-TR")}\n\n`,
+        "Her kod yalnızca BİR KEZ kullanılabilir. Güvenli bir yerde saklayın.\n\n",
+        recoveryCodes.join("\n"),
+        "\n",
+      ],
+      { type: "text/plain" },
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "erpaio-recovery-codes.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     refresh();
     loadSessions();
+    loadRecovery();
   }, []);
 
   const revokeSession = async (s: Session) => {
@@ -210,6 +277,106 @@ export default function SecurityPage() {
         )}
       </div>
 
+      {/* MFA Kurtarma Kodları */}
+      {meEnabled === true && (
+        <div style={{ maxWidth: 520, marginTop: 32 }}>
+          <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>MFA Kurtarma Kodları</h2>
+          <p style={{ color: "#525252", fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
+            Authenticator app&apos;ini kaybedersen bu tek kullanımlık kodlarla giriş yapabilirsin.
+            Kodlar yalnızca bir kez gösterilir; güvenli bir yerde sakla.
+          </p>
+
+          <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 20 }}>
+            {recovery && recovery.total > 0 ? (
+              <>
+                <div style={{ fontSize: 13, color: "#0F172A", marginBottom: 4 }}>
+                  <strong>{recovery.remaining}</strong> / {recovery.total} kod kalan
+                </div>
+                {recovery.generatedAt && (
+                  <div style={{ fontSize: 12, color: "#737373", marginBottom: 16 }}>
+                    Oluşturuldu: {new Date(recovery.generatedAt).toLocaleString("tr-TR")}
+                  </div>
+                )}
+                {recovery.remaining <= 3 && recovery.remaining > 0 && (
+                  <div style={{ fontSize: 12, color: "#F59E0B", marginBottom: 12 }}>
+                    ⚠ Az kod kaldı. Yenilemeyi düşün.
+                  </div>
+                )}
+                {recovery.remaining === 0 && (
+                  <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 12 }}>
+                    ⚠ Tüm kodlar kullanıldı. Yeni set oluştur.
+                  </div>
+                )}
+                <button onClick={generateRecovery} disabled={recoveryLoading} style={btnDanger}>
+                  {recoveryLoading ? "Oluşturuluyor..." : "Yeni Kodlar Oluştur"}
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, color: "#F59E0B", marginBottom: 12 }}>
+                  ⚠ Henüz kurtarma kodun yok
+                </div>
+                <button onClick={generateRecovery} disabled={recoveryLoading} style={btnPrimary}>
+                  {recoveryLoading ? "Oluşturuluyor..." : "Kurtarma Kodlarını Oluştur"}
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* One-time view modal */}
+          {recoveryCodes && (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.5)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 16,
+                zIndex: 1000,
+              }}
+            >
+              <div style={{ background: "#FFFFFF", borderRadius: 16, padding: 24, maxWidth: 480, width: "100%" }}>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600 }}>Kurtarma Kodların</h3>
+                <p style={{ color: "#525252", fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
+                  Bu kodlar bir daha gösterilmeyecek. Şimdi indir veya kopyala. Her kod sadece bir kez kullanılabilir.
+                </p>
+                <div
+                  style={{
+                    background: "#F9FAFB",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 8,
+                    padding: 16,
+                    marginBottom: 16,
+                    fontFamily: "ui-monospace, Menlo, Monaco, monospace",
+                    fontSize: 14,
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 8,
+                    color: "#0F172A",
+                  }}
+                >
+                  {recoveryCodes.map((c) => (
+                    <div key={c} style={{ letterSpacing: 1 }}>{c}</div>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button onClick={downloadRecoveryCodes} style={btnPrimary}>İndir (.txt)</button>
+                  <button onClick={copyRecoveryCodes} style={btnSecondary}>Kopyala</button>
+                  <button
+                    onClick={() => setRecoveryCodes(null)}
+                    style={{ ...btnSecondary, marginLeft: "auto" }}
+                  >
+                    Kapat
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Aktif Oturumlar */}
       <div style={{ maxWidth: 520, marginTop: 32 }}>
         <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>Aktif Oturumlar</h2>
@@ -307,6 +474,17 @@ const btnDanger: React.CSSProperties = {
   borderRadius: 6,
   padding: "10px 20px",
   color: "#EF4444",
+  fontSize: 12,
+  cursor: "pointer",
+  fontFamily: "inherit",
+};
+
+const btnSecondary: React.CSSProperties = {
+  background: "#FFFFFF",
+  border: "1px solid #E5E7EB",
+  borderRadius: 6,
+  padding: "10px 20px",
+  color: "#0F172A",
   fontSize: 12,
   cursor: "pointer",
   fontFamily: "inherit",

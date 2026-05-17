@@ -38,24 +38,36 @@ model Tenant {
 }
 
 model User {
-  id               String        @id @default(cuid())
+  id               String             @id @default(cuid())
   tenantId         String
-  email            String        @unique
+  email            String             @unique
   emailVerifiedAt  DateTime?
   passwordHash     String
   name             String?
-  avatarBase64     String?       @db.Text
-  role             String        @default("viewer")
-  isSysAdmin       Boolean       @default(false)
+  avatarBase64     String?            @db.Text
+  role             String             @default("viewer")
+  isSysAdmin       Boolean            @default(false)
   totpSecretEnc    String?
-  totpEnabled      Boolean       @default(false)
-  failedLoginCount Int           @default(0)
+  totpEnabled      Boolean            @default(false)
+  failedLoginCount Int                @default(0)
   lockedUntil      DateTime?
-  createdAt        DateTime      @default(now())
-  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt        DateTime           @default(now())
+  tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions         ChatSession[]
   apiTokens        ApiToken[]
   pushTokens       PushToken[]
+  recoveryCodes    MfaRecoveryCode[]
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model ErpConnection {

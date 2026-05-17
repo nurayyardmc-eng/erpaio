@@ -2,40 +2,84 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { Mail, Lock, AlertCircle } from "lucide-react";
+import { Mail, Lock, AlertCircle, ShieldCheck } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+
+type Step = "credentials" | "mfa";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [useRecovery, setUseRecovery] = useState(false);
+  const [step, setStep] = useState<Step>("credentials");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const attemptLogin = async (totp?: string) => {
+    const result = await signIn("credentials", {
+      email,
+      password,
+      totpCode: totp ?? "",
+      redirect: false,
+    });
+    return result;
+  };
+
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
+      const result = await attemptLogin();
       if (result?.error) {
+        // NextAuth v5: custom errors thrown in authorize() come back as `code` or
+        // embedded in `error`. Match either.
+        const errStr = result.error ?? "";
+        const codeStr = result.code ?? "";
+        if (codeStr === "MFA_REQUIRED" || /MFA_REQUIRED/i.test(errStr)) {
+          setStep("mfa");
+          setLoading(false);
+          return;
+        }
+        if (codeStr === "ACCOUNT_LOCKED" || /ACCOUNT_LOCKED/i.test(errStr)) {
+          setError("Hesap geçici olarak kilitlendi (15 dk).");
+          setLoading(false);
+          return;
+        }
         setError("Email veya şifre hatalı.");
         setLoading(false);
         return;
       }
-
       window.location.href = "/dashboard";
     } catch {
       setError("Giriş başarısız. Lütfen tekrar deneyin.");
       setLoading(false);
     }
   };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await attemptLogin(totpCode.trim());
+      if (result?.error) {
+        setError(useRecovery ? "Kurtarma kodu geçersiz veya kullanılmış." : "Doğrulama kodu yanlış.");
+        setLoading(false);
+        return;
+      }
+      window.location.href = "/dashboard";
+    } catch {
+      setError("Doğrulama başarısız.");
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = step === "mfa" ? handleMfaSubmit : handleCredentialsSubmit;
 
   return (
     <div style={{
@@ -58,48 +102,113 @@ export default function LoginPage() {
           <Logo size={96} variant="full" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 8px", fontWeight: 700, letterSpacing: -0.5 }}>
-          Giriş Yap
+          {step === "mfa" ? "İki Faktörlü Doğrulama" : "Giriş Yap"}
         </h1>
         <p style={{ color: colors.textMuted, fontSize: 14, marginBottom: 28 }}>
-          Hesabına devam et
+          {step === "mfa"
+            ? useRecovery
+              ? "Kurtarma kodunu gir (XXXX-XXXX)"
+              : "Authenticator app'inden 6 haneli kodu gir"
+            : "Hesabına devam et"}
         </p>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Email</label>
-            <div style={{ position: "relative" }}>
-              <Mail size={16} style={iconStyle} />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ ...inputStyle, paddingLeft: 42 }}
-                autoComplete="email"
-                required
-              />
-            </div>
-          </div>
+          {step === "credentials" ? (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <label style={labelStyle}>Email</label>
+                <div style={{ position: "relative" }}>
+                  <Mail size={16} style={iconStyle} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={{ ...inputStyle, paddingLeft: 42 }}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+              </div>
 
-          <div style={{ marginBottom: 8 }}>
-            <label style={labelStyle}>Şifre</label>
-            <div style={{ position: "relative" }}>
-              <Lock size={16} style={iconStyle} />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ ...inputStyle, paddingLeft: 42 }}
-                autoComplete="current-password"
-                required
-              />
-            </div>
-          </div>
+              <div style={{ marginBottom: 8 }}>
+                <label style={labelStyle}>Şifre</label>
+                <div style={{ position: "relative" }}>
+                  <Lock size={16} style={iconStyle} />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ ...inputStyle, paddingLeft: 42 }}
+                    autoComplete="current-password"
+                    required
+                  />
+                </div>
+              </div>
 
-          <div style={{ marginBottom: 20, fontSize: 13, textAlign: "right" }}>
-            <Link href="/forgot-password" style={{ color: colors.brand, fontWeight: 500 }}>
-              Şifremi unuttum
-            </Link>
-          </div>
+              <div style={{ marginBottom: 20, fontSize: 13, textAlign: "right" }}>
+                <Link href="/forgot-password" style={{ color: colors.brand, fontWeight: 500 }}>
+                  Şifremi unuttum
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <label style={labelStyle}>{useRecovery ? "Kurtarma Kodu" : "Doğrulama Kodu"}</label>
+                <div style={{ position: "relative" }}>
+                  <ShieldCheck size={16} style={iconStyle} />
+                  <input
+                    type="text"
+                    value={totpCode}
+                    onChange={(e) => {
+                      const v = e.target.value.toUpperCase();
+                      setTotpCode(
+                        useRecovery
+                          ? v.replace(/[^A-Z2-9-]/g, "").slice(0, 9)
+                          : v.replace(/\D/g, "").slice(0, 6),
+                      );
+                    }}
+                    placeholder={useRecovery ? "XXXX-XXXX" : "000000"}
+                    style={{
+                      ...inputStyle,
+                      paddingLeft: 42,
+                      fontFamily: "ui-monospace, Menlo, Monaco, monospace",
+                      letterSpacing: useRecovery ? 2 : 4,
+                      fontSize: 18,
+                      textAlign: "center",
+                    }}
+                    autoComplete="one-time-code"
+                    inputMode={useRecovery ? "text" : "numeric"}
+                    autoFocus
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 20, fontSize: 13, textAlign: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseRecovery(!useRecovery);
+                    setTotpCode("");
+                    setError("");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: colors.brand,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    fontSize: 13,
+                    textDecoration: "underline",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {useRecovery ? "Authenticator kodu kullan" : "Kurtarma kodu kullan"}
+                </button>
+              </div>
+            </>
+          )}
 
           {error && (
             <div style={{
@@ -132,12 +241,43 @@ export default function LoginPage() {
               fontWeight: 600,
             }}
           >
-            {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            {loading
+              ? step === "mfa"
+                ? "Doğrulanıyor..."
+                : "Giriş yapılıyor..."
+              : step === "mfa"
+              ? "Doğrula"
+              : "Giriş Yap"}
           </button>
 
-          <div style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: colors.textMuted }}>
-            Hesabın yok mu? <Link href="/signup" style={{ color: colors.brand, fontWeight: 600 }}>Kayıt Ol</Link>
-          </div>
+          {step === "mfa" && (
+            <button
+              type="button"
+              onClick={() => {
+                setStep("credentials");
+                setTotpCode("");
+                setError("");
+              }}
+              style={{
+                marginTop: 12,
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                color: colors.textMuted,
+                fontSize: 13,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              ← Email/şifreye geri dön
+            </button>
+          )}
+
+          {step === "credentials" && (
+            <div style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: colors.textMuted }}>
+              Hesabın yok mu? <Link href="/signup" style={{ color: colors.brand, fontWeight: 600 }}>Kayıt Ol</Link>
+            </div>
+          )}
         </form>
       </div>
     </div>
