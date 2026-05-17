@@ -1,8 +1,17 @@
 "use client";
 import { confirmDialog } from "@/components/Confirm";
+import { showToast } from "@/components/Toaster";
 import { useEffect, useState } from "react";
 
 interface SetupResp { secret: string; qr: string; uri: string }
+interface Session {
+  id: string;
+  name: string;
+  lastUsedAt: string | null;
+  expiresAt: string;
+  createdAt: string;
+  isCurrent: boolean;
+}
 
 export default function SecurityPage() {
   const [meEnabled, setMeEnabled] = useState<boolean | null>(null);
@@ -10,6 +19,8 @@ export default function SecurityPage() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
 
   const refresh = () => {
     fetch("/api/me").then(r => r.json()).then(d => {
@@ -17,7 +28,46 @@ export default function SecurityPage() {
     });
   };
 
-  useEffect(refresh, []);
+  const loadSessions = () => {
+    setSessionsLoading(true);
+    fetch("/api/me/sessions")
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d) => {
+        setSessions(d.sessions ?? []);
+        setSessionsLoading(false);
+      })
+      .catch(() => setSessionsLoading(false));
+  };
+
+  useEffect(() => {
+    refresh();
+    loadSessions();
+  }, []);
+
+  const revokeSession = async (s: Session) => {
+    if (s.isCurrent) {
+      showToast("Aktif oturumunuzu sonlandıramazsınız. Çıkış yapmak için Ayarlar sayfasını kullanın.", "error");
+      return;
+    }
+    const ok = await confirmDialog({
+      title: "Oturumu sonlandır?",
+      message: `${s.name} cihazı uygulamadan çıkacak. Tekrar giriş yapması gerekecek.`,
+      confirmLabel: "Sonlandır",
+      destructive: true,
+    });
+    if (!ok) return;
+
+    const res = await fetch(`/api/me/sessions?tokenId=${s.id}`, { method: "DELETE" });
+    if (res.ok) {
+      showToast("Oturum sonlandırıldı", "success");
+      loadSessions();
+    } else {
+      showToast("İşlem başarısız", "error");
+    }
+  };
 
   const beginSetup = async () => {
     setLoading(true);
@@ -158,6 +208,83 @@ export default function SecurityPage() {
             {status.msg}
           </div>
         )}
+      </div>
+
+      {/* Aktif Oturumlar */}
+      <div style={{ maxWidth: 520, marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>Aktif Oturumlar</h2>
+        <p style={{ color: "#525252", fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
+          Hesabınıza erişimi olan tüm cihazlar. Tanımadığınız bir oturum görüyorsanız sonlandırın
+          ve şifrenizi değiştirin.
+        </p>
+
+        <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+          {sessionsLoading ? (
+            <div style={{ padding: 24 }}>
+              <div className="skeleton" style={{ height: 16, borderRadius: 8, marginBottom: 8 }} />
+              <div className="skeleton" style={{ height: 16, borderRadius: 8, width: "60%" }} />
+            </div>
+          ) : sessions.length === 0 ? (
+            <div style={{ padding: 24, textAlign: "center", color: "#737373", fontSize: 13 }}>
+              Aktif oturum yok.
+            </div>
+          ) : (
+            sessions.map((s, i) => (
+              <div
+                key={s.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "16px 20px",
+                  borderTop: i === 0 ? "none" : "1px solid #E5E7EB",
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0A0A0A", marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+                    {s.name}
+                    {s.isCurrent && (
+                      <span style={{
+                        fontSize: 10,
+                        color: "#10B981",
+                        background: "#D1FAE5",
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        fontWeight: 700,
+                        letterSpacing: 1,
+                      }}>BU OTURUM</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#737373" }}>
+                    {s.lastUsedAt
+                      ? `Son kullanım: ${new Date(s.lastUsedAt).toLocaleString("tr-TR")}`
+                      : "Henüz kullanılmadı"}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>
+                    Süre sonu: {new Date(s.expiresAt).toLocaleDateString("tr-TR")}
+                  </div>
+                </div>
+                {!s.isCurrent && (
+                  <button
+                    onClick={() => revokeSession(s)}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      background: "transparent",
+                      color: "#EF4444",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Sonlandır
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
