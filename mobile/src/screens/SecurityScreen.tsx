@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import {
+  generateRecoveryCodes,
+  getRecoveryCodeStatus,
+} from "../lib/auth";
 import {
   getApiSessions,
   revokeApiSession,
@@ -78,6 +82,7 @@ export default function SecurityScreen({ navigation }: Props) {
               <Text style={styles.desc}>
                 {t.security.mfaActiveDesc}
               </Text>
+              <RecoveryStatusRow />
               <TouchableOpacity onPress={disable} disabled={loading} style={styles.dangerBtn} activeOpacity={0.8}>
                 <Text style={styles.dangerBtnText}>{loading ? "..." : t.security.mfaDisableBtn}</Text>
               </TouchableOpacity>
@@ -85,9 +90,16 @@ export default function SecurityScreen({ navigation }: Props) {
           ) : (
             <>
               <Text style={styles.warning}>{t.security.mfaInactive}</Text>
-              <Text style={styles.desc}>
+              <Text style={[styles.desc, { marginBottom: spacing(3) }]}>
                 {t.security.mfaInactiveDesc}
               </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("MfaEnable")}
+                style={styles.enableMfaBtn}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.enableMfaBtnText}>{t.security.mfaEnableBtn}</Text>
+              </TouchableOpacity>
             </>
           )}
         </View>
@@ -199,6 +211,92 @@ function ActiveSessionsSection() {
   );
 }
 
+/**
+ * MFA aktif iken kalan recovery code sayısı + regenerate butonu.
+ * Eski kodlar tükendiyse kullanıcı authenticator app'i kaybetmesi durumunda
+ * hesabına erişemez — bu yüzden status sürekli görünür.
+ */
+function RecoveryStatusRow() {
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const [shownCodes, setShownCodes] = useState<string[] | null>(null);
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["mfa-recovery-status"], queryFn: getRecoveryCodeStatus });
+
+  const regenerate = async () => {
+    const ok = await confirmDialog({
+      title: t.mfaSetup.regenerateConfirmTitle,
+      message: t.mfaSetup.regenerateConfirmMessage,
+      confirmLabel: t.mfaSetup.regenerateConfirmYes,
+      destructive: true,
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const { codes } = await generateRecoveryCodes();
+      setShownCodes(codes);
+      void qc.invalidateQueries({ queryKey: ["mfa-recovery-status"] });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t.common.error;
+      showToast(msg, "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const shareCodes = async () => {
+    if (!shownCodes) return;
+    try {
+      await Share.share({ message: shownCodes.join("\n") });
+    } catch {
+      // user cancelled
+    }
+  };
+
+  return (
+    <View style={styles.recoveryRow}>
+      {q.isLoading ? (
+        <ActivityIndicator color={colors.brand} />
+      ) : (
+        <Text style={styles.recoveryStatusText}>
+          {q.data && q.data.total > 0
+            ? `${t.mfaSetup.recoveryStatusPrefix}${q.data.remaining}${t.mfaSetup.recoveryStatusSuffix}`
+            : t.mfaSetup.recoveryNeverGenerated}
+        </Text>
+      )}
+      <TouchableOpacity
+        onPress={regenerate}
+        disabled={busy}
+        style={[styles.regenerateBtn, busy && { opacity: 0.5 }]}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.regenerateBtnText}>{t.mfaSetup.regenerateBtn}</Text>
+      </TouchableOpacity>
+
+      {shownCodes && (
+        <View style={styles.regenerateCodesBox}>
+          <View style={styles.warningBoxInline}>
+            <Text style={styles.warningTextInline}>{t.mfaSetup.stepRecoveryWarning}</Text>
+          </View>
+          {shownCodes.map((c) => (
+            <Text key={c} style={styles.recoveryCodeInline} selectable>
+              {c}
+            </Text>
+          ))}
+          <View style={{ flexDirection: "row", gap: spacing(2), marginTop: spacing(2) }}>
+            <TouchableOpacity onPress={shareCodes} style={styles.outlineBtnSmall} activeOpacity={0.7}>
+              <Text style={styles.outlineBtnSmallText}>{t.mfaSetup.shareCodesBtn}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShownCodes(null)} style={styles.outlineBtnSmall} activeOpacity={0.7}>
+              <Text style={styles.outlineBtnSmallText}>{t.mfaSetup.doneBtn}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
   card: {
@@ -259,4 +357,67 @@ const styles = StyleSheet.create({
   },
   revokeBtnDisabled: { opacity: 0.4 },
   revokeBtnText: { color: colors.error, fontFamily: font, fontSize: 12, fontWeight: "600" },
+  enableMfaBtn: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.brand,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(5),
+    paddingVertical: spacing(2.5),
+  },
+  enableMfaBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  recoveryRow: {
+    marginBottom: spacing(3),
+    paddingTop: spacing(2),
+    borderTopColor: colors.borderSubtle,
+    borderTopWidth: 1,
+  },
+  recoveryStatusText: {
+    color: colors.textMuted,
+    fontFamily: font,
+    fontSize: 12,
+    marginBottom: spacing(2),
+    marginTop: spacing(2),
+  },
+  regenerateBtn: {
+    alignSelf: "flex-start",
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(1.5),
+  },
+  regenerateBtnText: { color: colors.text, fontFamily: font, fontSize: 12, fontWeight: "500" },
+  regenerateCodesBox: {
+    marginTop: spacing(3),
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing(3),
+  },
+  warningBoxInline: {
+    backgroundColor: colors.warningSoft,
+    borderRadius: radius.sm,
+    padding: spacing(2),
+    marginBottom: spacing(2),
+  },
+  warningTextInline: { color: colors.warning, fontFamily: font, fontSize: 11, fontWeight: "600", lineHeight: 16 },
+  recoveryCodeInline: {
+    color: colors.text,
+    fontFamily: fontMono,
+    fontSize: 14,
+    letterSpacing: 1.5,
+    textAlign: "center",
+    paddingVertical: spacing(1),
+  },
+  outlineBtnSmall: {
+    flex: 1,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingVertical: spacing(2),
+    alignItems: "center",
+    backgroundColor: colors.bg,
+  },
+  outlineBtnSmallText: { color: colors.text, fontFamily: font, fontSize: 12, fontWeight: "500" },
 });

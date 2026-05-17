@@ -449,6 +449,41 @@ export const en: Dictionary = {
     noActiveConnTitle: "No active connection",
     noActiveConnDesc: "An ERP connection is required for schema insights.",
   },
+  mfaSetup: {
+    brand: "MFA SETUP",
+    title: "Two-Factor Authentication",
+    description:
+      "Protect your account with an authenticator app (Google Authenticator, 1Password, Authy, Microsoft Authenticator, etc.). On each login you will be asked for a 6-digit code from the app.",
+    stepSetupTitle: "Step 1 — Add to Authenticator",
+    stepSetupHint:
+      "Copy the secret below or use \"Open in Authenticator\" to add it directly to your app. Then enter the 6-digit code from the app.",
+    secretLabel: "TOTP Secret",
+    secretCopyHint: "Long-press to select & copy",
+    openAuthAppBtn: "Open in Authenticator",
+    shareSecretBtn: "Share Secret",
+    codeLabel: "6-digit code from Authenticator",
+    codePlaceholder: "123456",
+    verifyBtn: "Verify & Enable",
+    verifyingBtn: "Verifying...",
+    verifyError: "Code is wrong or expired. Try again.",
+    stepRecoveryTitle: "Step 2 — Save Recovery Codes",
+    stepRecoveryWarning:
+      "Save these codes in a SAFE PLACE. If you lose your phone you can bypass MFA with these. Each code can be used ONCE only. You cannot see them again after closing this screen.",
+    shareCodesBtn: "Share Codes",
+    doneBtn: "Done, I Saved Them",
+    completeToast: "MFA enabled.",
+    setupErrorPlanGate:
+      "MFA is only available on Pro+ plans. Upgrade in the web admin panel.",
+    setupErrorGeneric: "Failed to start MFA setup.",
+    regenerateBtn: "Regenerate Recovery Codes",
+    regenerateConfirmTitle: "Regenerate codes?",
+    regenerateConfirmMessage:
+      "All current recovery codes will be invalidated. 10 new codes will be generated and shown only once.",
+    regenerateConfirmYes: "Yes, regenerate",
+    recoveryStatusPrefix: "Recovery codes remaining: ",
+    recoveryStatusSuffix: " / 10",
+    recoveryNeverGenerated: "No recovery codes generated yet.",
+  },
   security: {
     brand: "ERPAIO · SECURITY",
     title: "Security",
@@ -466,6 +501,7 @@ export const en: Dictionary = {
     disableConfirmYes: "Yes, disable",
     mfaDisabledToast: "MFA disabled",
     mfaDisableFailedToast: "Action failed",
+    mfaEnableBtn: "Enable MFA",
     sessionsTitle: "Active Sessions",
     sessionsDescription:
       "All devices/apps with access to your account. If you see an unrecognized session, revoke it and change your password.",

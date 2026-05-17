@@ -120,3 +120,52 @@ export async function requestPasswordReset(email: string): Promise<void> {
     body: { email },
   });
 }
+
+// ============= MFA (TOTP) =============
+export interface MfaSetupResponse {
+  /** Base32-encoded TOTP secret — user manually copies to authenticator app. */
+  secret: string;
+  /** otpauth://… provisioning URI — Linking.openURL ile authenticator app açar. */
+  uri: string;
+  /** QR data URL — web kullanır; mobile şu an kullanmıyor (secret + uri yeterli). */
+  qr: string;
+}
+
+/**
+ * MFA TOTP secret üret. Server yeni secret oluşturur ve User.totpSecretEnc'ı
+ * günceller (henüz `totpEnabled: false`). Verify adımında kod doğrulanıp
+ * `totpEnabled: true` olur.
+ *
+ * 403: plan MFA'yı desteklemiyor (Starter). 429: rate limit (saatte 5 setup).
+ */
+export async function setupMfa(): Promise<MfaSetupResponse> {
+  return api<MfaSetupResponse>("/api/auth/mfa/setup", { method: "POST" });
+}
+
+/**
+ * Setup'tan dönen secret'a karşı authenticator'ın ürettiği 6 haneli kodu doğrula.
+ * Server kodu doğrularsa `totpEnabled: true` set eder + audit log yazar.
+ */
+export async function verifyMfaSetup(code: string): Promise<{ ok: true }> {
+  return api("/api/auth/mfa/setup", { method: "PATCH", body: { code } });
+}
+
+export interface RecoveryCodeStatus {
+  total: number;
+  remaining: number;
+  generatedAt: string | null;
+}
+
+/** MFA aktifse kullanılmamış recovery code sayısı; ekran metadata'sı için. */
+export async function getRecoveryCodeStatus(): Promise<RecoveryCodeStatus> {
+  return api<RecoveryCodeStatus>("/api/auth/mfa/recovery-codes");
+}
+
+/**
+ * Yeni recovery code set'i üret. Eski kodları geçersiz kılar; dönen kodlar
+ * SADECE BİR KEZ görünür — kullanıcı kaydetmek zorunda. Mobile UI Share ile
+ * kullanıcının kendi yedeğini almasına izin verir.
+ */
+export async function generateRecoveryCodes(): Promise<{ codes: string[] }> {
+  return api<{ codes: string[] }>("/api/auth/mfa/recovery-codes", { method: "POST" });
+}

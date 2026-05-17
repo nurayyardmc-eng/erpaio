@@ -449,6 +449,41 @@ export const tr: Dictionary = {
     noActiveConnTitle: "Aktif bağlantı yok",
     noActiveConnDesc: "Şema analizi için ERP bağlantısı gerekli.",
   },
+  mfaSetup: {
+    brand: "MFA KURULUMU",
+    title: "İki Faktörlü Doğrulama",
+    description:
+      "Authenticator uygulaması (Google Authenticator, 1Password, Authy, Microsoft Authenticator vb.) kullanarak hesabını koru. Her girişte uygulamanın ürettiği 6 haneli kodu istenir.",
+    stepSetupTitle: "1. Adım — Authenticator'a Ekle",
+    stepSetupHint:
+      "Aşağıdaki secret'ı kopyala veya \"Authenticator'da Aç\" ile doğrudan uygulamana ekle. Sonra uygulamadaki 6 haneli kodu aşağıya gir.",
+    secretLabel: "TOTP Secret",
+    secretCopyHint: "Üstüne basılı tut → kopyala",
+    openAuthAppBtn: "Authenticator'da Aç",
+    shareSecretBtn: "Secret'ı Paylaş",
+    codeLabel: "Authenticator'dan 6 haneli kod",
+    codePlaceholder: "123456",
+    verifyBtn: "Doğrula ve Etkinleştir",
+    verifyingBtn: "Doğrulanıyor...",
+    verifyError: "Kod hatalı veya süresi dolmuş. Tekrar dene.",
+    stepRecoveryTitle: "2. Adım — Kurtarma Kodlarını Kaydet",
+    stepRecoveryWarning:
+      "Bu kodları GÜVENLİ BİR YERE kaydet. Telefonunu kaybedersen MFA'yı bu kodlarla atlayabilirsin. Her kod yalnızca BİR KEZ kullanılabilir. Bu ekranı kapatınca kodları bir daha göremezsin.",
+    shareCodesBtn: "Kodları Paylaş",
+    doneBtn: "Tamam, Kaydettim",
+    completeToast: "MFA etkinleştirildi.",
+    setupErrorPlanGate:
+      "MFA yalnızca Pro+ planlarda mevcut. Yükseltmek için web yönetim paneline geçin.",
+    setupErrorGeneric: "MFA kurulumu başlatılamadı.",
+    regenerateBtn: "Kurtarma Kodlarını Yenile",
+    regenerateConfirmTitle: "Kodları yenile?",
+    regenerateConfirmMessage:
+      "Mevcut tüm kurtarma kodları geçersiz olur. Yeni 10 kod oluşturulur ve sadece bir kez gösterilir.",
+    regenerateConfirmYes: "Evet, yenile",
+    recoveryStatusPrefix: "Kalan kurtarma kodu: ",
+    recoveryStatusSuffix: " / 10",
+    recoveryNeverGenerated: "Henüz kurtarma kodu oluşturulmadı.",
+  },
   security: {
     brand: "ERPAIO · GÜVENLİK",
     title: "Güvenlik",
@@ -466,6 +501,7 @@ export const tr: Dictionary = {
     disableConfirmYes: "Evet, kapat",
     mfaDisabledToast: "MFA kapatıldı",
     mfaDisableFailedToast: "İşlem başarısız",
+    mfaEnableBtn: "MFA'yı Etkinleştir",
     sessionsTitle: "Aktif Oturumlar",
     sessionsDescription:
       "Hesabınıza erişimi olan tüm cihazlar/uygulamalar. Tanımadığınız bir oturum görüyorsanız sonlandırın ve şifrenizi değiştirin.",

@@ -17,6 +17,7 @@ import OverviewScreen from "./OverviewScreen";
 import ActivityScreen from "./ActivityScreen";
 import ConsentsScreen from "./ConsentsScreen";
 import DevicesScreen from "./DevicesScreen";
+import MfaEnableScreen from "./MfaEnableScreen";
 
 export type MoreStackParamList = {
   More: undefined;
@@ -37,6 +38,7 @@ export type MoreStackParamList = {
   Activity: undefined;
   Consents: undefined;
   Devices: undefined;
+  MfaEnable: undefined;
 };
 
 const Stack = createNativeStackNavigator<MoreStackParamList>();
@@ -62,6 +64,7 @@ export default function MoreStackNav() {
       <Stack.Screen name="Activity" component={ActivityScreen} />
       <Stack.Screen name="Consents" component={ConsentsScreen} />
       <Stack.Screen name="Devices" component={DevicesScreen} />
+      <Stack.Screen name="MfaEnable" component={MfaEnableScreen} />
     </Stack.Navigator>
   );
 }

@@ -453,6 +453,36 @@ export interface Dictionary {
     noActiveConnTitle: string;
     noActiveConnDesc: string;
   };
+  mfaSetup: {
+    brand: string;
+    title: string;
+    description: string;
+    stepSetupTitle: string;
+    stepSetupHint: string;
+    secretLabel: string;
+    secretCopyHint: string;
+    openAuthAppBtn: string;
+    shareSecretBtn: string;
+    codeLabel: string;
+    codePlaceholder: string;
+    verifyBtn: string;
+    verifyingBtn: string;
+    verifyError: string;
+    stepRecoveryTitle: string;
+    stepRecoveryWarning: string;
+    shareCodesBtn: string;
+    doneBtn: string;
+    completeToast: string;
+    setupErrorPlanGate: string;
+    setupErrorGeneric: string;
+    regenerateBtn: string;
+    regenerateConfirmTitle: string;
+    regenerateConfirmMessage: string;
+    regenerateConfirmYes: string;
+    recoveryStatusPrefix: string;
+    recoveryStatusSuffix: string;
+    recoveryNeverGenerated: string;
+  };
   security: {
     brand: string;
     title: string;
@@ -470,6 +500,7 @@ export interface Dictionary {
     disableConfirmYes: string;
     mfaDisabledToast: string;
     mfaDisableFailedToast: string;
+    mfaEnableBtn: string;
     sessionsTitle: string;
     sessionsDescription: string;
     sessionsEmpty: string;
