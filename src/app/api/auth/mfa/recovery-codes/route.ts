@@ -6,6 +6,7 @@ import {
 } from "@/lib/auth/recovery";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
@@ -40,5 +41,16 @@ export async function POST(req: Request) {
   }
 
   const codes = await generateRecoveryCodes(session.user.id);
+
+  const ctx = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "mfa.recovery.regenerate",
+    metadata: { count: codes.length },
+    ...ctx,
+  });
+
   return Response.json({ codes });
 }

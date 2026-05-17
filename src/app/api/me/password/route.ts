@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
 const BodySchema = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -41,5 +42,16 @@ export async function POST(req: Request) {
   });
 
   childLogger({ component: "password-change" }).info({ userId: session.user.id }, "Password changed");
+
+  const { ipAddress, userAgent } = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "password.change",
+    ipAddress,
+    userAgent,
+  });
+
   return Response.json({ ok: true });
 }

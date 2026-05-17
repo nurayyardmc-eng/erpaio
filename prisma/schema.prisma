@@ -36,6 +36,7 @@ model Tenant {
   baselines            AnomalyBaseline[]
   queryCache           QueryCache[]
   consentLogs          ConsentLog[]
+  activityLogs         ActivityLog[]
   invitations          Invitation[]
   scheduledReports     ScheduledReport[]
   watchlists           Watchlist[]
@@ -68,6 +69,7 @@ model User {
   pushTokens           PushToken[]
   recoveryCodes        MfaRecoveryCode[]
   consentLogs          ConsentLog[]
+  activityLogs         ActivityLog[]
   emailVerifyTokens    EmailVerificationToken[]
   passwordResetTokens  PasswordResetToken[]
   scheduledReports     ScheduledReport[]
@@ -83,6 +85,28 @@ model MfaRecoveryCode {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// Account activity audit log — hassas mutasyonlar (şifre, profil, MFA,
+/// oturum, takım) için append-only kayıt. KVKK md. 13 + GDPR Art. 30 kapsamında
+/// işleme faaliyet kaydı. User silinse bile satır korunur (SetNull).
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  tenantId   String?
+  email      String? // user silindikten sonra audit için
+  action     String // örn. "password.change", "profile.update", "mfa.enable"
+  target     String? // ek hedef (e.g. session id, user id)
+  metadata   Json? // değişen alanların özeti (PII'siz)
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([tenantId, createdAt])
+  @@index([action, createdAt])
 }
 
 /// KVKK / GDPR consent audit log.

@@ -6,6 +6,7 @@ import { generateSecret, provisioningUri, verifyCode } from "@/lib/auth/totp";
 import { hasFeature } from "@/lib/plans";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
 export async function POST(req: Request) {
   const session = await getAuth(req);
@@ -76,6 +77,15 @@ export async function PATCH(req: Request) {
     data: { totpEnabled: true },
   });
 
+  const ctx = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "mfa.enable",
+    ...ctx,
+  });
+
   return Response.json({ ok: true });
 }
 
@@ -87,5 +97,15 @@ export async function DELETE(req: Request) {
     where: { id: session.user.id },
     data: { totpSecretEnc: null, totpEnabled: false },
   });
+
+  const ctx = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "mfa.disable",
+    ...ctx,
+  });
+
   return Response.json({ ok: true });
 }
