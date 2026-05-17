@@ -1,13 +1,15 @@
-import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { computeHealthScore } from "@/lib/analytics/healthScore";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
+import { requireSysAdmin } from "@/lib/auth/sysadmin";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 export async function GET(req: Request) {
-  const session = await getAuth(req);
-  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { isSysAdmin: true } });
-  if (!user?.isSysAdmin) return localizedError(req, 403, { tr: "Sysadmin gerekli.", en: "Sysadmin required." });
+  const guard = await requireSysAdmin(req);
+  if ("error" in guard) return guard.error;
+
+  const limit = await rateLimit(guard.userId, RATE_LIMITS.ADMIN_READ);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
   const tenants = await prisma.tenant.findMany({
     select: { id: true, name: true, plan: true, createdAt: true },

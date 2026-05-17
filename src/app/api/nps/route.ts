@@ -32,12 +32,18 @@ export async function POST(req: Request) {
   return Response.json({ ok: true });
 }
 
+/**
+ * Sysadmin-only — platform genelinde NPS aggregate. Cross-tenant by design
+ * (isSysAdmin gate'i ile korunur). Tenant kullanıcısı kendi tenant'ının
+ * NPS'sini ayrı bir endpoint'ten almalı (bu sürümde yok — ihtiyaç oluştukça
+ * eklenir).
+ */
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { isSysAdmin: true } });
-  if (!user?.isSysAdmin) return localizedError(req, 403, { tr: "Sysadmin.", en: "Sysadmin." });
+  if (!user?.isSysAdmin) return jsonError(req, "api.forbidden", 403);
 
   const responses = await prisma.npsResponse.findMany({
     orderBy: { respondedAt: "desc" },

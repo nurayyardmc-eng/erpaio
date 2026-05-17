@@ -75,7 +75,9 @@ export async function GET(req: NextRequest) {
       await prisma.scheduledReport.update({
         where: { id: r.id },
         data: { lastError: msg.slice(0, 500) },
-      }).catch(() => {});
+      }).catch((updateErr) => {
+        log.error({ err: updateErr, reportId: r.id }, "Failed to record lastError on scheduled report");
+      });
       Sentry.captureException(err, { tags: { component: "cron-reports", reportId: r.id } });
     }
   }

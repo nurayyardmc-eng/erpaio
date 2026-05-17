@@ -99,7 +99,10 @@ export async function POST(req: Request) {
                 `${baseUrl}/dashboard`,
               ),
               tenantId: tenant.id,
-            }).catch(() => {});
+            }).catch((emailErr) => {
+              log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
+              Sentry.captureException(emailErr, { tags: { component: "stripe-webhook", subsystem: "email" } });
+            });
           }
         }
         break;
@@ -138,7 +141,10 @@ export async function POST(req: Request) {
               `${baseUrl}/pricing`,
             ),
             tenantId: tenant.id,
-          }).catch(() => {});
+          }).catch((emailErr) => {
+            log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
+            Sentry.captureException(emailErr, { tags: { component: "stripe-webhook", subsystem: "email" } });
+          });
           log.info({ tenantId: tenant.id }, "trial_will_end notification sent");
         }
         break;
@@ -165,7 +171,10 @@ export async function POST(req: Request) {
                 `${baseUrl}/pricing`,
               ),
               tenantId: tenant.id,
-            }).catch(() => {});
+            }).catch((emailErr) => {
+              log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
+              Sentry.captureException(emailErr, { tags: { component: "stripe-webhook", subsystem: "email" } });
+            });
           }
         }
         break;
@@ -196,7 +205,10 @@ export async function POST(req: Request) {
               invoice.hosted_invoice_url ?? `${baseUrl}/dashboard/settings`,
             ),
             tenantId: tenant.id,
-          }).catch(() => {});
+          }).catch((emailErr) => {
+            log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
+            Sentry.captureException(emailErr, { tags: { component: "stripe-webhook", subsystem: "email" } });
+          });
         }
         break;
       }

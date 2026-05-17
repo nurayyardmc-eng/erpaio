@@ -34,6 +34,34 @@ export async function GET(req: NextRequest) {
 
   log.info({ event: "cron_start" }, "Cron run started");
 
+  // Concurrency guard: ayni jobName için yakın zamanda RUNNING varsa skip.
+  // GitHub Actions retry'leri ve Vercel timeout-then-reinvocation tetikleyebilir.
+  // 10 dakikadan eskiyse stale kabul (görev maxDuration=300s + buffer).
+  const STALE_THRESHOLD_MS = 10 * 60_000;
+  const existingRunning = await prisma.cronRun.findFirst({
+    where: {
+      jobName,
+      status: "RUNNING",
+      startedAt: { gt: new Date(Date.now() - STALE_THRESHOLD_MS) },
+    },
+    select: { id: true, startedAt: true },
+  });
+  if (existingRunning) {
+    log.warn(
+      { event: "cron_skip_duplicate", existingId: existingRunning.id, existingStartedAt: existingRunning.startedAt },
+      "Skipping — another run is in progress",
+    );
+    return NextResponse.json(
+      {
+        ok: true,
+        skipped: true,
+        reason: "Another run is in progress",
+        existingRunId: existingRunning.id,
+      },
+      { status: 409, headers: { [REQUEST_ID_HEADER]: requestId } },
+    );
+  }
+
   const cronRun = await prisma.cronRun.create({
     data: { jobName, status: "RUNNING" },
   });

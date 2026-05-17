@@ -367,7 +367,9 @@ ${schema}`;
     log.warn({ err, event: "chat_error", cacheHit }, "Chat query failed");
 
     if (cacheHit && cacheId) {
-      await recordOutcome(cacheId, false).catch(() => {});
+      await recordOutcome(cacheId, false).catch((recordErr) => {
+        log.error({ err: recordErr, cacheId }, "recordOutcome(false) failed");
+      });
     }
 
     if (err.name === "SQLValidationError") {

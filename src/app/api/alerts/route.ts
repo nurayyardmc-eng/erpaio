@@ -22,6 +22,11 @@ const PostSchema = z.object({
   module: z.string().max(80).optional(),
 });
 
+const PatchSchema = z.object({
+  id: z.string().min(1).max(48),
+  status: z.enum(["open", "acked", "resolved"]),
+});
+
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
@@ -87,14 +92,28 @@ export async function POST(req: Request) {
       title: `${alert.severity.toUpperCase()} · ${alert.title}`,
       body: alert.description ?? alert.title,
       data: { alertId: alert.id, severity: alert.severity, type: alert.type },
-    }).catch(() => {});
+    }).catch((err) => {
+      const log = childLogger({ component: "alerts", alertId: alert.id });
+      log.error({ err, severity: alert.severity }, "Push send failed");
+      Sentry.captureException(err, {
+        tags: { component: "alerts", subsystem: "push" },
+        extra: { alertId: alert.id, severity: alert.severity },
+      });
+    });
 
     if (tenant.emailEnabled && tenant.emailTo) {
       sendEmail({
         to: tenant.emailTo,
         subject: `[ERPAIO ${alert.severity.toUpperCase()}] ${alert.title}`,
         html: alertEmailHtml({ severity: alert.severity, title: alert.title, description: alert.description }),
-      }).catch(() => {});
+      }).catch((err) => {
+        const log = childLogger({ component: "alerts", alertId: alert.id });
+        log.error({ err, severity: alert.severity }, "Alert email send failed");
+        Sentry.captureException(err, {
+          tags: { component: "alerts", subsystem: "email" },
+          extra: { alertId: alert.id, severity: alert.severity },
+        });
+      });
     }
   }
 
@@ -108,12 +127,13 @@ export async function PATCH(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const { id, status } = await req.json();
+  const body = await parseJsonBody(req, PatchSchema);
+  if (body instanceof Response) return body;
 
   // Atomik tenant-scoped update — başka tenant'ın alert'i id ile bilinse bile güncellenemez.
   const result = await prisma.alert.updateMany({
-    where: { id, tenantId: session.user.tenantId },
-    data: { status },
+    where: { id: body.id, tenantId: session.user.tenantId },
+    data: { status: body.status },
   });
   if (result.count === 0) return jsonError(req, "api.notFound", 404);
 
