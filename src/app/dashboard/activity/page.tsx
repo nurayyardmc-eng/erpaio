@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface Activity {
   id: string;
@@ -92,6 +93,21 @@ export default function ActivityPage() {
     return labels[action] ?? action;
   };
 
+  const exportCsv = () => {
+    if (activities.length === 0) return;
+    const rows = activities.map((a) => ({
+      time: a.createdAt,
+      action: a.action,
+      actionLabel: actionLabel(a.action),
+      target: a.target ?? "",
+      ip: a.ipAddress ?? "",
+      userAgent: a.userAgent ?? "",
+    }));
+    const csv = rowsToCsv(rows, ["time", "action", "actionLabel", "target", "ip", "userAgent"]);
+    const ts = new Date().toISOString().slice(0, 10);
+    downloadCsv(`erpaio-activity-${ts}.csv`, csv);
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: colors.bgSubtle, color: colors.text, padding: 40 }}>
       <Link href="/dashboard/security" style={{ color: colors.textMuted, fontSize: 13, marginBottom: 16, display: "inline-block" }}>
@@ -103,9 +119,29 @@ export default function ActivityPage() {
       <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 8px", letterSpacing: -0.5 }}>
         {t.activity.title}
       </h1>
-      <p style={{ color: colors.textMuted, fontSize: 13, marginBottom: 24, lineHeight: 1.6, maxWidth: 720 }}>
+      <p style={{ color: colors.textMuted, fontSize: 13, marginBottom: 16, lineHeight: 1.6, maxWidth: 720 }}>
         {t.activity.description}
       </p>
+
+      {activities.length > 0 && (
+        <button
+          onClick={exportCsv}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 100,
+            border: `1px solid ${colors.border}`,
+            background: colors.card,
+            color: colors.text,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: "pointer",
+            marginBottom: 16,
+            fontFamily: "inherit",
+          }}
+        >
+          {t.audit.exportCsv}
+        </button>
+      )}
 
       <div style={{ maxWidth: 880 }}>
         {error ? (
