@@ -17,6 +17,11 @@ export const en: Dictionary = {
     no: "No",
     newButton: "+ New",
   },
+  api: {
+    errTimeout: "Request timed out.",
+    errNetwork: "Network error. Please check your internet connection.",
+    errGeneric: "Unexpected error.",
+  },
   settings: {
     title: "Settings",
     profile: "Profile",

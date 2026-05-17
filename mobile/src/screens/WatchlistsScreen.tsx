@@ -11,6 +11,7 @@ import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n/context";
+import { apiErrorMessage } from "../lib/apiError";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -30,7 +31,7 @@ export default function WatchlistsScreen({ navigation }: Props) {
       queryClient.invalidateQueries({ queryKey: ["watchlists"] });
       showToast(t.watchlists.deletedToast, "success");
     },
-    onError: (e: Error) => showToast(e.message, "error"),
+    onError: (e: Error) => showToast(apiErrorMessage(e, t), "error"),
   });
 
   const onDelete = async (w: Watchlist) => {

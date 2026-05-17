@@ -26,6 +26,7 @@ import {
 } from "../lib/chat";
 import { getMe } from "../lib/auth";
 import { shareCsv } from "../lib/share";
+import { apiErrorMessage } from "../lib/apiError";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import { useI18n } from "../lib/i18n/context";
 import type { ChatStackParamList } from "./SessionsScreen";
@@ -141,7 +142,7 @@ export default function ChatScreen({ route, navigation }: Props) {
     } catch (e) {
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", status: "error", content: e instanceof Error ? e.message : t.chat.errorGeneric },
+        { role: "assistant", status: "error", content: apiErrorMessage(e, t) },
       ]);
     } finally {
       setLoading(false);
@@ -204,7 +205,7 @@ export default function ChatScreen({ route, navigation }: Props) {
     } catch (e) {
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", status: "error", content: e instanceof Error ? e.message : "SQL hatası." },
+        { role: "assistant", status: "error", content: apiErrorMessage(e, t) },
       ]);
     } finally {
       setLoading(false);

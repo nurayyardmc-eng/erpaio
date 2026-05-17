@@ -10,6 +10,7 @@ import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n/context";
+import { apiErrorMessage } from "../lib/apiError";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 import { useState } from "react";
@@ -31,7 +32,7 @@ export default function ConnectionsScreen({ navigation }: Props) {
       queryClient.invalidateQueries({ queryKey: ["connections"] });
       showToast(t.connections.deletedToast, "success");
     },
-    onError: (e: Error) => showToast(e.message, "error"),
+    onError: (e: Error) => showToast(apiErrorMessage(e, t), "error"),
   });
 
   const onDelete = async (item: ErpConnection) => {

@@ -28,6 +28,11 @@ export interface Dictionary {
     no: string;
     newButton: string;
   };
+  api: {
+    errTimeout: string;
+    errNetwork: string;
+    errGeneric: string;
+  };
   settings: {
     title: string;
     profile: string;

@@ -25,9 +25,20 @@ export async function clearToken(): Promise<void> {
   await SecureStore.deleteItemAsync(TOKEN_KEY);
 }
 
+/** Client-side error code for translation. Server-side errors arrive in `body.error`. */
+export type ApiErrorCode = "timeout" | "network" | "http";
+
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public body?: unknown) {
+  /** Code for client-side i18n; server errors are pre-localized via Accept-Language. */
+  public readonly code: ApiErrorCode;
+  constructor(
+    public status: number,
+    message: string,
+    public body?: unknown,
+    code: ApiErrorCode = "http",
+  ) {
     super(message);
+    this.code = code;
   }
 }
 
@@ -94,9 +105,9 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
         continue;
       }
       if (isAbort) {
-        throw new ApiError(0, "İstek zaman aşımına uğradı (timeout).");
+        throw new ApiError(0, "Request timed out.", undefined, "timeout");
       }
-      throw new ApiError(0, "Ağ hatası. İnternet bağlantınızı kontrol edin.");
+      throw new ApiError(0, "Network error.", undefined, "network");
     }
     clearTimeout(timeoutId);
 

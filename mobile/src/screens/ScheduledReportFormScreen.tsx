@@ -16,6 +16,7 @@ import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n/context";
+import { apiErrorMessage } from "../lib/apiError";
 import type { Dictionary } from "../lib/i18n/dictionary";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
@@ -69,7 +70,7 @@ export default function ScheduledReportFormScreen({ navigation }: Props) {
       showToast(t.scheduledReportForm.createdToast, "success");
       navigation.goBack();
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => setError(apiErrorMessage(e, t)),
   });
 
   const onSubmit = () => {

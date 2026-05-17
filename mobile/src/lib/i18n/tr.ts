@@ -17,6 +17,11 @@ export const tr: Dictionary = {
     no: "Hayır",
     newButton: "+ Yeni",
   },
+  api: {
+    errTimeout: "İstek zaman aşımına uğradı.",
+    errNetwork: "Ağ hatası. İnternet bağlantınızı kontrol edin.",
+    errGeneric: "Beklenmeyen hata.",
+  },
   settings: {
     title: "Ayarlar",
     profile: "Profil",
