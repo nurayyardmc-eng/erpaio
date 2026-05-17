@@ -10,12 +10,18 @@ import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/wha
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
+import {
+  FP_SUPPRESS_WINDOW_DAYS,
+  shouldSuppressByFpCount,
+} from "./suppression";
 
 export interface TenantRunResult {
   tenantId: string;
   metricsRun: number;
   anomaliesFound: number;
   alertsCreated: number;
+  /** Eşiği aşan FP geçmişi nedeniyle suppress edilen anomaly sayısı. */
+  alertsSuppressed: number;
   errors: Array<{ metric: string; error: string }>;
 }
 
@@ -25,7 +31,12 @@ export async function runAnomalyDetectionForTenant(
 ): Promise<TenantRunResult> {
   const log = childLogger({ component: "anomaly-engine", tenantId, mode });
   const result: TenantRunResult = {
-    tenantId, metricsRun: 0, anomaliesFound: 0, alertsCreated: 0, errors: [],
+    tenantId,
+    metricsRun: 0,
+    anomaliesFound: 0,
+    alertsCreated: 0,
+    alertsSuppressed: 0,
+    errors: [],
   };
 
   const queries = mode === "hourly" ? getHourlyQueries() : getDailyQueries();
@@ -81,6 +92,26 @@ export async function runAnomalyDetectionForTenant(
       if (anomaly.isAnomaly) {
         result.anomaliesFound++;
 
+        // FP suppression check — son 30 günde aynı metricKey için 3+ FP varsa,
+        // bu anomaly'yi YARATMA (kullanıcı zaten "bu yanlış alarm" diye
+        // işaretlemiş). Engine learning loop kapanışı.
+        const fpSince = new Date(Date.now() - FP_SUPPRESS_WINDOW_DAYS * 24 * 60 * 60_000);
+        const fpCount = await prisma.alert.count({
+          where: {
+            tenantId,
+            metricKey: query.key,
+            falsePositiveAt: { gt: fpSince },
+          },
+        });
+        if (shouldSuppressByFpCount(fpCount)) {
+          result.alertsSuppressed++;
+          log.info(
+            { metricKey: query.key, fpCount, windowDays: FP_SUPPRESS_WINDOW_DAYS },
+            "Anomaly suppressed by FP feedback",
+          );
+          continue;
+        }
+
         const alert = await prisma.alert.create({
           data: {
             tenantId,
@@ -88,6 +119,7 @@ export async function runAnomalyDetectionForTenant(
             severity: anomaly.severity,
             title: query.label,
             description: anomaly.message,
+            metricKey: query.key,
             evidence: {
               metricKey: query.key,
               algorithm: anomaly.algorithm,

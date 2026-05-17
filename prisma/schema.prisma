@@ -219,11 +219,15 @@ model Alert {
   /// aynı şeye FP demesi engine için "weight: high" sinyali olabilir).
   /// SetNull cascade kullanıcı silinince satır kalır.
   falsePositiveBy   String?
+  /// Anomaly engine için metric key (evidence.metricKey'in kolon kopyası,
+  /// indexed FP suppression query'si için). Manuel alert'lerde null.
+  metricKey         String?
   createdAt   DateTime @default(now())
   tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   notificationLogs  NotificationLog[]
 
   @@index([tenantId, falsePositiveAt])
+  @@index([tenantId, metricKey, falsePositiveAt])
 }
 
 model AnomalyBaseline {
