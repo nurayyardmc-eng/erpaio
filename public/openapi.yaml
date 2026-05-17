@@ -1,0 +1,483 @@
+openapi: 3.0.3
+info:
+  title: ERPAIO API
+  description: |
+    ERPAIO REST API — Türkçe doğal dil ile ERP veritabanı sorgulama.
+
+    ## Kimlik doğrulama
+
+    İki yöntem desteklenir:
+    - **Bearer token**: `Authorization: Bearer <token>`. Token'lar `/api/auth/mobile-login`
+      üzerinden alınır (90 gün geçerli). Mobile app ve API entegrasyonları için.
+    - **Session cookie**: NextAuth ile login (web dashboard için, otomatik).
+
+    ## i18n
+
+    `Accept-Language: tr` veya `Accept-Language: en` header'ı ile error mesajları
+    lokalize döner. `erpaio_lang` cookie'si de honor edilir.
+
+    ## Rate limiting
+
+    Bazı endpoint'ler IP veya user başına rate-limit'li. Aşılınca 429
+    `{"error": "..."}` + `Retry-After` header'ı döner.
+
+    ## Hata formatı
+
+    Tüm hatalar `{"error": "açıklama"}` shape'inde döner. HTTP status anlamlıdır
+    (400 invalid input, 401 unauthorized, 403 forbidden, 404 not found, 429
+    rate-limited, 500 internal).
+  version: "1.0.0"
+  contact:
+    email: support@erpaio.com
+servers:
+  - url: https://erpaio.vercel.app
+    description: Production
+
+tags:
+  - name: Auth
+    description: Login, signup, password reset, MFA
+  - name: Me
+    description: Mevcut kullanıcı bilgileri
+  - name: Tenant
+    description: Tenant ayarları + usage
+  - name: Chat
+    description: AI sorgu + sohbet geçmişi
+  - name: Connections
+    description: ERP bağlantıları
+  - name: Alerts
+    description: Anomaly alerts
+  - name: Health
+    description: Service health check
+
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Service health check
+      description: |
+        DB ping + version + env. `?deep=true` parametresi ile son 24h cron
+        health summary'sini de döner. Uptime monitor'lar için.
+      parameters:
+        - name: deep
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: All systems operational
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: One or more dependencies unhealthy
+
+  /api/auth/signup:
+    post:
+      tags: [Auth]
+      summary: Yeni tenant + owner user oluştur
+      description: |
+        KVKK md. 5 + GDPR Art. 7 gereği explicit consent (`acceptedTerms` +
+        `acceptedPrivacy`) zorunlu. Rate limit: IP başına saatte 3.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, tenantName, acceptedTerms, acceptedPrivacy]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8, maxLength: 200 }
+                name: { type: string, maxLength: 80 }
+                tenantName: { type: string, minLength: 1, maxLength: 120 }
+                acceptedTerms: { type: boolean, enum: [true] }
+                acceptedPrivacy: { type: boolean, enum: [true] }
+                documentVer: { type: string, default: "v1" }
+      responses:
+        "200":
+          description: Hesap oluşturuldu, doğrulama maili gönderildi
+        "409": { description: Email zaten kayıtlı }
+        "429": { description: Çok fazla deneme }
+
+  /api/auth/mobile-login:
+    post:
+      tags: [Auth]
+      summary: Mobile + API entegrasyonları için Bearer token üret
+      description: |
+        90 gün geçerli `ApiToken` döner. Rate limit: IP başına 15 dk'da 10 deneme.
+        Body'de `deviceName` opsiyonel (audit için).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                deviceName: { type: string, maxLength: 80 }
+      responses:
+        "200":
+          description: Token + user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  expiresAt: { type: string, format: date-time }
+                  user: { $ref: "#/components/schemas/User" }
+        "401": { description: Invalid credentials }
+        "429": { description: Rate limited }
+
+  /api/auth/mobile-logout:
+    post:
+      tags: [Auth]
+      summary: API token revoke + cihazın push token'ı sil
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Cihazın push token'ı (verilirse sadece bu cihaz, yoksa user'ın tüm push token'ları silinir)
+      responses:
+        "200": { description: Logout başarılı }
+        "401": { description: Unauthorized }
+
+  /api/me:
+    get:
+      tags: [Me]
+      summary: Mevcut kullanıcı bilgileri
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User + tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MeResponse" }
+        "401": { description: Unauthorized }
+    patch:
+      tags: [Me]
+      summary: Profil güncelle (name, avatar)
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 80, nullable: true }
+                avatarBase64: { type: string, maxLength: 500000, nullable: true, description: "data:image/... formatında base64" }
+      responses:
+        "200":
+          description: Updated user
+        "400": { description: Invalid format }
+        "401": { description: Unauthorized }
+
+  /api/me/sessions:
+    get:
+      tags: [Me]
+      summary: Aktif API token'lar (sessions)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Sessions array
+    delete:
+      tags: [Me]
+      summary: Belirli bir API token'ını revoke et
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: tokenId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Revoked }
+        "400": { description: tokenId required }
+
+  /api/me/consents:
+    get:
+      tags: [Me]
+      summary: KVKK md. 11 — kullanıcının kendi onay geçmişi
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Consent history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  consents:
+                    type: array
+                    items: { $ref: "#/components/schemas/ConsentEntry" }
+
+  /api/me/activity:
+    get:
+      tags: [Me]
+      summary: KVKK md. 11 — kullanıcının hassas işlem geçmişi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Activity log
+        "429": { description: Rate limited }
+
+  /api/tenant:
+    get:
+      tags: [Tenant]
+      summary: Tenant ayarları
+      security:
+        - BearerAuth: []
+      responses:
+        "200": { description: Tenant settings }
+    patch:
+      tags: [Tenant]
+      summary: Tenant ayarlarını güncelle (admin/owner)
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 100 }
+                whatsappTo: { type: string, pattern: "^whatsapp:\\+?\\d{6,15}$", nullable: true }
+                whatsappEnabled: { type: boolean }
+                emailTo: { type: string, format: email, nullable: true }
+                emailEnabled: { type: boolean }
+                alertMinSeverity: { type: string, enum: [low, medium, high, critical] }
+      responses:
+        "200": { description: Updated tenant }
+        "403": { description: Admin/owner gerekli }
+
+  /api/tenant/usage:
+    get:
+      tags: [Tenant]
+      summary: Aylık token kullanım durumu
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Usage status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  used: { type: integer }
+                  budget: { type: integer }
+                  remaining: { type: integer }
+                  percentUsed: { type: number }
+                  resetsOn: { type: string, format: date-time }
+
+  /api/chat:
+    post:
+      tags: [Chat]
+      summary: Türkçe doğal dilde ERP sorgusu — AI SQL üretir + çalıştırır
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connectionId, question]
+              properties:
+                connectionId: { type: string }
+                question: { type: string, minLength: 1, maxLength: 2000 }
+                sessionId: { type: string, description: "Mevcut session'a ekle (yoksa yeni oluştur)" }
+      responses:
+        "200":
+          description: SQL + sonuçlar
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sql: { type: string }
+                  results: { type: array, items: { type: object } }
+                  columns: { type: array, items: { type: string } }
+                  total: { type: integer }
+                  latencyMs: { type: integer }
+                  messageId: { type: string }
+                  cacheHit: { type: boolean }
+                  sessionId: { type: string }
+        "400": { description: SQL validation failed }
+        "402": { description: Token budget exhausted }
+        "429": { description: Rate limited }
+
+  /api/chat/sessions:
+    get:
+      tags: [Chat]
+      summary: Kullanıcının sohbet listesi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: view
+          in: query
+          schema: { type: string, enum: [active, archived], default: active }
+      responses:
+        "200": { description: Sessions array }
+
+  /api/connections:
+    get:
+      tags: [Connections]
+      summary: Tenant'ın ERP bağlantıları
+      security:
+        - BearerAuth: []
+      responses:
+        "200": { description: Connections list }
+    post:
+      tags: [Connections]
+      summary: Yeni ERP bağlantısı (password AES-256-GCM ile şifrelenir)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [erpType, host, dbName, username, password]
+              properties:
+                erpType: { type: string, enum: [nebim_v3, sap, dynamics365, postgres] }
+                host: { type: string }
+                port: { type: integer, default: 1433 }
+                dbName: { type: string }
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema: { type: object, properties: { id: { type: string } } }
+
+  /api/alerts:
+    get:
+      tags: [Alerts]
+      summary: Tenant'ın anomaly alert'leri
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, acked, resolved, all], default: open }
+      responses:
+        "200": { description: Alerts list }
+    patch:
+      tags: [Alerts]
+      summary: Alert status güncelle (ack/resolve)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, status]
+              properties:
+                id: { type: string }
+                status: { type: string, enum: [open, acked, resolved] }
+      responses:
+        "200": { description: Updated }
+        "404": { description: Alert not found in tenant }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API token (mobile-login response.token)
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        name: { type: string, nullable: true }
+        role: { type: string, enum: [owner, admin, member, viewer] }
+        tenantId: { type: string }
+
+    MeResponse:
+      type: object
+      properties:
+        user:
+          allOf:
+            - $ref: "#/components/schemas/User"
+            - type: object
+              properties:
+                avatarBase64: { type: string, nullable: true }
+                tenant:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    name: { type: string }
+                    plan: { type: string }
+        authMethod: { type: string, enum: [session, token] }
+
+    HealthResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+        version: { type: string }
+        env: { type: string }
+        checks:
+          type: object
+          properties:
+            database:
+              type: object
+              properties:
+                ok: { type: boolean }
+                latencyMs: { type: integer }
+                error: { type: string, nullable: true }
+            cron:
+              type: object
+              description: "Only present when ?deep=true"
+              properties:
+                ok: { type: boolean }
+                jobs:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      runs: { type: integer }
+                      failed: { type: integer }
+                      lastRunAt: { type: string, format: date-time, nullable: true }
+        timestamp: { type: string, format: date-time }
+        uptimeMs: { type: integer }
+
+    ConsentEntry:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [kvkk_signup, kvkk_marketing, kvkk_cookies, terms, privacy] }
+        action: { type: string, enum: [granted, withdrawn] }
+        documentVer: { type: string, nullable: true }
+        context: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }

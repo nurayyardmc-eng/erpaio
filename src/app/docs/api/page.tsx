@@ -102,7 +102,16 @@ export default function ApiDocsPage() {
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "60px 32px" }}>
         <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>API Referansı</h1>
         <p style={{ color: "#475569", fontSize: 14, marginBottom: 12 }}>
-          OpenAPI 3.1 spec: <a href="/api/openapi" style={{ color: "#0A0A0A" }}>/api/openapi</a>
+          OpenAPI 3.0 spec:{" "}
+          <a href="/api/openapi" style={{ color: "#0A0A0A" }}>JSON</a>
+          {" · "}
+          <a href="/api/openapi?format=yaml" style={{ color: "#0A0A0A" }}>YAML</a>
+          {" · "}
+          <a href="/openapi.yaml" style={{ color: "#0A0A0A" }}>Direkt indir</a>
+        </p>
+        <p style={{ color: "#94A3B8", fontSize: 12, marginBottom: 16, lineHeight: 1.6 }}>
+          Postman / Insomnia / Swagger UI&apos;ye import et: yukarıdaki JSON
+          URL&apos;ini kullan. Spec public/openapi.yaml dosyasından üretilir.
         </p>
         <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16, marginBottom: 32 }}>
           <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 6 }}>Authentication</div>
