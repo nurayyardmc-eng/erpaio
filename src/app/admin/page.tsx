@@ -56,18 +56,24 @@ export default function AdminPage() {
       </p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
-        <Link href="/admin/cron-runs" style={{
-          padding: "6px 12px",
-          borderRadius: 100,
-          background: "#FFFFFF",
-          border: "1px solid #E5E7EB",
-          color: "#0F172A",
-          fontSize: 12,
-          fontWeight: 500,
-          textDecoration: "none",
-        }}>
-          Cron Runs →
-        </Link>
+        {([
+          { href: "/admin/cron-runs", label: "Cron Runs" },
+          { href: "/admin/activity", label: "Activity Log" },
+          { href: "/admin/key-history", label: "Encryption Keys" },
+        ] as const).map((l) => (
+          <Link key={l.href} href={l.href} style={{
+            padding: "6px 12px",
+            borderRadius: 100,
+            background: "#FFFFFF",
+            border: "1px solid #E5E7EB",
+            color: "#0F172A",
+            fontSize: 12,
+            fontWeight: 500,
+            textDecoration: "none",
+          }}>
+            {l.label} →
+          </Link>
+        ))}
       </div>
 
       {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
