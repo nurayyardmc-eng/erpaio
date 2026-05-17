@@ -11,6 +11,8 @@ export interface ErpConnection {
   erpType: string;
   erpProfile: string | null;
   lastSchemaSyncAt: string | null;
+  /** Schema cache snapshot — null ise hiç sync olmadı. Track RRR'de eklendi. */
+  schemaCache?: { builtAt: string; tableCount: number } | null;
 }
 
 export async function getConnections(): Promise<ErpConnection[]> {

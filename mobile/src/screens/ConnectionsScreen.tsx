@@ -2,6 +2,16 @@ import { FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, Vi
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteConnection, getConnections, type ErpConnection } from "../lib/dashboard";
+import { schemaAgeRelative, schemaAgeStatus, type SchemaAgeStatus } from "../lib/schemaAge";
+
+// Schema age → renk eşlemesi. Theme palette ile uyumlu. "never" branch'i ayrı
+// render edildiği için burada yok; type tarafından da garanti edilir.
+type BadgeStatus = Exclude<SchemaAgeStatus, "never">;
+const SCHEMA_AGE_BADGE: Record<BadgeStatus, { fg: string; bg: string }> = {
+  fresh: { fg: "#065F46", bg: "#D1FAE5" },
+  stale: { fg: "#92400E", bg: "#FEF3C7" },
+  "very-stale": { fg: "#991B1B", bg: "#FEE2E2" },
+};
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -47,34 +57,77 @@ export default function ConnectionsScreen({ navigation }: Props) {
     deleteMutation.mutate(item.id);
   };
 
-  const renderItem = ({ item }: { item: ErpConnection }) => (
-    <View style={styles.card}>
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: spacing(2) }}>
-        <Text style={styles.dbName}>{item.dbName}</Text>
-        <View style={[styles.statusBadge, item.status === "active" ? styles.statusActive : styles.statusError]}>
-          <Text style={[styles.statusText, item.status === "active" ? styles.statusActiveText : styles.statusErrorText]}>
-            {item.status === "active" ? t.connections.statusActive : t.connections.statusError}
-          </Text>
+  const renderItem = ({ item }: { item: ErpConnection }) => {
+    const builtAt = item.schemaCache?.builtAt ?? null;
+    const ageStatus = schemaAgeStatus(builtAt);
+    const ageRel = schemaAgeRelative(builtAt);
+    const ageBadge = ageStatus !== "never" ? SCHEMA_AGE_BADGE[ageStatus] : null;
+    const ageLabel =
+      ageStatus === "fresh"
+        ? t.connections.schemaFreshLabel
+        : ageStatus === "stale"
+          ? t.connections.schemaStaleLabel
+          : ageStatus === "very-stale"
+            ? t.connections.schemaVeryStaleLabel
+            : null;
+
+    return (
+      <View style={styles.card}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: spacing(2) }}>
+          <Text style={styles.dbName}>{item.dbName}</Text>
+          <View style={[styles.statusBadge, item.status === "active" ? styles.statusActive : styles.statusError]}>
+            <Text style={[styles.statusText, item.status === "active" ? styles.statusActiveText : styles.statusErrorText]}>
+              {item.status === "active" ? t.connections.statusActive : t.connections.statusError}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setMenuFor(item)}
+            style={styles.menuBtn}
+            activeOpacity={0.6}
+            accessibilityRole="button"
+            accessibilityLabel={t.connections.menuA11y}
+          >
+            <Text style={styles.menuDots}>⋯</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={() => setMenuFor(item)}
-          style={styles.menuBtn}
-          activeOpacity={0.6}
-          accessibilityRole="button"
-          accessibilityLabel={t.connections.menuA11y}
-        >
-          <Text style={styles.menuDots}>⋯</Text>
-        </TouchableOpacity>
+        <Text style={styles.host}>{item.host}:{item.port}</Text>
+        <Text style={styles.meta}>{item.erpType}{item.erpProfile ? ` · ${item.erpProfile}` : ""}</Text>
+
+        {/* Schema cache age — Track RRR. AI sorgu üretimi bu snapshot'a göre
+            yapılır; bayatlamış ise re-sync önerilir. */}
+        {ageStatus === "never" ? (
+          <Text style={[styles.meta, { color: colors.textSubtle, fontStyle: "italic" }]}>
+            {t.connections.schemaNeverSynced}
+          </Text>
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4, gap: spacing(2), flexWrap: "wrap" }}>
+            {ageLabel && ageBadge && (
+              <View style={[styles.schemaBadge, { backgroundColor: ageBadge.bg }]}>
+                <Text style={[styles.schemaBadgeText, { color: ageBadge.fg }]}>{ageLabel}</Text>
+              </View>
+            )}
+            {item.schemaCache?.tableCount !== undefined && (
+              <Text style={styles.meta}>
+                {item.schemaCache.tableCount}
+                {t.connections.schemaCountSuffix}
+              </Text>
+            )}
+            {ageRel && (
+              <Text style={styles.metaFaint}>
+                {ageRel.value}
+                {ageRel.unit === "hour" ? t.connections.schemaAgeHour : t.connections.schemaAgeDay}
+              </Text>
+            )}
+          </View>
+        )}
       </View>
-      <Text style={styles.host}>{item.host}:{item.port}</Text>
-      <Text style={styles.meta}>{item.erpType}{item.erpProfile ? ` · ${item.erpProfile}` : ""}</Text>
-      {item.lastSchemaSyncAt && (
-        <Text style={styles.meta}>
-          {t.connections.lastSchemaSync}{new Date(item.lastSchemaSyncAt).toLocaleString("tr-TR")}
-        </Text>
-      )}
-    </View>
-  );
+    );
+  };
+
+  // Schema age badge color map — yukarıdaki render içinde inline kullanılır.
+  // Definition burada çünkü render her item'da yeniden değerlendirilir;
+  // sabit obje module level'da olur. Ama colors/theme'e bağımlı olduğu için
+  // function scope'ta tutuyoruz (render-once cost trivial).
 
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
@@ -166,6 +219,13 @@ const styles = StyleSheet.create({
   statusErrorText: { color: colors.error },
   host: { color: colors.text, fontFamily: font, fontSize: 13, marginBottom: 2 },
   meta: { color: colors.textSubtle, fontFamily: font, fontSize: 12, marginTop: 2 },
+  metaFaint: { color: colors.textSubtle, fontFamily: font, fontSize: 11, fontStyle: "italic" },
+  schemaBadge: {
+    paddingHorizontal: spacing(2),
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  schemaBadgeText: { fontFamily: font, fontSize: 10, fontWeight: "700", letterSpacing: 0.8 },
   menuBtn: { paddingHorizontal: spacing(2), paddingVertical: spacing(1) },
   menuDots: { color: colors.textMuted, fontSize: 22, fontWeight: "300" },
 

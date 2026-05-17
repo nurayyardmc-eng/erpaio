@@ -219,6 +219,13 @@ export const en: Dictionary = {
     deleteConfirmMessageSuffix: " connection will be permanently deleted. Linked chats may be affected.",
     deleteConfirmYes: "Delete",
     deletedToast: "Connection deleted",
+    schemaCountSuffix: " tables",
+    schemaNeverSynced: "schema never synced",
+    schemaAgeHour: "h ago",
+    schemaAgeDay: "d ago",
+    schemaFreshLabel: "FRESH",
+    schemaStaleLabel: "STALE",
+    schemaVeryStaleLabel: "VERY STALE",
   },
   connectionForm: {
     brand: "ERPAIO · NEW CONNECTION",

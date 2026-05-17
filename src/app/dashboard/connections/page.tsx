@@ -5,6 +5,7 @@ import { showToast } from "@/components/Toaster";
 import EmptyState from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
+import { schemaAgeRelative, schemaAgeStatus, type SchemaAgeStatus } from "@/lib/schema/age";
 
 interface Connection {
   id: string;
@@ -14,7 +15,16 @@ interface Connection {
   status: string;
   lastSync?: string;
   createdAt: string;
+  /** Schema cache snapshot — RRR'de eklendi; eski client'lar görmezden gelir. */
+  schemaCache?: { builtAt: string; tableCount: number } | null;
 }
+
+// Schema age → renk eşlemesi.
+const SCHEMA_AGE_BADGE: Record<Exclude<SchemaAgeStatus, "never">, { fg: string; bg: string; label: string }> = {
+  fresh: { fg: "#065F46", bg: "#D1FAE5", label: "GÜNCEL" },
+  stale: { fg: "#92400E", bg: "#FEF3C7", label: "ESKİ" },
+  "very-stale": { fg: "#991B1B", bg: "#FEE2E2", label: "ÇOK ESKİ" },
+};
 
 const ERP_TYPES = [
   { id: "nebim_v3", label: "Nebim V3", desc: "Türkiye perakende standardı (MS SQL)", port: 1433 },
@@ -296,6 +306,10 @@ export default function ConnectionsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {connections.map((conn) => {
               const isActive = conn.status === "active";
+              const builtAt = conn.schemaCache?.builtAt ?? null;
+              const ageStatus = schemaAgeStatus(builtAt);
+              const ageRel = schemaAgeRelative(builtAt);
+              const ageBadge = ageStatus !== "never" ? SCHEMA_AGE_BADGE[ageStatus] : null;
               return (
                 <div key={conn.id} className="elevated" style={{
                   background: colors.card,
@@ -307,7 +321,7 @@ export default function ConnectionsPage() {
                   alignItems: "center",
                   gap: 12,
                 }}>
-                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", flex: 1, minWidth: 0 }}>
                     <div style={{
                       width: 36,
                       height: 36,
@@ -316,14 +330,48 @@ export default function ConnectionsPage() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      flexShrink: 0,
                     }}>
                       <Database size={16} color={colors.brand} />
                     </div>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{conn.dbName}</div>
                       <div style={{ fontSize: 12, color: colors.textMuted }}>
                         {conn.host} · {conn.erpType}
                       </div>
+                      {/* Schema cache age — Track RRR. AI sorgu üretimi bu snapshot'a göre çalışır. */}
+                      {ageStatus === "never" ? (
+                        <div style={{ fontSize: 11, color: "#94A3B8", fontStyle: "italic", marginTop: 4 }}>
+                          henüz şema sync&apos;i yok
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+                          {ageBadge && (
+                            <span style={{
+                              fontSize: 10,
+                              letterSpacing: 0.8,
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: 4,
+                              background: ageBadge.bg,
+                              color: ageBadge.fg,
+                            }}>
+                              {ageBadge.label}
+                            </span>
+                          )}
+                          {conn.schemaCache?.tableCount !== undefined && (
+                            <span style={{ fontSize: 11, color: colors.textMuted }}>
+                              {conn.schemaCache.tableCount} tablo
+                            </span>
+                          )}
+                          {ageRel && (
+                            <span style={{ fontSize: 11, color: "#94A3B8", fontStyle: "italic" }}>
+                              {ageRel.value}
+                              {ageRel.unit === "hour" ? " saat önce" : " gün önce"}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <span style={{
@@ -336,6 +384,7 @@ export default function ConnectionsPage() {
                     background: isActive ? "#D1FAE5" : "#FEE2E2",
                     color: isActive ? "#10B981" : "#EF4444",
                     fontWeight: 600,
+                    flexShrink: 0,
                   }}>
                     {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                     {isActive ? "Aktif" : conn.status}

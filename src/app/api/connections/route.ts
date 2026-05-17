@@ -73,6 +73,11 @@ export async function GET(req: Request) {
       status: true,
       lastSync: true,
       createdAt: true,
+      // Schema cache snapshot — UI'da "X tablo · Y gün önce" badge için.
+      // RRR'de eklendi; eski client'lar bu field'ı görmezden gelir.
+      schemaCache: {
+        select: { builtAt: true, tableCount: true },
+      },
     },
   });
 

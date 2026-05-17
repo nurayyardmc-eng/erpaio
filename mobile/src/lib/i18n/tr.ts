@@ -219,6 +219,13 @@ export const tr: Dictionary = {
     deleteConfirmMessageSuffix: " bağlantısı kalıcı olarak silinecek. Bağlı sohbetler etkilenebilir.",
     deleteConfirmYes: "Sil",
     deletedToast: "Bağlantı silindi",
+    schemaCountSuffix: " tablo",
+    schemaNeverSynced: "henüz şema sync'i yok",
+    schemaAgeHour: " saat önce",
+    schemaAgeDay: " gün önce",
+    schemaFreshLabel: "GÜNCEL",
+    schemaStaleLabel: "ESKİ",
+    schemaVeryStaleLabel: "ÇOK ESKİ",
   },
   connectionForm: {
     brand: "ERPAIO · YENİ BAĞLANTI",

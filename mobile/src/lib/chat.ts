@@ -5,6 +5,8 @@ export interface Connection {
   dbName: string;
   host: string;
   status: string;
+  /** Schema cache snapshot — null ise hiç sync olmadı. RRR'de eklendi. */
+  schemaCache?: { builtAt: string; tableCount: number } | null;
 }
 
 export interface SessionListItem {

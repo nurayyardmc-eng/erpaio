@@ -226,6 +226,13 @@ export interface Dictionary {
     deleteConfirmMessageSuffix: string;
     deleteConfirmYes: string;
     deletedToast: string;
+    schemaCountSuffix: string; // " tablo" / " tables"
+    schemaNeverSynced: string; // "henüz sync yok" / "never synced"
+    schemaAgeHour: string; // "{n} saat önce" / "{n}h ago"
+    schemaAgeDay: string; // "{n} gün önce" / "{n}d ago"
+    schemaFreshLabel: string; // "Güncel" / "Fresh"
+    schemaStaleLabel: string; // "Bayatlamış" / "Stale"
+    schemaVeryStaleLabel: string; // "Çok eski" / "Very stale"
   };
   connectionForm: {
     brand: string;
