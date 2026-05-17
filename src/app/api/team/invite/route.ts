@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/notifications/email";
 import { getPlan } from "@/lib/plans";
 import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PostSchema = z.object({
   email: z.string().email(),
@@ -17,13 +18,13 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner" && session.user.role !== "admin") {
-    return Response.json({ error: "Yalnızca admin." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
   }
 
   const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { email, role } = body.data;
   const log = childLogger({ component: "invite", tenantId: session.user.tenantId });
@@ -32,20 +33,21 @@ export async function POST(req: Request) {
     where: { id: session.user.tenantId },
     select: { plan: true, name: true, _count: { select: { users: true } } },
   });
-  if (!tenant) return Response.json({ error: "Tenant bulunamadı." }, { status: 404 });
+  if (!tenant) return localizedError(req, 404, { tr: "Tenant bulunamadı.", en: "Tenant not found." });
 
   const planLimits = getPlan(tenant.plan);
   const pendingCount = await prisma.invitation.count({
     where: { tenantId: session.user.tenantId, acceptedAt: null, expiresAt: { gt: new Date() } },
   });
   if (tenant._count.users + pendingCount >= planLimits.maxUsers) {
-    return Response.json({
-      error: `${tenant.plan} planında ${planLimits.maxUsers} kullanıcı limiti var. Plan yükseltin.`,
-    }, { status: 402 });
+    return localizedError(req, 402, {
+      tr: `${tenant.plan} planında ${planLimits.maxUsers} kullanıcı limiti var. Plan yükseltin.`,
+      en: `${tenant.plan} plan has a ${planLimits.maxUsers} user limit. Please upgrade.`,
+    });
   }
 
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-  if (existing) return Response.json({ error: "Bu email kayıtlı." }, { status: 409 });
+  if (existing) return localizedError(req, 409, { tr: "Bu email kayıtlı.", en: "This email is already registered." });
 
   const rawToken = randomBytes(32).toString("base64url");
   const tokenHash = createHash("sha256").update(rawToken).digest("hex");

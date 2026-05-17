@@ -1,10 +1,11 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 import { z } from "zod";
 
 export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { id } = await ctx.params;
 
@@ -15,7 +16,7 @@ export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[i
     },
   });
 
-  if (!chatSession) return Response.json({ error: "Bulunamadı." }, { status: 404 });
+  if (!chatSession) return jsonError(req, "api.notFound", 404);
 
   return Response.json({
     id: chatSession.id,
@@ -45,19 +46,19 @@ const PatchSchema = z.object({
 
 export async function PATCH(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { id } = await ctx.params;
   const body = PatchSchema.safeParse(await req.json());
   if (!body.success) {
-    return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+    return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
   }
 
   const owned = await prisma.chatSession.findFirst({
     where: { id, tenantId: session.user.tenantId, userId: session.user.id },
     select: { id: true },
   });
-  if (!owned) return Response.json({ error: "Bulunamadı." }, { status: 404 });
+  if (!owned) return jsonError(req, "api.notFound", 404);
 
   const data: { title?: string; pinned?: boolean; archivedAt?: Date | null } = {};
   if (typeof body.data.title === "string") data.title = body.data.title;
@@ -77,7 +78,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/chat/sessions/
 
 export async function DELETE(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { id } = await ctx.params;
 
@@ -85,7 +86,7 @@ export async function DELETE(req: Request, ctx: RouteContext<"/api/chat/sessions
     where: { id, tenantId: session.user.tenantId, userId: session.user.id },
     select: { id: true },
   });
-  if (!owned) return Response.json({ error: "Bulunamadı." }, { status: 404 });
+  if (!owned) return jsonError(req, "api.notFound", 404);
 
   await prisma.chatSession.delete({ where: { id } });
   return Response.json({ ok: true });

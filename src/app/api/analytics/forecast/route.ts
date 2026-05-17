@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { linearForecast } from "@/lib/analytics/forecast";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const QuerySchema = z.object({
   metricKey: z.string().min(1),
@@ -10,11 +11,11 @@ const QuerySchema = z.object({
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { searchParams } = new URL(req.url);
   const parsed = QuerySchema.safeParse(Object.fromEntries(searchParams));
-  if (!parsed.success) return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  if (!parsed.success) return localizedError(req, 400, { tr: parsed.error.issues[0].message, en: parsed.error.issues[0].message });
 
   const { metricKey, steps } = parsed.data;
 
@@ -26,9 +27,10 @@ export async function GET(req: Request) {
   });
 
   if (baselines.length < 5) {
-    return Response.json({
-      error: "Yetersiz veri (en az 5 snapshot gerekli, mevcut: " + baselines.length + ")",
-    }, { status: 400 });
+    return localizedError(req, 400, {
+      tr: "Yetersiz veri (en az 5 snapshot gerekli, mevcut: " + baselines.length + ")",
+      en: "Insufficient data (at least 5 snapshots required, current: " + baselines.length + ")",
+    });
   }
 
   const values = baselines.map((b) => b.value);

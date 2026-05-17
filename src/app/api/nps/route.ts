@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PostSchema = z.object({
   score: z.number().int().min(0).max(10),
@@ -13,10 +14,10 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   await prisma.npsResponse.create({
     data: {
@@ -33,10 +34,10 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { isSysAdmin: true } });
-  if (!user?.isSysAdmin) return Response.json({ error: "Sysadmin." }, { status: 403 });
+  if (!user?.isSysAdmin) return localizedError(req, 403, { tr: "Sysadmin.", en: "Sysadmin." });
 
   const responses = await prisma.npsResponse.findMany({
     orderBy: { respondedAt: "desc" },

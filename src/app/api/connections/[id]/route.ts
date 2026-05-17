@@ -1,12 +1,13 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 export async function DELETE(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { id } = await ctx.params;
 
@@ -16,7 +17,7 @@ export async function DELETE(
   });
 
   if (result.count === 0) {
-    return Response.json({ error: "Bağlantı bulunamadı." }, { status: 404 });
+    return localizedError(req, 404, { tr: "Bağlantı bulunamadı.", en: "Connection not found." });
   }
 
   return Response.json({ ok: true });

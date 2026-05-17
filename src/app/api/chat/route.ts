@@ -15,6 +15,7 @@ import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 
 const client = new Anthropic();
 
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   setSentryUser({
     id: session.user.id,
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
   });
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { question, connectionId, sessionId, forceRun } = body.data;
   const tenantId = session.user.tenantId;
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
   if (!limit.success) {
     return Response.json(
-      { error: "Çok fazla istek. Biraz sonra tekrar deneyin." },
+      { error: serverMessages(req).api.rateLimited },
       {
         status: 429,
         headers: {
@@ -128,13 +129,13 @@ export async function POST(req: Request) {
     );
   }
 
-  if (detectInjection(question)) return Response.json({ error: "Geçersiz soru." }, { status: 400 });
+  if (detectInjection(question)) return localizedError(req, 400, { tr: "Geçersiz soru.", en: "Invalid question." });
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: connectionId, tenantId, status: "active" },
     select: { id: true, erpType: true, erpProfile: true },
   });
-  if (!conn) return Response.json({ error: "Aktif bağlantı bulunamadı." }, { status: 404 });
+  if (!conn) return localizedError(req, 404, { tr: "Aktif bağlantı bulunamadı.", en: "No active connection found." });
 
   const profileSlug = conn.erpProfile ?? (conn.erpType === "nebim_v3" ? "nebim_v3" : null);
   const erpProfile = profileSlug ? loadProfile(profileSlug) : null;
@@ -374,9 +375,9 @@ ${schema}`;
     }
     if (err.name === "AIError") {
       Sentry.captureException(e, { tags: { component: "chat", subsystem: "claude" } });
-      return Response.json({ error: "Soru SQL'e çevrilemedi." }, { status: 502 });
+      return localizedError(req, 502, { tr: "Soru SQL'e çevrilemedi.", en: "Could not translate question into SQL." });
     }
     Sentry.captureException(e, { tags: { component: "chat", cacheHit: String(cacheHit) } });
-    return Response.json({ error: "Sorgu çalıştırılamadı.", detail: err.message }, { status: 500 });
+    return Response.json({ error: serverMessages(req).api.serverError, detail: err.message }, { status: 500 });
   }
 }

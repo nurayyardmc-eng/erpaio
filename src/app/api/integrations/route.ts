@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PostSchema = z.object({
   kind: z.enum(["slack", "teams", "webhook"]),
@@ -12,7 +13,7 @@ const PostSchema = z.object({
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const integrations = await prisma.tenantIntegration.findMany({
     where: { tenantId: session.user.tenantId },
@@ -34,13 +35,13 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner" && session.user.role !== "admin") {
-    return Response.json({ error: "Yalnızca admin." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
   }
 
   const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { kind, endpoint, secret } = body.data;
 
@@ -68,14 +69,14 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner" && session.user.role !== "admin") {
-    return Response.json({ error: "Yalnızca admin." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
   }
 
   const { searchParams } = new URL(req.url);
   const kind = searchParams.get("kind");
-  if (!kind) return Response.json({ error: "kind gerekli." }, { status: 400 });
+  if (!kind) return localizedError(req, 400, { tr: "kind gerekli.", en: "kind required." });
 
   await prisma.tenantIntegration.deleteMany({
     where: { tenantId: session.user.tenantId, kind },

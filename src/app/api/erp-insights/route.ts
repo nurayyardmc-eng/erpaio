@@ -2,10 +2,11 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { inferForeignKeys } from "@/lib/erpProfiles/foreignKeyInference";
 import { findCustomItems } from "@/lib/erpProfiles/customColumnFlag";
+import { jsonError } from "@/lib/i18n/server";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { searchParams } = new URL(req.url);
   const connectionId = searchParams.get("connectionId");

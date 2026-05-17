@@ -1,15 +1,16 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 async function requireSysAdmin(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return { error: Response.json({ error: "Yetkisiz." }, { status: 401 }) };
+  if (!session?.user) return { error: jsonError(req, "api.unauthorized", 401) };
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { isSysAdmin: true },
   });
   if (!user?.isSysAdmin) {
-    return { error: Response.json({ error: "Yetkisiz (sysadmin gerekli)." }, { status: 403 }) };
+    return { error: localizedError(req, 403, { tr: "Yetkisiz (sysadmin gerekli).", en: "Unauthorized (sysadmin required)." }) };
   }
   return { ok: true };
 }

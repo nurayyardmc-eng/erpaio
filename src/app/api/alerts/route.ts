@@ -6,10 +6,11 @@ import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError } from "@/lib/i18n/server";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") ?? "open";
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const body = await req.json();
 
@@ -87,7 +88,7 @@ export async function PATCH(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { id, status } = await req.json();
 
@@ -96,7 +97,7 @@ export async function PATCH(req: Request) {
     where: { id, tenantId: session.user.tenantId },
     data: { status },
   });
-  if (result.count === 0) return Response.json({ error: "Bulunamadı." }, { status: 404 });
+  if (result.count === 0) return jsonError(req, "api.notFound", 404);
 
   return Response.json({ ok: true });
 }

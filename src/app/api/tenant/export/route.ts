@@ -1,14 +1,15 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 export const maxDuration = 300;
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner") {
-    return Response.json({ error: "Yalnızca tenant sahibi export alabilir." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca tenant sahibi export alabilir.", en: "Only the tenant owner can export." });
   }
 
   const tenantId = session.user.tenantId;

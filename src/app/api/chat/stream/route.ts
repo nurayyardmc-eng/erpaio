@@ -15,6 +15,7 @@ import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const client = new Anthropic();
 export const maxDuration = 60;
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   setSentryUser({
     id: session.user.id,
@@ -44,30 +45,30 @@ export async function POST(req: Request) {
   });
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { question, connectionId, sessionId } = body.data;
   const tenantId = session.user.tenantId;
 
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
   if (!limit.success) {
-    return Response.json({ error: "Çok fazla istek." }, { status: 429 });
+    return jsonError(req, "api.rateLimited", 429);
   }
 
   const budget = await checkAndConsume(tenantId, 5000);
   if (!budget.ok) {
-    return Response.json({ error: budget.reason }, { status: 402 });
+    return localizedError(req, 402, { tr: budget.reason, en: budget.reason });
   }
 
   if (detectInjection(question)) {
-    return Response.json({ error: "Geçersiz soru." }, { status: 400 });
+    return localizedError(req, 400, { tr: "Geçersiz soru.", en: "Invalid question." });
   }
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: connectionId, tenantId, status: "active" },
     select: { id: true, erpType: true, erpProfile: true },
   });
-  if (!conn) return Response.json({ error: "Aktif bağlantı bulunamadı." }, { status: 404 });
+  if (!conn) return localizedError(req, 404, { tr: "Aktif bağlantı bulunamadı.", en: "No active connection found." });
 
   const log = childLogger({ component: "chat-stream", tenantId, userId: session.user.id });
   const t0 = Date.now();

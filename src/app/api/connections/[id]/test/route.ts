@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { dialectFromErpType } from "@/lib/db/dialect";
+import { jsonError, resolveLocale } from "@/lib/i18n/server";
 
 export async function GET(
   req: Request,
@@ -9,7 +10,7 @@ export async function GET(
 ) {
   const session = await auth();
   if (!session?.user) {
-    return Response.json({ error: "Yetkisiz." }, { status: 401 });
+    return jsonError(req, "api.unauthorized", 401);
   }
 
   const { id } = await params;
@@ -18,7 +19,7 @@ export async function GET(
     where: { id, tenantId: session.user.tenantId },
   });
   if (!conn) {
-    return Response.json({ error: "Bulunamadı." }, { status: 404 });
+    return jsonError(req, "api.notFound", 404);
   }
 
   const dialect = dialectFromErpType(conn.erpType);
@@ -40,6 +41,7 @@ export async function GET(
       where: { id },
       data: { status: "error" },
     });
-    return Response.json({ ok: false, error: "Bağlantı başarısız." }, { status: 503 });
+    const locale = resolveLocale(req);
+    return Response.json({ ok: false, error: locale === "en" ? "Connection failed." : "Bağlantı başarısız." }, { status: 503 });
   }
 }

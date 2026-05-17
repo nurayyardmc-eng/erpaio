@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PostSchema = z.object({
   name: z.string().min(1).max(120),
@@ -13,7 +14,7 @@ const PostSchema = z.object({
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const reports = await prisma.scheduledReport.findMany({
     where: { tenantId: session.user.tenantId },
@@ -27,16 +28,16 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: body.data.connectionId, tenantId: session.user.tenantId },
     select: { id: true },
   });
-  if (!conn) return Response.json({ error: "Bağlantı bulunamadı." }, { status: 404 });
+  if (!conn) return localizedError(req, 404, { tr: "Bağlantı bulunamadı.", en: "Connection not found." });
 
   const report = await prisma.scheduledReport.create({
     data: { ...body.data, tenantId: session.user.tenantId, userId: session.user.id },
@@ -46,11 +47,11 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
-  if (!id) return Response.json({ error: "id gerekli." }, { status: 400 });
+  if (!id) return localizedError(req, 400, { tr: "id gerekli.", en: "id required." });
 
   await prisma.scheduledReport.deleteMany({
     where: { id, tenantId: session.user.tenantId },

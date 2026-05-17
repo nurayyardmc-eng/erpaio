@@ -1,10 +1,11 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { METRIC_QUERIES } from "@/lib/anomaly/queries";
+import { jsonError } from "@/lib/i18n/server";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const tenantId = session.user.tenantId;
 

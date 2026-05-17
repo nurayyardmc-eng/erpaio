@@ -3,23 +3,24 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
 import { rateLimit } from "@/lib/rateLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 export async function POST(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const limit = await rateLimit(session.user.id, {
     prefix: "verify-resend",
     max: 3,
     windowMs: 60 * 60_000,
   });
-  if (!limit.success) return Response.json({ error: "Çok fazla istek. 1 saat sonra deneyin." }, { status: 429 });
+  if (!limit.success) return localizedError(req, 429, { tr: "Çok fazla istek. 1 saat sonra deneyin.", en: "Too many requests. Try again in 1 hour." });
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { email: true, emailVerifiedAt: true, name: true },
   });
-  if (!user) return Response.json({ error: "Bulunamadı." }, { status: 404 });
+  if (!user) return jsonError(req, "api.notFound", 404);
   if (user.emailVerifiedAt) return Response.json({ ok: true, alreadyVerified: true });
 
   const rawToken = randomBytes(32).toString("base64url");

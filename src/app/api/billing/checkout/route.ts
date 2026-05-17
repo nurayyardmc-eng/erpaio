@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { stripe, PRICE_IDS, isStripeConfigured } from "@/lib/billing/stripe";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const BodySchema = z.object({
   plan: z.enum(["pro", "enterprise"]),
@@ -9,32 +10,32 @@ const BodySchema = z.object({
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
-    return Response.json(
-      { error: "Stripe not configured. Contact support@erpaio.com to upgrade." },
-      { status: 503 },
-    );
+    return localizedError(req, 503, {
+      tr: "Stripe yapılandırılmamış. Yükseltme için support@erpaio.com ile iletişime geçin.",
+      en: "Stripe not configured. Contact support@erpaio.com to upgrade.",
+    });
   }
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner") {
-    return Response.json({ error: "Yalnızca tenant sahibi plan değiştirebilir." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca tenant sahibi plan değiştirebilir.", en: "Only the tenant owner can change the plan." });
   }
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: "Geçersiz plan." }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: "Geçersiz plan.", en: "Invalid plan." });
 
   const { plan } = body.data;
   const priceId = PRICE_IDS[plan];
   if (!priceId) {
-    return Response.json({ error: `${plan} fiyat ID'si yapılandırılmamış.` }, { status: 503 });
+    return localizedError(req, 503, { tr: `${plan} fiyat ID'si yapılandırılmamış.`, en: `${plan} price ID not configured.` });
   }
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: session.user.tenantId },
     select: { id: true, name: true, stripeCustomerId: true },
   });
-  if (!tenant) return Response.json({ error: "Tenant bulunamadı." }, { status: 404 });
+  if (!tenant) return localizedError(req, 404, { tr: "Tenant bulunamadı.", en: "Tenant not found." });
 
   let customerId = tenant.stripeCustomerId;
   if (!customerId) {

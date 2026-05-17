@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
+import { jsonError } from "@/lib/i18n/server";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -15,7 +16,7 @@ const Schema = z.object({
 export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) {
-    return Response.json({ error: "Yetkisiz." }, { status: 401 });
+    return jsonError(req, "api.unauthorized", 401);
   }
 
   const body = await req.json();
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) {
-    return Response.json({ error: "Yetkisiz." }, { status: 401 });
+    return jsonError(req, "api.unauthorized", 401);
   }
 
   const connections = await prisma.erpConnection.findMany({

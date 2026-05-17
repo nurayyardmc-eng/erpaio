@@ -1,16 +1,17 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { stripe, isStripeConfigured } from "@/lib/billing/stripe";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
-    return Response.json({ error: "Stripe not configured." }, { status: 503 });
+    return localizedError(req, 503, { tr: "Stripe yapılandırılmamış.", en: "Stripe not configured." });
   }
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner") {
-    return Response.json({ error: "Yalnızca tenant sahibi." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca tenant sahibi.", en: "Only the tenant owner." });
   }
 
   const tenant = await prisma.tenant.findUnique({
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
     select: { stripeCustomerId: true },
   });
   if (!tenant?.stripeCustomerId) {
-    return Response.json({ error: "Henüz aktif aboneliğiniz yok." }, { status: 400 });
+    return localizedError(req, 400, { tr: "Henüz aktif aboneliğiniz yok.", en: "You don't have an active subscription yet." });
   }
 
   const portal = await stripe!.billingPortal.sessions.create({

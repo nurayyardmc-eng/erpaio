@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { validateSQL } from "@/lib/validators/sql";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PostSchema = z.object({
   key: z.string().regex(/^[a-z0-9_]{3,40}$/, "Sadece küçük harf, rakam, _"),
@@ -18,7 +19,7 @@ const PostSchema = z.object({
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const metrics = await prisma.customMetric.findMany({
     where: { tenantId: session.user.tenantId },
@@ -32,35 +33,36 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner" && session.user.role !== "admin") {
-    return Response.json({ error: "Yalnızca admin." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
   }
 
   const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { sql } = body.data;
   try {
     validateSQL(sql);
   } catch (err) {
-    return Response.json(
-      { error: err instanceof Error ? err.message : "SQL geçersiz" },
-      { status: 400 },
-    );
+    return localizedError(req, 400, {
+      tr: err instanceof Error ? err.message : "SQL geçersiz",
+      en: err instanceof Error ? err.message : "Invalid SQL",
+    });
   }
 
   if (!/SELECT.+\s+(metric_value|value|val)\b/i.test(sql)) {
-    return Response.json({
-      error: "SQL'de tek satır + 'metric_value' kolonu döndürmeli (örn: SELECT SUM(...) AS metric_value FROM ...)",
-    }, { status: 400 });
+    return localizedError(req, 400, {
+      tr: "SQL'de tek satır + 'metric_value' kolonu döndürmeli (örn: SELECT SUM(...) AS metric_value FROM ...)",
+      en: "SQL must return a single row with a 'metric_value' column (e.g. SELECT SUM(...) AS metric_value FROM ...)",
+    });
   }
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: body.data.connectionId, tenantId: session.user.tenantId },
     select: { id: true },
   });
-  if (!conn) return Response.json({ error: "Bağlantı bulunamadı." }, { status: 404 });
+  if (!conn) return localizedError(req, 404, { tr: "Bağlantı bulunamadı.", en: "Connection not found." });
 
   const metric = await prisma.customMetric.upsert({
     where: { tenantId_key: { tenantId: session.user.tenantId, key: body.data.key } },
@@ -98,11 +100,11 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
-  if (!id) return Response.json({ error: "id gerekli." }, { status: 400 });
+  if (!id) return localizedError(req, 400, { tr: "id gerekli.", en: "id required." });
 
   await prisma.customMetric.deleteMany({
     where: { id, tenantId: session.user.tenantId },

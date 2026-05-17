@@ -7,6 +7,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   setSentryUser({
     id: session.user.id,
@@ -33,20 +34,20 @@ export async function POST(req: Request) {
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
   if (!limit.success) {
     return Response.json(
-      { error: "Çok fazla istek." },
+      { error: serverMessages(req).api.rateLimited },
       { status: 429, headers: { "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)) } },
     );
   }
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { sql, connectionId, sessionId } = body.data;
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: connectionId, tenantId, status: "active" },
   });
-  if (!conn) return Response.json({ error: "Aktif bağlantı bulunamadı." }, { status: 404 });
+  if (!conn) return localizedError(req, 404, { tr: "Aktif bağlantı bulunamadı.", en: "No active connection found." });
 
   const log = childLogger({ component: "chat-run-sql", tenantId, userId: session.user.id });
   const t0 = Date.now();
@@ -96,6 +97,6 @@ export async function POST(req: Request) {
       return Response.json({ error: err.message }, { status: 400 });
     }
     Sentry.captureException(e, { tags: { component: "chat-run-sql" } });
-    return Response.json({ error: "SQL çalıştırılamadı.", detail: err.message }, { status: 500 });
+    return Response.json({ error: serverMessages(req).api.serverError, detail: err.message }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -18,7 +19,7 @@ export async function PATCH(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   setSentryUser({
     id: session.user.id,
@@ -30,13 +31,13 @@ export async function PATCH(req: Request) {
   const limit = await rateLimit(session.user.id, RATE_LIMITS.CHAT_FEEDBACK);
   if (!limit.success) {
     return Response.json(
-      { error: "Çok fazla feedback." },
+      { error: serverMessages(req).api.rateLimited },
       { status: 429, headers: { "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)) } },
     );
   }
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { messageId, feedback } = body.data;
   const tenantId = session.user.tenantId;
@@ -50,7 +51,7 @@ export async function PATCH(req: Request) {
     select: { id: true, sessionId: true, createdAt: true },
   });
 
-  if (!message) return Response.json({ error: "Mesaj bulunamadı." }, { status: 404 });
+  if (!message) return localizedError(req, 404, { tr: "Mesaj bulunamadı.", en: "Message not found." });
 
   await prisma.chatMessage.update({
     where: { id: messageId },

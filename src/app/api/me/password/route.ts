@@ -4,6 +4,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { rateLimit } from "@/lib/rateLimit";
 import { childLogger } from "@/lib/observability/logger";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const BodySchema = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -12,7 +13,7 @@ const BodySchema = z.object({
 
 export async function POST(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const limit = await rateLimit(session.user.id, {
     prefix: "change-password",
@@ -20,23 +21,23 @@ export async function POST(req: Request) {
     windowMs: 60 * 60_000,
   });
   if (!limit.success) {
-    return Response.json({ error: "Çok fazla deneme. 1 saat sonra deneyin." }, { status: 429 });
+    return localizedError(req, 429, { tr: "Çok fazla deneme. 1 saat sonra deneyin.", en: "Too many attempts. Try again in 1 hour." });
   }
 
   const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { passwordHash: true },
   });
-  if (!user) return Response.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
+  if (!user) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
 
   const valid = await bcrypt.compare(body.data.currentPassword, user.passwordHash);
-  if (!valid) return Response.json({ error: "Mevcut şifre hatalı." }, { status: 400 });
+  if (!valid) return localizedError(req, 400, { tr: "Mevcut şifre hatalı.", en: "Current password is incorrect." });
 
   if (body.data.currentPassword === body.data.newPassword) {
-    return Response.json({ error: "Yeni şifre mevcut şifre ile aynı olamaz." }, { status: 400 });
+    return localizedError(req, 400, { tr: "Yeni şifre mevcut şifre ile aynı olamaz.", en: "New password cannot be the same as the current one." });
   }
 
   const newHash = await bcrypt.hash(body.data.newPassword, 12);

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PutSchema = z.object({
   tableName: z.string().min(1).max(128),
@@ -12,7 +13,7 @@ const PutSchema = z.object({
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const annotations = await prisma.schemaAnnotation.findMany({
     where: { tenantId: session.user.tenantId },
@@ -26,13 +27,13 @@ export async function PUT(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "admin" && session.user.role !== "owner") {
-    return Response.json({ error: "Yalnızca yönetici düzenleyebilir." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca yönetici düzenleyebilir.", en: "Only admins can edit." });
   }
 
   const body = PutSchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   const { tableName, columnName, description, hidden } = body.data;
 
@@ -62,15 +63,15 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "admin" && session.user.role !== "owner") {
-    return Response.json({ error: "Yalnızca yönetici silebilir." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca yönetici silebilir.", en: "Only admins can delete." });
   }
 
   const { searchParams } = new URL(req.url);
   const tableName = searchParams.get("tableName");
   const columnName = searchParams.get("columnName") ?? "";
-  if (!tableName) return Response.json({ error: "tableName gerekli." }, { status: 400 });
+  if (!tableName) return localizedError(req, 400, { tr: "tableName gerekli.", en: "tableName required." });
 
   await prisma.schemaAnnotation.deleteMany({
     where: { tenantId: session.user.tenantId, tableName, columnName },

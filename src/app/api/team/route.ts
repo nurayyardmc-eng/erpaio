@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PatchSchema = z.object({
   userId: z.string(),
@@ -10,7 +11,7 @@ const PatchSchema = z.object({
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const [users, invitations] = await Promise.all([
     prisma.user.findMany({
@@ -33,17 +34,17 @@ export async function PATCH(req: Request) {
   if (tooBig) return tooBig;
 
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner") {
-    return Response.json({ error: "Yalnızca tenant sahibi rol değiştirebilir." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca tenant sahibi rol değiştirebilir.", en: "Only the tenant owner can change roles." });
   }
 
   const body = PatchSchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
 
   // Owner devri bu endpoint'ten yapılamaz — atomic transfer için ayrı endpoint gerekli.
   if (body.data.role === "owner") {
-    return Response.json({ error: "Owner devri için ayrı endpoint kullanın (henüz yok)." }, { status: 400 });
+    return localizedError(req, 400, { tr: "Owner devri için ayrı endpoint kullanın (henüz yok).", en: "Use a separate endpoint for owner transfer (not yet available)." });
   }
 
   // Hedef kullanıcı tenant içinde mevcut mu?
@@ -51,7 +52,7 @@ export async function PATCH(req: Request) {
     where: { id: body.data.userId, tenantId: session.user.tenantId },
     select: { role: true },
   });
-  if (!target) return Response.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
+  if (!target) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
 
   // Son owner düşürülemez — tenant orphan kalmasın.
   if (target.role === "owner") {
@@ -59,7 +60,7 @@ export async function PATCH(req: Request) {
       where: { tenantId: session.user.tenantId, role: "owner" },
     });
     if (ownerCount <= 1) {
-      return Response.json({ error: "Son owner rolü düşürülemez. Önce başka birini owner yapın." }, { status: 400 });
+      return localizedError(req, 400, { tr: "Son owner rolü düşürülemez. Önce başka birini owner yapın.", en: "Cannot demote the last owner. Promote someone else to owner first." });
     }
   }
 
@@ -73,9 +74,9 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
-  if (!session?.user) return Response.json({ error: "Yetkisiz." }, { status: 401 });
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   if (session.user.role !== "owner" && session.user.role !== "admin") {
-    return Response.json({ error: "Yalnızca admin." }, { status: 403 });
+    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
   }
 
   const { searchParams } = new URL(req.url);
@@ -84,20 +85,20 @@ export async function DELETE(req: Request) {
 
   if (userId) {
     if (userId === session.user.id) {
-      return Response.json({ error: "Kendi hesabınızı silmek için /dashboard/settings → Hesabı sil." }, { status: 400 });
+      return localizedError(req, 400, { tr: "Kendi hesabınızı silmek için /dashboard/settings → Hesabı sil.", en: "To delete your own account, go to /dashboard/settings → Delete account." });
     }
     const target = await prisma.user.findFirst({
       where: { id: userId, tenantId: session.user.tenantId },
       select: { role: true },
     });
     if (target?.role === "owner") {
-      return Response.json({ error: "Owner silinemez." }, { status: 400 });
+      return localizedError(req, 400, { tr: "Owner silinemez.", en: "Owner cannot be deleted." });
     }
     await prisma.user.deleteMany({ where: { id: userId, tenantId: session.user.tenantId } });
   } else if (invitationId) {
     await prisma.invitation.deleteMany({ where: { id: invitationId, tenantId: session.user.tenantId } });
   } else {
-    return Response.json({ error: "userId veya invitationId gerekli." }, { status: 400 });
+    return localizedError(req, 400, { tr: "userId veya invitationId gerekli.", en: "userId or invitationId required." });
   }
 
   return Response.json({ ok: true });
