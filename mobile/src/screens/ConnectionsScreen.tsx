@@ -1,17 +1,14 @@
 import { FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteConnection, getConnections, type ErpConnection } from "../lib/dashboard";
+import {
+  deleteConnection,
+  getConnections,
+  syncConnectionSchema,
+  type ErpConnection,
+} from "../lib/dashboard";
+import { getMe } from "../lib/auth";
 import { schemaAgeRelative, schemaAgeStatus, type SchemaAgeStatus } from "../lib/schemaAge";
-
-// Schema age → renk eşlemesi. Theme palette ile uyumlu. "never" branch'i ayrı
-// render edildiği için burada yok; type tarafından da garanti edilir.
-type BadgeStatus = Exclude<SchemaAgeStatus, "never">;
-const SCHEMA_AGE_BADGE: Record<BadgeStatus, { fg: string; bg: string }> = {
-  fresh: { fg: "#065F46", bg: "#D1FAE5" },
-  stale: { fg: "#92400E", bg: "#FEF3C7" },
-  "very-stale": { fg: "#991B1B", bg: "#FEE2E2" },
-};
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -24,6 +21,15 @@ import { apiErrorMessage } from "../lib/apiError";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 import { useState } from "react";
+
+// Schema age → renk eşlemesi. Theme palette ile uyumlu. "never" branch'i ayrı
+// render edildiği için burada yok; type tarafından da garanti edilir.
+type BadgeStatus = Exclude<SchemaAgeStatus, "never">;
+const SCHEMA_AGE_BADGE: Record<BadgeStatus, { fg: string; bg: string }> = {
+  fresh: { fg: "#065F46", bg: "#D1FAE5" },
+  stale: { fg: "#92400E", bg: "#FEF3C7" },
+  "very-stale": { fg: "#991B1B", bg: "#FEE2E2" },
+};
 
 interface Props {
   navigation: NativeStackNavigationProp<MoreStackParamList, "Connections">;
@@ -44,6 +50,30 @@ export default function ConnectionsScreen({ navigation }: Props) {
     },
     onError: (e: Error) => showToast(apiErrorMessage(e, t), "error"),
   });
+
+  const syncMutation = useMutation({
+    mutationFn: (id: string) => syncConnectionSchema(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dash-connections"] });
+      queryClient.invalidateQueries({ queryKey: ["connections"] });
+      showToast(t.connections.syncedToast, "success");
+    },
+    onError: (e: Error) => showToast(apiErrorMessage(e, t) || t.connections.syncFailedToast, "error"),
+  });
+
+  // Owner/admin role check — sheet'te "Re-sync" item'ı koşullu göstermek için.
+  const meQuery = useQuery({ queryKey: ["me-role-conn"], queryFn: getMe });
+  const isOwnerOrAdmin =
+    meQuery.data?.user.role === "owner" || meQuery.data?.user.role === "admin";
+
+  const onSync = (item: ErpConnection) => {
+    setMenuFor(null);
+    if (!isOwnerOrAdmin) {
+      showToast(t.connections.syncOwnerOnly, "error");
+      return;
+    }
+    syncMutation.mutate(item.id);
+  };
 
   const onDelete = async (item: ErpConnection) => {
     setMenuFor(null);
@@ -178,6 +208,18 @@ export default function ConnectionsScreen({ navigation }: Props) {
           >
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.dbName}</Text>
+              {isOwnerOrAdmin && (
+                <TouchableOpacity
+                  onPress={() => onSync(menuFor)}
+                  style={styles.sheetItem}
+                  activeOpacity={0.6}
+                  disabled={syncMutation.isPending}
+                >
+                  <Text style={styles.sheetText}>
+                    {syncMutation.isPending ? t.connections.syncingNowBtn : t.connections.syncNowBtn}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
                 <Text style={[styles.sheetText, { color: colors.error }]}>{t.common.delete}</Text>
               </TouchableOpacity>

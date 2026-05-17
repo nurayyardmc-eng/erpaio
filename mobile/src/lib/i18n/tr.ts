@@ -226,6 +226,11 @@ export const tr: Dictionary = {
     schemaFreshLabel: "GÜNCEL",
     schemaStaleLabel: "ESKİ",
     schemaVeryStaleLabel: "ÇOK ESKİ",
+    syncNowBtn: "Şimdi senkronize et",
+    syncingNowBtn: "Senkronize ediliyor...",
+    syncedToast: "Şema senkronlandı.",
+    syncFailedToast: "Şema senkronu başarısız.",
+    syncOwnerOnly: "Yalnızca owner/admin senkron tetikleyebilir.",
   },
   connectionForm: {
     brand: "ERPAIO · YENİ BAĞLANTI",

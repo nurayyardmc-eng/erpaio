@@ -38,6 +38,8 @@ export default function ConnectionsPage() {
   const [listLoading, setListLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     erpType: "nebim_v3",
     host: "",
@@ -54,6 +56,37 @@ export default function ConnectionsPage() {
   };
 
   useEffect(() => { refresh(); }, []);
+
+  // Fetch role for owner/admin-gated "Sync now" button. Async setState callback
+  // arrives later — not synchronous from the effect body.
+  useEffect(() => {
+    fetch("/api/me")
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((d: { user?: { role?: string } } | null) => setUserRole(d?.user?.role ?? null))
+      .catch(() => {});
+  }, []);
+
+  const isOwnerOrAdmin = userRole === "owner" || userRole === "admin";
+
+  const syncNow = async (id: string) => {
+    setSyncingId(id);
+    try {
+      const res = await fetch(`/api/connections/${encodeURIComponent(id)}/sync`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Schema sync başarısız.", "error");
+      } else {
+        showToast(`Şema senkronlandı (${data.schemaCache?.tableCount ?? "?"} tablo).`, "success");
+        refresh();
+      }
+    } catch {
+      showToast("Schema sync başarısız.", "error");
+    } finally {
+      setSyncingId(null);
+    }
+  };
 
   const onTypeChange = (id: string) => {
     const t = ERP_TYPES.find((x) => x.id === id);
@@ -374,21 +407,42 @@ export default function ConnectionsPage() {
                       )}
                     </div>
                   </div>
-                  <span style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 5,
-                    fontSize: 11,
-                    padding: "4px 10px",
-                    borderRadius: 100,
-                    background: isActive ? "#D1FAE5" : "#FEE2E2",
-                    color: isActive ? "#10B981" : "#EF4444",
-                    fontWeight: 600,
-                    flexShrink: 0,
-                  }}>
-                    {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                    {isActive ? "Aktif" : conn.status}
-                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                    <span style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: 11,
+                      padding: "4px 10px",
+                      borderRadius: 100,
+                      background: isActive ? "#D1FAE5" : "#FEE2E2",
+                      color: isActive ? "#10B981" : "#EF4444",
+                      fontWeight: 600,
+                    }}>
+                      {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                      {isActive ? "Aktif" : conn.status}
+                    </span>
+                    {isOwnerOrAdmin && (
+                      <button
+                        onClick={() => syncNow(conn.id)}
+                        disabled={syncingId === conn.id}
+                        title="ERP schema'yı yeniden tarayıp cache'i güncelle"
+                        style={{
+                          background: "transparent",
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: 100,
+                          padding: "4px 10px",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: syncingId === conn.id ? "#94A3B8" : colors.text,
+                          cursor: syncingId === conn.id ? "not-allowed" : "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        {syncingId === conn.id ? "Senkronize ediliyor..." : "Şimdi senkronize et"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

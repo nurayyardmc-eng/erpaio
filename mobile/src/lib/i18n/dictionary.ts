@@ -233,6 +233,11 @@ export interface Dictionary {
     schemaFreshLabel: string; // "Güncel" / "Fresh"
     schemaStaleLabel: string; // "Bayatlamış" / "Stale"
     schemaVeryStaleLabel: string; // "Çok eski" / "Very stale"
+    syncNowBtn: string;
+    syncingNowBtn: string;
+    syncedToast: string;
+    syncFailedToast: string;
+    syncOwnerOnly: string;
   };
   connectionForm: {
     brand: string;

@@ -42,6 +42,7 @@ const ACTION_LABELS_TR: Record<string, string> = {
   "push_token.revoke": "Cihaz (push) silindi",
   "alert.feedback.false_positive": "Alert yanlış alarm olarak işaretlendi",
   "alert.feedback.clear": "Alert FP işareti kaldırıldı",
+  "connection.schema.sync": "ERP şeması senkronize edildi",
 };
 
 const ACTION_LABELS_EN: Record<string, string> = {
@@ -69,6 +70,7 @@ const ACTION_LABELS_EN: Record<string, string> = {
   "push_token.revoke": "Device (push) removed",
   "alert.feedback.false_positive": "Alert marked as false positive",
   "alert.feedback.clear": "Alert FP mark cleared",
+  "connection.schema.sync": "ERP schema synced",
 };
 
 export default function ActivityPage() {

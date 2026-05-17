@@ -32,7 +32,8 @@ export type ActivityAction =
   | "notification.prefs.update"
   | "push_token.revoke"
   | "alert.feedback.false_positive"
-  | "alert.feedback.clear";
+  | "alert.feedback.clear"
+  | "connection.schema.sync";
 
 export interface RecordActivityInput {
   userId?: string | null;

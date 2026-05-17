@@ -226,6 +226,11 @@ export const en: Dictionary = {
     schemaFreshLabel: "FRESH",
     schemaStaleLabel: "STALE",
     schemaVeryStaleLabel: "VERY STALE",
+    syncNowBtn: "Sync now",
+    syncingNowBtn: "Syncing...",
+    syncedToast: "Schema synced.",
+    syncFailedToast: "Schema sync failed.",
+    syncOwnerOnly: "Only owner/admin can trigger sync.",
   },
   connectionForm: {
     brand: "ERPAIO · NEW CONNECTION",

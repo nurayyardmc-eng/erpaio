@@ -32,6 +32,19 @@ export async function createConnection(input: CreateConnectionInput): Promise<{ 
   return api("/api/connections", { method: "POST", body: input });
 }
 
+/**
+ * Manuel schema cache re-sync. Owner/admin gerekir; 403 olursa server döner.
+ * Başarılı olursa yeni schemaCache snapshot dönülür → UI badge anında günceller.
+ *
+ * Track SSS. ERP'ye INFORMATION_SCHEMA query yollar — birkaç saniye sürebilir.
+ */
+export async function syncConnectionSchema(id: string): Promise<{
+  ok: true;
+  schemaCache: { builtAt: string; tableCount: number } | null;
+}> {
+  return api(`/api/connections/${encodeURIComponent(id)}/sync`, { method: "POST" });
+}
+
 export async function deleteConnection(id: string): Promise<void> {
   await api(`/api/connections/${id}`, { method: "DELETE" });
 }
