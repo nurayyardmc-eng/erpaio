@@ -448,6 +448,23 @@ export const tr: Dictionary = {
     disableConfirmYes: "Evet, kapat",
     mfaDisabledToast: "MFA kapatıldı",
     mfaDisableFailedToast: "İşlem başarısız",
+    sessionsTitle: "Aktif Oturumlar",
+    sessionsDescription:
+      "Hesabınıza erişimi olan tüm cihazlar/uygulamalar. Tanımadığınız bir oturum görüyorsanız sonlandırın ve şifrenizi değiştirin.",
+    sessionsEmpty: "Aktif oturum yok.",
+    sessionsCurrent: "BU OTURUM",
+    sessionsLastUsed: "Son: ",
+    sessionsNeverUsed: "Henüz kullanılmadı",
+    sessionsExpires: "Bitiş: ",
+    sessionRevoke: "Sonlandır",
+    sessionRevokeConfirmTitle: "Oturumu sonlandır?",
+    sessionRevokeConfirmMessage:
+      "Bu cihaz uygulamadan çıkacak ve tekrar giriş yapması gerekecek.",
+    sessionRevokeConfirmYes: "Sonlandır",
+    sessionRevokedToast: "Oturum sonlandırıldı.",
+    sessionRevokeFailedToast: "Oturum sonlandırılamadı.",
+    sessionRevokeCurrentBlocked:
+      "Aktif oturumunuzu sonlandıramazsınız. Çıkış için Ayarlar > Çıkış Yap'ı kullanın.",
   },
   overview: {
     brand: "ERPAIO · METRİKLER",

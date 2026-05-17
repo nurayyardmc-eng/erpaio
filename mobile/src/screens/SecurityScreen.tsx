@@ -1,8 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { colors, font, radius, spacing } from "../lib/theme";
+import {
+  getApiSessions,
+  revokeApiSession,
+  type ApiSession,
+} from "../lib/dashboard";
+import { colors, font, fontMono, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
@@ -86,14 +92,109 @@ export default function SecurityScreen({ navigation }: Props) {
           )}
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>{t.security.sectionApiToken}</Text>
-          <Text style={styles.desc}>
-            {t.security.apiTokenDesc}
-          </Text>
-          <Text style={styles.linkText}>erpaio.vercel.app/dashboard/security</Text>
-        </View>
+        <ActiveSessionsSection />
       </ScrollView>
+    </View>
+  );
+}
+
+/**
+ * Aktif API token oturumları. /api/me/sessions (= ApiToken[]) listesi.
+ * Web /dashboard/security'deki "Aktif Oturumlar" section'ının mobile karşılığı.
+ *
+ * Kullanıcı current oturumunu sonlandıramaz (server `isCurrent: true` döner;
+ * UI disable + uyarı toast).
+ */
+function ActiveSessionsSection() {
+  const { t, locale } = useI18n();
+  const [revoking, setRevoking] = useState<string | null>(null);
+
+  const q = useQuery({ queryKey: ["me-sessions"], queryFn: getApiSessions });
+
+  const revoke = useCallback(
+    async (s: ApiSession) => {
+      if (s.isCurrent) {
+        showToast(t.security.sessionRevokeCurrentBlocked, "error");
+        return;
+      }
+      const ok = await confirmDialog({
+        title: t.security.sessionRevokeConfirmTitle,
+        message: t.security.sessionRevokeConfirmMessage,
+        confirmLabel: t.security.sessionRevokeConfirmYes,
+        destructive: true,
+      });
+      if (!ok) return;
+      setRevoking(s.id);
+      try {
+        await revokeApiSession(s.id);
+        showToast(t.security.sessionRevokedToast, "success");
+        void q.refetch();
+      } catch {
+        showToast(t.security.sessionRevokeFailedToast, "error");
+      } finally {
+        setRevoking(null);
+      }
+    },
+    [q, t],
+  );
+
+  const fmtDate = (s: string) =>
+    new Date(s).toLocaleString(locale === "en" ? "en-US" : "tr-TR");
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.sectionTitle}>{t.security.sessionsTitle}</Text>
+      <Text style={styles.desc}>{t.security.sessionsDescription}</Text>
+      {q.isLoading ? (
+        <ActivityIndicator color={colors.brand} />
+      ) : q.isError ? (
+        <Text style={[styles.warning, { marginBottom: 0 }]}>{t.security.sessionRevokeFailedToast}</Text>
+      ) : (q.data?.sessions ?? []).length === 0 ? (
+        <Text style={[styles.desc, { marginBottom: 0 }]}>{t.security.sessionsEmpty}</Text>
+      ) : (
+        (q.data?.sessions ?? []).map((s, idx, arr) => (
+          <View
+            key={s.id}
+            style={[
+              styles.sessionRow,
+              idx === arr.length - 1 && { borderBottomWidth: 0 },
+              s.isCurrent && styles.sessionRowCurrent,
+            ]}
+          >
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 2 }}>
+                <Text style={styles.sessionName}>{s.name}</Text>
+                {s.isCurrent && (
+                  <View style={styles.currentBadge}>
+                    <Text style={styles.currentBadgeText}>{t.security.sessionsCurrent}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.sessionMeta}>
+                {s.lastUsedAt
+                  ? `${t.security.sessionsLastUsed}${fmtDate(s.lastUsedAt)}`
+                  : t.security.sessionsNeverUsed}
+              </Text>
+              <Text style={styles.sessionMetaFaint}>
+                {t.security.sessionsExpires}{fmtDate(s.expiresAt)}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => revoke(s)}
+              disabled={revoking === s.id || s.isCurrent}
+              style={[
+                styles.revokeBtn,
+                (revoking === s.id || s.isCurrent) && styles.revokeBtnDisabled,
+              ]}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.revokeBtnText}>
+                {revoking === s.id ? "..." : t.security.sessionRevoke}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ))
+      )}
     </View>
   );
 }
@@ -129,4 +230,33 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2.5),
   },
   dangerBtnText: { color: colors.error, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  sessionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing(3),
+    borderBottomColor: colors.borderSubtle,
+    borderBottomWidth: 1,
+  },
+  sessionRowCurrent: { backgroundColor: colors.brandSoft, marginHorizontal: -spacing(4), paddingHorizontal: spacing(4), borderRadius: radius.md },
+  sessionName: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "600" },
+  currentBadge: {
+    marginLeft: spacing(2),
+    backgroundColor: colors.brand,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(2),
+    paddingVertical: 2,
+  },
+  currentBadgeText: { color: "#FFFFFF", fontFamily: font, fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
+  sessionMeta: { color: colors.textMuted, fontFamily: font, fontSize: 12, marginTop: 2 },
+  sessionMetaFaint: { color: colors.textSubtle, fontFamily: fontMono, fontSize: 11, marginTop: 2 },
+  revokeBtn: {
+    marginLeft: spacing(2),
+    borderColor: colors.error,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(1.5),
+  },
+  revokeBtnDisabled: { opacity: 0.4 },
+  revokeBtnText: { color: colors.error, fontFamily: font, fontSize: 12, fontWeight: "600" },
 });

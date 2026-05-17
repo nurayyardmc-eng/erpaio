@@ -448,6 +448,23 @@ export const en: Dictionary = {
     disableConfirmYes: "Yes, disable",
     mfaDisabledToast: "MFA disabled",
     mfaDisableFailedToast: "Action failed",
+    sessionsTitle: "Active Sessions",
+    sessionsDescription:
+      "All devices/apps with access to your account. If you see an unrecognized session, revoke it and change your password.",
+    sessionsEmpty: "No active sessions.",
+    sessionsCurrent: "THIS SESSION",
+    sessionsLastUsed: "Last: ",
+    sessionsNeverUsed: "Never used",
+    sessionsExpires: "Expires: ",
+    sessionRevoke: "Revoke",
+    sessionRevokeConfirmTitle: "Revoke session?",
+    sessionRevokeConfirmMessage:
+      "This device will be signed out and will need to log in again.",
+    sessionRevokeConfirmYes: "Revoke",
+    sessionRevokedToast: "Session revoked.",
+    sessionRevokeFailedToast: "Failed to revoke session.",
+    sessionRevokeCurrentBlocked:
+      "You cannot revoke your current session. Use Settings > Sign Out to log out.",
   },
   overview: {
     brand: "ERPAIO · METRICS",

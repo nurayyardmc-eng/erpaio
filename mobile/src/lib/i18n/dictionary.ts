@@ -455,6 +455,20 @@ export interface Dictionary {
     disableConfirmYes: string;
     mfaDisabledToast: string;
     mfaDisableFailedToast: string;
+    sessionsTitle: string;
+    sessionsDescription: string;
+    sessionsEmpty: string;
+    sessionsCurrent: string;
+    sessionsLastUsed: string;
+    sessionsNeverUsed: string;
+    sessionsExpires: string;
+    sessionRevoke: string;
+    sessionRevokeConfirmTitle: string;
+    sessionRevokeConfirmMessage: string;
+    sessionRevokeConfirmYes: string;
+    sessionRevokedToast: string;
+    sessionRevokeFailedToast: string;
+    sessionRevokeCurrentBlocked: string;
   };
   overview: {
     brand: string;

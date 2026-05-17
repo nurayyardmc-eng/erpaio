@@ -282,6 +282,24 @@ export async function revokeMyDevice(id: string): Promise<{ ok: true }> {
   return api(`/api/me/devices?id=${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+// ============= API token (active session) management =============
+export interface ApiSession {
+  id: string;
+  name: string;
+  lastUsedAt: string | null;
+  expiresAt: string;
+  createdAt: string;
+  isCurrent: boolean;
+}
+
+export async function getApiSessions(): Promise<{ sessions: ApiSession[] }> {
+  return api(`/api/me/sessions`);
+}
+
+export async function revokeApiSession(id: string): Promise<{ ok: true }> {
+  return api(`/api/me/sessions?tokenId=${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
 // ============= Overview Metrics =============
 export interface DashboardMetrics {
   todayQueries: number;
