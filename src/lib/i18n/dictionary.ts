@@ -205,6 +205,17 @@ export interface Dictionary {
     emptyDesc: string;
     rowsSuffix: string;
   };
+  activity: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    colTime: string;
+    colAction: string;
+    colIp: string;
+    linkLabel: string;
+    linkDescription: string;
+  };
   scheduledReports: {
     breadcrumb: string;
     title: string;

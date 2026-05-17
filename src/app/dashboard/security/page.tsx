@@ -381,6 +381,30 @@ export default function SecurityPage() {
         </div>
       )}
 
+      {/* Activity log link */}
+      <div style={{ maxWidth: 520, marginTop: 32 }}>
+        <a
+          href="/dashboard/activity"
+          style={{
+            display: "block",
+            background: "#FFFFFF",
+            border: "1px solid #E5E7EB",
+            borderRadius: 12,
+            padding: 20,
+            textDecoration: "none",
+            color: "#0F172A",
+            transition: "border-color 0.15s",
+          }}
+        >
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+            {t.activity.linkLabel} →
+          </div>
+          <div style={{ fontSize: 13, color: "#525252" }}>
+            {t.activity.linkDescription}
+          </div>
+        </a>
+      </div>
+
       {/* Aktif Oturumlar */}
       <div style={{ maxWidth: 520, marginTop: 32 }}>
         <h2 style={{ fontSize: 18, margin: "0 0 16px", fontWeight: 600 }}>{t.security.sessionsTitle}</h2>

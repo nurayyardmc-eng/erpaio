@@ -191,6 +191,18 @@ export const tr: Dictionary = {
     emptyDesc: "Bu filtrede henüz aktivite yok. Sohbet ekranında soru sorunca buraya işlenir.",
     rowsSuffix: "satır",
   },
+  activity: {
+    brand: "GÜVENLİK AKTİVİTESİ",
+    title: "Hesap Aktivite Geçmişi",
+    description:
+      "Hesabınızdaki hassas mutasyonların (şifre değişimi, MFA, oturum, profil güncellemesi) audit kaydı. KVKK md. 11 işleme bilgi talep hakkı kapsamında size sunulur.",
+    emptyTitle: "Henüz aktivite kaydı yok.",
+    colTime: "Zaman",
+    colAction: "İşlem",
+    colIp: "IP",
+    linkLabel: "Hesap aktivitelerini gör",
+    linkDescription: "Şifre değişimi, MFA, oturum gibi güvenlik işlemlerinin geçmişi.",
+  },
   scheduledReports: {
     breadcrumb: "ERPAIO · RAPOR",
     title: "Planlı Raporlar",

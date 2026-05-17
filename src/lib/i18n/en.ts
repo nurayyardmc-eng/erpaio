@@ -192,6 +192,18 @@ export const en: Dictionary = {
       "No activity yet for this filter. Activity is recorded when you ask questions in chat.",
     rowsSuffix: "rows",
   },
+  activity: {
+    brand: "SECURITY ACTIVITY",
+    title: "Account Activity Log",
+    description:
+      "Audit trail of sensitive mutations on your account (password changes, MFA, sessions, profile updates). Provided under GDPR Art. 15 / KVKK md. 11 right of access.",
+    emptyTitle: "No activity recorded yet.",
+    colTime: "Time",
+    colAction: "Action",
+    colIp: "IP",
+    linkLabel: "View account activity",
+    linkDescription: "History of security events: password changes, MFA, sessions.",
+  },
   scheduledReports: {
     breadcrumb: "ERPAIO · REPORTS",
     title: "Scheduled Reports",
