@@ -164,6 +164,9 @@ export const en: Dictionary = {
     deleteOk: "Chat deleted",
     deleteFailed: "Action failed",
     untitled: "(Untitled)",
+    exportMd: "Share as Markdown",
+    exportFailed: "Export failed.",
+    exportEmpty: "This chat has no messages yet.",
   },
   login: {
     title: "Sign In",

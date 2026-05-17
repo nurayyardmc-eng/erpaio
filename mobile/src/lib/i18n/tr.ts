@@ -164,6 +164,9 @@ export const tr: Dictionary = {
     deleteOk: "Sohbet silindi",
     deleteFailed: "İşlem başarısız",
     untitled: "(Başlıksız)",
+    exportMd: "Markdown olarak paylaş",
+    exportFailed: "Dışa aktarma başarısız.",
+    exportEmpty: "Bu sohbette henüz mesaj yok.",
   },
   login: {
     title: "Giriş Yap",

@@ -621,6 +621,18 @@ export default function ChatPage() {
                       {isArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
                       {isArchived ? t.chat.unarchive : t.chat.archive}
                     </button>
+                    <button
+                      onClick={() => {
+                        setOpenMenu(null);
+                        // Browser auth cookie included; Content-Disposition triggers download.
+                        window.location.assign(`/api/chat/sessions/${encodeURIComponent(s.id)}/export`);
+                      }}
+                      style={menuItemStyle}
+                      title={t.chat.exportMdTitle}
+                    >
+                      <Download size={14} />
+                      {t.chat.exportMd}
+                    </button>
                     <div style={{ height: 1, background: "rgba(10,10,10,0.06)", margin: "4px 0" }} />
                     <button
                       onClick={() => deleteSession(s.id, s.title)}

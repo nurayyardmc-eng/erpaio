@@ -171,6 +171,9 @@ export interface Dictionary {
     deleteOk: string;
     deleteFailed: string;
     untitled: string;
+    exportMd: string;
+    exportFailed: string;
+    exportEmpty: string;
   };
   login: {
     title: string;

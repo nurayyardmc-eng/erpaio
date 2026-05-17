@@ -471,6 +471,8 @@ export const tr: Dictionary = {
     archive: "Arşivle",
     unarchive: "Arşivden çıkar",
     delete: "Sil",
+    exportMd: "Markdown indir",
+    exportMdTitle: "Sohbeti Markdown dosyası olarak indir (KVKK md. 15 veri taşınabilirlik)",
     pinToastOn: "Sohbet sabitlendi.",
     pinToastOff: "Sabitleme kaldırıldı.",
     archiveToastOn: "Sohbet arşivlendi.",

@@ -3,6 +3,7 @@ import {
   FlatList,
   Modal,
   RefreshControl,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,7 +12,13 @@ import {
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteSession, getSessionsByView, patchSession, type SessionListItem } from "../lib/chat";
+import {
+  deleteSession,
+  exportSessionMarkdown,
+  getSessionsByView,
+  patchSession,
+  type SessionListItem,
+} from "../lib/chat";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
@@ -83,6 +90,24 @@ export default function SessionsScreen({ navigation }: Props) {
     });
     if (!ok) return;
     deleteMutation.mutate(s.id, { onSuccess: () => showToast(t.sessions.deleteOk, "success") });
+  };
+
+  const onExport = async (s: SessionListItem) => {
+    setMenuFor(null);
+    try {
+      const markdown = await exportSessionMarkdown(s.id);
+      if (!markdown) {
+        showToast(t.sessions.exportEmpty, "error");
+        return;
+      }
+      await Share.share({
+        message: markdown,
+        title: s.title ?? t.sessions.untitled,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t.sessions.exportFailed;
+      showToast(msg, "error");
+    }
   };
 
   const renderItem = ({ item }: { item: SessionListItem }) => (
@@ -188,6 +213,9 @@ export default function SessionsScreen({ navigation }: Props) {
               </TouchableOpacity>
               <TouchableOpacity onPress={() => onArchive(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
                 <Text style={styles.sheetText}>{menuFor.archivedAt ? t.sessions.unarchive : t.sessions.archive}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => onExport(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
+                <Text style={styles.sheetText}>{t.sessions.exportMd}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
                 <Text style={[styles.sheetText, { color: colors.error }]}>{t.sessions.delete}</Text>

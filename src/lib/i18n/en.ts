@@ -471,6 +471,8 @@ export const en: Dictionary = {
     unpin: "Unpin",
     archive: "Archive",
     unarchive: "Unarchive",
+    exportMd: "Download Markdown",
+    exportMdTitle: "Download chat as Markdown file (GDPR Art. 20 data portability)",
     delete: "Delete",
     pinToastOn: "Chat pinned.",
     pinToastOff: "Pin removed.",

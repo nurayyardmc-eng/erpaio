@@ -59,6 +59,15 @@ export async function deleteSession(id: string): Promise<void> {
   await api(`/api/chat/sessions/${id}`, { method: "DELETE" });
 }
 
+/**
+ * Sohbet session'ını markdown formatında export et.
+ * Server text/markdown döner; api() raw string'i parse edemeyince string olarak
+ * geri verir. KVKK md. 15 / GDPR Art. 20 data portability.
+ */
+export async function exportSessionMarkdown(id: string): Promise<string> {
+  return api<string>(`/api/chat/sessions/${encodeURIComponent(id)}/export`);
+}
+
 export async function getSessionsByView(view: "active" | "archived" = "active"): Promise<SessionListItem[]> {
   return api<SessionListItem[]>(`/api/chat/sessions?view=${view}`);
 }

@@ -465,6 +465,8 @@ export interface Dictionary {
     archive: string;
     unarchive: string;
     delete: string;
+    exportMd: string;
+    exportMdTitle: string;
     pinToastOn: string;
     pinToastOff: string;
     archiveToastOn: string;
