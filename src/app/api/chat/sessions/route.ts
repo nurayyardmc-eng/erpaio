@@ -1,19 +1,25 @@
+import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
+import { parseQuery } from "@/lib/http/searchParams";
+
+const QuerySchema = z.object({
+  view: z.enum(["active", "archived"]).default("active"),
+});
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const url = new URL(req.url);
-  const view = url.searchParams.get("view") ?? "active"; // active | archived
+  const q = parseQuery(req, QuerySchema);
+  if (q instanceof Response) return q;
 
   const sessions = await prisma.chatSession.findMany({
     where: {
       tenantId: session.user.tenantId,
       userId: session.user.id,
-      archivedAt: view === "archived" ? { not: null } : null,
+      archivedAt: q.view === "archived" ? { not: null } : null,
     },
     orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
     take: 100,

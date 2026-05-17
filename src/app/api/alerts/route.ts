@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
@@ -7,16 +8,32 @@ import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError } from "@/lib/i18n/server";
+import { parseQuery, parseJsonBody } from "@/lib/http/searchParams";
+
+const QuerySchema = z.object({
+  status: z.enum(["open", "acked", "resolved", "all"]).default("open"),
+});
+
+const PostSchema = z.object({
+  type: z.string().min(1).max(80),
+  severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  module: z.string().max(80).optional(),
+});
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status") ?? "open";
+  const q = parseQuery(req, QuerySchema);
+  if (q instanceof Response) return q;
 
   const alerts = await prisma.alert.findMany({
-    where: { tenantId: session.user.tenantId, status },
+    where: {
+      tenantId: session.user.tenantId,
+      ...(q.status !== "all" && { status: q.status }),
+    },
     orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
     take: 50,
   });
@@ -31,13 +48,14 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const body = await req.json();
+  const body = await parseJsonBody(req, PostSchema);
+  if (body instanceof Response) return body;
 
   const alert = await prisma.alert.create({
     data: {
       tenantId: session.user.tenantId,
       type: body.type,
-      severity: body.severity ?? "medium",
+      severity: body.severity,
       title: body.title,
       description: body.description,
       module: body.module,
