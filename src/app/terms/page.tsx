@@ -41,7 +41,7 @@ export default function TermsPage() {
         </Section>
 
         <Section title="4. AI üretimi içerik (sorumluluk reddi)">
-          ERPAIO AI'ı (Claude) doğal dil sorgularını SQL'e çevirir. AI üretimi
+          ERPAIO AI&apos;ı (Claude) doğal dil sorgularını SQL&apos;e çevirir. AI üretimi
           sonuçlar her zaman %100 doğru olmayabilir. <strong>Kritik kararlar
           almadan önce sonuçları doğrulamanız gerekir.</strong> Yanlış SQL üretiminden
           veya buna dayalı kararlardan ERPAIO sorumlu tutulamaz.
@@ -77,7 +77,7 @@ export default function TermsPage() {
         </Section>
 
         <Section title="9. Fikri mülkiyet">
-          ERPAIO'nun yazılımı, prompt'ları, AI modeli, ERP profile'ları (Nebim, SAP vb.
+          ERPAIO&apos;nun yazılımı, prompt&apos;ları, AI modeli, ERP profile&apos;ları (Nebim, SAP vb.
           için hazırlanan bilgi tabanları) bizim fikri mülkiyetimizdir. Hizmeti
           kullanma hakkı verilir, sahiplik aktarılmaz.
         </Section>
@@ -93,7 +93,7 @@ export default function TermsPage() {
         </Section>
 
         <Section title="12. Uygulanacak hukuk ve yetki">
-          Türkiye Cumhuriyeti hukuku uygulanır. İhtilaflar İstanbul Mahkemeleri'nde
+          Türkiye Cumhuriyeti hukuku uygulanır. İhtilaflar İstanbul Mahkemeleri&apos;nde
           görülür.
         </Section>
 

@@ -42,7 +42,9 @@ function ResetPasswordInner() {
   const [ok, setOk] = useState(false);
 
   useEffect(() => {
+    // Sync error/invalid flag with URL token param; runs once on mount and again only if token changes.
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError("Geçersiz link.");
       setTokenInvalid(true);
     }

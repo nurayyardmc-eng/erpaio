@@ -40,6 +40,8 @@ export default function InsightsPage() {
       });
   };
 
+  // Mount-only fetch of connection list; loadConns sets state via async fetch.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(loadConns, []);
 
   const loadInsights = () => {
@@ -61,6 +63,8 @@ export default function InsightsPage() {
       });
   };
 
+  // Reload insights when user picks a different connection; loadInsights hydrates state via fetch.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(loadInsights, [selected]);
 
   return (

@@ -54,7 +54,7 @@ export default function OverviewPage() {
 
       {!loading && data && data.metrics.every((m) => m.latest === null) && (
         <div style={{ marginTop: 40, padding: 20, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, color: "#475569", fontSize: 12 }}>
-          Henüz metrik snapshot yok. Cron job'u beklerken (saatlik 0:00, günlük 06:00) veya{" "}
+          Henüz metrik snapshot yok. Cron job&apos;u beklerken (saatlik 0:00, günlük 06:00) veya{" "}
           <code style={{ color: "#0A0A0A" }}>/api/cron/anomaly-detection</code> manuel tetiklenebilir.
         </div>
       )}

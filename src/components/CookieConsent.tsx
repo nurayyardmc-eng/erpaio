@@ -11,6 +11,8 @@ export default function CookieConsent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const v = localStorage.getItem(CONSENT_KEY);
+    // One-time hydration from localStorage — must run after mount because localStorage isn't available during SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!v) setShow(true);
   }, []);
 

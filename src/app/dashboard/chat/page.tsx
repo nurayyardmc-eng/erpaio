@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { downloadXlsx } from "@/lib/export/xlsx";
-import { detectChartHint, type ChartHint } from "@/lib/charts/detect";
+import { type ChartHint } from "@/lib/charts/detect";
 import MiniChart from "@/components/MiniChart";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
@@ -306,30 +306,6 @@ export default function ChatPage() {
             : m,
         ),
       );
-    }
-  };
-
-  const fetchFollowUps = async (sql: string, rowCount: number, question: string) => {
-    try {
-      const res = await fetch("/api/chat/follow-ups", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, sql, rowCount }),
-      });
-      const data = await res.json();
-      if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-        setMessages((prev) => {
-          const lastIdx = prev.findLastIndex((m) => m.role === "assistant" && m.status === "success");
-          if (lastIdx === -1) return prev;
-          return prev.map((m, i) =>
-            i === lastIdx && m.role === "assistant" && m.status === "success"
-              ? { ...m, followUps: data.suggestions }
-              : m,
-          );
-        });
-      }
-    } catch {
-      // ignore
     }
   };
 
@@ -1016,18 +992,6 @@ export default function ChatPage() {
     </div>
   );
 }
-
-const iconBtn: React.CSSProperties = {
-  background: "transparent",
-  border: "1px solid #E5E7EB",
-  borderRadius: 4,
-  width: 28,
-  height: 28,
-  color: "#475569",
-  fontSize: 14,
-  cursor: "pointer",
-  fontFamily: "inherit",
-};
 
 const iconBtnSmall: React.CSSProperties = {
   background: "transparent",

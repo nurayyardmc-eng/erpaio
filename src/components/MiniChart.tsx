@@ -92,12 +92,16 @@ function PieChart({ hint, rows }: Props) {
   const total = values.reduce((a, b) => a + b.value, 0);
   if (total === 0) return null;
 
-  let acc = 0;
-  const slices = values.map((v) => {
-    const start = acc;
-    acc += (v.value / total) * 360;
-    return { ...v, start, end: acc };
-  });
+  // Build cumulative arc slices via reduce so we don't mutate a let-binding during render.
+  const slices = values.reduce<Array<typeof values[number] & { start: number; end: number }>>(
+    (out, v) => {
+      const start = out.length > 0 ? out[out.length - 1].end : 0;
+      const end = start + (v.value / total) * 360;
+      out.push({ ...v, start, end });
+      return out;
+    },
+    [],
+  );
 
   return (
     <div style={chartBox}>

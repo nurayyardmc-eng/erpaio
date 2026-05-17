@@ -61,6 +61,8 @@ export default function ScheduledReportsPage() {
     });
   };
 
+  // Initial load on mount; refresh reads form.connectionId only to pick a default.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(refresh, []);
   useEffect(() => {
     if (!status) return;

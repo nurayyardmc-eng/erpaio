@@ -16,12 +16,11 @@ export interface HealthScore {
 export async function computeHealthScore(tenantId: string): Promise<HealthScore> {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60_000);
 
-  const [messages, users, distinctDays] = await Promise.all([
+  const [messages, distinctDays] = await Promise.all([
     prisma.chatMessage.findMany({
       where: { session: { tenantId }, createdAt: { gte: since } },
       select: { role: true, success: true, feedback: true, createdAt: true },
     }),
-    prisma.user.count({ where: { tenantId } }),
     prisma.$queryRaw<Array<{ d: Date }>>`
       SELECT DISTINCT DATE("createdAt") AS d
       FROM "ChatMessage" cm
@@ -30,7 +29,6 @@ export async function computeHealthScore(tenantId: string): Promise<HealthScore>
     `,
   ]);
 
-  const totalMessages = messages.length;
   const userMessages = messages.filter((m) => m.role === "user").length;
   const assistantMessages = messages.filter((m) => m.role === "assistant").length;
   const errors = messages.filter((m) => m.role === "assistant" && !m.success).length;

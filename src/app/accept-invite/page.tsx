@@ -30,6 +30,8 @@ function Inner() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // One-shot validation when token changes; intended to sync error state with URL param.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!token) setError("Davet linki geçersiz.");
   }, [token]);
 

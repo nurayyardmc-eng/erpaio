@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { rateLimit } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { childLogger } from "@/lib/observability/logger";

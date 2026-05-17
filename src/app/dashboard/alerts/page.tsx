@@ -44,6 +44,8 @@ export default function AlertsPage() {
       .catch(() => { setError(true); setLoading(false); });
   };
 
+  // Mount-only fetch; load() triggers async setState which is the intended pattern here.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(load, []);
 
   const filtered = alerts.filter((a) =>

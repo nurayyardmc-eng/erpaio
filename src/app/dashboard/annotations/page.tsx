@@ -42,6 +42,8 @@ export default function AnnotationsPage() {
   };
 
   useEffect(() => {
+    // Mount-only initial load; refresh() performs async state hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
   }, []);
 

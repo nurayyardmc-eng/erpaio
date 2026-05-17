@@ -23,9 +23,8 @@ jobs:
         run: npx next typegen
       - name: TypeScript (web)
         run: npx tsc --noEmit
-      # ESLint gate'i pre-commit hook'ta (staged file'lar için zero-warning).
-      # CI'da repo-genel ESLint çağrısı pre-existing 42 errors yüzünden block edici
-      # olur — ayrı bir cleanup pass'ten sonra burada da --max-warnings=0 açılabilir.
+      - name: ESLint (web, zero-warning policy — pre-commit hook ile aynı)
+        run: npx eslint . --max-warnings=0
 
   mobile-typecheck:
     runs-on: ubuntu-latest

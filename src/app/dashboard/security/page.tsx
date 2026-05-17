@@ -111,7 +111,9 @@ export default function SecurityPage() {
   };
 
   useEffect(() => {
+    // Mount-only hydration of MFA state, sessions, and recovery codes via async fetches.
     refresh();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSessions();
     loadRecovery();
   }, []);
@@ -234,6 +236,8 @@ export default function SecurityPage() {
             <div style={{ fontSize: 12, color: "#475569", marginBottom: 12 }}>
               <strong style={{ color: "#0F172A" }}>{t.security.setupStep1}</strong> {t.security.setupStep1Label}
             </div>
+            {/* TOTP QR is a runtime-generated data URL with fixed size; next/image adds no benefit. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={setup.qr} alt={t.security.setupQrAlt} style={{ display: "block", margin: "12px auto", background: "#fff", padding: 8, borderRadius: 8 }} />
             <details style={{ marginBottom: 16 }}>
               <summary style={{ color: "#94A3B8", fontSize: 11, cursor: "pointer" }}>{t.security.setupManualCode}</summary>

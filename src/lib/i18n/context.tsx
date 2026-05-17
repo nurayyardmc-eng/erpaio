@@ -36,6 +36,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const fromCookie = readCookieLocale();
+    // One-time post-mount sync from cookie to avoid SSR hydration mismatch; intentional setState in effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (fromCookie !== locale) setLocaleState(fromCookie);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

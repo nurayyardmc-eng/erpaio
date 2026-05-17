@@ -19,7 +19,6 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import Logo from "@/components/Logo";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 

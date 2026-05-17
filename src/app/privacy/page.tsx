@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 32 }}>Son güncelleme: 2026-05-03</p>
 
         <Section title="1. Genel">
-          ERPAIO ("hizmet", "biz") müşterilerin ERP veritabanlarına Türkçe doğal dil
+          ERPAIO (&quot;hizmet&quot;, &quot;biz&quot;) müşterilerin ERP veritabanlarına Türkçe doğal dil
           arayüzü ve anomaly tespiti sağlayan bir SaaS uygulamasıdır. Bu politika
           KVKK (6698 sayılı Kişisel Verilerin Korunması Kanunu) ve GDPR (EU 2016/679)
           uyumludur.

@@ -36,7 +36,7 @@ export async function GET(
     });
 
     return Response.json({ ok: true, tableCount: tables.length });
-  } catch (err: any) {
+  } catch {
     await prisma.erpConnection.update({
       where: { id },
       data: { status: "error" },

@@ -51,6 +51,8 @@ export default function TeamPage() {
       });
   };
 
+  // Mount-only fetch of team members + invitations; refresh hydrates state asynchronously.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(refresh, []);
   useEffect(() => {
     if (!status) return;

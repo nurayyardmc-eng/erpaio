@@ -61,6 +61,8 @@ export default function CommandPalette() {
           body: new URLSearchParams({ csrfToken, callbackUrl: "/" }),
         });
       } catch {}
+      // Hard navigation after sign-out — intentionally mutating window.location is the standard pattern.
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = "/";
     }},
   ];
@@ -102,6 +104,8 @@ export default function CommandPalette() {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
     } else {
+      // Reset palette state when it closes; intentional sync with `open` prop transitions.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
       setActive(0);
     }

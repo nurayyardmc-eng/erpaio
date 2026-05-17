@@ -39,6 +39,8 @@ export default function SavedQueriesPage() {
   };
 
   useEffect(() => {
+    // Mount-only initial fetch; load() hydrates state asynchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, []);
 

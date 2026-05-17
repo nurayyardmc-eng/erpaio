@@ -37,6 +37,8 @@ function Inner() {
 
   useEffect(() => {
     if (!token) {
+      // Token missing in URL → mark invalid synchronously so the page can render its error state on first paint.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState("err");
       setMsg("Link geçersiz.");
       return;
