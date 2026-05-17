@@ -41,11 +41,10 @@ export default function SessionsScreen({ navigation }: Props) {
     queryFn: () => getSessionsByView(view),
   });
 
-  useFocusEffect(
-    useCallback(() => {
-      sessionsQuery.refetch();
-    }, [view]),
-  );
+  // sessionsQuery.refetch is stable from react-query; depending on `view`
+  // is enough to retrigger when the user switches tabs.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useFocusEffect(useCallback(() => { sessionsQuery.refetch(); }, [view]));
 
   const patchMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof patchSession>[1] }) => patchSession(id, data),
