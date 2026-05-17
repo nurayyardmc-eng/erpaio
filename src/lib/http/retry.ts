@@ -1,8 +1,11 @@
 // HTTP retry decision logic — pure helpers, test-able without a real network.
 //
-// NOTE: Web has a parallel copy at src/lib/http/retry.ts (with tests there).
-// Tests live web-side because vitest can't transform mobile/ files in CI.
-// Keep these two files BYTE-IDENTICAL except for the header.
+// NOTE: Mobile has a parallel copy at mobile/src/lib/retry.ts. They MUST stay
+// in sync (identical pure logic). Reason for duplication: vitest can't transform
+// mobile/ files in CI because mobile/tsconfig.json extends expo/tsconfig.base
+// which only exists in mobile/node_modules. Cross-tree imports also fail
+// because Metro's projectRoot is mobile/. Easiest pragmatic fix: duplicate
+// ~80 lines, accept the maintenance cost.
 //
 // Strategy:
 // - GET retried on: transient errors (5xx, network), 429 honoring Retry-After
