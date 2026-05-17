@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
 const PostSchema = z.object({
   kind: z.enum(["slack", "teams", "webhook"]),
@@ -64,6 +65,17 @@ export async function POST(req: Request) {
     select: { id: true, kind: true, enabled: true },
   });
 
+  const ctx = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "integration.update",
+    target: integration.id,
+    metadata: { kind },
+    ...ctx,
+  });
+
   return Response.json({ integration });
 }
 
@@ -81,5 +93,16 @@ export async function DELETE(req: Request) {
   await prisma.tenantIntegration.deleteMany({
     where: { tenantId: session.user.tenantId, kind },
   });
+
+  const ctx = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "integration.update",
+    metadata: { kind, deleted: true },
+    ...ctx,
+  });
+
   return Response.json({ ok: true });
 }

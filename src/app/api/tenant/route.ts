@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
 const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -64,6 +65,17 @@ export async function PATCH(req: Request) {
       emailEnabled: true,
       alertMinSeverity: true,
     },
+  });
+
+  // Audit trail — değişen alanların adlarını yaz (PII içerik yok, sadece field names)
+  const ctx = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "tenant.update",
+    metadata: { fields: Object.keys(body.data) },
+    ...ctx,
   });
 
   return Response.json(tenant);

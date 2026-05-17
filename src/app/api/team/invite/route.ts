@@ -7,6 +7,7 @@ import { getPlan } from "@/lib/plans";
 import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
 const PostSchema = z.object({
   email: z.string().email(),
@@ -91,6 +92,19 @@ export async function POST(req: Request) {
   });
 
   log.info({ invitationId: invitation.id, role }, "Invitation sent");
+
+  // Audit trail — invite metadata (no PII'siz, email zaten log'da var)
+  const ctx = activityContextFromRequest(req);
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: "team.invite",
+    target: invitation.id,
+    metadata: { invitedEmail: email, role },
+    ...ctx,
+  });
+
   return Response.json({ ok: true, invitationId: invitation.id });
 }
 
