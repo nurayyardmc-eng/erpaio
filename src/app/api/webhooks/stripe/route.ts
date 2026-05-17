@@ -62,7 +62,9 @@ export async function POST(req: Request) {
   const body = await req.text();
   let event;
   try {
-    event = stripe!.webhooks.constructEvent(body, signature, webhookSecret);
+    // Stripe replay tolerance — explicit 300s (default zaten 300s, ama SDK
+    // versiyonu değişince surprise olmasın). Saatler senkron değilse fail eder.
+    event = stripe!.webhooks.constructEvent(body, signature, webhookSecret, 300);
   } catch (err) {
     log.warn({ err }, "Invalid webhook signature");
     return Response.json({ error: "Invalid signature." }, { status: 400 });

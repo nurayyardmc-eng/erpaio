@@ -6,6 +6,10 @@
 // Neden gerek var: GitHub Actions retry'leri ve Vercel timeout-then-reinvocation
 // senaryolarında aynı cron iki kez başlayabilir. Sonuç: duplicate alertler,
 // duplicate email'ler, ERP rate-limit problemi.
+//
+// ⚠ TIMEZONE: Tüm cron schedule'lar UTC. Türkiye UTC+3 ise human-readable
+// saat farkı vardır. Örnek: workflow `cron: '0 9 * * *'` = TR saatiyle 12:00.
+// Workflow yaml'larında human-readable yorum şart (örn: trial-warnings-daily.yml).
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";

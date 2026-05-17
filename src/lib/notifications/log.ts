@@ -6,8 +6,12 @@
 // recordNotification() best-effort: log fail olursa ana flow bloklamaz,
 // console.error ile görünür kalır.
 
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@prisma/client";
+import { childLogger } from "@/lib/observability/logger";
+
+const log = childLogger({ component: "notification-log" });
 
 export type NotificationChannel =
   | "whatsapp"
@@ -50,8 +54,12 @@ export async function recordNotification(input: RecordNotificationInput): Promis
           : Prisma.JsonNull,
       },
     });
-  } catch (e) {
-    console.error("recordNotification failed:", e);
+  } catch (err) {
+    log.error({ err, tenantId: input.tenantId, channel: input.channel }, "recordNotification failed");
+    Sentry.captureException(err, {
+      tags: { component: "notification-log", channel: input.channel },
+      extra: { tenantId: input.tenantId, alertId: input.alertId },
+    });
   }
 }
 
