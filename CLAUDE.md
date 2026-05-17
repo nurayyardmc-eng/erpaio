@@ -82,6 +82,7 @@ vercel --prod --yes      # Manual deploy (sadece /Users/nurayyardimci/erpaio'dan
 - Health: `/api/health` (DB + version)
 - Cron: GitHub Actions (Hobby plan) — hourly anomaly, daily reports, daily watchlists
 - Env vars: Vercel Production (Resend, Anthropic, Sentry, Twilio, Encryption Key)
+- Opsiyonel env: `SYSADMIN_NOTIFY_EMAIL` (comma-separated) — daily cleanup cron son 24h'taki cron başarısızlıklarını tek özet email olarak bu adreslere yollar. Boşsa no-op.
 
 ## Bilinen kısıtlar
 - Vercel Hobby: 100 deploy/gün → toplu commit önerilir

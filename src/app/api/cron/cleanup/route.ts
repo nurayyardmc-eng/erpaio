@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
+import { sendCronHealthDigest } from "@/lib/cron/healthDigest";
 import { childLogger } from "@/lib/observability/logger";
 
 export const runtime = "nodejs";
@@ -155,10 +156,22 @@ export async function GET(req: NextRequest) {
     errorMessage: errors > 0 ? "Partial cleanup — see Sentry" : null,
   });
 
+  // Tail step: cron health digest — son 24h'taki başarısızlıkları sysadmin'e
+  // tek email ile özetler. Best-effort, hata fırlatırsa cleanup'ı bozma.
+  // SYSADMIN_NOTIFY_EMAIL env boşsa no-op.
+  let digestResult: { ok: boolean; failuresFound: number } | null = null;
+  try {
+    digestResult = await sendCronHealthDigest();
+  } catch (err) {
+    log.error({ err }, "Cron health digest failed");
+    Sentry.captureException(err, { tags: { component: "cron-cleanup", subsystem: "health-digest" } });
+  }
+
   return NextResponse.json({
     ok: true,
     totalDeleted,
     results,
+    digest: digestResult,
     durationMs: Date.now() - startedAt,
   });
 }
