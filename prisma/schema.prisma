@@ -36,6 +36,15 @@ model Tenant {
   baselines            AnomalyBaseline[]
   queryCache           QueryCache[]
   consentLogs          ConsentLog[]
+  invitations          Invitation[]
+  scheduledReports     ScheduledReport[]
+  watchlists           Watchlist[]
+  integrations         TenantIntegration[]
+  ipAllowlist          TenantIpAllowlist[]
+  tableEmbeddings      TableEmbedding[]
+  npsResponses         NpsResponse[]
+  customMetrics        CustomMetric[]
+  schemaAnnotations    SchemaAnnotation[]
 }
 
 model User {
@@ -54,11 +63,15 @@ model User {
   lockedUntil      DateTime?
   createdAt        DateTime           @default(now())
   tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  sessions         ChatSession[]
-  apiTokens        ApiToken[]
-  pushTokens       PushToken[]
-  recoveryCodes    MfaRecoveryCode[]
-  consentLogs      ConsentLog[]
+  sessions             ChatSession[]
+  apiTokens            ApiToken[]
+  pushTokens           PushToken[]
+  recoveryCodes        MfaRecoveryCode[]
+  consentLogs          ConsentLog[]
+  emailVerifyTokens    EmailVerificationToken[]
+  passwordResetTokens  PasswordResetToken[]
+  scheduledReports     ScheduledReport[]
+  watchlists           Watchlist[]
 }
 
 model MfaRecoveryCode {
@@ -109,8 +122,12 @@ model ErpConnection {
   status      String       @default("pending")
   lastSync    DateTime?
   createdAt   DateTime     @default(now())
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  schemaCache SchemaCache?
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  schemaCache      SchemaCache?
+  scheduledReports ScheduledReport[]
+  watchlists       Watchlist[]
+  tableEmbeddings  TableEmbedding[]
+  customMetrics    CustomMetric[]
 }
 
 model SchemaCache {
@@ -247,6 +264,8 @@ model EmailVerificationToken {
   usedAt    DateTime?
   createdAt DateTime @default(now())
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
@@ -257,6 +276,8 @@ model PasswordResetToken {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([tokenHash])
   @@index([userId])
@@ -272,6 +293,8 @@ model Invitation {
   expiresAt  DateTime
   acceptedAt DateTime?
   createdAt  DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, email])
   @@index([tokenHash])
@@ -291,7 +314,13 @@ model ScheduledReport {
   lastError    String?
   createdAt    DateTime  @default(now())
 
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
+  @@index([userId])
+  @@index([connectionId])
   @@index([enabled, schedule])
 }
 
@@ -311,7 +340,13 @@ model Watchlist {
   triggeredAt  DateTime?
   createdAt    DateTime  @default(now())
 
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
+  @@index([userId])
+  @@index([connectionId])
   @@index([enabled])
 }
 
@@ -327,6 +362,8 @@ model TenantIntegration {
   lastError     String?
   createdAt     DateTime  @default(now())
 
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([tenantId, kind])
   @@index([tenantId])
 }
@@ -337,6 +374,8 @@ model TenantIpAllowlist {
   cidr      String
   label     String?
   createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, cidr])
 }
@@ -350,6 +389,9 @@ model TableEmbedding {
   text         String
   embeddingHex String
   createdAt    DateTime @default(now())
+
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  connection ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, connectionId, tableName, columnName])
   @@index([tenantId, connectionId])
@@ -366,11 +408,14 @@ model EncryptionKey {
 model NpsResponse {
   id          String   @id @default(cuid())
   tenantId    String
-  userId      String
+  userId      String?
   score       Int
   comment     String?
   promptedAt  DateTime
   respondedAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // userId SetNull — kullanıcı silinse de anket data'sı aggregated analysis için kalır
 
   @@index([tenantId, respondedAt])
 }
@@ -391,8 +436,12 @@ model CustomMetric {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  connection ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
   @@unique([tenantId, key])
   @@index([tenantId, enabled])
+  @@index([connectionId])
 }
 
 model SchemaAnnotation {
@@ -404,6 +453,8 @@ model SchemaAnnotation {
   hidden      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, tableName, columnName])
   @@index([tenantId])
