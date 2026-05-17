@@ -402,6 +402,458 @@ paths:
         "200": { description: Updated }
         "404": { description: Alert not found in tenant }
 
+  /api/chat/sessions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Chat]
+      summary: Sohbet pin/archive/rename
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, maxLength: 200 }
+                pinned: { type: boolean }
+                archivedAt: { type: string, format: date-time, nullable: true }
+      responses:
+        "200": { description: Updated }
+        "404": { description: Not found in tenant }
+    delete:
+      tags: [Chat]
+      summary: Sohbeti sil
+      security:
+        - BearerAuth: []
+      responses:
+        "200": { description: Deleted }
+
+  /api/chat/feedback:
+    patch:
+      tags: [Chat]
+      summary: Mesaj feedback (👍 / 👎)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messageId, feedback]
+              properties:
+                messageId: { type: string }
+                feedback: { type: integer, enum: [1, -1] }
+      responses:
+        "200": { description: Recorded }
+
+  /api/chat/run-sql:
+    post:
+      tags: [Chat]
+      summary: Manuel SQL çalıştır (kullanıcı SQL'i düzenleyip yeniden çalıştırınca)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connectionId, sql]
+              properties:
+                connectionId: { type: string }
+                sql: { type: string }
+                sessionId: { type: string }
+      responses:
+        "200": { description: Result }
+        "400": { description: SQL validation rejected (read-only only) }
+
+  /api/chat/explain:
+    post:
+      tags: [Chat]
+      summary: SQL sonucunu AI ile özetle
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messageId]
+              properties:
+                messageId: { type: string }
+      responses:
+        "200": { description: Explanation }
+
+  /api/scheduled-reports:
+    get:
+      tags: [Scheduled Reports]
+      summary: Planlı raporlar
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: List }
+    post:
+      tags: [Scheduled Reports]
+      summary: Yeni planlı rapor
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, question, connectionId, schedule, emailTo]
+              properties:
+                name: { type: string, maxLength: 120 }
+                question: { type: string, maxLength: 2000 }
+                connectionId: { type: string }
+                schedule: { type: string, enum: [hourly, daily_06, daily_18, weekly_monday, monthly_first] }
+                emailTo: { type: string, format: email }
+      responses:
+        "200": { description: Created }
+    delete:
+      tags: [Scheduled Reports]
+      summary: Planlı raporu sil
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Deleted }
+
+  /api/watchlists:
+    get:
+      tags: [Watchlists]
+      summary: Eşik bazlı izleme listesi
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: List }
+    post:
+      tags: [Watchlists]
+      summary: Yeni watchlist
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, question, connectionId, thresholdOp, thresholdVal]
+              properties:
+                name: { type: string }
+                question: { type: string }
+                connectionId: { type: string }
+                thresholdOp: { type: string, enum: [lt, lte, gt, gte, eq] }
+                thresholdVal: { type: number }
+                emailTo: { type: string, format: email }
+      responses:
+        "200": { description: Created }
+    delete:
+      tags: [Watchlists]
+      summary: Watchlist sil
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Deleted }
+
+  /api/annotations:
+    get:
+      tags: [Annotations]
+      summary: Şema açıklamaları (AI bağlamı için)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: List }
+    put:
+      tags: [Annotations]
+      summary: Tablo/kolon açıklaması ekle/güncelle
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tableName]
+              properties:
+                tableName: { type: string }
+                columnName: { type: string }
+                description: { type: string }
+                hidden: { type: boolean }
+      responses:
+        "200": { description: Upserted }
+    delete:
+      tags: [Annotations]
+      summary: Açıklamayı sil
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: tableName, in: query, required: true, schema: { type: string } }
+        - { name: columnName, in: query, schema: { type: string } }
+      responses:
+        "200": { description: Deleted }
+
+  /api/audit:
+    get:
+      tags: [Audit]
+      summary: Tenant chat history (KVKK md. 11)
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+        - { name: before, in: query, schema: { type: string, format: date-time } }
+        - { name: role, in: query, schema: { type: string, enum: [user, assistant, system] } }
+        - { name: success, in: query, schema: { type: boolean } }
+      responses:
+        "200": { description: Messages + nextCursor }
+
+  /api/integrations:
+    get:
+      tags: [Integrations]
+      summary: Slack/Teams/Webhook entegrasyonları
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: List }
+    post:
+      tags: [Integrations]
+      summary: Entegrasyon ekle/güncelle (endpoint AES-256-GCM ile şifrelenir)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, endpoint]
+              properties:
+                kind: { type: string, enum: [slack, teams, webhook] }
+                endpoint: { type: string, format: uri }
+                secret: { type: string }
+      responses:
+        "200": { description: Saved }
+    delete:
+      tags: [Integrations]
+      summary: Entegrasyon sil
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: kind, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Deleted }
+
+  /api/team:
+    get:
+      tags: [Team]
+      summary: Tenant kullanıcıları + bekleyen davetler
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: Users + invitations }
+    patch:
+      tags: [Team]
+      summary: Kullanıcı rolü değiştir (admin/owner)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, role]
+              properties:
+                userId: { type: string }
+                role: { type: string, enum: [owner, admin, member, viewer] }
+      responses:
+        "200": { description: Updated }
+    delete:
+      tags: [Team]
+      summary: Kullanıcı veya davet sil
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: userId, in: query, schema: { type: string } }
+        - { name: invitationId, in: query, schema: { type: string } }
+      responses:
+        "200": { description: Deleted }
+
+  /api/team/invite:
+    post:
+      tags: [Team]
+      summary: Email ile yeni üye davet et
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+                role: { type: string, enum: [admin, member, viewer], default: member }
+      responses:
+        "200": { description: Invitation created + email sent }
+        "402": { description: Plan user limit aşıldı }
+
+  /api/security/allowlist:
+    get:
+      tags: [Security]
+      summary: IP CIDR allowlist
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: List }
+    post:
+      tags: [Security]
+      summary: Yeni CIDR ekle
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cidr]
+              properties:
+                cidr: { type: string, description: "CIDR notation (192.168.1.0/24)" }
+                label: { type: string }
+      responses:
+        "200": { description: Created }
+    delete:
+      tags: [Security]
+      summary: CIDR sil
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Deleted }
+
+  /api/auth/mfa/setup:
+    post:
+      tags: [MFA]
+      summary: MFA setup başlat (TOTP secret + QR üretir)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Secret + QR data URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret: { type: string }
+                  qr: { type: string, description: "data:image/png base64" }
+                  uri: { type: string }
+        "403": { description: Pro+ plan gerekli }
+    patch:
+      tags: [MFA]
+      summary: 6-haneli TOTP kodu ile MFA'yı aktif et
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, pattern: "^\\d{6}$" }
+      responses:
+        "200": { description: MFA enabled }
+        "400": { description: Code wrong }
+    delete:
+      tags: [MFA]
+      summary: MFA'yı kapat
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: Disabled }
+
+  /api/auth/mfa/recovery-codes:
+    get:
+      tags: [MFA]
+      summary: Recovery code status (total, remaining)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  remaining: { type: integer }
+                  generatedAt: { type: string, format: date-time, nullable: true }
+    post:
+      tags: [MFA]
+      summary: Yeni recovery code seti üret (10 kod, bcrypt hash'lenir, plaintext yalnızca BU response'ta görünür)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Plaintext codes (ONCE)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  codes:
+                    type: array
+                    items: { type: string, example: "ABCD-2345" }
+                    minItems: 10
+                    maxItems: 10
+
+  /api/auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Şifre sıfırlama (forgot-password e-postasındaki token ile)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string, minLength: 8 }
+                password: { type: string, minLength: 8, maxLength: 200 }
+      responses:
+        "200": { description: Şifre güncellendi + tüm API token'lar revoke edildi }
+        "400": { description: Token geçersiz veya süresi dolmuş }
+        "429": { description: Rate limited }
+
+  /api/auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Email doğrulama (signup email'indeki token ile)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string, minLength: 8 }
+      responses:
+        "200": { description: Email verified }
+        "400": { description: Token geçersiz/expired }
+
+  /api/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Şifre sıfırlama email'i gönder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200": { description: Email gönderildi (kullanıcı yoksa da 200 — enumeration prevention) }
+        "429": { description: Rate limited (IP başına saatte 3) }
+
 components:
   securitySchemes:
     BearerAuth:
