@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/dual";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody, parseQuery } from "@/lib/http/searchParams";
 
 const BodySchema = z.object({
   token: z.string().min(8).max(256),
@@ -17,10 +18,10 @@ export async function POST(req: Request) {
   if ("error" in result) return result.error;
   const { user } = result;
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { token, platform, deviceName } = body.data;
+  const { token, platform, deviceName } = body;
 
   await prisma.pushToken.upsert({
     where: { token },
@@ -31,17 +32,18 @@ export async function POST(req: Request) {
   return Response.json({ ok: true });
 }
 
+const DeleteQuery = z.object({ token: z.string().min(8).max(256) });
+
 export async function DELETE(req: Request) {
   const result = await requireAuth(req);
   if ("error" in result) return result.error;
   const { user } = result;
 
-  const { searchParams } = new URL(req.url);
-  const token = searchParams.get("token");
-  if (!token) return Response.json({ error: "token gerekli." }, { status: 400 });
+  const q = parseQuery(req, DeleteQuery);
+  if (q instanceof Response) return q;
 
   await prisma.pushToken.deleteMany({
-    where: { token, userId: user.id },
+    where: { token: q.token, userId: user.id },
   });
 
   return Response.json({ ok: true });

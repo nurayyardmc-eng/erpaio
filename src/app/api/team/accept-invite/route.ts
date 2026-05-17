@@ -4,6 +4,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
+import { jsonError, localizedError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 
 const BodySchema = z.object({
   token: z.string().min(8),
@@ -15,20 +17,23 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { token, password, name } = body.data;
+  const { token, password, name } = body;
   const tokenHash = createHash("sha256").update(token).digest("hex");
 
   const inv = await prisma.invitation.findUnique({ where: { tokenHash } });
   if (!inv || inv.acceptedAt || inv.expiresAt < new Date()) {
-    return Response.json({ error: "Davet geçersiz veya süresi dolmuş." }, { status: 400 });
+    return jsonError(req, "auth.invalidToken", 400);
   }
 
   const existing = await prisma.user.findUnique({ where: { email: inv.email } });
   if (existing) {
-    return Response.json({ error: "Bu email zaten kayıtlı." }, { status: 409 });
+    return localizedError(req, 409, {
+      tr: "Bu email zaten kayıtlı.",
+      en: "This email is already registered.",
+    });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);

@@ -7,6 +7,8 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { recordConsent, consentContextFromRequest } from "@/lib/auth/consent";
+import { jsonError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 
 const BodySchema = z.object({
   email: z.string().email().max(200),
@@ -38,22 +40,17 @@ export async function POST(req: Request) {
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const limit = await rateLimit(ip, SIGNUP_LIMIT);
-  if (!limit.success) {
-    return Response.json(
-      { error: "Çok fazla kayıt denemesi. 1 saat sonra tekrar deneyin." },
-      { status: 429 },
-    );
-  }
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  const parsedBody = await parseJsonBody(req, BodySchema);
+  if (parsedBody instanceof Response) return parsedBody;
 
-  const { email, password, name, tenantName } = body.data;
+  const { email, password, name, tenantName } = parsedBody;
   const log = childLogger({ component: "signup", email });
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return Response.json({ error: "Bu email zaten kayıtlı." }, { status: 409 });
+    return jsonError(req, "auth.emailTaken", 409);
   }
 
   let slug = slugify(tenantName);
@@ -89,7 +86,7 @@ export async function POST(req: Request) {
   // KVKK/Privacy/Terms onayını append-only consent log'a yaz (md. 5 + md. 7).
   const { ipAddress, userAgent } = consentContextFromRequest(req);
   const userId = tenant.users[0].id;
-  const docVer = body.data.documentVer ?? "v1";
+  const docVer = parsedBody.documentVer ?? "v1";
   await Promise.all([
     recordConsent({
       userId,

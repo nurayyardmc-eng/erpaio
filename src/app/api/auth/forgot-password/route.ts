@@ -5,6 +5,8 @@ import { rateLimit } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
+import { jsonError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 
 const BodySchema = z.object({ email: z.string().email() });
 const LIMIT = { prefix: "forgot-pw", max: 3, windowMs: 60 * 60_000 };
@@ -15,14 +17,12 @@ export async function POST(req: Request) {
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const limit = await rateLimit(ip, LIMIT);
-  if (!limit.success) {
-    return Response.json({ error: "Çok fazla deneme." }, { status: 429 });
-  }
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: "Geçersiz email." }, { status: 400 });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { email } = body.data;
+  const { email } = body;
   const log = childLogger({ component: "forgot-password", email });
 
   const user = await prisma.user.findUnique({ where: { email } });

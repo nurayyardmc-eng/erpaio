@@ -5,6 +5,8 @@ import { generateApiToken, hashApiToken } from "@/lib/auth/dual";
 import { rateLimit } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
+import { jsonError, serverMessages } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 
 const BodySchema = z.object({
   email: z.string().email(),
@@ -23,8 +25,9 @@ export async function POST(req: Request) {
     ?? "unknown";
   const limit = await rateLimit(ip, LOGIN_LIMIT);
   if (!limit.success) {
+    // Retry-After header'ı korumak için manuel response (jsonError header desteklemiyor)
     return Response.json(
-      { error: "Çok fazla deneme. Lütfen bekleyin." },
+      { error: serverMessages(req).api.rateLimited },
       {
         status: 429,
         headers: { "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)) },
@@ -32,22 +35,22 @@ export async function POST(req: Request) {
     );
   }
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return Response.json({ error: body.error.issues[0]?.message ?? "Geçersiz veri" }, { status: 400 });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { email, password, deviceName } = body.data;
+  const { email, password, deviceName } = body;
   const log = childLogger({ component: "mobile-login", email });
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     log.info({ event: "login_failed", reason: "no_user" }, "Login failed");
-    return Response.json({ error: "Email veya şifre hatalı." }, { status: 401 });
+    return jsonError(req, "auth.invalidCredentials", 401);
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
     log.info({ event: "login_failed", reason: "bad_password" }, "Login failed");
-    return Response.json({ error: "Email veya şifre hatalı." }, { status: 401 });
+    return jsonError(req, "auth.invalidCredentials", 401);
   }
 
   const raw = generateApiToken();
