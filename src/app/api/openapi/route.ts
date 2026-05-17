@@ -3,7 +3,10 @@ import path from "node:path";
 import { parse as parseYaml } from "yaml";
 
 export const runtime = "nodejs";
-export const dynamic = "force-static";
+// force-dynamic: post-deploy YAML değişikliklerini anında yansıt (ISR cache
+// yerine her request'te oku). Cache-Control: public, max-age=300 ile edge
+// cache 5 dakika tutar — bu kabul edilebilir staleness.
+export const dynamic = "force-dynamic";
 
 /**
  * Public OpenAPI 3.0 spec — third-party developers + Postman/Insomnia import için.

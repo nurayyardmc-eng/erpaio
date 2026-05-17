@@ -205,7 +205,8 @@ model Alert {
   evidence    Json?
   status      String   @default("open")
   createdAt   DateTime @default(now())
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  notificationLogs  NotificationLog[]
 }
 
 model AnomalyBaseline {
@@ -508,7 +509,8 @@ model QueryCache {
 model NotificationLog {
   id        String   @id @default(cuid())
   tenantId  String
-  alertId   String? // bağlı alert (varsa)
+  alertId   String? // bağlı alert (varsa); Alert silinince SetNull ki delivery
+                    // log audit'i kaybolmasın
   channel   String // "whatsapp" | "email" | "push" | "slack" | "teams" | "webhook"
   status    String // "sent" | "failed" | "skipped"
   recipient String? // email adresi, whatsapp:+90..., token suffix vb.
@@ -517,6 +519,7 @@ model NotificationLog {
   createdAt DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  alert  Alert? @relation(fields: [alertId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, createdAt])
   @@index([channel, status, createdAt])

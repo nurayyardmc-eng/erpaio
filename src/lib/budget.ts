@@ -3,6 +3,17 @@ import { childLogger } from "@/lib/observability/logger";
 
 const log = childLogger({ component: "budget" });
 
+/**
+ * Pre-flight budget check.
+ *
+ * RACE WINDOW: SELECT → caller's AI call → recordUsage(). Concurrent in-flight
+ * requests can all pass the check before any of them records usage, leading
+ * to over-spend bounded by `concurrent_reqs × estimatedTokens`. Per-tenant
+ * concurrency is rate-limited (CHAT: 30/min), so worst case ≈ 150k tokens
+ * over a 2M monthly budget (7%). Accepted trade-off vs. user-facing UX of
+ * pre-flight rejection. recordUsage() uses atomic increment so the counter
+ * itself never loses writes.
+ */
 export async function checkAndConsume(
   tenantId: string,
   estimatedTokens: number,
@@ -16,8 +27,9 @@ export async function checkAndConsume(
   const now = new Date();
   const resetAge = now.getTime() - tenant.budgetResetAt.getTime();
   if (resetAge > 30 * 24 * 60 * 60_000) {
-    await prisma.tenant.update({
-      where: { id: tenantId },
+    // Atomik reset — başka concurrent request reset'i tekrarlamasın
+    await prisma.tenant.updateMany({
+      where: { id: tenantId, budgetResetAt: tenant.budgetResetAt },
       data: { monthlyTokensUsed: 0, budgetResetAt: now },
     });
     log.info({ tenantId }, "Token budget auto-reset (>30d)");
