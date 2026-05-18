@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteAnnotation, getAnnotations, type Annotation } from "../lib/dashboard";
+import { shareJson } from "../lib/share";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -79,15 +80,37 @@ export default function AnnotationsScreen({ navigation }: Props) {
         description={t.annotations.description}
         onBack={() => navigation.goBack()}
         right={
-          <TouchableOpacity
-            onPress={() => navigation.navigate("AnnotationForm")}
-            style={styles.addBtn}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel={t.annotations.addA11y}
-          >
-            <Text style={styles.addBtnText}>{t.annotations.addLabel}</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: spacing(2), alignItems: "center" }}>
+            {/* Track JJJ — annotations share (schema config backup/migration). */}
+            {(q.data?.annotations.length ?? 0) > 0 && (
+              <TouchableOpacity
+                onPress={async () => {
+                  const ts = new Date().toISOString().slice(0, 10);
+                  try {
+                    await shareJson(`erpaio-annotations-${ts}.json`, {
+                      count: q.data!.annotations.length,
+                      annotations: q.data!.annotations,
+                    });
+                  } catch {
+                    showToast(t.common.error, "error");
+                  }
+                }}
+                style={styles.exportBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.exportBtnText}>↓</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={() => navigation.navigate("AnnotationForm")}
+              style={styles.addBtn}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel={t.annotations.addA11y}
+            >
+              <Text style={styles.addBtnText}>{t.annotations.addLabel}</Text>
+            </TouchableOpacity>
+          </View>
         }
       />
       {q.isLoading ? (
@@ -154,6 +177,15 @@ const styles = StyleSheet.create({
     marginLeft: spacing(2),
   },
   addBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "700" },
   menuBtn: { paddingHorizontal: spacing(2), paddingVertical: spacing(1) },
   menuDots: { color: colors.textMuted, fontSize: 22, fontWeight: "300" },
 
