@@ -60,6 +60,12 @@ export interface Dictionary {
     profileSavingBtn: string;
     profileSavedToast: string;
     profileSaveFailedToast: string;
+    avatarUpload: string;
+    avatarChange: string;
+    avatarRemove: string;
+    avatarPermissionDenied: string;
+    avatarPickFailed: string;
+    avatarTooLarge: string;
     emailChangeBtn: string;
     emailChangeHint: string;
     emailChangeFieldNew: string;

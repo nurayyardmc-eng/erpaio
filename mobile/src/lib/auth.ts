@@ -5,6 +5,7 @@ export interface MobileUser {
   id: string;
   email: string;
   name: string | null;
+  avatarBase64?: string | null;
   role: string;
   tenantId: string;
 }
@@ -57,13 +58,14 @@ export async function getMe(): Promise<{ user: MobileUser } | null> {
 }
 
 /**
- * Profil güncelleme — şu anda yalnızca isim. Avatar mobile'da henüz desteklenmiyor
- * (expo-image-picker dep gerekir; ileride ayrı track).
- * Server `recordActivity('profile.update')` audit log entry yazar.
+ * Profil güncelleme — name + avatar (Track PPPP).
+ * Server `recordActivity('profile.update' veya 'profile.avatar.update')` audit
+ * yazar. `avatarBase64` data-URI formatında olmalı (`data:image/...`); null
+ * gönderirsek avatar kaldırılır; undefined → değişiklik yok.
  *
  * Server response { user: { id, email, name, avatarBase64 } } — role + tenantId
  * stripped olduğundan tam MobileUser dönmez. Caller success sonrası getMe()
- * çağrısı yapabilir (full hydrate) ya da yalnızca yeni name değerini kullanabilir.
+ * çağrısı yapabilir (full hydrate).
  */
 export interface ProfileUpdateResponse {
   id: string;
@@ -72,7 +74,12 @@ export interface ProfileUpdateResponse {
   avatarBase64?: string | null;
 }
 
-export async function updateMyProfile(input: { name: string | null }): Promise<ProfileUpdateResponse> {
+export interface ProfileUpdateInput {
+  name?: string | null;
+  avatarBase64?: string | null;
+}
+
+export async function updateMyProfile(input: ProfileUpdateInput): Promise<ProfileUpdateResponse> {
   const res = await api<{ user: ProfileUpdateResponse }>("/api/me", {
     method: "PATCH",
     body: input,

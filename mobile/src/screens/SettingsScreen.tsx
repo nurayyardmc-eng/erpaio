@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Linking,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
@@ -414,7 +416,11 @@ function ProfileSection() {
   const meQuery = useQuery({ queryKey: ["me-profile"], queryFn: getMe });
 
   const [draftName, setDraftName] = useState<string | null>(null);
+  // null = avatar değişikliği yok (server değeri kullanılır); string = yeni base64;
+  // "" sentinel = avatar kaldır (PATCH null gönder).
+  const [draftAvatar, setDraftAvatar] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pickingImage, setPickingImage] = useState(false);
 
   // Sync server'dan gelen current isim ile draft (kullanıcı edit etmediyse).
   useEffect(() => {
@@ -427,15 +433,74 @@ function ProfileSection() {
   if (meQuery.isLoading || !meQuery.data) return null;
   const currentName = meQuery.data.user.name ?? "";
   const email = meQuery.data.user.email;
-  const dirty = draftName !== null && draftName.trim() !== currentName.trim();
+  const currentAvatar = meQuery.data.user.avatarBase64 ?? null;
+  const displayedAvatar = draftAvatar !== null
+    ? (draftAvatar === "" ? null : draftAvatar)
+    : currentAvatar;
+  const nameDirty = draftName !== null && draftName.trim() !== currentName.trim();
+  const avatarDirty = draftAvatar !== null;
+  const dirty = nameDirty || avatarDirty;
+
+  const pickAvatar = async () => {
+    if (pickingImage || saving) return;
+    setPickingImage(true);
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        showToast(t.settings.avatarPermissionDenied, "error");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.6,
+        // Base64'ü picker direkt sağlasın — file-system reads gerektirmez,
+        // server max 500KB base64 (≈370KB raw) cap'i quality 0.6 + aspect 1:1
+        // çoğu fotoda altında kalır.
+        base64: true,
+      });
+      if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+      if (!asset.base64) {
+        showToast(t.settings.avatarPickFailed, "error");
+        return;
+      }
+      const mime = asset.mimeType ?? "image/jpeg";
+      const dataUri = `data:${mime};base64,${asset.base64}`;
+      // Server cap'i 500_000 char base64. Quality 0.6 ile genelde altında
+      // kalır ama büyük fotolarda guard koyalım.
+      if (dataUri.length > 500_000) {
+        showToast(t.settings.avatarTooLarge, "error");
+        return;
+      }
+      setDraftAvatar(dataUri);
+    } catch {
+      showToast(t.settings.avatarPickFailed, "error");
+    } finally {
+      setPickingImage(false);
+    }
+  };
+
+  const removeAvatar = () => {
+    setDraftAvatar("");
+  };
 
   const save = async () => {
     if (!dirty || saving) return;
     setSaving(true);
     try {
-      const trimmed = (draftName ?? "").trim();
-      await updateMyProfile({ name: trimmed.length > 0 ? trimmed : null });
+      const input: { name?: string | null; avatarBase64?: string | null } = {};
+      if (nameDirty) {
+        const trimmed = (draftName ?? "").trim();
+        input.name = trimmed.length > 0 ? trimmed : null;
+      }
+      if (avatarDirty) {
+        input.avatarBase64 = draftAvatar === "" ? null : draftAvatar;
+      }
+      await updateMyProfile(input);
       showToast(t.settings.profileSavedToast, "success");
+      setDraftAvatar(null);
       // me-profile + me-role tüm getMe consumer'larını refresh
       void qc.invalidateQueries({ queryKey: ["me-profile"] });
       void qc.invalidateQueries({ queryKey: ["me-role"] });
@@ -452,6 +517,31 @@ function ProfileSection() {
 
   return (
     <Section title={t.settings.sectionProfile}>
+      <View style={styles.avatarRow}>
+        <View style={styles.avatarWrap}>
+          {displayedAvatar ? (
+            <Image source={{ uri: displayedAvatar }} style={styles.avatarImg} />
+          ) : (
+            <View style={[styles.avatarImg, styles.avatarPlaceholder]}>
+              <Text style={styles.avatarInitial}>
+                {(currentName.trim() || email).charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+        </View>
+        <View style={{ flex: 1, marginLeft: spacing(3) }}>
+          <TouchableOpacity onPress={pickAvatar} disabled={pickingImage || saving} activeOpacity={0.7}>
+            <Text style={styles.avatarBtn}>
+              {pickingImage ? "..." : (displayedAvatar ? t.settings.avatarChange : t.settings.avatarUpload)}
+            </Text>
+          </TouchableOpacity>
+          {displayedAvatar && (
+            <TouchableOpacity onPress={removeAvatar} disabled={pickingImage || saving} activeOpacity={0.7}>
+              <Text style={styles.avatarBtnSecondary}>{t.settings.avatarRemove}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
       <Field label={t.settings.fieldProfileEmail}>
         <Text
           selectable
@@ -1023,6 +1113,46 @@ const styles = StyleSheet.create({
     marginTop: spacing(2),
   },
   profileSaveBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  avatarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing(3),
+  },
+  avatarWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    overflow: "hidden",
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+  },
+  avatarImg: { width: "100%", height: "100%" },
+  avatarPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bgSubtle,
+  },
+  avatarInitial: {
+    color: colors.textMuted,
+    fontFamily: fontSerif,
+    fontSize: 28,
+    fontWeight: "400",
+  },
+  avatarBtn: {
+    color: colors.brand,
+    fontFamily: font,
+    fontSize: 13,
+    fontWeight: "600",
+    paddingVertical: spacing(1),
+  },
+  avatarBtnSecondary: {
+    color: colors.textSubtle,
+    fontFamily: font,
+    fontSize: 12,
+    fontWeight: "500",
+    paddingVertical: spacing(1),
+  },
   usageBadge: {
     paddingHorizontal: spacing(2),
     paddingVertical: 3,
