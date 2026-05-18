@@ -62,6 +62,11 @@ export default function WatchlistsScreen({ navigation }: Props) {
     toggleMutation.mutate({ id: w.id, enabled: !w.enabled });
   };
 
+  const onEdit = (w: Watchlist) => {
+    setMenuFor(null);
+    navigation.navigate("WatchlistForm", { editWatchlist: w });
+  };
+
   const renderItem = ({ item }: { item: Watchlist }) => (
     <View style={styles.card}>
       <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: spacing(1.5) }}>
@@ -136,6 +141,13 @@ export default function WatchlistsScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setMenuFor(null)}>
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.name}</Text>
+              <TouchableOpacity
+                onPress={() => onEdit(menuFor)}
+                style={styles.sheetItem}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.sheetText}>{t.watchlists.editBtn}</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => onToggle(menuFor)}
                 style={styles.sheetItem}

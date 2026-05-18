@@ -11,18 +11,18 @@ import {
   View,
 } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createWatchlist, getConnections, type CreateWatchlistInput } from "../lib/dashboard";
+import { createWatchlist, getConnections, updateWatchlist, type CreateWatchlistInput } from "../lib/dashboard";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n/context";
 import { apiErrorMessage } from "../lib/apiError";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
 
-interface Props {
+type Props = NativeStackScreenProps<MoreStackParamList, "WatchlistForm"> & {
   navigation: NativeStackNavigationProp<MoreStackParamList, "WatchlistForm">;
-}
+};
 
 const OPS: Array<{ id: CreateWatchlistInput["thresholdOp"]; label: string }> = [
   { id: "lt", label: "<" },
@@ -32,40 +32,64 @@ const OPS: Array<{ id: CreateWatchlistInput["thresholdOp"]; label: string }> = [
   { id: "eq", label: "=" },
 ];
 
-export default function WatchlistFormScreen({ navigation }: Props) {
+export default function WatchlistFormScreen({ navigation, route }: Props) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const connsQuery = useQuery({ queryKey: ["connections"], queryFn: getConnections });
+  const editWatchlist = route.params?.editWatchlist;
+  const isEdit = !!editWatchlist;
+  // Edit mode'da connection değiştirilemez (PATCH şeması connectionId kabul
+  // etmiyor). Create için connection chooser şart.
+  const connsQuery = useQuery({
+    queryKey: ["connections"],
+    queryFn: getConnections,
+    enabled: !isEdit,
+  });
 
-  const [name, setName] = useState("");
-  const [question, setQuestion] = useState("");
+  const [name, setName] = useState(editWatchlist?.name ?? "");
+  const [question, setQuestion] = useState(editWatchlist?.question ?? "");
   const [connectionId, setConnectionId] = useState<string>("");
-  const [thresholdOp, setThresholdOp] = useState<CreateWatchlistInput["thresholdOp"]>("lt");
-  const [thresholdVal, setThresholdVal] = useState("");
-  const [emailTo, setEmailTo] = useState("");
+  const [thresholdOp, setThresholdOp] = useState<CreateWatchlistInput["thresholdOp"]>(
+    (editWatchlist?.thresholdOp as CreateWatchlistInput["thresholdOp"]) ?? "lt",
+  );
+  const [thresholdVal, setThresholdVal] = useState(
+    editWatchlist?.thresholdVal != null ? String(editWatchlist.thresholdVal) : "",
+  );
+  const [emailTo, setEmailTo] = useState(editWatchlist?.emailTo ?? "");
   const [error, setError] = useState<string | null>(null);
 
   const activeConns = (connsQuery.data ?? []).filter((c) => c.status === "active");
 
-  // Default-select first active connection. Guarded — runs once per mount.
+  // Default-select first active connection (create-only). Guarded — runs once.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!connectionId && activeConns[0]) setConnectionId(activeConns[0].id);
-  }, [activeConns, connectionId]);
+    if (!isEdit && !connectionId && activeConns[0]) setConnectionId(activeConns[0].id);
+  }, [activeConns, connectionId, isEdit]);
 
-  const mutation = useMutation({
-    mutationFn: () =>
-      createWatchlist({
+  const mutation = useMutation<void, Error>({
+    mutationFn: async () => {
+      const valNum = parseFloat(thresholdVal);
+      if (isEdit && editWatchlist) {
+        await updateWatchlist(editWatchlist.id, {
+          name: name.trim(),
+          question: question.trim(),
+          thresholdOp,
+          thresholdVal: valNum,
+          emailTo: emailTo.trim() ? emailTo.trim() : null,
+        });
+        return;
+      }
+      await createWatchlist({
         name: name.trim(),
         question: question.trim(),
         connectionId,
         thresholdOp,
-        thresholdVal: parseFloat(thresholdVal),
+        thresholdVal: valNum,
         emailTo: emailTo.trim() || undefined,
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watchlists"] });
-      showToast(t.watchlistForm.createdToast, "success");
+      showToast(isEdit ? t.watchlistForm.updatedToast : t.watchlistForm.createdToast, "success");
       navigation.goBack();
     },
     onError: (e: Error) => setError(apiErrorMessage(e, t)),
@@ -73,7 +97,7 @@ export default function WatchlistFormScreen({ navigation }: Props) {
 
   const onSubmit = () => {
     setError(null);
-    if (!name.trim() || !question.trim() || !connectionId) {
+    if (!name.trim() || !question.trim() || (!isEdit && !connectionId)) {
       setError(t.watchlistForm.errRequired);
       return;
     }
@@ -88,9 +112,9 @@ export default function WatchlistFormScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScreenHeader
-        brand={t.watchlistForm.brand}
-        title={t.watchlistForm.title}
-        description={t.watchlistForm.description}
+        brand={isEdit ? t.watchlistForm.editBrand : t.watchlistForm.brand}
+        title={isEdit ? t.watchlistForm.editTitle : t.watchlistForm.title}
+        description={isEdit ? t.watchlistForm.editDescription : t.watchlistForm.description}
         onBack={() => navigation.goBack()}
       />
       <KeyboardAvoidingView
@@ -128,29 +152,31 @@ export default function WatchlistFormScreen({ navigation }: Props) {
             />
           </Field>
 
-          <Field label={t.watchlistForm.fieldConnection}>
-            {activeConns.length === 0 ? (
-              <Text style={styles.muted}>{t.watchlistForm.noActiveConnections}</Text>
-            ) : (
-              <View style={styles.chipRow}>
-                {activeConns.map((c) => {
-                  const active = connectionId === c.id;
-                  return (
-                    <TouchableOpacity
-                      key={c.id}
-                      onPress={() => setConnectionId(c.id)}
-                      style={[styles.chip, active && styles.chipActive]}
-                      activeOpacity={0.7}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: active }}
-                    >
-                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{c.dbName}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-          </Field>
+          {!isEdit && (
+            <Field label={t.watchlistForm.fieldConnection}>
+              {activeConns.length === 0 ? (
+                <Text style={styles.muted}>{t.watchlistForm.noActiveConnections}</Text>
+              ) : (
+                <View style={styles.chipRow}>
+                  {activeConns.map((c) => {
+                    const active = connectionId === c.id;
+                    return (
+                      <TouchableOpacity
+                        key={c.id}
+                        onPress={() => setConnectionId(c.id)}
+                        style={[styles.chip, active && styles.chipActive]}
+                        activeOpacity={0.7}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{c.dbName}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </Field>
+          )}
 
           <Field label={t.watchlistForm.fieldOperator}>
             <View style={styles.chipRow}>
@@ -207,8 +233,8 @@ export default function WatchlistFormScreen({ navigation }: Props) {
 
           <TouchableOpacity
             onPress={onSubmit}
-            disabled={mutation.isPending || activeConns.length === 0}
-            style={[styles.submitBtn, (mutation.isPending || activeConns.length === 0) && { opacity: 0.5 }]}
+            disabled={mutation.isPending || (!isEdit && activeConns.length === 0)}
+            style={[styles.submitBtn, (mutation.isPending || (!isEdit && activeConns.length === 0)) && { opacity: 0.5 }]}
             activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel={t.watchlistForm.submitA11y}

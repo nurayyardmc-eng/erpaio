@@ -363,6 +363,7 @@ export const tr: Dictionary = {
     disableBtn: "Devre dışı bırak",
     enabledToast: "Watchlist etkinleştirildi",
     disabledToast: "Watchlist devre dışı bırakıldı",
+    editBtn: "Düzenle",
   },
   watchlistForm: {
     brand: "ERPAIO · YENİ WATCHLIST",
@@ -389,6 +390,10 @@ export const tr: Dictionary = {
     errInvalidThreshold: "Eşik değer geçerli bir sayı olmalı.",
     submitA11y: "Watchlist'i kaydet",
     createdToast: "Watchlist oluşturuldu",
+    editBrand: "ERPAIO · WATCHLIST DÜZENLE",
+    editTitle: "Watchlist Düzenle",
+    editDescription: "Eşik, soru ve email alıcısını güncelleyin. Bağlantı değiştirilemez.",
+    updatedToast: "Watchlist güncellendi",
   },
   scheduledReports: {
     brand: "ERPAIO · RAPORLAR",

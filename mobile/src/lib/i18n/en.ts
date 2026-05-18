@@ -363,6 +363,7 @@ export const en: Dictionary = {
     disableBtn: "Disable",
     enabledToast: "Watchlist enabled",
     disabledToast: "Watchlist disabled",
+    editBtn: "Edit",
   },
   watchlistForm: {
     brand: "ERPAIO · NEW WATCHLIST",
@@ -389,6 +390,10 @@ export const en: Dictionary = {
     errInvalidThreshold: "Threshold value must be a valid number.",
     submitA11y: "Save watchlist",
     createdToast: "Watchlist created",
+    editBrand: "ERPAIO · EDIT WATCHLIST",
+    editTitle: "Edit Watchlist",
+    editDescription: "Update threshold, question, and email recipient. Connection cannot be changed.",
+    updatedToast: "Watchlist updated",
   },
   scheduledReports: {
     brand: "ERPAIO · REPORTS",

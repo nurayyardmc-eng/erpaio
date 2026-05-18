@@ -369,6 +369,7 @@ export interface Dictionary {
     disableBtn: string;
     enabledToast: string;
     disabledToast: string;
+    editBtn: string;
   };
   watchlistForm: {
     brand: string;
@@ -395,6 +396,10 @@ export interface Dictionary {
     errInvalidThreshold: string;
     submitA11y: string;
     createdToast: string;
+    editBrand: string;
+    editTitle: string;
+    editDescription: string;
+    updatedToast: string;
   };
   scheduledReports: {
     brand: string;

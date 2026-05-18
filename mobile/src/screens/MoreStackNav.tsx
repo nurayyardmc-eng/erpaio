@@ -31,7 +31,7 @@ export type MoreStackParamList = {
   Annotations: undefined;
   AnnotationForm: undefined;
   Watchlists: undefined;
-  WatchlistForm: undefined;
+  WatchlistForm: { editWatchlist?: import("../lib/dashboard").Watchlist } | undefined;
   Insights: undefined;
   ScheduledReports: undefined;
   ScheduledReportForm: undefined;
