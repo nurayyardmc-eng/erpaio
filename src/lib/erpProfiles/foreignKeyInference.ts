@@ -12,7 +12,8 @@ export interface InferredFk {
 const JOIN_RX =
   /\bJOIN\s+(?:dbo\.)?\[?([\w]+)\]?\s+(?:[\w]+\s+)?ON\s+\[?([\w]+)\]?\.\[?([\w]+)\]?\s*=\s*\[?([\w]+)\]?\.\[?([\w]+)\]?/gi;
 
-function extractJoins(sql: string): Array<{ a: string; aCol: string; b: string; bCol: string }> {
+// Exported for test (Track GGGG). Pure regex parser, no side effects.
+export function extractJoins(sql: string): Array<{ a: string; aCol: string; b: string; bCol: string }> {
   const out: Array<{ a: string; aCol: string; b: string; bCol: string }> = [];
   let m;
   while ((m = JOIN_RX.exec(sql)) !== null) {
@@ -57,7 +58,8 @@ export async function inferForeignKeys(
   return result;
 }
 
-function canonicalize(j: { a: string; aCol: string; b: string; bCol: string }): {
+// Exported for test (Track GGGG). Pure deterministic ordering.
+export function canonicalize(j: { a: string; aCol: string; b: string; bCol: string }): {
   fromTable: string;
   fromColumn: string;
   toTable: string;
