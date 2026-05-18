@@ -23,6 +23,9 @@ const ONE_DAY_MS = 24 * 60 * 60_000;
  * - Alert (resolved/acked): 180 gün. status="open" Alert'ler asla silinmez.
  * - SlowQueryLog: 30 gün. Eşik üstü ERP query trace; perf inceleme için
  *   son 30 gün yeterli, eski log noise yapar + tablo büyür.
+ * - AnomalyBaseline: 90 gün. Engine `take: historyWindow+1` (default 30)
+ *   ile son N kayıtları okur; 90 gün rolling history yeterli + yıllık
+ *   metric scale'de tablo şişmesini engeller.
  *
  * SAKLI TUTULANLAR (silinmiyor):
  * - ConsentLog: KVKK md. 7 + 11 audit trail, kalıcı.
@@ -41,6 +44,7 @@ const RETENTION = {
   resolvedAlertDays: 180,
   notificationLogDays: 180,
   slowQueryLogDays: 30,
+  anomalyBaselineDays: 90,
 } as const;
 
 export async function GET(req: NextRequest) {
@@ -137,6 +141,18 @@ export async function GET(req: NextRequest) {
         where: { createdAt: { lt: before } },
       });
       results.slowQueryLog = r.count;
+      totalDeleted += r.count;
+    }
+
+    // AnomalyBaseline — hourly cron her metric için 1 row üretir, tablo
+    // unbounded grow eğilimli. Engine son 30 entry'i okuyor; 90 gün safe
+    // margin (daily metrics 30 history * 1 day = 30 gün, 3x emniyet payı).
+    {
+      const before = new Date(now - RETENTION.anomalyBaselineDays * ONE_DAY_MS);
+      const r = await prisma.anomalyBaseline.deleteMany({
+        where: { capturedAt: { lt: before } },
+      });
+      results.anomalyBaseline = r.count;
       totalDeleted += r.count;
     }
   } catch (err) {
