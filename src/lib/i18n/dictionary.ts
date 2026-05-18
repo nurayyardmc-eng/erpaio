@@ -371,6 +371,7 @@ export interface Dictionary {
     enabledToast: string;
     disabledToast: string;
     disabledBadge: string;
+    updatedToast: string;
   };
   annotations: {
     breadcrumb: string;

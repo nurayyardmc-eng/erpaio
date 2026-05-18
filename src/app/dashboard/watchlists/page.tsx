@@ -36,6 +36,16 @@ export default function WatchlistsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  // Inline edit state — sadece bir satır aynı anda edit edilebilir.
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    question: "",
+    thresholdOp: "gt" as "lt" | "lte" | "gt" | "gte" | "eq",
+    thresholdVal: 0,
+    emailTo: "",
+  });
+  const [editSaving, setEditSaving] = useState(false);
 
   const refresh = () => {
     Promise.all([
@@ -89,6 +99,51 @@ export default function WatchlistsPage() {
     const _ok = await confirmDialog({ title: t.watchlists.deleteConfirmTitle, message: t.watchlists.deleteConfirmMessage, confirmLabel: t.watchlists.deleteConfirmYes, destructive: true }); if (!_ok) return;
     await fetch(`/api/watchlists?id=${id}`, { method: "DELETE" });
     refresh();
+  };
+
+  const startEdit = (w: Watchlist) => {
+    setEditId(w.id);
+    setEditForm({
+      name: w.name,
+      question: w.question,
+      thresholdOp: w.thresholdOp as "lt" | "lte" | "gt" | "gte" | "eq",
+      thresholdVal: w.thresholdVal,
+      emailTo: w.emailTo ?? "",
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditId(null);
+  };
+
+  const saveEdit = async (id: string) => {
+    setEditSaving(true);
+    try {
+      const res = await fetch(`/api/watchlists/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name,
+          question: editForm.question,
+          thresholdOp: editForm.thresholdOp,
+          thresholdVal: Number(editForm.thresholdVal),
+          // Boş string → null (email kaldır), dolu → email (PATCH şeması validate eder).
+          emailTo: editForm.emailTo ? editForm.emailTo : null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || t.common.error, "error");
+        return;
+      }
+      showToast(t.watchlists.updatedToast, "success");
+      setEditId(null);
+      refresh();
+    } catch {
+      showToast(t.common.error, "error");
+    } finally {
+      setEditSaving(false);
+    }
   };
 
   const toggleEnabled = async (w: Watchlist) => {
@@ -170,28 +225,69 @@ export default function WatchlistsPage() {
       )}
       {watchlists.map((w) => (
         <div key={w.id} style={card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                {w.name}
-                {!w.enabled && (
-                  <span style={badgeDisabled}>{t.watchlists.disabledBadge}</span>
-                )}
+          {editId === w.id ? (
+            <div>
+              <Field label={t.watchlists.fieldName}>
+                <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} style={input} />
+              </Field>
+              <Field label={t.watchlists.fieldQuestion}>
+                <input value={editForm.question} onChange={(e) => setEditForm({ ...editForm, question: e.target.value })} style={input} />
+              </Field>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Field label={t.watchlists.fieldOp}>
+                  <select value={editForm.thresholdOp} onChange={(e) => setEditForm({ ...editForm, thresholdOp: e.target.value as typeof editForm.thresholdOp })} style={input}>
+                    <option value="lt">&lt;</option>
+                    <option value="lte">≤</option>
+                    <option value="gt">&gt;</option>
+                    <option value="gte">≥</option>
+                    <option value="eq">=</option>
+                  </select>
+                </Field>
+                <div style={{ flex: 1 }}>
+                  <Field label={t.watchlists.fieldThreshold}>
+                    <input type="number" value={editForm.thresholdVal} onChange={(e) => setEditForm({ ...editForm, thresholdVal: Number(e.target.value) })} style={input} />
+                  </Field>
+                </div>
               </div>
-              <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{w.question}</div>
-              <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
-                {t.watchlists.triggerLabel}: <code style={{ color: "#0A0A0A" }}>{w.thresholdOp} {w.thresholdVal}</code>
-                {w.lastValue !== null && (<> · {t.watchlists.lastValueLabel}: <code style={{ color: w.triggeredAt ? "#F59E0B" : "#475569" }}>{w.lastValue}</code></>)}
-                {w.lastRunAt && <> · {new Date(w.lastRunAt).toLocaleString("tr-TR")}</>}
+              <Field label={t.watchlists.fieldEmail}>
+                <input type="email" value={editForm.emailTo} onChange={(e) => setEditForm({ ...editForm, emailTo: e.target.value })} placeholder={t.watchlists.fieldEmailPlaceholder} style={input} />
+              </Field>
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <button onClick={() => saveEdit(w.id)} disabled={editSaving} style={btnPrimary}>
+                  {editSaving ? t.common.saving : t.common.save}
+                </button>
+                <button onClick={cancelEdit} disabled={editSaving} style={btnSecondary}>
+                  {t.common.cancel}
+                </button>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-              <button onClick={() => toggleEnabled(w)} style={btnSecondary}>
-                {w.enabled ? t.watchlists.disable : t.watchlists.enable}
-              </button>
-              <button onClick={() => remove(w.id)} style={btnDanger}>{t.watchlists.delete}</button>
+          ) : (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                  {w.name}
+                  {!w.enabled && (
+                    <span style={badgeDisabled}>{t.watchlists.disabledBadge}</span>
+                  )}
+                </div>
+                <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{w.question}</div>
+                <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
+                  {t.watchlists.triggerLabel}: <code style={{ color: "#0A0A0A" }}>{w.thresholdOp} {w.thresholdVal}</code>
+                  {w.lastValue !== null && (<> · {t.watchlists.lastValueLabel}: <code style={{ color: w.triggeredAt ? "#F59E0B" : "#475569" }}>{w.lastValue}</code></>)}
+                  {w.lastRunAt && <> · {new Date(w.lastRunAt).toLocaleString("tr-TR")}</>}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                <button onClick={() => startEdit(w)} style={btnSecondary}>
+                  {t.common.edit}
+                </button>
+                <button onClick={() => toggleEnabled(w)} style={btnSecondary}>
+                  {w.enabled ? t.watchlists.disable : t.watchlists.enable}
+                </button>
+                <button onClick={() => remove(w.id)} style={btnDanger}>{t.watchlists.delete}</button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ))}
     </div>

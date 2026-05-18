@@ -368,6 +368,7 @@ export const tr: Dictionary = {
     enabledToast: "Watchlist etkinleştirildi.",
     disabledToast: "Watchlist devre dışı bırakıldı.",
     disabledBadge: "Devre dışı",
+    updatedToast: "Watchlist güncellendi.",
   },
   annotations: {
     breadcrumb: "ERPAIO · ŞEMA AÇIKLAMALARI",

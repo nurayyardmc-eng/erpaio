@@ -369,6 +369,7 @@ export const en: Dictionary = {
     enabledToast: "Watchlist enabled.",
     disabledToast: "Watchlist disabled.",
     disabledBadge: "Disabled",
+    updatedToast: "Watchlist updated.",
   },
   annotations: {
     breadcrumb: "ERPAIO · SCHEMA ANNOTATIONS",
