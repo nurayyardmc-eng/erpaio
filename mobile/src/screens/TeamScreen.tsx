@@ -1,4 +1,4 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useQuery } from "@tanstack/react-query";
 import { getTeam } from "../lib/dashboard";
@@ -6,6 +6,8 @@ import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { showToast } from "../components/Toast";
+import { shareJson } from "../lib/share";
 import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
@@ -29,6 +31,28 @@ export default function TeamScreen({ navigation }: Props) {
         title={t.team.title}
         description={t.team.description}
         onBack={() => navigation.goBack()}
+        right={
+          ((q.data?.users.length ?? 0) > 0 || (q.data?.invitations.length ?? 0) > 0) ? (
+            <TouchableOpacity
+              onPress={async () => {
+                /* Track OOO — team share (kullanıcı listesi + bekleyen davetler audit). */
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  await shareJson(`erpaio-team-${ts}.json`, {
+                    users: q.data!.users,
+                    invitations: q.data!.invitations,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
       <ScrollView
         style={{ flex: 1 }}
@@ -85,6 +109,15 @@ export default function TeamScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   section: {
     backgroundColor: colors.card,
     borderColor: colors.border,
