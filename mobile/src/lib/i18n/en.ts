@@ -641,6 +641,15 @@ export const en: Dictionary = {
     upgradeBtn: "Upgrade",
     dismissAria: "Dismiss notification",
   },
+  nps: {
+    header: "Quick Survey",
+    promptText: "Would you recommend ERPAIO to a friend?",
+    ratingHint: "Rate from 0 to 10.",
+    commentPlaceholder: "Comment (optional)",
+    submitBtn: "Submit",
+    thanksMsg: "Thanks!",
+    dismissAria: "Dismiss survey",
+  },
   saved: {
     brand: "ERPAIO · SAVED",
     title: "Saved Queries",

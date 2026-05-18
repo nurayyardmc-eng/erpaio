@@ -640,6 +640,15 @@ export interface Dictionary {
     upgradeBtn: string;
     dismissAria: string;
   };
+  nps: {
+    header: string;
+    promptText: string;
+    ratingHint: string;
+    commentPlaceholder: string;
+    submitBtn: string;
+    thanksMsg: string;
+    dismissAria: string;
+  };
   saved: {
     brand: string;
     title: string;

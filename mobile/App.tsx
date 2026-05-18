@@ -27,6 +27,7 @@ import { colors, font } from "./src/lib/theme";
 import Toaster from "./src/components/Toast";
 import ConfirmHost from "./src/components/Confirm";
 import KvkkConsent from "./src/components/KvkkConsent";
+import NpsPrompt from "./src/components/NpsPrompt";
 import { I18nProvider } from "./src/lib/i18n/context";
 
 const queryClient = new QueryClient({
@@ -332,6 +333,10 @@ export default function App() {
         <Toaster />
         <ConfirmHost />
         <KvkkConsent />
+        {/* Track TTTT — NPS prompt sadece auth'lı kullanıcıya. Component
+            kendi AsyncStorage cool-down'unu yönetir (30s delay + 90g submit
+            + 14g dismiss). Web NpsPrompt ile parity. */}
+        {authState === "authed" && <NpsPrompt />}
         </I18nProvider>
       </PersistQueryClientProvider>
     </SafeAreaProvider>

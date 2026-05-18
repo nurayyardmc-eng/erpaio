@@ -641,6 +641,15 @@ export const tr: Dictionary = {
     upgradeBtn: "Planı yükselt",
     dismissAria: "Bildirimi kapat",
   },
+  nps: {
+    header: "Hızlı Anket",
+    promptText: "ERPAIO'yu bir arkadaşınıza önerir misiniz?",
+    ratingHint: "0-10 puan verin.",
+    commentPlaceholder: "Yorum (opsiyonel)",
+    submitBtn: "Gönder",
+    thanksMsg: "Teşekkürler!",
+    dismissAria: "Anketi kapat",
+  },
   saved: {
     brand: "ERPAIO · KAYITLI",
     title: "Kayıtlı Sorgular",
