@@ -671,6 +671,10 @@ export const tr: Dictionary = {
     sessionRevokeFailedToast: "Oturum sonlandırılamadı.",
     sessionRevokeCurrentBlocked:
       "Aktif oturumunuzu sonlandıramazsınız. Çıkış için Ayarlar > Çıkış Yap'ı kullanın.",
+    sessionRenameBtn: "Oturum adını düzenle",
+    sessionRenameSave: "Kaydet",
+    sessionRenamedToast: "Oturum adı güncellendi.",
+    sessionRenameFailed: "İsim güncellenemedi.",
   },
   overview: {
     brand: "ERPAIO · METRİKLER",

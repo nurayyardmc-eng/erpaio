@@ -481,6 +481,10 @@ export const en: Dictionary = {
     sessionRevokeCurrentBlocked:
       "You cannot revoke your current session. Use the Settings page to sign out.",
     sessionRevokeFailed: "Action failed",
+    sessionRenameBtn: "Rename session",
+    sessionRenameSave: "Save",
+    sessionRenamedToast: "Session renamed.",
+    sessionRenameFailed: "Failed to rename.",
   },
   chat: {
     historyTitle: "Chat History",

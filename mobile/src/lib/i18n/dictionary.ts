@@ -663,6 +663,10 @@ export interface Dictionary {
     sessionRevokedToast: string;
     sessionRevokeFailedToast: string;
     sessionRevokeCurrentBlocked: string;
+    sessionRenameBtn: string;
+    sessionRenameSave: string;
+    sessionRenamedToast: string;
+    sessionRenameFailed: string;
   };
   overview: {
     brand: string;

@@ -29,6 +29,7 @@ export type ActivityAction =
   | "ip_allowlist.remove"
   | "api_token.create"
   | "api_token.revoke"
+  | "api_token.rename"
   | "notification.prefs.update"
   | "push_token.revoke"
   | "alert.feedback.false_positive"

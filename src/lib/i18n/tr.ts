@@ -480,6 +480,10 @@ export const tr: Dictionary = {
     sessionRevokeCurrentBlocked:
       "Aktif oturumunuzu sonlandıramazsınız. Çıkış yapmak için Ayarlar sayfasını kullanın.",
     sessionRevokeFailed: "İşlem başarısız",
+    sessionRenameBtn: "Oturum adını düzenle",
+    sessionRenameSave: "Kaydet",
+    sessionRenamedToast: "Oturum adı güncellendi.",
+    sessionRenameFailed: "İsim güncellenemedi.",
   },
   chat: {
     historyTitle: "Sohbet Geçmişi",

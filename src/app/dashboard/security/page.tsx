@@ -28,6 +28,9 @@ export default function SecurityPage() {
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+  // Track FFFF — inline rename state
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const [recovery, setRecovery] = useState<RecoveryStatus | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [recoveryLoading, setRecoveryLoading] = useState(false);
@@ -137,6 +140,43 @@ export default function SecurityPage() {
       loadSessions();
     } else {
       showToast(t.security.sessionRevokeFailed, "error");
+    }
+  };
+
+  // Track FFFF — inline rename helpers
+  const startRename = (s: Session) => {
+    setRenamingId(s.id);
+    setRenameValue(s.name);
+  };
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameValue("");
+  };
+  const saveRename = async (s: Session) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed || trimmed === s.name) {
+      cancelRename();
+      return;
+    }
+    // Optimistic update
+    setSessions((prev) => prev.map((p) => (p.id === s.id ? { ...p, name: trimmed } : p)));
+    setRenamingId(null);
+    try {
+      const res = await fetch("/api/me/sessions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tokenId: s.id, name: trimmed }),
+      });
+      if (!res.ok) {
+        // Revert
+        setSessions((prev) => prev.map((p) => (p.id === s.id ? { ...p, name: s.name } : p)));
+        showToast(t.security.sessionRenameFailed, "error");
+      } else {
+        showToast(t.security.sessionRenamedToast, "success");
+      }
+    } catch {
+      setSessions((prev) => prev.map((p) => (p.id === s.id ? { ...p, name: s.name } : p)));
+      showToast(t.security.sessionRenameFailed, "error");
     }
   };
 
@@ -435,7 +475,43 @@ export default function SecurityPage() {
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#0A0A0A", marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
-                    {s.name}
+                    {renamingId === s.id ? (
+                      <>
+                        <input
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveRename(s);
+                            if (e.key === "Escape") cancelRename();
+                          }}
+                          autoFocus
+                          maxLength={80}
+                          style={{
+                            fontSize: 13, padding: "4px 8px", borderRadius: 6,
+                            border: "1px solid #CBD5E1", flex: 1, outline: "none",
+                            fontFamily: "inherit",
+                          }}
+                        />
+                        <button onClick={() => saveRename(s)} style={{ fontSize: 11, fontWeight: 600, padding: "4px 8px", borderRadius: 6, border: "1px solid #0A0A0A", background: "#0A0A0A", color: "#FFFFFF", cursor: "pointer", fontFamily: "inherit" }}>
+                          {t.security.sessionRenameSave}
+                        </button>
+                        <button onClick={cancelRename} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid #CBD5E1", background: "transparent", color: "#475569", cursor: "pointer", fontFamily: "inherit" }}>
+                          {t.common.cancel}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span>{s.name}</span>
+                        <button
+                          onClick={() => startRename(s)}
+                          title={t.security.sessionRenameBtn}
+                          aria-label={t.security.sessionRenameBtn}
+                          style={{ fontSize: 11, padding: "2px 6px", borderRadius: 6, border: "none", background: "transparent", color: "#94A3B8", cursor: "pointer", fontFamily: "inherit" }}
+                        >
+                          ✏︎
+                        </button>
+                      </>
+                    )}
                     {s.isCurrent && (
                       <span style={{
                         fontSize: 10,

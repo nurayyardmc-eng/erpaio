@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
@@ -9,6 +9,7 @@ import {
 } from "../lib/auth";
 import {
   getApiSessions,
+  renameApiSession,
   revokeApiSession,
   type ApiSession,
 } from "../lib/dashboard";
@@ -120,8 +121,36 @@ export default function SecurityScreen({ navigation }: Props) {
 function ActiveSessionsSection() {
   const { t, locale } = useI18n();
   const [revoking, setRevoking] = useState<string | null>(null);
+  // Track FFFF — inline rename state
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const q = useQuery({ queryKey: ["me-sessions"], queryFn: getApiSessions });
+
+  const startRename = (s: ApiSession) => {
+    setRenamingId(s.id);
+    setRenameValue(s.name);
+  };
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameValue("");
+  };
+  const saveRename = async (s: ApiSession) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed || trimmed === s.name) {
+      cancelRename();
+      return;
+    }
+    setRenamingId(null);
+    try {
+      await renameApiSession(s.id, trimmed);
+      showToast(t.security.sessionRenamedToast, "success");
+      void q.refetch();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t.security.sessionRenameFailed;
+      showToast(msg, "error");
+    }
+  };
 
   const revoke = useCallback(
     async (s: ApiSession) => {
@@ -174,14 +203,40 @@ function ActiveSessionsSection() {
             ]}
           >
             <View style={{ flex: 1, minWidth: 0 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 2 }}>
-                <Text style={styles.sessionName}>{s.name}</Text>
-                {s.isCurrent && (
-                  <View style={styles.currentBadge}>
-                    <Text style={styles.currentBadgeText}>{t.security.sessionsCurrent}</Text>
-                  </View>
-                )}
-              </View>
+              {renamingId === s.id ? (
+                <View style={{ flexDirection: "row", gap: spacing(1.5), marginBottom: spacing(1.5) }}>
+                  <TextInput
+                    value={renameValue}
+                    onChangeText={setRenameValue}
+                    autoFocus
+                    maxLength={80}
+                    style={styles.renameInput}
+                    onSubmitEditing={() => saveRename(s)}
+                  />
+                  <TouchableOpacity onPress={() => saveRename(s)} style={styles.renameSaveBtn}>
+                    <Text style={styles.renameSaveBtnText}>{t.security.sessionRenameSave}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={cancelRename} style={styles.renameCancelBtn}>
+                    <Text style={styles.renameCancelBtnText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 2, gap: spacing(1) }}>
+                  <Text style={styles.sessionName}>{s.name}</Text>
+                  <TouchableOpacity
+                    onPress={() => startRename(s)}
+                    accessibilityLabel={t.security.sessionRenameBtn}
+                    style={styles.renameIconBtn}
+                  >
+                    <Text style={styles.renameIcon}>✏︎</Text>
+                  </TouchableOpacity>
+                  {s.isCurrent && (
+                    <View style={styles.currentBadge}>
+                      <Text style={styles.currentBadgeText}>{t.security.sessionsCurrent}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
               <Text style={styles.sessionMeta}>
                 {s.lastUsedAt
                   ? `${t.security.sessionsLastUsed}${fmtDate(s.lastUsedAt)}`
@@ -357,6 +412,37 @@ const styles = StyleSheet.create({
   },
   revokeBtnDisabled: { opacity: 0.4 },
   revokeBtnText: { color: colors.error, fontFamily: font, fontSize: 12, fontWeight: "600" },
+  renameIconBtn: { padding: spacing(0.5) },
+  renameIcon: { color: colors.textSubtle, fontSize: 12 },
+  renameInput: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing(2),
+    paddingVertical: spacing(1.5),
+    color: colors.text,
+    fontFamily: font,
+    fontSize: 13,
+  },
+  renameSaveBtn: {
+    backgroundColor: colors.brand,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing(2.5),
+    paddingVertical: spacing(1.5),
+    justifyContent: "center",
+  },
+  renameSaveBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 12, fontWeight: "600" },
+  renameCancelBtn: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing(2),
+    paddingVertical: spacing(1.5),
+    justifyContent: "center",
+  },
+  renameCancelBtnText: { color: colors.textMuted, fontFamily: font, fontSize: 14, fontWeight: "500" },
   enableMfaBtn: {
     alignSelf: "flex-start",
     backgroundColor: colors.brand,

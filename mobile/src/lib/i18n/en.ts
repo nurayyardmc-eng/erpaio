@@ -671,6 +671,10 @@ export const en: Dictionary = {
     sessionRevokeFailedToast: "Failed to revoke session.",
     sessionRevokeCurrentBlocked:
       "You cannot revoke your current session. Use Settings > Sign Out to log out.",
+    sessionRenameBtn: "Rename session",
+    sessionRenameSave: "Save",
+    sessionRenamedToast: "Session renamed.",
+    sessionRenameFailed: "Failed to rename.",
   },
   overview: {
     brand: "ERPAIO · METRICS",

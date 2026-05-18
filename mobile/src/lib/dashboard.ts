@@ -407,6 +407,18 @@ export async function revokeApiSession(id: string): Promise<{ ok: true }> {
   return api(`/api/me/sessions?tokenId=${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+/**
+ * API token rename — Track FFFF. Kullanıcı kendi aktif oturumunun display
+ * label'ını değiştirebilir (Eski iPhone, İş tableti vb.). Auth davranışını
+ * etkilemez, sadece UI listesinde görünür. Audit log entry kaydedilir.
+ */
+export async function renameApiSession(id: string, name: string): Promise<{ ok: true; name: string }> {
+  return api(`/api/me/sessions`, {
+    method: "PATCH",
+    body: { tokenId: id, name },
+  });
+}
+
 // ============= IP allowlist (tenant security) =============
 export interface IpAllowlistEntry {
   id: string;

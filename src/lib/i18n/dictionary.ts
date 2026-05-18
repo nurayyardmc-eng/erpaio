@@ -473,6 +473,10 @@ export interface Dictionary {
     sessionRevokeOk: string;
     sessionRevokeCurrentBlocked: string;
     sessionRevokeFailed: string;
+    sessionRenameBtn: string;
+    sessionRenameSave: string;
+    sessionRenamedToast: string;
+    sessionRenameFailed: string;
   };
   chat: {
     historyTitle: string;
