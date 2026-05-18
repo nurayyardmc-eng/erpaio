@@ -407,6 +407,10 @@ export const en: Dictionary = {
     triggerHistoryTitle: "Trigger history",
     triggerHistoryEmpty: "No triggers yet.",
     triggerHistoryCap: "Showing the most recent 50 triggers (older records removed after 90 days).",
+    testRunBtn: "Run test",
+    testRunResultPrefix: "Current value:",
+    testRunWouldTrigger: "would trigger ✓",
+    testRunNoTrigger: "would not trigger",
   },
   scheduledReports: {
     brand: "ERPAIO · REPORTS",

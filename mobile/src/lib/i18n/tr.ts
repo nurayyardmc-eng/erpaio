@@ -407,6 +407,10 @@ export const tr: Dictionary = {
     triggerHistoryTitle: "Tetiklenme geçmişi",
     triggerHistoryEmpty: "Henüz tetiklenme yok.",
     triggerHistoryCap: "Son 50 tetiklenme gösterilir (90 gün sonrası silinir).",
+    testRunBtn: "Test çalıştır",
+    testRunResultPrefix: "Şu anki değer:",
+    testRunWouldTrigger: "tetiklenir ✓",
+    testRunNoTrigger: "tetiklenmez",
   },
   scheduledReports: {
     brand: "ERPAIO · RAPORLAR",

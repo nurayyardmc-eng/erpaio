@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Svg, { Circle, Line, Polyline } from "react-native-svg";
-import { createWatchlist, getConnections, getWatchlistTriggers, updateWatchlist, type CreateWatchlistInput } from "../lib/dashboard";
+import { createWatchlist, getConnections, getWatchlistTriggers, runWatchlistTest, updateWatchlist, type CreateWatchlistInput } from "../lib/dashboard";
 import { computeSparkline } from "../lib/watchlist/sparkline";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -54,6 +54,26 @@ export default function WatchlistFormScreen({ navigation, route }: Props) {
     queryFn: () => getWatchlistTriggers(editWatchlist!.id),
     enabled: isEdit,
   });
+
+  // Track CC — preview run state.
+  const [testResult, setTestResult] = useState<{ value: number; wouldTrigger: boolean } | null>(null);
+  const [testRunning, setTestRunning] = useState(false);
+
+  const runTest = async () => {
+    if (!editWatchlist) return;
+    setTestRunning(true);
+    setTestResult(null);
+    try {
+      const r = await runWatchlistTest(editWatchlist.id);
+      setTestResult({ value: r.value, wouldTrigger: r.wouldTrigger });
+    } catch (e) {
+      // showToast yerine sessiz başarısızlık değil — user farkında olmalı
+      const msg = e instanceof Error ? e.message : t.common.error;
+      setError(msg);
+    } finally {
+      setTestRunning(false);
+    }
+  };
 
   const [name, setName] = useState(editWatchlist?.name ?? "");
   const [question, setQuestion] = useState(editWatchlist?.question ?? "");
@@ -274,6 +294,36 @@ export default function WatchlistFormScreen({ navigation, route }: Props) {
             </View>
           )}
 
+          {/* Track CC — Test çalıştır sadece edit modunda (yeni metric'in
+              ID'si olmadan endpoint çağırılamaz). */}
+          {isEdit && (
+            <>
+              <TouchableOpacity
+                onPress={runTest}
+                disabled={testRunning}
+                style={[styles.testBtn, testRunning && { opacity: 0.5 }]}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.testBtnText}>
+                  {testRunning ? "..." : t.watchlistForm.testRunBtn}
+                </Text>
+              </TouchableOpacity>
+              {testResult && (
+                <View
+                  style={[
+                    styles.testResultBox,
+                    { backgroundColor: testResult.wouldTrigger ? "#D1FAE5" : colors.bgSubtle },
+                  ]}
+                >
+                  <Text style={[styles.testResultText, { color: testResult.wouldTrigger ? "#065F46" : colors.textMuted }]}>
+                    {t.watchlistForm.testRunResultPrefix} {testResult.value} —{" "}
+                    {testResult.wouldTrigger ? t.watchlistForm.testRunWouldTrigger : t.watchlistForm.testRunNoTrigger}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+
           <TouchableOpacity
             onPress={onSubmit}
             disabled={mutation.isPending || (!isEdit && activeConns.length === 0)}
@@ -408,6 +458,23 @@ const styles = StyleSheet.create({
     marginTop: spacing(2),
   },
   submitText: { color: colors.textInverse, fontFamily: font, fontSize: 15, fontWeight: "600" },
+  testBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: spacing(2),
+  },
+  testBtnText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  testResultBox: {
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: spacing(2),
+  },
+  testResultText: { fontFamily: font, fontSize: 13, fontWeight: "600" },
   triggerBox: {
     marginTop: spacing(3),
     marginBottom: spacing(2),

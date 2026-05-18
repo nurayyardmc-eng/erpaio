@@ -289,6 +289,16 @@ export async function getWatchlistTriggers(
   return api(`/api/watchlists/${encodeURIComponent(id)}/triggers`);
 }
 
+/**
+ * Track CC — watchlist preview run (AA mobile parity). SQL çalıştırır,
+ * threshold check yapar; persist YOK (cron yan etkileri saklı).
+ */
+export async function runWatchlistTest(
+  id: string,
+): Promise<{ value: number; wouldTrigger: boolean }> {
+  return api(`/api/watchlists/${encodeURIComponent(id)}/run`, { method: "POST" });
+}
+
 // ============= Scheduled Reports =============
 export interface ScheduledReport {
   id: string;

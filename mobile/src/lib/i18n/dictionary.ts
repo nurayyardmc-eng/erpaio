@@ -413,6 +413,10 @@ export interface Dictionary {
     triggerHistoryTitle: string;
     triggerHistoryEmpty: string;
     triggerHistoryCap: string;
+    testRunBtn: string;
+    testRunResultPrefix: string;
+    testRunWouldTrigger: string;
+    testRunNoTrigger: string;
   };
   scheduledReports: {
     brand: string;
