@@ -81,6 +81,21 @@ export async function exportTenantData(): Promise<Record<string, unknown>> {
   return api<Record<string, unknown>>(`/api/tenant/export`);
 }
 
+/**
+ * Tenant cron health — Track GG (DD mobile parity). 3 tenant-facing cron için
+ * son CronRun durumunu döner. Owner/admin gate server tarafında.
+ */
+export interface CronHealthJob {
+  jobName: string;
+  status: "SUCCESS" | "PARTIAL_FAILURE" | "FAILED" | "RUNNING" | "NEVER";
+  finishedAt: string | null;
+  alertsCreated: number;
+}
+
+export async function getCronHealth(): Promise<{ jobs: CronHealthJob[] }> {
+  return api<{ jobs: CronHealthJob[] }>(`/api/tenant/cron-health`);
+}
+
 // ============= Tenant notification log (audit trail) =============
 export interface NotificationLogEntry {
   id: string;

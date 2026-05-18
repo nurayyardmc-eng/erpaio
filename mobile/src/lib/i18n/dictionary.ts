@@ -42,6 +42,16 @@ export interface Dictionary {
     feedbackTitle: string;
     feedbackDescription: string;
     feedbackOpenBtn: string;
+    cronHealthTitle: string;
+    cronHealthDescription: string;
+    cronHealthSuccess: string;
+    cronHealthPartial: string;
+    cronHealthFailed: string;
+    cronHealthRunning: string;
+    cronHealthNever: string;
+    cronHealthAnomalyLabel: string;
+    cronHealthWatchlistsLabel: string;
+    cronHealthReportsLabel: string;
     logout: string;
     logoutConfirm: string;
     brand: string;

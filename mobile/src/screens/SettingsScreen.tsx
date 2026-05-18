@@ -21,7 +21,9 @@ import {
   deleteTenant,
   exportTenantData,
   getTenantUsage,
+  getCronHealth,
   type NotificationPrefs,
+  type CronHealthJob,
 } from "../lib/dashboard";
 import { shareJson } from "../lib/share";
 import { getMe, requestEmailChange, updateMyProfile } from "../lib/auth";
@@ -314,6 +316,8 @@ export default function SettingsScreen({ onLogout }: Props) {
           <Text style={styles.link}>{t.settings.linkSupport}</Text>
         </TouchableOpacity>
       </Section>
+
+      <TenantCronHealthSection />
 
       <TenantExportSection />
 
@@ -700,6 +704,96 @@ function EmailChangeRow({ currentEmail }: { currentEmail: string }) {
 }
 
 /**
+ * Tenant cron health — Track GG (DD mobile parity). Owner+admin görür 3
+ * tenant-facing cron'un son çalışma durumunu.
+ */
+function TenantCronHealthSection() {
+  const { t, locale } = useI18n();
+  const meQuery = useQuery({ queryKey: ["me-role-cron-health"], queryFn: getMe });
+  const role = meQuery.data?.user?.role ?? null;
+  const enabled = role === "owner" || role === "admin";
+  const healthQuery = useQuery({
+    queryKey: ["cron-health"],
+    queryFn: getCronHealth,
+    enabled,
+    staleTime: 60_000,
+  });
+
+  if (!enabled) return null;
+
+  const formatRel = (iso: string | null): string => {
+    if (!iso) return "—";
+    const diff = Date.now() - new Date(iso).getTime();
+    const min = Math.floor(diff / 60_000);
+    const hour = Math.floor(diff / 3_600_000);
+    const day = Math.floor(diff / 86_400_000);
+    if (locale === "en") {
+      if (min < 1) return "just now";
+      if (min < 60) return `${min}m ago`;
+      if (hour < 24) return `${hour}h ago`;
+      return `${day}d ago`;
+    }
+    if (min < 1) return "az önce";
+    if (min < 60) return `${min}d önce`;
+    if (hour < 24) return `${hour}sa önce`;
+    return `${day}g önce`;
+  };
+
+  const statusColor = (s: CronHealthJob["status"]): { bg: string; fg: string } => {
+    switch (s) {
+      case "SUCCESS": return { bg: "#D1FAE5", fg: "#065F46" };
+      case "PARTIAL_FAILURE": return { bg: "#FEF3C7", fg: "#92400E" };
+      case "FAILED": return { bg: "#FEE2E2", fg: "#991B1B" };
+      case "RUNNING": return { bg: "#E0F2FE", fg: "#075985" };
+      case "NEVER": return { bg: "#F1F5F9", fg: "#64748B" };
+    }
+  };
+
+  const statusLabel = (s: CronHealthJob["status"]): string => {
+    switch (s) {
+      case "SUCCESS": return t.settings.cronHealthSuccess;
+      case "PARTIAL_FAILURE": return t.settings.cronHealthPartial;
+      case "FAILED": return t.settings.cronHealthFailed;
+      case "RUNNING": return t.settings.cronHealthRunning;
+      case "NEVER": return t.settings.cronHealthNever;
+    }
+  };
+
+  const jobLabel = (name: string): string => {
+    switch (name) {
+      case "anomaly-detection": return t.settings.cronHealthAnomalyLabel;
+      case "watchlists": return t.settings.cronHealthWatchlistsLabel;
+      case "scheduled-reports": return t.settings.cronHealthReportsLabel;
+      default: return name;
+    }
+  };
+
+  return (
+    <Section title={t.settings.cronHealthTitle}>
+      <Text style={[styles.muted, { marginBottom: spacing(3) }]}>{t.settings.cronHealthDescription}</Text>
+      {healthQuery.isLoading || !healthQuery.data ? (
+        <Text style={styles.muted}>{t.common.loading}</Text>
+      ) : (
+        <View style={{ gap: spacing(2) }}>
+          {healthQuery.data.jobs.map((j) => {
+            const c = statusColor(j.status);
+            return (
+              <View key={j.jobName} style={styles.cronRow}>
+                <Text style={styles.cronLabel} numberOfLines={1}>{jobLabel(j.jobName)}</Text>
+                <Text style={styles.cronTime}>{formatRel(j.finishedAt)}</Text>
+                <View style={[styles.cronBadge, { backgroundColor: c.bg }]}>
+                  <Text style={[styles.cronBadgeText, { color: c.fg }]}>{statusLabel(j.status)}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </Section>
+  );
+}
+
+/**
  * Tenant data export — KVKK md. 11 / GDPR Art. 20 right to data portability.
  * Owner-only (server 403 dönüyor, UI rolü çekip butonu non-owner için gizler).
  * Click → API JSON çek → shareJson() ile Native Share intent ile dosya
@@ -1069,6 +1163,25 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2.5),
   },
   feedbackBtnText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  cronRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+    backgroundColor: colors.bg,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    gap: spacing(2),
+  },
+  cronLabel: { flex: 1, color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "500" },
+  cronTime: { color: colors.textMuted, fontFamily: font, fontSize: 11 },
+  cronBadge: {
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(2),
+    paddingVertical: 2,
+  },
+  cronBadgeText: { fontFamily: font, fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
   dangerSection: {
     marginTop: spacing(4),
     backgroundColor: colors.card,
