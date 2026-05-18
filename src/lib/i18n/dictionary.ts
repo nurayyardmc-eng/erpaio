@@ -185,6 +185,16 @@ export interface Dictionary {
     notifPrefsSaveError: string;
     notifPrefsToggleOn: string;
     notifPrefsToggleOff: string;
+    cronHealthTitle: string;
+    cronHealthDescription: string;
+    cronHealthSuccess: string;
+    cronHealthPartial: string;
+    cronHealthFailed: string;
+    cronHealthRunning: string;
+    cronHealthNever: string;
+    cronHealthAnomalyLabel: string;
+    cronHealthWatchlistsLabel: string;
+    cronHealthReportsLabel: string;
     tenantNpsTitle: string;
     tenantNpsDescription: string;
     tenantNpsEmpty: string;

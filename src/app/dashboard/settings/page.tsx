@@ -530,6 +530,8 @@ export default function SettingsPage() {
             </div>
           </Section>
 
+          <TenantCronHealthSection t={t} />
+
           <TenantNpsSection t={t} />
 
           <TenantExportSection t={t} />
@@ -538,6 +540,119 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * Tenant cron health — Track DD. Owner+admin görür platform crons'unun son
+ * çalışma durumunu. "Anomaly cron sağlıklı mı?" sorusunun cevabı.
+ * Direkt etkileyen 3 cron: anomaly-detection, watchlists, scheduled-reports.
+ */
+interface JobHealthData {
+  jobName: string;
+  status: "SUCCESS" | "PARTIAL_FAILURE" | "FAILED" | "RUNNING" | "NEVER";
+  finishedAt: string | null;
+  alertsCreated: number;
+}
+
+function formatRelativeTime(iso: string | null, locale: string): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60_000);
+  const hour = Math.floor(diff / 3_600_000);
+  const day = Math.floor(diff / 86_400_000);
+  if (locale === "en") {
+    if (min < 1) return "just now";
+    if (min < 60) return `${min}m ago`;
+    if (hour < 24) return `${hour}h ago`;
+    return `${day}d ago`;
+  }
+  if (min < 1) return "az önce";
+  if (min < 60) return `${min}d önce`;
+  if (hour < 24) return `${hour}sa önce`;
+  return `${day}g önce`;
+}
+
+function TenantCronHealthSection({ t }: { t: Dictionary }) {
+  const { locale } = useI18n();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<JobHealthData[] | null>(null);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((d: { user?: { role?: string } } | null) => {
+        const role = d?.user?.role ?? null;
+        setUserRole(role);
+        if (role === "owner" || role === "admin") {
+          return fetch("/api/tenant/cron-health")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d: { jobs: JobHealthData[] } | null) => setJobs(d?.jobs ?? null))
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  if (userRole !== "owner" && userRole !== "admin") return null;
+
+  const statusColor = (s: JobHealthData["status"]): { bg: string; fg: string } => {
+    switch (s) {
+      case "SUCCESS": return { bg: "#D1FAE5", fg: "#065F46" };
+      case "PARTIAL_FAILURE": return { bg: "#FEF3C7", fg: "#92400E" };
+      case "FAILED": return { bg: "#FEE2E2", fg: "#991B1B" };
+      case "RUNNING": return { bg: "#E0F2FE", fg: "#075985" };
+      case "NEVER": return { bg: "#F1F5F9", fg: "#64748B" };
+    }
+  };
+
+  const statusLabel = (s: JobHealthData["status"]): string => {
+    switch (s) {
+      case "SUCCESS": return t.settings.cronHealthSuccess;
+      case "PARTIAL_FAILURE": return t.settings.cronHealthPartial;
+      case "FAILED": return t.settings.cronHealthFailed;
+      case "RUNNING": return t.settings.cronHealthRunning;
+      case "NEVER": return t.settings.cronHealthNever;
+    }
+  };
+
+  const jobLabel = (name: string): string => {
+    switch (name) {
+      case "anomaly-detection": return t.settings.cronHealthAnomalyLabel;
+      case "watchlists": return t.settings.cronHealthWatchlistsLabel;
+      case "scheduled-reports": return t.settings.cronHealthReportsLabel;
+      default: return name;
+    }
+  };
+
+  return (
+    <Section title={t.settings.cronHealthTitle}>
+      <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 16px" }}>
+        {t.settings.cronHealthDescription}
+      </p>
+      {!jobs ? (
+        <div style={{ color: colors.textMuted, fontSize: 12 }}>{t.common.loading}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {jobs.map((j) => {
+            const c = statusColor(j.status);
+            return (
+              <div key={j.jobName} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8 }}>
+                <span style={{ flex: 1, fontSize: 13, color: colors.text, fontWeight: 500 }}>
+                  {jobLabel(j.jobName)}
+                </span>
+                <span style={{ fontSize: 11, color: colors.textMuted, fontVariantNumeric: "tabular-nums" }}>
+                  {formatRelativeTime(j.finishedAt, locale)}
+                </span>
+                <span style={{ background: c.bg, color: c.fg, fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 100, letterSpacing: 0.5 }}>
+                  {statusLabel(j.status)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Section>
   );
 }
 

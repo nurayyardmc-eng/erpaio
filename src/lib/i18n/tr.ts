@@ -167,6 +167,17 @@ export const tr: Dictionary = {
     accountSecurityDescription:
       "İki faktörlü doğrulama (MFA), güven listesi (IP allowlist) ve API token yönetimi ayrı sayfada.",
     accountSecurityLink: "Güvenlik ayarlarına git →",
+    cronHealthTitle: "Sistem Sağlığı",
+    cronHealthDescription:
+      "Platform cron job'larının son çalışma durumu. Anomaly detection, watchlist kontrol ve scheduled reports kullanıcı uyarılarını üretir; biri başarısızsa o uyarılar gelmiyor olabilir.",
+    cronHealthSuccess: "Başarılı",
+    cronHealthPartial: "Kısmi Başarı",
+    cronHealthFailed: "Başarısız",
+    cronHealthRunning: "Çalışıyor",
+    cronHealthNever: "Hiç çalışmadı",
+    cronHealthAnomalyLabel: "Anomaly Detection",
+    cronHealthWatchlistsLabel: "Watchlist Kontrolleri",
+    cronHealthReportsLabel: "Scheduled Reports",
     tenantNpsTitle: "Tenant NPS Skoru",
     tenantNpsDescription:
       "Bu org'daki kullanıcılarınızın bıraktığı NPS yanıtları. Owner ve admin görür. Skor -100 (kötü) ile +100 (mükemmel) arasında; 30+ sağlıklı kabul edilir.",

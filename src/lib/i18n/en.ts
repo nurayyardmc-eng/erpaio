@@ -167,6 +167,17 @@ export const en: Dictionary = {
     accountSecurityDescription:
       "Two-factor authentication (MFA), IP allowlist and API token management are on a separate page.",
     accountSecurityLink: "Go to security settings →",
+    cronHealthTitle: "System Health",
+    cronHealthDescription:
+      "Last run status of platform cron jobs. Anomaly detection, watchlist checks, and scheduled reports produce user-facing alerts; if any failed, those alerts may be missing.",
+    cronHealthSuccess: "Success",
+    cronHealthPartial: "Partial",
+    cronHealthFailed: "Failed",
+    cronHealthRunning: "Running",
+    cronHealthNever: "Never ran",
+    cronHealthAnomalyLabel: "Anomaly Detection",
+    cronHealthWatchlistsLabel: "Watchlist Checks",
+    cronHealthReportsLabel: "Scheduled Reports",
     tenantNpsTitle: "Tenant NPS Score",
     tenantNpsDescription:
       "NPS responses from users in this org. Visible to owner and admin. Score ranges from -100 (poor) to +100 (excellent); 30+ is considered healthy.",
