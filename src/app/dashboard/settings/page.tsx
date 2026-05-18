@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { showToast } from "@/components/Toaster";
+import { showNpsPrompt } from "@/components/NpsPrompt";
 import { confirmDialog } from "@/components/Confirm";
 import { useI18n } from "@/lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Dictionary, type Locale } from "@/lib/i18n/dictionary";
@@ -368,6 +369,30 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
+          </Section>
+
+          {/* Track WWWW — manuel NPS feedback trigger. NpsPrompt'un cool-down'unu
+              bypass eder; user "ben şu an feedback vermek istiyorum" diyebilir. */}
+          <Section title={t.settings.feedbackTitle}>
+            <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>
+              {t.settings.feedbackDescription}
+            </p>
+            <button
+              type="button"
+              onClick={() => showNpsPrompt()}
+              style={{
+                background: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 100,
+                padding: "8px 20px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              {t.settings.feedbackOpenBtn}
+            </button>
           </Section>
 
           <Section title={t.settings.whatsapp}>

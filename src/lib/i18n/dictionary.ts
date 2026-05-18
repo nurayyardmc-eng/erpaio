@@ -141,6 +141,9 @@ export interface Dictionary {
     language: string;
     languageHint: string;
     languageSaved: string;
+    feedbackTitle: string;
+    feedbackDescription: string;
+    feedbackOpenBtn: string;
     whatsapp: string;
     whatsappEnabled: string;
     whatsappTo: string;

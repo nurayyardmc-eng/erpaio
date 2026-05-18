@@ -15,6 +15,9 @@ import { useI18n } from "../lib/i18n/context";
  *
  * Web localStorage kullanır; mobile AsyncStorage (KvkkConsent ile aynı pattern).
  * Visible olduğunda bottom sheet modal — backdrop tap = dismiss.
+ *
+ * Track WWWW — module-level subject ile manuel trigger (showNpsPrompt).
+ * Settings'ten cool-down bypass + form reset edip açar.
  */
 
 const NPS_DISMISSED_KEY = "erpaio_nps_dismissed_until";
@@ -22,6 +25,14 @@ const NPS_SUBMITTED_KEY = "erpaio_nps_submitted";
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60_000;
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60_000;
 const INITIAL_DELAY_MS = 30_000;
+
+// Pub-sub: NpsPrompt mount edildiğinde listener kaydeder; showNpsPrompt
+// çağrıldığında notify edilir. Single instance varsayımı (root layout'ta 1).
+type Listener = () => void;
+const listeners = new Set<Listener>();
+export function showNpsPrompt() {
+  listeners.forEach((l) => l());
+}
 
 export default function NpsPrompt() {
   const { t } = useI18n();
@@ -45,6 +56,20 @@ export default function NpsPrompt() {
     return () => {
       mounted = false;
       if (timeoutHandle) clearTimeout(timeoutHandle);
+    };
+  }, []);
+
+  // Track WWWW — manuel trigger listener. Cool-down bypass + state reset.
+  useEffect(() => {
+    const listener = () => {
+      setScore(null);
+      setComment("");
+      setSubmitted(false);
+      setShow(true);
+    };
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
     };
   }, []);
 

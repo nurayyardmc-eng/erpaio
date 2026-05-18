@@ -7,6 +7,16 @@ import { useI18n } from "@/lib/i18n/context";
 const NPS_DISMISSED_KEY = "erpaio_nps_dismissed_until";
 const NPS_SUBMITTED_KEY = "erpaio_nps_submitted";
 
+/**
+ * Track WWWW — manuel trigger. Settings'te "Geri bildirim ver" butonu
+ * cool-down'u bypass eder, anketi hemen açar. Toaster ile aynı event-based
+ * pattern (window.dispatchEvent).
+ */
+export function showNpsPrompt() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("erpaio-nps-show"));
+}
+
 export default function NpsPrompt() {
   const { t } = useI18n();
   const [show, setShow] = useState(false);
@@ -24,6 +34,23 @@ export default function NpsPrompt() {
 
     const t = setTimeout(() => setShow(true), 30_000);
     return () => clearTimeout(t);
+  }, []);
+
+  /**
+   * Track WWWW — manuel trigger event handler. Settings'ten showNpsPrompt()
+   * çağrılınca cool-down'u bypass et + score/comment state'i sıfırla
+   * (önceden submit edildiyse "Teşekkürler" yerine fresh form aç).
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => {
+      setScore(null);
+      setComment("");
+      setSubmitted(false);
+      setShow(true);
+    };
+    window.addEventListener("erpaio-nps-show", handler);
+    return () => window.removeEventListener("erpaio-nps-show", handler);
   }, []);
 
   const dismiss = () => {

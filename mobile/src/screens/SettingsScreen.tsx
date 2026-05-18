@@ -36,6 +36,7 @@ import { useI18n } from "../lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "../lib/i18n/dictionary";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import { showToast } from "../components/Toast";
+import { showNpsPrompt } from "../components/NpsPrompt";
 
 interface Props {
   onLogout: () => void;
@@ -288,6 +289,18 @@ export default function SettingsScreen({ onLogout }: Props) {
             </TouchableOpacity>
           ))}
         </View>
+      </Section>
+
+      {/* Track WWWW — manuel NPS feedback trigger. Cool-down bypass. */}
+      <Section title={t.settings.feedbackTitle}>
+        <Text style={[styles.muted, { marginBottom: spacing(3) }]}>{t.settings.feedbackDescription}</Text>
+        <TouchableOpacity
+          onPress={() => showNpsPrompt()}
+          style={styles.feedbackBtn}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.feedbackBtnText}>{t.settings.feedbackOpenBtn}</Text>
+        </TouchableOpacity>
       </Section>
 
       <Section title={t.settings.sectionLegal}>
@@ -1046,6 +1059,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoutBtnText: { color: colors.error, fontFamily: font, fontSize: 14, fontWeight: "600" },
+  feedbackBtn: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2.5),
+  },
+  feedbackBtnText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "600" },
   dangerSection: {
     marginTop: spacing(4),
     backgroundColor: colors.card,

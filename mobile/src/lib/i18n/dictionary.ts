@@ -39,6 +39,9 @@ export interface Dictionary {
     language: string;
     languageHint: string;
     languageSaved: string;
+    feedbackTitle: string;
+    feedbackDescription: string;
+    feedbackOpenBtn: string;
     logout: string;
     logoutConfirm: string;
     brand: string;
