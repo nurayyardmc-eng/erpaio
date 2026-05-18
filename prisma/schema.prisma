@@ -78,6 +78,7 @@ model User {
   consentLogs          ConsentLog[]
   activityLogs         ActivityLog[]
   emailVerifyTokens    EmailVerificationToken[]
+  emailChangeTokens    EmailChangeToken[]
   passwordResetTokens  PasswordResetToken[]
   scheduledReports     ScheduledReport[]
   watchlists           Watchlist[]
@@ -314,6 +315,28 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// Email change verification tokens. Kullanıcı yeni email adresine bir
+/// doğrulama linki gönderir → link tıklanınca User.email atomik güncellenir.
+/// Eski email'e bildirim göndermiyoruz (mevcut email gerçek değil olabilir);
+/// audit log entry KVKK md. 13 kapsamında activity ekranında görünür.
+///
+/// Token raw değeri kayda dökülmez (createHash sha256). Tek kullanımlık —
+/// usedAt set edildikten sonra başka talep için yeni token gerekir.
+model EmailChangeToken {
+  id        String   @id @default(cuid())
+  userId    String
+  newEmail  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model PasswordResetToken {

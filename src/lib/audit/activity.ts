@@ -33,7 +33,9 @@ export type ActivityAction =
   | "push_token.revoke"
   | "alert.feedback.false_positive"
   | "alert.feedback.clear"
-  | "connection.schema.sync";
+  | "connection.schema.sync"
+  | "email.change.request"
+  | "email.change.complete";
 
 export interface RecordActivityInput {
   userId?: string | null;

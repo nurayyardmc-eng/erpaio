@@ -80,6 +80,24 @@ export async function updateMyProfile(input: { name: string | null }): Promise<P
   return res.user;
 }
 
+/**
+ * Email change request — yeni email adresine doğrulama linki gönderir.
+ * Server şifre doğrular + 24h geçerli token üretir + sendEmail. Track YYY.
+ *
+ * Başarılı olursa server her zaman {ok: true} döner — newEmail collision
+ * olsa bile (info leak önleme). Kullanıcıya "doğrulama linki gönderildi"
+ * mesajı gösterilir; gerçekten gönderilip gönderilmediği server kararı.
+ */
+export async function requestEmailChange(input: {
+  newEmail: string;
+  currentPassword: string;
+}): Promise<{ ok: true }> {
+  return api("/api/me/email/request-change", {
+    method: "POST",
+    body: input,
+  });
+}
+
 // Single-flight refresh guard — concurrent caller'lar aynı in-flight Promise'i
 // bekler. App launch'ta refreshIfNeeded() çağrılır + kullanıcı hemen chat'e
 // gider; iki POST/api/auth/mobile-refresh paralel çıkmasın (server eski

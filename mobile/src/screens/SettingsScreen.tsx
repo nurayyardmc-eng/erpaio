@@ -20,7 +20,7 @@ import {
   getTenantUsage,
   type NotificationPrefs,
 } from "../lib/dashboard";
-import { getMe, updateMyProfile } from "../lib/auth";
+import { getMe, requestEmailChange, updateMyProfile } from "../lib/auth";
 import {
   budgetStatusLevel,
   daysUntilReset,
@@ -455,6 +455,7 @@ function ProfileSection() {
         >
           {email}
         </Text>
+        <EmailChangeRow currentEmail={email} />
       </Field>
       <Field label={t.settings.fieldProfileName}>
         <TextInput
@@ -481,6 +482,113 @@ function ProfileSection() {
         </Text>
       </TouchableOpacity>
     </Section>
+  );
+}
+
+/**
+ * Email değiştirme inline form — Track YYY. Profile section'da email
+ * field altında. Tıklayınca form açar; submit → POST /me/email/request-change
+ * → server YENİ email'e doğrulama linki yollar. Kullanıcı linki tıklayınca
+ * web /auth/email-changed'da User.email atomik güncellenir.
+ */
+function EmailChangeRow({ currentEmail }: { currentEmail: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    const trimmed = newEmail.trim();
+    if (!trimmed || !password) return;
+    if (trimmed.toLowerCase() === currentEmail.toLowerCase()) {
+      showToast(t.settings.emailChangeSameAsCurrent, "error");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await requestEmailChange({ newEmail: trimmed, currentPassword: password });
+      showToast(t.settings.emailChangeSentToast, "success");
+      setOpen(false);
+      setNewEmail("");
+      setPassword("");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t.common.error;
+      showToast(msg, "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <View style={{ marginTop: spacing(1.5) }}>
+        <TouchableOpacity onPress={() => setOpen(true)} activeOpacity={0.7}>
+          <Text style={styles.emailChangeLink}>{t.settings.emailChangeBtn} →</Text>
+        </TouchableOpacity>
+        <Text style={[styles.muted, { fontSize: 11, marginTop: 2 }]}>
+          {t.settings.emailChangeHint}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.emailChangeBox}>
+      <Field label={t.settings.emailChangeFieldNew}>
+        <TextInput
+          value={newEmail}
+          onChangeText={setNewEmail}
+          placeholder="ornek@firma.com"
+          placeholderTextColor={colors.textSubtle}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          style={styles.input}
+        />
+      </Field>
+      <Field label={t.settings.emailChangeFieldPassword}>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t.settings.emailChangeFieldPasswordPlaceholder}
+          placeholderTextColor={colors.textSubtle}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={styles.input}
+        />
+      </Field>
+      <View style={{ flexDirection: "row", gap: spacing(2), marginTop: spacing(1) }}>
+        <TouchableOpacity
+          onPress={submit}
+          disabled={submitting || !newEmail.trim() || !password}
+          style={[
+            styles.profileSaveBtn,
+            (submitting || !newEmail.trim() || !password) && { opacity: 0.4 },
+          ]}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.profileSaveBtnText}>
+            {submitting ? t.settings.emailChangeSendingBtn : t.settings.emailChangeSendBtn}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setOpen(false);
+            setNewEmail("");
+            setPassword("");
+          }}
+          style={styles.cancelBtn}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.cancelBtnText}>{t.settings.emailChangeCancel}</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={[styles.muted, { fontSize: 11, marginTop: spacing(2), lineHeight: 16 }]}>
+        {t.settings.emailChangeNote}
+      </Text>
+    </View>
   );
 }
 
@@ -877,5 +985,20 @@ const styles = StyleSheet.create({
   usageBarFill: {
     height: 8,
     borderRadius: 4,
+  },
+  emailChangeLink: {
+    color: colors.brand,
+    fontFamily: font,
+    fontSize: 13,
+    fontWeight: "500",
+    textDecorationLine: "underline",
+  },
+  emailChangeBox: {
+    marginTop: spacing(2),
+    padding: spacing(3),
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.md,
   },
 });

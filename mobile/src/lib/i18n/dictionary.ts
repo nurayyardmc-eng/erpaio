@@ -60,6 +60,17 @@ export interface Dictionary {
     profileSavingBtn: string;
     profileSavedToast: string;
     profileSaveFailedToast: string;
+    emailChangeBtn: string;
+    emailChangeHint: string;
+    emailChangeFieldNew: string;
+    emailChangeFieldPassword: string;
+    emailChangeFieldPasswordPlaceholder: string;
+    emailChangeSendBtn: string;
+    emailChangeSendingBtn: string;
+    emailChangeNote: string;
+    emailChangeSentToast: string;
+    emailChangeSameAsCurrent: string;
+    emailChangeCancel: string;
     fieldPlan: string;
     sectionWhatsapp: string;
     toggleWhatsappEnabled: string;

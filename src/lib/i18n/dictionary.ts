@@ -113,6 +113,15 @@ export interface Dictionary {
     profileNamePlaceholder: string;
     profileEmail: string;
     profileEmailChangeNote: string;
+    emailChangeBtn: string;
+    emailChangeHint: string;
+    emailChangeFieldNew: string;
+    emailChangeFieldPassword: string;
+    emailChangeSendBtn: string;
+    emailChangeSendingBtn: string;
+    emailChangeNote: string;
+    emailChangeSentToast: string;
+    emailChangeSameAsCurrent: string;
     profileSave: string;
     profileSaved: string;
     avatarUpload: string;

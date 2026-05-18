@@ -256,9 +256,7 @@ export default function SettingsPage() {
               <div style={{ ...inputStyle, color: colors.textMuted, background: colors.bgSubtle }}>
                 {profile.email}
               </div>
-              <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>
-                {t.settings.profileEmailChangeNote}
-              </div>
+              <EmailChangeRow currentEmail={profile.email} />
             </Field>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <button
@@ -674,6 +672,142 @@ function DangerZone({ t }: { t: Dictionary }) {
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * Email değiştirme inline row — Track YYY.
+ * Profile section'da email field altında render edilir. Tıklayınca form
+ * açar (newEmail + password). Submit → POST /api/me/email/request-change
+ * → server YENİ email'e doğrulama linki yollar; kullanıcı linki tıklayınca
+ * email atomik güncellenir.
+ */
+function EmailChangeRow({ currentEmail }: { currentEmail: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!newEmail || !password) return;
+    if (newEmail.trim().toLowerCase() === currentEmail.toLowerCase()) {
+      showToast(t.settings.emailChangeSameAsCurrent, "error");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/me/email/request-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newEmail: newEmail.trim(), currentPassword: password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(t.settings.emailChangeSentToast, "success");
+        setOpen(false);
+        setNewEmail("");
+        setPassword("");
+      } else {
+        showToast(data.error || t.common.error, "error");
+      }
+    } catch {
+      showToast(t.common.networkError, "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <div style={{ marginTop: 6 }}>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: colors.text,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: "pointer",
+            padding: 0,
+            textDecoration: "underline",
+            fontFamily: "inherit",
+          }}
+        >
+          {t.settings.emailChangeBtn} →
+        </button>
+        <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>
+          {t.settings.emailChangeHint}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      marginTop: 12,
+      padding: 14,
+      background: colors.bgSubtle,
+      borderRadius: 10,
+      border: `1px solid ${colors.border}`,
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+    }}>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: colors.text, marginBottom: 4 }}>
+          {t.settings.emailChangeFieldNew}
+        </div>
+        <input
+          type="email"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
+          placeholder="ornek@firma.com"
+          autoComplete="email"
+          style={{ ...inputStyle, fontSize: 13 }}
+        />
+      </div>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: colors.text, marginBottom: 4 }}>
+          {t.settings.emailChangeFieldPassword}
+        </div>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          autoComplete="current-password"
+          style={{ ...inputStyle, fontSize: 13 }}
+        />
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={submitting || !newEmail || !password}
+          style={{
+            ...primaryBtn,
+            padding: "8px 16px",
+            fontSize: 12,
+            opacity: submitting || !newEmail || !password ? 0.5 : 1,
+          }}
+        >
+          {submitting ? t.settings.emailChangeSendingBtn : t.settings.emailChangeSendBtn}
+        </button>
+        <button
+          type="button"
+          onClick={() => { setOpen(false); setNewEmail(""); setPassword(""); }}
+          style={{ ...secondaryBtn, padding: "8px 16px", fontSize: 12 }}
+        >
+          {t.common.cancel}
+        </button>
+      </div>
+      <div style={{ fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+        {t.settings.emailChangeNote}
+      </div>
+    </div>
   );
 }
 

@@ -40,6 +40,8 @@ const ACTION_LABELS_TR: Record<string, string> = {
   "alert.feedback.false_positive": "Alert yanlış alarm olarak işaretlendi",
   "alert.feedback.clear": "Alert FP işareti kaldırıldı",
   "connection.schema.sync": "ERP şeması senkronize edildi",
+  "email.change.request": "Email değişikliği talebi",
+  "email.change.complete": "Email değişikliği tamamlandı",
 };
 
 const ACTION_LABELS_EN: Record<string, string> = {
@@ -68,6 +70,8 @@ const ACTION_LABELS_EN: Record<string, string> = {
   "alert.feedback.false_positive": "Alert marked as false positive",
   "alert.feedback.clear": "Alert FP mark cleared",
   "connection.schema.sync": "ERP schema synced",
+  "email.change.request": "Email change requested",
+  "email.change.complete": "Email change completed",
 };
 
 export default function ActivityScreen({ navigation }: Props) {

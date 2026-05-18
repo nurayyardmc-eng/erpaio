@@ -102,6 +102,7 @@ export const RATE_LIMITS = {
   MFA_VERIFY: { prefix: "mfa-verify", max: 10, windowMs: 5 * 60_000 }, // 10/5dk / user (brute force)
   RECOVERY_GEN: { prefix: "rec-gen", max: 3, windowMs: 60 * 60_000 }, // 3/saat / user
   PASSWORD_CHANGE: { prefix: "pwd-change", max: 5, windowMs: 60 * 60_000 }, // 5/saat / user
+  EMAIL_CHANGE_REQUEST: { prefix: "email-chg", max: 3, windowMs: 60 * 60_000 }, // 3/saat / user — spam koruma; verify token ayrı IP-based
   CONSENTS_READ: { prefix: "consents", max: 30, windowMs: 60_000 }, // 30/dk / user
   PUSH_TOKEN_REGISTER: { prefix: "push-reg", max: 10, windowMs: 60_000 }, // 10/dk / user (mobile launch'larda yeniden register'ı kapsar)
   NOTIFICATION_PREFS: { prefix: "notif-pref", max: 30, windowMs: 60_000 }, // 30/dk / user (GET ve PATCH ortak; UI toggle spam'i için bolca pay var)
