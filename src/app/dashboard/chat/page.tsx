@@ -914,6 +914,40 @@ export default function ChatPage() {
                   {t.chat.addErpConnectionCta}
                 </a>
               )}
+              {/* Track HH — onboarding suggested questions. Connection var ama
+                  ilk soru sorulmamış: kullanıcı boş ekrana bakıp ne yazacağını
+                  bilmiyor. Suggested prompt chips bir tık deneme akışı. */}
+              {selectedConn && (
+                <div style={{ marginTop: 32, display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 640 }}>
+                  <span style={{ fontSize: 11, color: "#94A3B8", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, width: "100%", marginBottom: 4 }}>
+                    {t.chat.suggestedLabel}
+                  </span>
+                  {[
+                    t.chat.suggestedQ1,
+                    t.chat.suggestedQ2,
+                    t.chat.suggestedQ3,
+                    t.chat.suggestedQ4,
+                  ].map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => setInput(q)}
+                      style={{
+                        background: "#FFFFFF",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: 100,
+                        padding: "8px 16px",
+                        color: "#0A0A0A",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

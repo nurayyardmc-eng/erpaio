@@ -631,6 +631,11 @@ export interface Dictionary {
     introWithConn: string;
     introWithoutConn: string;
     addErpConnectionCta: string;
+    suggestedLabel: string;
+    suggestedQ1: string;
+    suggestedQ2: string;
+    suggestedQ3: string;
+    suggestedQ4: string;
     sqlGenerating: string;
     confirmNeeded: string;
     confidenceLabel: string;
