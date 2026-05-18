@@ -420,6 +420,10 @@ export const tr: Dictionary = {
     triggerHistoryTitle: "Tetiklenme geçmişi",
     triggerHistoryEmpty: "Henüz tetiklenme yok.",
     triggerHistoryCap: "Son 50 tetiklenme gösterilir (daha eski kayıtlar 90 gün retention sonrası silinir).",
+    testRunBtn: "Test çalıştır",
+    testRunResultPrefix: "Şu anki değer:",
+    testRunWouldTrigger: "tetiklenir ✓",
+    testRunNoTrigger: "tetiklenmez",
   },
   customMetrics: {
     title: "Custom Metrics",

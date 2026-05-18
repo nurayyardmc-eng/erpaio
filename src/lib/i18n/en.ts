@@ -421,6 +421,10 @@ export const en: Dictionary = {
     triggerHistoryTitle: "Trigger history",
     triggerHistoryEmpty: "No triggers yet.",
     triggerHistoryCap: "Showing the most recent 50 triggers (older records are removed after the 90-day retention).",
+    testRunBtn: "Run test",
+    testRunResultPrefix: "Current value:",
+    testRunWouldTrigger: "would trigger ✓",
+    testRunNoTrigger: "would not trigger",
   },
   customMetrics: {
     title: "Custom Metrics",

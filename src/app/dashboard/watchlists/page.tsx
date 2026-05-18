@@ -58,6 +58,9 @@ export default function WatchlistsPage() {
   // Track NNNN — trigger history (sadece edit modunda yüklenir).
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [triggersLoading, setTriggersLoading] = useState(false);
+  // Track AA — test çalıştır state.
+  const [testResult, setTestResult] = useState<{ value: number; wouldTrigger: boolean } | null>(null);
+  const [testRunning, setTestRunning] = useState(false);
 
   const refresh = () => {
     Promise.all([
@@ -126,6 +129,7 @@ export default function WatchlistsPage() {
     // temizlenir; her edit açılışında fresh fetch yapılır.
     setTriggers([]);
     setTriggersLoading(true);
+    setTestResult(null);
     fetch(`/api/watchlists/${encodeURIComponent(w.id)}/triggers`)
       .then((r) => r.ok ? r.json() : { triggers: [] })
       .then((d: { triggers: Trigger[] }) => setTriggers(d.triggers ?? []))
@@ -136,6 +140,32 @@ export default function WatchlistsPage() {
   const cancelEdit = () => {
     setEditId(null);
     setTriggers([]);
+    setTestResult(null);
+  };
+
+  /**
+   * Track AA — preview run. Cron'u beklemeden anlık SQL + threshold check.
+   * Result inline gösterilir (yeşil "tetiklenir" / gri "tetiklenmez"). Persist
+   * yok — Watchlist.lastValue değişmez.
+   */
+  const runTest = async (id: string) => {
+    setTestRunning(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(`/api/watchlists/${encodeURIComponent(id)}/run`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || t.common.error, "error");
+        return;
+      }
+      setTestResult({ value: data.value, wouldTrigger: data.wouldTrigger });
+    } catch {
+      showToast(t.common.error, "error");
+    } finally {
+      setTestRunning(false);
+    }
   };
 
   const saveEdit = async (id: string) => {
@@ -275,13 +305,29 @@ export default function WatchlistsPage() {
               <Field label={t.watchlists.fieldEmail}>
                 <input type="email" value={editForm.emailTo} onChange={(e) => setEditForm({ ...editForm, emailTo: e.target.value })} placeholder={t.watchlists.fieldEmailPlaceholder} style={input} />
               </Field>
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
                 <button onClick={() => saveEdit(w.id)} disabled={editSaving} style={btnPrimary}>
                   {editSaving ? t.common.saving : t.common.save}
                 </button>
                 <button onClick={cancelEdit} disabled={editSaving} style={btnSecondary}>
                   {t.common.cancel}
                 </button>
+                <button onClick={() => runTest(w.id)} disabled={testRunning || editSaving} style={btnSecondary} type="button">
+                  {testRunning ? "..." : t.watchlists.testRunBtn}
+                </button>
+                {testResult && (
+                  <span style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: testResult.wouldTrigger ? "#10B981" : "#737373",
+                    padding: "4px 10px",
+                    background: testResult.wouldTrigger ? "#D1FAE5" : "#F1F5F9",
+                    borderRadius: 100,
+                  }}>
+                    {t.watchlists.testRunResultPrefix} {testResult.value} —{" "}
+                    {testResult.wouldTrigger ? t.watchlists.testRunWouldTrigger : t.watchlists.testRunNoTrigger}
+                  </span>
+                )}
               </div>
 
               {/* Track NNNN — Trigger history (son 50). Hep gösterilir;
