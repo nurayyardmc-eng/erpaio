@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface SlowQueryRow {
   id: string;
@@ -189,6 +190,27 @@ export default function SlowQueriesAdminPage() {
             }}
           >
             ✕ Tenant filtresini kaldır
+          </button>
+        )}
+        {rows.length > 0 && (
+          <button
+            onClick={() => {
+              const csvRows = rows.map((r) => ({
+                time: r.createdAt,
+                tenant: r.tenant.name,
+                durationMs: r.durationMs,
+                ok: String(r.ok),
+                connection: r.connection ? `${r.connection.erpType}:${r.connection.host}` : "",
+                sqlSnippet: r.sqlSnippet,
+                error: r.errorMessage ?? "",
+              }));
+              const csv = rowsToCsv(csvRows, ["time", "tenant", "durationMs", "ok", "connection", "sqlSnippet", "error"]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`erpaio-admin-slow-queries-${ts}.csv`, csv);
+            }}
+            style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ↓ CSV
           </button>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface Activity {
   id: string;
@@ -109,7 +110,28 @@ export default function AdminActivityPage() {
         )}
       </div>
 
-      {/* Reset filter */}
+      {/* Reset filter + CSV (Track WW) */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
+      {activities.length > 0 && (
+        <button
+          onClick={() => {
+            const rows = activities.map((a) => ({
+              time: a.createdAt,
+              tenant: a.tenant?.name ?? a.tenantId ?? "",
+              email: a.email ?? "",
+              action: a.action,
+              target: a.target ?? "",
+              ip: a.ipAddress ?? "",
+            }));
+            const csv = rowsToCsv(rows, ["time", "tenant", "email", "action", "target", "ip"]);
+            const ts = new Date().toISOString().slice(0, 10);
+            downloadCsv(`erpaio-admin-activity-${ts}.csv`, csv);
+          }}
+          style={{ padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
+        >
+          ↓ CSV
+        </button>
+      )}
       {actionFilter && (
         <button
           onClick={() => {
@@ -131,6 +153,7 @@ export default function AdminActivityPage() {
           × Filtre temizle ({actionFilter})
         </button>
       )}
+      </div>
 
       {/* Activity list */}
       {loading ? (

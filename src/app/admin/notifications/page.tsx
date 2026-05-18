@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 type Channel = "whatsapp" | "email" | "push" | "slack" | "teams" | "webhook";
 type Status = "sent" | "failed" | "skipped";
@@ -170,6 +171,27 @@ export default function AdminNotificationsPage() {
             {s || "Hepsi"}
           </button>
         ))}
+        {rows.length > 0 && (
+          <button
+            onClick={() => {
+              const csvRows = rows.map((r) => ({
+                time: r.createdAt,
+                tenant: r.tenant?.name ?? r.tenantId,
+                channel: r.channel,
+                status: r.status,
+                recipient: r.recipient ?? "",
+                error: r.error ?? "",
+                alertId: r.alertId ?? "",
+              }));
+              const csv = rowsToCsv(csvRows, ["time", "tenant", "channel", "status", "recipient", "error", "alertId"]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`erpaio-admin-notifications-${ts}.csv`, csv);
+            }}
+            style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ↓ CSV
+          </button>
+        )}
       </div>
 
       {/* Recent list */}
