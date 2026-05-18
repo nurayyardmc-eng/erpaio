@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface SlowQueryRow {
   id: string;
@@ -124,6 +125,38 @@ export default function SlowQueriesPage() {
             {p.label}
           </button>
         ))}
+        {rows.length > 0 && (
+          <button
+            onClick={() => {
+              /* Track RR — slow queries CSV (perf inceleme için). */
+              const csvRows = rows.map((r) => ({
+                time: r.createdAt,
+                durationMs: r.durationMs,
+                ok: String(r.ok),
+                connection: r.connection ? `${r.connection.erpType}:${r.connection.host}` : "",
+                sqlSnippet: r.sqlSnippet,
+                error: r.errorMessage ?? "",
+              }));
+              const csv = rowsToCsv(csvRows, ["time", "durationMs", "ok", "connection", "sqlSnippet", "error"]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`erpaio-slow-queries-${ts}.csv`, csv);
+            }}
+            style={{
+              marginLeft: "auto",
+              padding: "6px 14px",
+              borderRadius: 100,
+              fontSize: 12,
+              fontWeight: 500,
+              border: "1px solid rgba(10,10,10,0.12)",
+              background: "transparent",
+              color: "#525252",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            ↓ {t.audit.exportCsv}
+          </button>
+        )}
       </div>
 
       {/* Row list */}
