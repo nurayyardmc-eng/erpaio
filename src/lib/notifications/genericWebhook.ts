@@ -11,10 +11,14 @@ export interface WebhookPayload {
   data: Record<string, unknown>;
 }
 
-export async function sendWebhook(payload: WebhookPayload): Promise<{ ok: boolean }> {
+// Exported for test (Track LLLL). Pure body/headers builder, no I/O.
+export function buildWebhookRequest(payload: Omit<WebhookPayload, "url">, timestamp: string): {
+  body: string;
+  headers: Record<string, string>;
+} {
   const body = JSON.stringify({
     event: payload.event,
-    timestamp: new Date().toISOString(),
+    timestamp,
     data: payload.data,
   });
 
@@ -28,6 +32,12 @@ export async function sendWebhook(payload: WebhookPayload): Promise<{ ok: boolea
     const sig = createHmac("sha256", payload.secret).update(body).digest("hex");
     headers["X-ERPAIO-Signature"] = `sha256=${sig}`;
   }
+
+  return { body, headers };
+}
+
+export async function sendWebhook(payload: WebhookPayload): Promise<{ ok: boolean }> {
+  const { body, headers } = buildWebhookRequest(payload, new Date().toISOString());
 
   const delays = [0, 2000, 8000];
   let lastErr: unknown = null;
