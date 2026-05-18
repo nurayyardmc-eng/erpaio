@@ -28,6 +28,7 @@ import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { shareJson } from "../lib/share";
 import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -203,13 +204,45 @@ export default function SessionsScreen({ navigation }: Props) {
           <Text style={styles.brand}>ERPAIO · CHAT</Text>
           <Text style={styles.title}>{t.sessions.title}</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Chat", {})}
-          style={styles.newButton}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.newButtonText}>+ {t.common.save === "Save" ? "New" : "Yeni"}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", gap: spacing(2), alignItems: "center" }}>
+          {/* Track PPP — sessions share. Sadece metadata (title, dates, count);
+              message body'leri yok (uzun, mesaj export'u ayrı session export). */}
+          {(sessionsQuery.data?.length ?? 0) > 0 && (
+            <TouchableOpacity
+              onPress={async () => {
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  await shareJson(`erpaio-sessions-${ts}.json`, {
+                    view,
+                    count: sessionsQuery.data!.length,
+                    sessions: sessionsQuery.data!.map((s) => ({
+                      id: s.id,
+                      title: s.title,
+                      messageCount: s.messageCount,
+                      archivedAt: s.archivedAt,
+                      pinned: s.pinned,
+                      createdAt: s.createdAt,
+                      updatedAt: s.updatedAt,
+                    })),
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Chat", {})}
+            style={styles.newButton}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.newButtonText}>+ {t.common.save === "Save" ? "New" : "Yeni"}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.searchRow}>
@@ -394,6 +427,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2.5),
   },
   newButtonText: { color: colors.textInverse, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "700" },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
