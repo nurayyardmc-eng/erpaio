@@ -10,11 +10,12 @@ import {
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { acknowledgeAlert, getAlerts, type Alert } from "../lib/alerts";
+import { acknowledgeAlert, bulkUpdateAlerts, getAlerts, type Alert } from "../lib/alerts";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { showToast } from "../components/Toast";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AlertsStackParamList } from "./AlertsStackNav";
 
@@ -31,6 +32,9 @@ const SEVERITY: Record<Alert["severity"], { color: string; label: string }> = {
 
 export default function AlertsScreen({ navigation }: Props) {
   const [filter, setFilter] = useState<"open" | "acked">("open");
+  // Track KKKK — selection mode (long-press başlatır). Filter değişince temizlenir.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const selectionMode = selected.size > 0;
   const queryClient = useQueryClient();
 
   const alertsQuery = useQuery({
@@ -49,15 +53,68 @@ export default function AlertsScreen({ navigation }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alerts"] }),
   });
 
+  const bulkMutation = useMutation({
+    mutationFn: ({ ids, status }: { ids: string[]; status: "acked" | "resolved" }) =>
+      bulkUpdateAlerts(ids, status),
+    onSuccess: (data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+      setSelected(new Set());
+      const verb = vars.status === "acked" ? "okundu" : "çözüldü";
+      showToast(`${data.count} bildirim ${verb}`, "success");
+    },
+    onError: () => showToast("Toplu güncelleme başarısız", "error"),
+  });
+
+  const onLongPressItem = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
+
+  const onTapItem = (item: Alert) => {
+    if (selectionMode) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(item.id)) next.delete(item.id);
+        else next.add(item.id);
+        return next;
+      });
+    } else {
+      navigation.navigate("AlertDetail", { id: item.id });
+    }
+  };
+
+  const switchFilter = (k: "open" | "acked") => {
+    setSelected(new Set());
+    setFilter(k);
+  };
+
   const renderAlert = ({ item }: { item: Alert }) => {
     const sev = SEVERITY[item.severity] ?? SEVERITY.low;
+    const isSelected = selected.has(item.id);
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate("AlertDetail", { id: item.id })}
+        onPress={() => onTapItem(item)}
+        onLongPress={() => onLongPressItem(item.id)}
+        delayLongPress={350}
         activeOpacity={0.7}
-        style={[styles.card, { borderLeftColor: sev.color }]}
+        style={[
+          styles.card,
+          { borderLeftColor: sev.color },
+          isSelected && styles.cardSelected,
+        ]}
+        accessibilityRole="button"
+        accessibilityState={selectionMode ? { selected: isSelected } : undefined}
+        accessibilityHint={selectionMode ? "Seçimi değiştir" : "Detayı aç, uzun bas seçim moduna gir"}
       >
         <View style={styles.row}>
+          {selectionMode && (
+            <View style={[styles.checkbox, isSelected && styles.checkboxOn]}>
+              {isSelected && <Text style={styles.checkboxTick}>✓</Text>}
+            </View>
+          )}
           <View style={[styles.sevBadge, { backgroundColor: `${sev.color}1A` }]}>
             <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
           </View>
@@ -69,7 +126,7 @@ export default function AlertsScreen({ navigation }: Props) {
           <Text style={styles.timestamp}>
             {new Date(item.createdAt).toLocaleString("tr-TR")}
           </Text>
-          {filter === "open" && (
+          {filter === "open" && !selectionMode && (
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); ackMutation.mutate(item.id); }}
               disabled={ackMutation.isPending}
@@ -93,7 +150,7 @@ export default function AlertsScreen({ navigation }: Props) {
           {(["open", "acked"] as const).map((k) => (
             <TouchableOpacity
               key={k}
-              onPress={() => setFilter(k)}
+              onPress={() => switchFilter(k)}
               style={[styles.tab, filter === k && styles.tabActive]}
               activeOpacity={0.7}
             >
@@ -137,6 +194,40 @@ export default function AlertsScreen({ navigation }: Props) {
             />
           }
         />
+      )}
+
+      {selectionMode && (
+        <View style={styles.actionBar}>
+          <Text style={styles.actionBarCount}>{selected.size} seçili</Text>
+          <View style={styles.actionBarBtns}>
+            {filter === "open" && (
+              <TouchableOpacity
+                onPress={() => bulkMutation.mutate({ ids: Array.from(selected), status: "acked" })}
+                disabled={bulkMutation.isPending}
+                style={[styles.actionBtn, bulkMutation.isPending && { opacity: 0.5 }]}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.actionBtnText}>Okundu</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={() => bulkMutation.mutate({ ids: Array.from(selected), status: "resolved" })}
+              disabled={bulkMutation.isPending}
+              style={[styles.actionBtn, bulkMutation.isPending && { opacity: 0.5 }]}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.actionBtnText}>Çöz</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setSelected(new Set())}
+              disabled={bulkMutation.isPending}
+              style={styles.actionBtnSecondary}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.actionBtnSecondaryText}>İptal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       )}
     </View>
   );
@@ -227,4 +318,59 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(1.5),
   },
   ackBtnText: { color: colors.text, fontFamily: font, fontSize: 12, fontWeight: "500" },
+  cardSelected: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.brand,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxOn: {
+    backgroundColor: colors.brand,
+    borderColor: colors.brand,
+  },
+  checkboxTick: { color: colors.textInverse, fontSize: 14, fontWeight: "700" },
+  actionBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: spacing(3),
+    paddingBottom: spacing(5),
+    paddingHorizontal: spacing(5),
+    backgroundColor: colors.text,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  actionBarCount: {
+    color: colors.textInverse,
+    fontFamily: font,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  actionBarBtns: { flexDirection: "row", gap: spacing(2) },
+  actionBtn: {
+    backgroundColor: colors.textInverse,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3.5),
+    paddingVertical: spacing(2),
+  },
+  actionBtnText: { color: colors.text, fontFamily: font, fontSize: 12, fontWeight: "600" },
+  actionBtnSecondary: {
+    borderColor: colors.textInverse,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3.5),
+    paddingVertical: spacing(2),
+  },
+  actionBtnSecondaryText: { color: colors.textInverse, fontFamily: font, fontSize: 12, fontWeight: "500" },
 });

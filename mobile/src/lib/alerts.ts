@@ -43,6 +43,21 @@ export async function resolveAlert(id: string): Promise<void> {
   });
 }
 
+/**
+ * Track KKKK — toplu state transition. Triage akışında 20+ alert'i tek tek
+ * okundu basmak yerine long-press + multi-select + tek post.
+ * Max 100 id/req (server cap). Tenant-scoped server tarafında.
+ */
+export async function bulkUpdateAlerts(
+  ids: string[],
+  status: "acked" | "resolved",
+): Promise<{ count: number }> {
+  return api<{ count: number }>("/api/alerts/bulk", {
+    method: "POST",
+    body: { ids, status },
+  });
+}
+
 /** Anomaly engine learning loop — bu alert'i yanlış alarm olarak işaretle. */
 export async function markAlertFalsePositive(id: string): Promise<void> {
   await api(`/api/alerts/${encodeURIComponent(id)}/feedback`, {
