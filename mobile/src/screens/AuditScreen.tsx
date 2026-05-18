@@ -1,12 +1,14 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useQuery } from "@tanstack/react-query";
 import { getAudit, type AuditEntry } from "../lib/dashboard";
-import { colors, font, fontMono, spacing } from "../lib/theme";
+import { colors, font, fontMono, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { showToast } from "../components/Toast";
+import { shareJson } from "../lib/share";
 import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
@@ -36,6 +38,28 @@ export default function AuditScreen({ navigation }: Props) {
         title={t.audit.title}
         description={t.audit.description}
         onBack={() => navigation.goBack()}
+        right={
+          (q.data?.entries.length ?? 0) > 0 ? (
+            <TouchableOpacity
+              onPress={async () => {
+                /* Track FFF — audit log share. */
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  await shareJson(`erpaio-audit-${ts}.json`, {
+                    count: q.data!.entries.length,
+                    entries: q.data!.entries,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
       {q.isLoading ? (
         <View style={{ padding: spacing(5) }}><SkeletonList count={6} height={60} gap={6} /></View>
@@ -57,6 +81,15 @@ export default function AuditScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   row: {
     flexDirection: "row",
     alignItems: "center",
