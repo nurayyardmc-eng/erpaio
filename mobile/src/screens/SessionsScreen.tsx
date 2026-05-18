@@ -222,7 +222,6 @@ export default function SessionsScreen({ navigation }: Props) {
                       archivedAt: s.archivedAt,
                       pinned: s.pinned,
                       createdAt: s.createdAt,
-                      updatedAt: s.updatedAt,
                     })),
                   });
                 } catch {

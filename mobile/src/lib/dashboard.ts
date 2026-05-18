@@ -348,6 +348,7 @@ export interface ScheduledReport {
   emailTo: string;
   enabled: boolean;
   lastRunAt: string | null;
+  lastError: string | null;
   createdAt: string;
 }
 

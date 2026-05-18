@@ -108,6 +108,9 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
       </View>
       <Text style={styles.question}>{item.question}</Text>
       <Text style={styles.meta}>{SCHEDULE_LABEL[item.schedule] ?? item.schedule} · {item.emailTo}</Text>
+      {item.lastError && (
+        <Text style={styles.errorText} numberOfLines={2}>⚠ {item.lastError}</Text>
+      )}
       {item.lastRunAt && (
         <Text style={styles.timestamp}>{t.scheduledReports.lastRunLabel}{new Date(item.lastRunAt).toLocaleString("tr-TR")}</Text>
       )}
@@ -222,6 +225,7 @@ const styles = StyleSheet.create({
   question: { color: colors.textMuted, fontFamily: font, fontSize: 13, lineHeight: 19, marginBottom: spacing(1.5) },
   meta: { color: colors.text, fontFamily: font, fontSize: 12, marginBottom: 4 },
   timestamp: { color: colors.textSubtle, fontFamily: font, fontSize: 11 },
+  errorText: { color: colors.error, fontFamily: font, fontSize: 11, marginTop: 4 },
   addBtn: {
     backgroundColor: colors.brand,
     borderRadius: radius.full,
