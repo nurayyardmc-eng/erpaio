@@ -96,6 +96,26 @@ export async function getCronHealth(): Promise<{ jobs: CronHealthJob[] }> {
   return api<{ jobs: CronHealthJob[] }>(`/api/tenant/cron-health`);
 }
 
+/**
+ * Tenant NPS aggregate — Track MM (UUUU mobile parity). Owner/admin görür
+ * kendi org'unun NPS skorunu + recent yorumları.
+ */
+export interface TenantNpsResponse {
+  score: number;
+  comment: string | null;
+  respondedAt: string;
+}
+
+export interface TenantNpsData {
+  nps: number;
+  breakdown: { promoters: number; passives: number; detractors: number; total: number };
+  responses: TenantNpsResponse[];
+}
+
+export async function getTenantNps(): Promise<TenantNpsData> {
+  return api<TenantNpsData>(`/api/tenant/nps`);
+}
+
 // ============= Tenant notification log (audit trail) =============
 export interface NotificationLogEntry {
   id: string;

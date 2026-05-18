@@ -52,6 +52,14 @@ export interface Dictionary {
     cronHealthAnomalyLabel: string;
     cronHealthWatchlistsLabel: string;
     cronHealthReportsLabel: string;
+    tenantNpsTitle: string;
+    tenantNpsDescription: string;
+    tenantNpsEmpty: string;
+    tenantNpsScoreLabel: string;
+    tenantNpsResponsesLabel: string;
+    tenantNpsPromoters: string;
+    tenantNpsPassives: string;
+    tenantNpsDetractors: string;
     logout: string;
     logoutConfirm: string;
     brand: string;

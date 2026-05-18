@@ -22,6 +22,7 @@ import {
   exportTenantData,
   getTenantUsage,
   getCronHealth,
+  getTenantNps,
   type NotificationPrefs,
   type CronHealthJob,
 } from "../lib/dashboard";
@@ -318,6 +319,8 @@ export default function SettingsScreen({ onLogout }: Props) {
       </Section>
 
       <TenantCronHealthSection />
+
+      <TenantNpsSection />
 
       <TenantExportSection />
 
@@ -794,6 +797,86 @@ function TenantCronHealthSection() {
 }
 
 /**
+ * Tenant NPS aggregate — Track MM (UUUU mobile parity). Owner+admin görür
+ * kendi org NPS skorunu. Mobile compact UI — büyük skor + breakdown
+ * badges + max 3 recent comment (web 5'i gösterir, mobile dar ekran).
+ */
+function TenantNpsSection() {
+  const { t, locale } = useI18n();
+  const meQuery = useQuery({ queryKey: ["me-role-nps"], queryFn: getMe });
+  const role = meQuery.data?.user?.role ?? null;
+  const enabled = role === "owner" || role === "admin";
+  const npsQuery = useQuery({
+    queryKey: ["tenant-nps"],
+    queryFn: getTenantNps,
+    enabled,
+    staleTime: 60_000,
+  });
+
+  if (!enabled) return null;
+
+  const data = npsQuery.data;
+  const isEmpty = !data || data.breakdown.total === 0;
+  const scoreColor =
+    data && data.nps >= 30 ? colors.success : data && data.nps >= 0 ? "#F59E0B" : colors.error;
+
+  return (
+    <Section title={t.settings.tenantNpsTitle}>
+      <Text style={[styles.muted, { marginBottom: spacing(3) }]}>{t.settings.tenantNpsDescription}</Text>
+      {npsQuery.isLoading ? (
+        <Text style={styles.muted}>{t.common.loading}</Text>
+      ) : isEmpty ? (
+        <Text style={styles.muted}>{t.settings.tenantNpsEmpty}</Text>
+      ) : (
+        <View>
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginBottom: spacing(3) }}>
+            <Text style={{ fontSize: 40, fontWeight: "700", color: scoreColor, fontFamily: font }}>
+              {data!.nps > 0 ? "+" : ""}{data!.nps}
+            </Text>
+            <Text style={{ fontSize: 11, color: colors.textMuted, fontFamily: font }}>
+              {t.settings.tenantNpsScoreLabel} · {data!.breakdown.total} {t.settings.tenantNpsResponsesLabel}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: spacing(2), marginBottom: spacing(3), flexWrap: "wrap" }}>
+            <View style={[styles.npsBadge, { backgroundColor: "#D1FAE5" }]}>
+              <Text style={[styles.npsBadgeText, { color: "#065F46" }]}>
+                {t.settings.tenantNpsPromoters}: {data!.breakdown.promoters}
+              </Text>
+            </View>
+            <View style={[styles.npsBadge, { backgroundColor: "#F1F5F9" }]}>
+              <Text style={[styles.npsBadgeText, { color: "#475569" }]}>
+                {t.settings.tenantNpsPassives}: {data!.breakdown.passives}
+              </Text>
+            </View>
+            <View style={[styles.npsBadge, { backgroundColor: "#FEE2E2" }]}>
+              <Text style={[styles.npsBadgeText, { color: "#991B1B" }]}>
+                {t.settings.tenantNpsDetractors}: {data!.breakdown.detractors}
+              </Text>
+            </View>
+          </View>
+          {data!.responses.filter((r) => r.comment).slice(0, 3).map((r, i) => (
+            <View
+              key={i}
+              style={{
+                borderLeftWidth: 3,
+                borderLeftColor: r.score >= 9 ? "#10B981" : r.score >= 7 ? "#F59E0B" : "#EF4444",
+                paddingLeft: 10,
+                marginBottom: spacing(2),
+              }}
+            >
+              <Text style={{ fontSize: 10, color: colors.textMuted, fontFamily: font }}>
+                {r.score}/10 · {new Date(r.respondedAt).toLocaleDateString(locale === "en" ? "en-US" : "tr-TR")}
+              </Text>
+              <Text style={{ fontSize: 13, color: colors.text, fontFamily: font, marginTop: 2 }}>{r.comment}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </Section>
+  );
+}
+
+/**
  * Tenant data export — KVKK md. 11 / GDPR Art. 20 right to data portability.
  * Owner-only (server 403 dönüyor, UI rolü çekip butonu non-owner için gizler).
  * Click → API JSON çek → shareJson() ile Native Share intent ile dosya
@@ -1182,6 +1265,12 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   cronBadgeText: { fontFamily: font, fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
+  npsBadge: {
+    paddingHorizontal: spacing(2),
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  npsBadgeText: { fontFamily: font, fontSize: 11, fontWeight: "600" },
   dangerSection: {
     marginTop: spacing(4),
     backgroundColor: colors.card,
