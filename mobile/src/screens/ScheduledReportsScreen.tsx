@@ -2,7 +2,7 @@ import { FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, Vi
 import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteScheduledReport, getScheduledReports, type ScheduledReport } from "../lib/dashboard";
+import { deleteScheduledReport, getScheduledReports, updateScheduledReport, type ScheduledReport } from "../lib/dashboard";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -34,6 +34,22 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
   const q = useQuery({ queryKey: ["scheduled-reports"], queryFn: getScheduledReports });
   const [menuFor, setMenuFor] = useState<ScheduledReport | null>(null);
+
+  // Track LL — enable/disable toggle mutation.
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
+      updateScheduledReport(id, { enabled }),
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["scheduled-reports"] });
+      showToast(vars.enabled ? t.scheduledReports.enabledToast : t.scheduledReports.disabledToast, "success");
+    },
+    onError: () => showToast(t.common.error, "error"),
+  });
+
+  const onToggle = (r: ScheduledReport) => {
+    setMenuFor(null);
+    toggleMutation.mutate({ id: r.id, enabled: !r.enabled });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteScheduledReport(id),
@@ -127,6 +143,16 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setMenuFor(null)}>
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.name}</Text>
+              <TouchableOpacity
+                onPress={() => onToggle(menuFor)}
+                style={styles.sheetItem}
+                activeOpacity={0.6}
+                disabled={toggleMutation.isPending}
+              >
+                <Text style={styles.sheetText}>
+                  {menuFor.enabled ? t.scheduledReports.disableBtn : t.scheduledReports.enableBtn}
+                </Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
                 <Text style={[styles.sheetText, { color: colors.error }]}>{t.common.delete}</Text>
               </TouchableOpacity>

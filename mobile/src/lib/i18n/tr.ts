@@ -448,6 +448,10 @@ export const tr: Dictionary = {
     deleteConfirmMessageSuffix: " kalıcı olarak silinecek.",
     deleteConfirmYes: "Sil",
     deletedToast: "Rapor silindi",
+    enableBtn: "Etkinleştir",
+    disableBtn: "Devre dışı bırak",
+    enabledToast: "Rapor etkinleştirildi",
+    disabledToast: "Rapor devre dışı bırakıldı",
   },
   scheduledReportForm: {
     brand: "ERPAIO · YENİ RAPOR",

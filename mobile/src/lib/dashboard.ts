@@ -346,6 +346,30 @@ export async function deleteScheduledReport(id: string): Promise<void> {
   await api(`/api/scheduled-reports?id=${id}`, { method: "DELETE" });
 }
 
+/**
+ * Track LL — scheduled report partial update (KK mobile parity). Şu an
+ * yalnız enabled toggle UI'da kullanılıyor; helper full partial schema
+ * destekler (name/question/schedule/emailTo) — edit form ileride aynı
+ * helper'ı kullanır.
+ */
+export interface UpdateReportInput {
+  name?: string;
+  question?: string;
+  schedule?: "hourly" | "daily_06" | "daily_18" | "weekly_monday" | "monthly_first";
+  emailTo?: string;
+  enabled?: boolean;
+}
+
+export async function updateScheduledReport(
+  id: string,
+  patch: UpdateReportInput,
+): Promise<{ report: ScheduledReport }> {
+  return api(`/api/scheduled-reports/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: patch,
+  });
+}
+
 // ============= Team =============
 export interface TeamUser {
   id: string;

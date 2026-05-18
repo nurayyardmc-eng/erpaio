@@ -448,6 +448,10 @@ export const en: Dictionary = {
     deleteConfirmMessageSuffix: " will be permanently deleted.",
     deleteConfirmYes: "Delete",
     deletedToast: "Report deleted",
+    enableBtn: "Enable",
+    disableBtn: "Disable",
+    enabledToast: "Report enabled",
+    disabledToast: "Report disabled",
   },
   scheduledReportForm: {
     brand: "ERPAIO · NEW REPORT",
