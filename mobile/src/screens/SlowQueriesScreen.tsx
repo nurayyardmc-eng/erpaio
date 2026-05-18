@@ -3,6 +3,8 @@ import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } fr
 
 import { useQuery } from "@tanstack/react-query";
 import { getMySlowQueries, type SlowQueryRow } from "../lib/dashboard";
+import { shareJson } from "../lib/share";
+import { showToast } from "../components/Toast";
 import { getMe } from "../lib/auth";
 import { colors, font, fontMono, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -81,6 +83,28 @@ export default function SlowQueriesScreen({ navigation }: Props) {
         title={t.slowQueries.title}
         description={t.slowQueries.description}
         onBack={() => navigation.goBack()}
+        right={
+          isOwnerOrAdmin && (q.data?.rows.length ?? 0) > 0 ? (
+            <TouchableOpacity
+              onPress={async () => {
+                /* Track III — slow queries share. */
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  await shareJson(`erpaio-slow-queries-${ts}.json`, {
+                    summary: q.data!.summary,
+                    rows: q.data!.rows,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
 
       {!isOwnerOrAdmin && !meQuery.isLoading ? (
@@ -152,6 +176,15 @@ export default function SlowQueriesScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   summaryCard: {
     backgroundColor: colors.card,
     borderColor: colors.border,
