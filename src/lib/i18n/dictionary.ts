@@ -654,6 +654,9 @@ export interface Dictionary {
     cachedBadge: string;
     editSqlTitle: string;
     editSqlAria: string;
+    copyTitle: string;
+    copyAria: string;
+    copyToast: string;
     csvDownloadTitle: string;
     csvDownloadAria: string;
     xlsxDownloadTitle: string;

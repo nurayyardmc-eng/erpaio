@@ -5,6 +5,7 @@ import {
   AlertCircle,
   Zap,
   Pencil,
+  Copy,
   Download,
   FileSpreadsheet,
   Sparkles,
@@ -1009,9 +1010,26 @@ export default function ChatPage() {
                           )}
                           <span style={{ flex: 1 }} />
                           {!msg.editing && (
-                            <button onClick={() => startEdit(i)} title={t.chat.editSqlTitle} aria-label={t.chat.editSqlAria} style={iconBtnSmall}>
-                              <Pencil size={12} />
-                            </button>
+                            <>
+                              <button onClick={() => startEdit(i)} title={t.chat.editSqlTitle} aria-label={t.chat.editSqlAria} style={iconBtnSmall}>
+                                <Pencil size={12} />
+                              </button>
+                              {/* Track SS — copy SQL to clipboard. */}
+                              <button
+                                onClick={() => {
+                                  void navigator.clipboard.writeText(msg.sql).then(() => {
+                                    showToast(t.chat.copyToast, "success");
+                                  }).catch(() => {
+                                    showToast(t.common.error, "error");
+                                  });
+                                }}
+                                title={t.chat.copyTitle}
+                                aria-label={t.chat.copyAria}
+                                style={iconBtnSmall}
+                              >
+                                <Copy size={12} />
+                              </button>
+                            </>
                           )}
                           {msg.results.length > 0 && (
                             <>
