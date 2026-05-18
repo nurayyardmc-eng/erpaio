@@ -4,6 +4,7 @@ import { Bell } from "lucide-react";
 import { SkeletonList } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
+import { useI18n } from "@/lib/i18n/context";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -27,6 +28,7 @@ interface Alert {
 }
 
 export default function AlertsPage() {
+  const { t, locale } = useI18n();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -138,8 +140,8 @@ export default function AlertsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", fontFamily: "inherit", color: "#0F172A", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>Bildirimler</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.alerts.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 24px" }}>{t.alerts.title}</h1>
 
       {loading && <SkeletonList count={3} height={72} gap={10} />}
 
@@ -147,31 +149,31 @@ export default function AlertsPage() {
 
       {!loading && !error && alerts.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-          <FilterPill label="Tümü" active={severityFilter === "all"} onClick={() => setSeverityFilter("all")} />
-          <FilterPill label="Kritik" active={severityFilter === "critical"} onClick={() => setSeverityFilter("critical")} />
-          <FilterPill label="Yüksek" active={severityFilter === "high"} onClick={() => setSeverityFilter("high")} />
-          <FilterPill label="Orta" active={severityFilter === "medium"} onClick={() => setSeverityFilter("medium")} />
-          <FilterPill label="Düşük" active={severityFilter === "low"} onClick={() => setSeverityFilter("low")} />
+          <FilterPill label={t.alerts.filterAll} active={severityFilter === "all"} onClick={() => setSeverityFilter("all")} />
+          <FilterPill label={t.alerts.sevCritical} active={severityFilter === "critical"} onClick={() => setSeverityFilter("critical")} />
+          <FilterPill label={t.alerts.sevHigh} active={severityFilter === "high"} onClick={() => setSeverityFilter("high")} />
+          <FilterPill label={t.alerts.sevMedium} active={severityFilter === "medium"} onClick={() => setSeverityFilter("medium")} />
+          <FilterPill label={t.alerts.sevLow} active={severityFilter === "low"} onClick={() => setSeverityFilter("low")} />
           <span style={{ width: 1, background: "rgba(10,10,10,0.08)", margin: "0 4px" }} />
-          <FilterPill label="Hepsi" active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
-          <FilterPill label="Açık" active={statusFilter === "open"} onClick={() => setStatusFilter("open")} />
-          <FilterPill label="Okunmuş" active={statusFilter === "acked"} onClick={() => setStatusFilter("acked")} />
+          <FilterPill label={t.alerts.statusAll} active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
+          <FilterPill label={t.alerts.statusOpen} active={statusFilter === "open"} onClick={() => setStatusFilter("open")} />
+          <FilterPill label={t.alerts.statusAcked} active={statusFilter === "acked"} onClick={() => setStatusFilter("acked")} />
         </div>
       )}
 
       {!loading && !error && alerts.length === 0 && (
         <EmptyState
           icon={<Bell size={28} />}
-          title="Henüz bildirim yok"
-          description="Anomaly detector saatlik çalışıyor. Önemli olaylar burada gözükür."
+          title={t.alerts.emptyTitle}
+          description={t.alerts.emptyDesc}
         />
       )}
 
       {!loading && filtered.length === 0 && alerts.length > 0 && (
         <EmptyState
           icon={<Bell size={28} />}
-          title="Filtreye uyan bildirim yok"
-          description="Filtreyi değiştirerek tekrar deneyin."
+          title={t.alerts.filteredEmptyTitle}
+          description={t.alerts.filteredEmptyDesc}
         />
       )}
 
@@ -182,9 +184,9 @@ export default function AlertsPage() {
               type="checkbox"
               checked={filtered.length > 0 && filtered.every((a) => selected.has(a.id))}
               onChange={() => selectAllVisible(filtered.map((a) => a.id))}
-              aria-label="Tümünü seç"
+              aria-label={t.alerts.bulkClear}
             />
-            <span>{selected.size > 0 ? `${selected.size} bildirim seçili` : "Toplu işlem için seç"}</span>
+            <span>{selected.size > 0 ? t.alerts.bulkPromptSelected(selected.size) : t.alerts.bulkPromptIdle}</span>
           </label>
           {selected.size > 0 && (
             <>
@@ -193,21 +195,21 @@ export default function AlertsPage() {
                 disabled={bulkBusy}
                 style={{ marginLeft: "auto", background: "#FAFAF8", border: "1px solid #FAFAF8", borderRadius: 6, padding: "4px 12px", color: "#0A0A0A", fontSize: 11, cursor: bulkBusy ? "wait" : "pointer", fontFamily: "inherit", opacity: bulkBusy ? 0.5 : 1 }}
               >
-                Okundu işaretle
+                {t.alerts.bulkMarkAcked}
               </button>
               <button
                 onClick={() => bulkUpdate("resolved")}
                 disabled={bulkBusy}
                 style={{ background: "transparent", border: "1px solid #FAFAF8", borderRadius: 6, padding: "4px 12px", color: "#FAFAF8", fontSize: 11, cursor: bulkBusy ? "wait" : "pointer", fontFamily: "inherit", opacity: bulkBusy ? 0.5 : 1 }}
               >
-                Çöz
+                {t.alerts.bulkResolve}
               </button>
               <button
                 onClick={() => setSelected(new Set())}
                 disabled={bulkBusy}
                 style={{ background: "transparent", border: "none", color: "#FAFAF8", fontSize: 11, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }}
               >
-                Temizle
+                {t.alerts.bulkClear}
               </button>
             </>
           )}
@@ -230,7 +232,7 @@ export default function AlertsPage() {
             type="checkbox"
             checked={selected.has(alert.id)}
             onChange={() => toggleSelected(alert.id)}
-            aria-label={`${alert.title} seç`}
+            aria-label={`${alert.title} ${t.alerts.rowSelectAriaSuffix}`}
             style={{ marginRight: 14, cursor: "pointer", flexShrink: 0 }}
           />
           <div style={{ flex: 1 }}>
@@ -241,13 +243,13 @@ export default function AlertsPage() {
               <span style={{ fontSize: 9, color: "#94A3B8" }}>{alert.module ?? "general"}</span>
               {alert.falsePositiveAt && (
                 <span style={{ fontSize: 9, color: "#92400E", background: "#FEF3C7", border: "1px solid #F59E0B", padding: "2px 6px", borderRadius: 3, letterSpacing: 1 }}>
-                  YANLIŞ ALARM
+                  {t.alerts.falsePositiveBadge}
                 </span>
               )}
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{alert.title}</div>
             {alert.description && <div style={{ fontSize: 11, color: "#475569" }}>{alert.description}</div>}
-            <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 6 }}>{new Date(alert.createdAt).toLocaleString("tr-TR")}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 6 }}>{new Date(alert.createdAt).toLocaleString(locale === "en" ? "en-US" : "tr-TR")}</div>
           </div>
 
           <div style={{ display: "flex", gap: 6, flexShrink: 0, flexDirection: "column", alignItems: "flex-end" }}>
@@ -256,17 +258,17 @@ export default function AlertsPage() {
                 onClick={() => acknowledge(alert.id)}
                 style={{ background: "#E5E7EB", border: "1px solid #D1D5DB", borderRadius: 6, padding: "6px 12px", color: "#475569", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}
               >
-                Okundu
+                {t.alerts.ackBtn}
               </button>
             )}
             {(alert.status === "acked" || alert.status === "resolved") && (
               <span style={{ fontSize: 10, color: "#94A3B8" }}>
-                {alert.status === "resolved" ? "Çözüldü" : "Okundu"}
+                {alert.status === "resolved" ? t.alerts.statusResolvedLabel : t.alerts.statusAckedLabel}
               </span>
             )}
             <button
               onClick={() => toggleFalsePositive(alert.id, !!alert.falsePositiveAt)}
-              title={alert.falsePositiveAt ? "Yanlış alarm işaretini kaldır" : "Yanlış alarm olarak işaretle (engine öğrensin)"}
+              title={alert.falsePositiveAt ? t.alerts.fpClearTooltip : t.alerts.fpMarkTooltip}
               style={{
                 background: alert.falsePositiveAt ? "#FEF3C7" : "transparent",
                 border: `1px dashed ${alert.falsePositiveAt ? "#F59E0B" : "#94A3B8"}`,
@@ -278,7 +280,7 @@ export default function AlertsPage() {
                 fontFamily: "inherit",
               }}
             >
-              {alert.falsePositiveAt ? "↶ FP geri al" : "Yanlış alarmdı"}
+              {alert.falsePositiveAt ? t.alerts.fpClearBtn : t.alerts.fpMarkBtn}
             </button>
           </div>
         </div>
@@ -286,7 +288,7 @@ export default function AlertsPage() {
 
       {/* Test butonu */}
       <div style={{ marginTop: 32, borderTop: "1px solid #E5E7EB", paddingTop: 24 }}>
-        <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 12 }}>Test bildirimi gönder:</div>
+        <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 12 }}>{t.alerts.testSectionLabel}</div>
         <button
           onClick={async () => {
             await fetch("/api/alerts", {
@@ -295,8 +297,8 @@ export default function AlertsPage() {
               body: JSON.stringify({
                 type: "anomaly",
                 severity: "high",
-                title: "Test: Stok kritik seviyede",
-                description: "5 ürün kritik stok seviyesinin altına düştü.",
+                title: t.alerts.testTitle,
+                description: t.alerts.testDescription,
                 module: "inventory",
               }),
             });
@@ -305,7 +307,7 @@ export default function AlertsPage() {
           }}
           style={{ background: "#F59E0B18", border: "1px solid #F59E0B40", borderRadius: 6, padding: "10px 20px", color: "#F59E0B", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
         >
-          Test Bildirimi Gönder
+          {t.alerts.testSendBtn}
         </button>
       </div>
     </div>
