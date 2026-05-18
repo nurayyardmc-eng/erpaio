@@ -705,6 +705,12 @@ export const en: Dictionary = {
     pinFailedToast: "Action failed.",
     longPressPinHint: "Long-press to pin",
     longPressUnpinHint: "Long-press to unpin",
+    deleteBtnA11y: "Delete query",
+    deleteConfirmTitle: "Delete query?",
+    deleteConfirmMessageSuffix: " will be removed from the cache.",
+    deleteConfirmYes: "Delete",
+    deletedToast: "Query deleted",
+    deleteFailedToast: "Failed to delete",
   },
   insights: {
     brand: "ERPAIO · INSIGHTS",

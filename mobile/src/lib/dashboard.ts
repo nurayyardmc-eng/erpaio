@@ -191,6 +191,11 @@ export async function pinSavedQuery(id: string, pinned: boolean): Promise<{ ok: 
   });
 }
 
+/** Track KKK — saved query delete (cache cleanup). */
+export async function deleteSavedQuery(id: string): Promise<void> {
+  await api(`/api/saved-queries/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
 // ============= Annotations =============
 export interface Annotation {
   id: string;

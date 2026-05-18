@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Pin, PinOff } from "lucide-react";
+import { Bookmark, Pin, PinOff, Trash2 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { confirmDialog } from "@/components/Confirm";
+import { showToast } from "@/components/Toaster";
 
 interface SavedQuery {
   id: string;
@@ -72,6 +74,34 @@ export default function SavedQueriesPage() {
       setQueries((prev) =>
         prev.map((p) => (p.id === q.id ? { ...p, pinned: q.pinned } : p)),
       );
+    }
+  };
+
+  /** Track KKK — saved query silme. */
+  const removeQuery = async (q: SavedQuery, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const ok = await confirmDialog({
+      title: "Sorguyu sil?",
+      message: `"${q.question}" cache'den kaldırılacak.`,
+      confirmLabel: "Sil",
+      destructive: true,
+    });
+    if (!ok) return;
+    // Optimistic remove
+    const prev = queries;
+    setQueries((p) => p.filter((x) => x.id !== q.id));
+    try {
+      const res = await fetch(`/api/saved-queries/${encodeURIComponent(q.id)}`, { method: "DELETE" });
+      if (!res.ok) {
+        setQueries(prev);
+        showToast("Silinemedi", "error");
+        return;
+      }
+      showToast("Silindi", "success");
+    } catch {
+      setQueries(prev);
+      showToast("Silinemedi", "error");
     }
   };
 
@@ -180,6 +210,26 @@ export default function SavedQueriesPage() {
               }}
             >
               {q.pinned ? <Pin size={16} fill="currentColor" /> : <PinOff size={16} />}
+            </button>
+            <button
+              onClick={(e) => removeQuery(q, e)}
+              title="Sorguyu sil"
+              aria-label="Sorguyu sil"
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 44,
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: 6,
+                borderRadius: 6,
+                color: "#94A3B8",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Trash2 size={14} />
             </button>
           </div>
         ))}

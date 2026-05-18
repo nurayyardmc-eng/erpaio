@@ -1,8 +1,9 @@
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSavedQueries, pinSavedQuery, type SavedQuery } from "../lib/dashboard";
+import { deleteSavedQuery, getSavedQueries, pinSavedQuery, type SavedQuery } from "../lib/dashboard";
 import { shareJson } from "../lib/share";
+import { confirmDialog } from "../components/Confirm";
 import { colors, font, fontMono, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -72,7 +73,45 @@ export default function SavedScreen({ navigation }: Props) {
     pinMutation.mutate({ id: item.id, pinned: !item.pinned });
   };
 
+  // Track KKK — saved query delete.
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteSavedQuery(id),
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ["saved-queries"] });
+      const prev = queryClient.getQueryData<{ queries: SavedQuery[] }>(["saved-queries"]);
+      queryClient.setQueryData<{ queries: SavedQuery[] }>(["saved-queries"], (old) => ({
+        queries: (old?.queries ?? []).filter((q) => q.id !== id),
+      }));
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["saved-queries"], ctx.prev);
+      showToast(t.saved.deleteFailedToast, "error");
+    },
+    onSuccess: () => showToast(t.saved.deletedToast, "success"),
+  });
+
+  const onDelete = async (item: SavedQuery) => {
+    const ok = await confirmDialog({
+      title: t.saved.deleteConfirmTitle,
+      message: `"${item.question}"${t.saved.deleteConfirmMessageSuffix}`,
+      confirmLabel: t.saved.deleteConfirmYes,
+      destructive: true,
+    });
+    if (!ok) return;
+    deleteMutation.mutate(item.id);
+  };
+
   const renderItem = ({ item }: { item: SavedQuery }) => (
+    <View style={{ position: "relative" }}>
+      <TouchableOpacity
+        onPress={() => onDelete(item)}
+        style={styles.deleteCornerBtn}
+        activeOpacity={0.6}
+        accessibilityLabel={t.saved.deleteBtnA11y}
+      >
+        <Text style={styles.deleteCornerBtnText}>×</Text>
+      </TouchableOpacity>
     <TouchableOpacity
       onPress={() => rerun(item)}
       onLongPress={() => onLongPress(item)}
@@ -108,6 +147,7 @@ export default function SavedScreen({ navigation }: Props) {
         </Text>
       </View>
     </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -174,6 +214,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2),
   },
   exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
+  deleteCornerBtn: {
+    position: "absolute",
+    top: spacing(2),
+    right: spacing(2),
+    padding: spacing(1),
+    zIndex: 10,
+  },
+  deleteCornerBtnText: { color: colors.textSubtle, fontFamily: font, fontSize: 18, fontWeight: "300" },
   card: {
     backgroundColor: colors.card,
     borderColor: colors.border,

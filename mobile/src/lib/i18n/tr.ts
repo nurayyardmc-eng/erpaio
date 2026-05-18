@@ -705,6 +705,12 @@ export const tr: Dictionary = {
     pinFailedToast: "İşlem başarısız.",
     longPressPinHint: "Uzun basıp sabitle",
     longPressUnpinHint: "Uzun basıp sabitlemeyi kaldır",
+    deleteBtnA11y: "Sorguyu sil",
+    deleteConfirmTitle: "Sorguyu sil?",
+    deleteConfirmMessageSuffix: " cache'den kaldırılacak.",
+    deleteConfirmYes: "Sil",
+    deletedToast: "Sorgu silindi",
+    deleteFailedToast: "Silinemedi",
   },
   insights: {
     brand: "ERPAIO · ANALİZ",

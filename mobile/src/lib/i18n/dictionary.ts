@@ -703,6 +703,12 @@ export interface Dictionary {
     pinFailedToast: string;
     longPressPinHint: string;
     longPressUnpinHint: string;
+    deleteBtnA11y: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessageSuffix: string;
+    deleteConfirmYes: string;
+    deletedToast: string;
+    deleteFailedToast: string;
   };
   insights: {
     brand: string;
