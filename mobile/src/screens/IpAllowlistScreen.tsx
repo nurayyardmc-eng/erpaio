@@ -25,6 +25,7 @@ import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { confirmDialog } from "../components/Confirm";
 import { showToast } from "../components/Toast";
+import { shareJson } from "../lib/share";
 import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
@@ -134,6 +135,28 @@ export default function IpAllowlistScreen({ navigation }: Props) {
         title={t.ipAllowlist.title}
         description={t.ipAllowlist.description}
         onBack={() => navigation.goBack()}
+        right={
+          entries.length > 0 ? (
+            <TouchableOpacity
+              onPress={async () => {
+                /* Track NNN — IP allowlist share (security audit). */
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  await shareJson(`erpaio-ip-allowlist-${ts}.json`, {
+                    count: entries.length,
+                    entries,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
 
       {/* Add form (only for owner/admin) */}
@@ -216,6 +239,15 @@ export default function IpAllowlistScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   addCard: {
     backgroundColor: colors.card,
     borderColor: colors.border,
