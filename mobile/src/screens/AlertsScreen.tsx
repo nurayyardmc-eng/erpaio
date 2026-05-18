@@ -16,6 +16,7 @@ import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { showToast } from "../components/Toast";
+import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AlertsStackParamList } from "./AlertsStackNav";
 
@@ -23,14 +24,23 @@ interface Props {
   navigation: NativeStackNavigationProp<AlertsStackParamList, "AlertsList">;
 }
 
-const SEVERITY: Record<Alert["severity"], { color: string; label: string }> = {
-  critical: { color: "#EF4444", label: "KRİTİK" },
-  high: { color: "#F59E0B", label: "YÜKSEK" },
-  medium: { color: "#F59E0B", label: "ORTA" },
-  low: { color: "#737373", label: "DÜŞÜK" },
+const SEVERITY_COLOR: Record<Alert["severity"], string> = {
+  critical: "#EF4444",
+  high: "#F59E0B",
+  medium: "#F59E0B",
+  low: "#737373",
 };
 
 export default function AlertsScreen({ navigation }: Props) {
+  const { t } = useI18n();
+  const severityLabel = (s: Alert["severity"]) => {
+    switch (s) {
+      case "critical": return t.alerts.sevCritical;
+      case "high": return t.alerts.sevHigh;
+      case "medium": return t.alerts.sevMedium;
+      case "low": return t.alerts.sevLow;
+    }
+  };
   const [filter, setFilter] = useState<"open" | "acked">("open");
   // Track KKKK — selection mode (long-press başlatır). Filter değişince temizlenir.
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -59,10 +69,12 @@ export default function AlertsScreen({ navigation }: Props) {
     onSuccess: (data, vars) => {
       queryClient.invalidateQueries({ queryKey: ["alerts"] });
       setSelected(new Set());
-      const verb = vars.status === "acked" ? "okundu" : "çözüldü";
-      showToast(`${data.count} bildirim ${verb}`, "success");
+      const msg = vars.status === "acked"
+        ? t.alerts.bulkSuccessAcked(data.count)
+        : t.alerts.bulkSuccessResolved(data.count);
+      showToast(msg, "success");
     },
-    onError: () => showToast("Toplu güncelleme başarısız", "error"),
+    onError: () => showToast(t.alerts.bulkErrorToast, "error"),
   });
 
   const onLongPressItem = (id: string) => {
@@ -92,7 +104,7 @@ export default function AlertsScreen({ navigation }: Props) {
   };
 
   const renderAlert = ({ item }: { item: Alert }) => {
-    const sev = SEVERITY[item.severity] ?? SEVERITY.low;
+    const sevColor = SEVERITY_COLOR[item.severity] ?? SEVERITY_COLOR.low;
     const isSelected = selected.has(item.id);
     return (
       <TouchableOpacity
@@ -102,12 +114,12 @@ export default function AlertsScreen({ navigation }: Props) {
         activeOpacity={0.7}
         style={[
           styles.card,
-          { borderLeftColor: sev.color },
+          { borderLeftColor: sevColor },
           isSelected && styles.cardSelected,
         ]}
         accessibilityRole="button"
         accessibilityState={selectionMode ? { selected: isSelected } : undefined}
-        accessibilityHint={selectionMode ? "Seçimi değiştir" : "Detayı aç, uzun bas seçim moduna gir"}
+        accessibilityHint={selectionMode ? t.alerts.selectToggleHint : t.alerts.selectHint}
       >
         <View style={styles.row}>
           {selectionMode && (
@@ -115,8 +127,8 @@ export default function AlertsScreen({ navigation }: Props) {
               {isSelected && <Text style={styles.checkboxTick}>✓</Text>}
             </View>
           )}
-          <View style={[styles.sevBadge, { backgroundColor: `${sev.color}1A` }]}>
-            <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
+          <View style={[styles.sevBadge, { backgroundColor: `${sevColor}1A` }]}>
+            <Text style={[styles.sevText, { color: sevColor }]}>{severityLabel(item.severity)}</Text>
           </View>
           {item.module && <Text style={styles.module}>{item.module}</Text>}
         </View>
@@ -124,7 +136,7 @@ export default function AlertsScreen({ navigation }: Props) {
         {item.description && <Text style={styles.desc}>{item.description}</Text>}
         <View style={styles.footer}>
           <Text style={styles.timestamp}>
-            {new Date(item.createdAt).toLocaleString("tr-TR")}
+            {new Date(item.createdAt).toLocaleString()}
           </Text>
           {filter === "open" && !selectionMode && (
             <TouchableOpacity
@@ -133,7 +145,7 @@ export default function AlertsScreen({ navigation }: Props) {
               style={styles.ackBtn}
               activeOpacity={0.7}
             >
-              <Text style={styles.ackBtnText}>Okundu</Text>
+              <Text style={styles.ackBtnText}>{t.alerts.ackBtn}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -144,8 +156,8 @@ export default function AlertsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <View style={styles.header}>
-        <Text style={styles.brand}>ERPAIO · BİLDİRİMLER</Text>
-        <Text style={styles.headerTitle}>Bildirimler</Text>
+        <Text style={styles.brand}>{t.alerts.brand}</Text>
+        <Text style={styles.headerTitle}>{t.alerts.title}</Text>
         <View style={styles.tabs}>
           {(["open", "acked"] as const).map((k) => (
             <TouchableOpacity
@@ -155,7 +167,7 @@ export default function AlertsScreen({ navigation }: Props) {
               activeOpacity={0.7}
             >
               <Text style={[styles.tabText, filter === k && styles.tabTextActive]}>
-                {k === "open" ? "Açık" : "Okundu"}
+                {k === "open" ? t.alerts.tabOpen : t.alerts.tabAcked}
               </Text>
             </TouchableOpacity>
           ))}
@@ -178,12 +190,8 @@ export default function AlertsScreen({ navigation }: Props) {
           contentContainerStyle={{ padding: spacing(4), flexGrow: 1 }}
           ListEmptyComponent={
             <EmptyState
-              title={filter === "open" ? "Açık bildirim yok" : "Okundu bildirim yok"}
-              description={
-                filter === "open"
-                  ? "Anomaly detector saatlik çalışıyor. Önemli olaylar burada gözükür."
-                  : "Henüz okuduğun bildirim yok."
-              }
+              title={filter === "open" ? t.alerts.emptyOpenTitle : t.alerts.emptyAckedTitle}
+              description={filter === "open" ? t.alerts.emptyOpenDesc : t.alerts.emptyAckedDesc}
             />
           }
           refreshControl={
@@ -198,7 +206,7 @@ export default function AlertsScreen({ navigation }: Props) {
 
       {selectionMode && (
         <View style={styles.actionBar}>
-          <Text style={styles.actionBarCount}>{selected.size} seçili</Text>
+          <Text style={styles.actionBarCount}>{selected.size}{t.alerts.bulkSelectedSuffix}</Text>
           <View style={styles.actionBarBtns}>
             {filter === "open" && (
               <TouchableOpacity
@@ -207,7 +215,7 @@ export default function AlertsScreen({ navigation }: Props) {
                 style={[styles.actionBtn, bulkMutation.isPending && { opacity: 0.5 }]}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionBtnText}>Okundu</Text>
+                <Text style={styles.actionBtnText}>{t.alerts.bulkAck}</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -216,7 +224,7 @@ export default function AlertsScreen({ navigation }: Props) {
               style={[styles.actionBtn, bulkMutation.isPending && { opacity: 0.5 }]}
               activeOpacity={0.7}
             >
-              <Text style={styles.actionBtnText}>Çöz</Text>
+              <Text style={styles.actionBtnText}>{t.alerts.bulkResolve}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setSelected(new Set())}
@@ -224,7 +232,7 @@ export default function AlertsScreen({ navigation }: Props) {
               style={styles.actionBtnSecondary}
               activeOpacity={0.7}
             >
-              <Text style={styles.actionBtnSecondaryText}>İptal</Text>
+              <Text style={styles.actionBtnSecondaryText}>{t.alerts.bulkCancel}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -14,25 +14,39 @@ import { colors, font, fontMono, fontSerif, radius, spacing } from "../lib/theme
 import ErrorState from "../components/ErrorState";
 import { showToast } from "../components/Toast";
 import { confirmDialog } from "../components/Confirm";
+import { useI18n } from "../lib/i18n/context";
+import type { Dictionary } from "../lib/i18n/dictionary";
 import type { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AlertsStackParamList } from "./AlertsStackNav";
 
 type Props = NativeStackScreenProps<AlertsStackParamList, "AlertDetail">;
 
-const SEVERITY: Record<Alert["severity"], { color: string; label: string }> = {
-  critical: { color: "#EF4444", label: "KRİTİK" },
-  high: { color: "#F59E0B", label: "YÜKSEK" },
-  medium: { color: "#F59E0B", label: "ORTA" },
-  low: { color: "#737373", label: "DÜŞÜK" },
+const SEVERITY_COLOR: Record<Alert["severity"], string> = {
+  critical: "#EF4444",
+  high: "#F59E0B",
+  medium: "#F59E0B",
+  low: "#737373",
 };
 
-const STATUS_LABEL_TR: Record<Alert["status"], string> = {
-  open: "Açık",
-  acked: "Okundu",
-  resolved: "Çözüldü",
-};
+function severityLabel(s: Alert["severity"], t: Dictionary): string {
+  switch (s) {
+    case "critical": return t.alerts.sevCritical;
+    case "high": return t.alerts.sevHigh;
+    case "medium": return t.alerts.sevMedium;
+    case "low": return t.alerts.sevLow;
+  }
+}
+
+function statusLabel(s: Alert["status"], t: Dictionary): string {
+  switch (s) {
+    case "open": return t.alerts.statusOpen;
+    case "acked": return t.alerts.statusAcked;
+    case "resolved": return t.alerts.statusResolved;
+  }
+}
 
 export default function AlertDetailScreen({ route, navigation }: Props) {
+  const { t } = useI18n();
   const { id } = route.params;
   const qc = useQueryClient();
   const [acting, setActing] = useState<"ack" | "resolve" | "fp" | "clearFp" | null>(null);
@@ -44,7 +58,8 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
 
   const onAck = useMutationWrapper({
     action: () => acknowledgeAlert(id),
-    label: "Okundu olarak işaretlendi.",
+    label: t.alerts.ackedToast,
+    failLabel: t.alerts.actionFailedToast,
     qc,
     id,
     nav: navigation,
@@ -54,20 +69,20 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
 
   const onResolve = async () => {
     const ok = await confirmDialog({
-      title: "Bildirimi çözüldü olarak işaretle?",
-      message: "Çözüldü olarak işaretlendikten sonra kapalı listede görünür.",
-      confirmLabel: "Evet",
+      title: t.alerts.resolveConfirmTitle,
+      message: t.alerts.resolveConfirmMessage,
+      confirmLabel: t.alerts.confirmYes,
       destructive: false,
     });
     if (!ok) return;
     setActing("resolve");
     try {
       await resolveAlert(id);
-      showToast("Bildirim çözüldü.", "success");
+      showToast(t.alerts.resolvedToast, "success");
       void qc.invalidateQueries({ queryKey: ["alert", id] });
       void qc.invalidateQueries({ queryKey: ["alerts"] });
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "İşlem başarısız.", "error");
+      showToast(e instanceof Error ? e.message : t.alerts.actionFailedToast, "error");
     } finally {
       setActing(null);
     }
@@ -75,21 +90,20 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
 
   const onMarkFp = async () => {
     const ok = await confirmDialog({
-      title: "Yanlış alarm olarak işaretle?",
-      message:
-        "Bu sinyali anomaly engine'in öğrenme döngüsüne gönderir. Engine, aynı türde tekrarlayan yanlış alarmları zamanla bastırmayı öğrenir.",
-      confirmLabel: "Evet, yanlış alarm",
+      title: t.alerts.fpConfirmTitle,
+      message: t.alerts.fpConfirmMessage,
+      confirmLabel: t.alerts.fpConfirmYes,
       destructive: false,
     });
     if (!ok) return;
     setActing("fp");
     try {
       await markAlertFalsePositive(id);
-      showToast("Yanlış alarm olarak kaydedildi.", "success");
+      showToast(t.alerts.fpMarkedToast, "success");
       void qc.invalidateQueries({ queryKey: ["alert", id] });
       void qc.invalidateQueries({ queryKey: ["alerts"] });
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "İşlem başarısız.", "error");
+      showToast(e instanceof Error ? e.message : t.alerts.actionFailedToast, "error");
     } finally {
       setActing(null);
     }
@@ -99,11 +113,11 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
     setActing("clearFp");
     try {
       await clearAlertFeedback(id);
-      showToast("Yanlış alarm işareti kaldırıldı.", "success");
+      showToast(t.alerts.fpClearedToast, "success");
       void qc.invalidateQueries({ queryKey: ["alert", id] });
       void qc.invalidateQueries({ queryKey: ["alerts"] });
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "İşlem başarısız.", "error");
+      showToast(e instanceof Error ? e.message : t.alerts.actionFailedToast, "error");
     } finally {
       setActing(null);
     }
@@ -113,9 +127,9 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
     <View style={[styles.root, { paddingTop: 50 }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Text style={styles.backText}>← Geri</Text>
+          <Text style={styles.backText}>{t.alerts.back}</Text>
         </TouchableOpacity>
-        <Text style={styles.brand}>ERPAIO · BİLDİRİM DETAYI</Text>
+        <Text style={styles.brand}>{t.alerts.detailBrand}</Text>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}>
@@ -125,29 +139,29 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
           <ErrorState onRetry={() => q.refetch()} />
         ) : (
           <>
-            <AlertHeader alert={q.data} />
+            <AlertHeader alert={q.data} t={t} />
 
             {q.data.description && (
               <View style={styles.card}>
-                <Text style={styles.sectionLabel}>AÇIKLAMA</Text>
+                <Text style={styles.sectionLabel}>{t.alerts.sectionDescription}</Text>
                 <Text style={styles.bodyText}>{q.data.description}</Text>
               </View>
             )}
 
             <View style={styles.card}>
-              <Text style={styles.sectionLabel}>BİLGİLER</Text>
-              <MetaRow label="Tip" value={q.data.type} mono />
-              {q.data.module && <MetaRow label="Modül" value={q.data.module} />}
-              <MetaRow label="Durum" value={STATUS_LABEL_TR[q.data.status] ?? q.data.status} />
+              <Text style={styles.sectionLabel}>{t.alerts.sectionInfo}</Text>
+              <MetaRow label={t.alerts.metaType} value={q.data.type} mono />
+              {q.data.module && <MetaRow label={t.alerts.metaModule} value={q.data.module} />}
+              <MetaRow label={t.alerts.metaStatus} value={statusLabel(q.data.status, t)} />
               <MetaRow
-                label="Zaman"
-                value={new Date(q.data.createdAt).toLocaleString("tr-TR")}
+                label={t.alerts.metaTime}
+                value={new Date(q.data.createdAt).toLocaleString()}
               />
             </View>
 
             {q.data.evidence !== null && q.data.evidence !== undefined && (
               <View style={styles.card}>
-                <Text style={styles.sectionLabel}>KANIT (raw)</Text>
+                <Text style={styles.sectionLabel}>{t.alerts.sectionEvidence}</Text>
                 <Text style={styles.evidenceText} selectable>
                   {JSON.stringify(q.data.evidence, null, 2)}
                 </Text>
@@ -163,7 +177,7 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
                   activeOpacity={0.85}
                 >
                   <Text style={styles.secondaryBtnText}>
-                    {acting === "ack" ? "..." : "Okundu olarak işaretle"}
+                    {acting === "ack" ? "..." : t.alerts.ackBtnLabel}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -173,7 +187,7 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
                   activeOpacity={0.85}
                 >
                   <Text style={styles.primaryBtnText}>
-                    {acting === "resolve" ? "..." : "Çözüldü"}
+                    {acting === "resolve" ? "..." : t.alerts.resolveBtnFromOpen}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -187,7 +201,7 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
                   activeOpacity={0.85}
                 >
                   <Text style={styles.primaryBtnText}>
-                    {acting === "resolve" ? "..." : "Çözüldü olarak işaretle"}
+                    {acting === "resolve" ? "..." : t.alerts.resolveBtnFromAcked}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -204,7 +218,7 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.fpClearBtnText}>
-                    {acting === "clearFp" ? "..." : "✓ Yanlış alarm olarak işaretlendi (geri al)"}
+                    {acting === "clearFp" ? "..." : t.alerts.fpClearBtn}
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -215,7 +229,7 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.fpMarkBtnText}>
-                    {acting === "fp" ? "..." : "Bu yanlış alarmdı"}
+                    {acting === "fp" ? "..." : t.alerts.fpMarkBtn}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -231,6 +245,7 @@ export default function AlertDetailScreen({ route, navigation }: Props) {
 function useMutationWrapper(opts: {
   action: () => Promise<void>;
   label: string;
+  failLabel: string;
   qc: ReturnType<typeof useQueryClient>;
   id: string;
   nav: NativeStackNavigationProp<AlertsStackParamList, "AlertDetail">;
@@ -245,20 +260,20 @@ function useMutationWrapper(opts: {
       void opts.qc.invalidateQueries({ queryKey: ["alert", opts.id] });
       void opts.qc.invalidateQueries({ queryKey: ["alerts"] });
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "İşlem başarısız.", "error");
+      showToast(e instanceof Error ? e.message : opts.failLabel, "error");
     } finally {
       opts.clearBusy();
     }
   };
 }
 
-function AlertHeader({ alert }: { alert: Alert }) {
-  const sev = SEVERITY[alert.severity] ?? SEVERITY.low;
+function AlertHeader({ alert, t }: { alert: Alert; t: Dictionary }) {
+  const sevColor = SEVERITY_COLOR[alert.severity] ?? SEVERITY_COLOR.low;
   return (
-    <View style={[styles.headerCard, { borderLeftColor: sev.color }]}>
+    <View style={[styles.headerCard, { borderLeftColor: sevColor }]}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: spacing(2), marginBottom: spacing(2), flexWrap: "wrap" }}>
-        <View style={[styles.sevBadge, { backgroundColor: `${sev.color}1A` }]}>
-          <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
+        <View style={[styles.sevBadge, { backgroundColor: `${sevColor}1A` }]}>
+          <Text style={[styles.sevText, { color: sevColor }]}>{severityLabel(alert.severity, t)}</Text>
         </View>
         <View
           style={[
@@ -275,12 +290,12 @@ function AlertHeader({ alert }: { alert: Alert }) {
               },
             ]}
           >
-            {STATUS_LABEL_TR[alert.status] ?? alert.status}
+            {statusLabel(alert.status, t)}
           </Text>
         </View>
         {alert.falsePositiveAt && (
           <View style={[styles.statusBadge, { backgroundColor: "#FEF3C7", borderColor: "#F59E0B", borderWidth: 1 }]}>
-            <Text style={[styles.statusText, { color: "#92400E" }]}>YANLIŞ ALARM</Text>
+            <Text style={[styles.statusText, { color: "#92400E" }]}>{t.alerts.falsePositiveBadge}</Text>
           </View>
         )}
       </View>
