@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface TenantHealth {
   tenant: {
@@ -123,6 +124,43 @@ export default function HealthScoresPage() {
             {k === "score" ? "Skora göre" : k === "activity" ? "Activity'e göre" : "İsme göre"}
           </button>
         ))}
+        {items.length > 0 && (
+          <button
+            onClick={() => {
+              /* Track UU — sysadmin health scores CSV (pilot risk audit). */
+              const rows = items.map((it) => ({
+                tenantId: it.tenant.id,
+                name: it.tenant.name,
+                plan: it.tenant.plan,
+                score: it.health.score,
+                grade: it.health.grade,
+                activity: it.health.signals.activity,
+                qualityRate: it.health.signals.qualityRate,
+                feedbackRate: it.health.signals.feedbackRate,
+                cacheHitRate: it.health.signals.cacheHitRate,
+                errorRate: it.health.signals.errorRate,
+                daysActive: it.health.signals.daysActive,
+                createdAt: it.tenant.createdAt,
+              }));
+              const csv = rowsToCsv(rows, ["tenantId", "name", "plan", "score", "grade", "activity", "qualityRate", "feedbackRate", "cacheHitRate", "errorRate", "daysActive", "createdAt"]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`erpaio-health-scores-${ts}.csv`, csv);
+            }}
+            style={{
+              marginLeft: "auto",
+              padding: "6px 12px",
+              borderRadius: 100,
+              fontSize: 12,
+              border: "1px solid rgba(10,10,10,0.12)",
+              background: "transparent",
+              color: "#525252",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            ↓ CSV
+          </button>
+        )}
       </div>
 
       {loading ? (
