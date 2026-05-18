@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { showToast } from "@/components/Toaster";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 const TRIGGER_JOBS = [
   { jobName: "anomaly-detection", path: "/api/cron/anomaly-detection" },
@@ -203,6 +204,31 @@ export default function CronRunsPage() {
             {s || "Hepsi"}
           </button>
         ))}
+        {runs.length > 0 && (
+          <button
+            onClick={() => {
+              /* Track VV — cron runs CSV. */
+              const csvRows = runs.map((r) => ({
+                jobName: r.jobName,
+                status: r.status,
+                startedAt: r.startedAt,
+                finishedAt: r.finishedAt ?? "",
+                durationMs: r.durationMs ?? "",
+                tenantsTotal: r.tenantsTotal,
+                tenantsOk: r.tenantsOk,
+                tenantsFail: r.tenantsFail,
+                alertsCreated: r.alertsCreated,
+                errorMessage: r.errorMessage ?? "",
+              }));
+              const csv = rowsToCsv(csvRows, ["jobName", "status", "startedAt", "finishedAt", "durationMs", "tenantsTotal", "tenantsOk", "tenantsFail", "alertsCreated", "errorMessage"]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`erpaio-cron-runs-${ts}.csv`, csv);
+            }}
+            style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ↓ CSV
+          </button>
+        )}
       </div>
 
       {/* Run list */}
