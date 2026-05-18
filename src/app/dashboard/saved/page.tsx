@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Bookmark, Pin, PinOff } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface SavedQuery {
   id: string;
@@ -98,6 +99,31 @@ export default function SavedQueriesPage() {
           title="Henüz kayıtlı sorgu yok"
           description="Sohbette sorduğunuz başarılı sorgular otomatik olarak cache'e yazılır. Buradan tekrar erişebilirsiniz."
         />
+      )}
+
+      {/* Track XX — saved queries CSV (config backup / migration). */}
+      {!loading && queries.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <button
+            onClick={() => {
+              const rows = queries.map((q) => ({
+                question: q.question,
+                sqlQuery: q.sqlQuery,
+                successCount: q.successCount,
+                failCount: q.failCount,
+                reliability: q.reliability,
+                pinned: String(!!q.pinned),
+                lastUsedAt: q.lastUsedAt,
+              }));
+              const csv = rowsToCsv(rows, ["question", "sqlQuery", "successCount", "failCount", "reliability", "pinned", "lastUsedAt"]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`erpaio-saved-queries-${ts}.csv`, csv);
+            }}
+            style={{ padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ↓ CSV
+          </button>
+        </div>
       )}
 
       <div style={{ display: "grid", gap: 12 }}>
