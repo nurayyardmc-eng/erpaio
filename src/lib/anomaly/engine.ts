@@ -6,6 +6,7 @@ import {
   type AnomalyResult,
 } from "./detectors";
 import { getHourlyQueries, getDailyQueries, type MetricQuery } from "./queries";
+import { getTenantCustomMetrics } from "./customMetrics";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
@@ -39,7 +40,11 @@ export async function runAnomalyDetectionForTenant(
     errors: [],
   };
 
-  const queries = mode === "hourly" ? getHourlyQueries() : getDailyQueries();
+  const staticQueries = mode === "hourly" ? getHourlyQueries() : getDailyQueries();
+  // Track YYYY — DB-stored tenant custom metrics merged into engine loop.
+  // Static = ERPAIO platform geneli; custom = tenant-özel.
+  const customQueries = await getTenantCustomMetrics(tenantId, mode);
+  const queries = [...staticQueries, ...customQueries];
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -62,7 +67,10 @@ export async function runAnomalyDetectionForTenant(
 
   for (const query of queries) {
     try {
-      const metricValue = await executeMetricQuery(erpConnection.id, query);
+      // Track YYYY — custom metrics kendi connectionId'lerini taşır; static
+      // metrics tenant'ın ilk aktif connection'ını kullanır.
+      const connId = query.connectionId ?? erpConnection.id;
+      const metricValue = await executeMetricQuery(connId, query);
       result.metricsRun++;
 
       const now = new Date();

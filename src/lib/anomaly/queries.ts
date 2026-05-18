@@ -8,6 +8,12 @@ export interface MetricQuery {
   direction?: "drop" | "spike" | "both";
   historyWindow?: number;
   sql: string;
+  /**
+   * Track YYYY — per-query ERP connection override. Static metrics tenant'ın
+   * ilk aktif connection'ını kullanır (engine default). Custom metrics
+   * (DB-stored) connectionId'sini buraya geçirir.
+   */
+  connectionId?: string;
 }
 
 export const METRIC_QUERIES: MetricQuery[] = [
