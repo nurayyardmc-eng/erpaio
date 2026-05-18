@@ -17,9 +17,10 @@ export interface TeamsPayload {
   description?: string | null;
 }
 
-export async function sendTeams(payload: TeamsPayload): Promise<{ ok: boolean }> {
+// Exported for test (Track KKKK). Pure MessageCard builder, no I/O.
+export function buildTeamsBody(payload: Omit<TeamsPayload, "webhookUrl">) {
   const color = SEVERITY_COLORS[payload.severity] ?? "9AA5B4";
-  const body = {
+  return {
     "@type": "MessageCard",
     "@context": "http://schema.org/extensions",
     themeColor: color,
@@ -27,6 +28,10 @@ export async function sendTeams(payload: TeamsPayload): Promise<{ ok: boolean }>
     title: `${payload.severity.toUpperCase()} · ${payload.title}`,
     text: payload.description ?? "",
   };
+}
+
+export async function sendTeams(payload: TeamsPayload): Promise<{ ok: boolean }> {
+  const body = buildTeamsBody(payload);
 
   try {
     const res = await fetch(payload.webhookUrl, {
