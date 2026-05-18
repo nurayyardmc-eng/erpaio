@@ -4,6 +4,7 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import CommandPalette from "@/components/CommandPalette";
 import HelpFab from "@/components/HelpFab";
+import NpsPrompt from "@/components/NpsPrompt";
 import TrialBanner from "@/components/TrialBanner";
 import { colors } from "@/lib/theme";
 
@@ -25,6 +26,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </div>
       <CommandPalette />
       <HelpFab />
+      {/* Track SSSS — NPS prompt (90gün cool-down + 30s delay). Önceden dead code
+          olarak duruyordu; layout'a mount edildi. localStorage gating'i kendisi yapar. */}
+      <NpsPrompt />
     </div>
   );
 }

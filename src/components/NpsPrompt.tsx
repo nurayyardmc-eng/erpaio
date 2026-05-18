@@ -2,11 +2,13 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/context";
 
 const NPS_DISMISSED_KEY = "erpaio_nps_dismissed_until";
 const NPS_SUBMITTED_KEY = "erpaio_nps_submitted";
 
 export default function NpsPrompt() {
+  const { t } = useI18n();
   const [show, setShow] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [comment, setComment] = useState("");
@@ -71,7 +73,7 @@ export default function NpsPrompt() {
           justifyContent: "center",
         }}>
           <CheckCircle2 size={18} />
-          Teşekkürler!
+          {t.nps.thanksMsg}
         </div>
       ) : (
         <>
@@ -83,9 +85,9 @@ export default function NpsPrompt() {
               fontWeight: 700,
               textTransform: "uppercase",
             }}>
-              Hızlı Anket
+              {t.nps.header}
             </div>
-            <button onClick={dismiss} style={{
+            <button onClick={dismiss} aria-label={t.nps.dismissAria} style={{
               background: "none",
               border: "none",
               color: colors.textSubtle,
@@ -97,7 +99,7 @@ export default function NpsPrompt() {
             </button>
           </div>
           <p style={{ color: colors.text, fontSize: 13, lineHeight: 1.5, margin: "0 0 14px" }}>
-            ERPAIO&apos;yu bir arkadaşınıza önerir misiniz? <strong>0-10 puan verin.</strong>
+            {t.nps.promptText} <strong>{t.nps.ratingHint}</strong>
           </p>
           <div style={{ display: "flex", gap: 4, marginBottom: 12, flexWrap: "wrap" }}>
             {Array.from({ length: 11 }, (_, i) => (
@@ -124,7 +126,7 @@ export default function NpsPrompt() {
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Yorum (opsiyonel)"
+              placeholder={t.nps.commentPlaceholder}
               rows={2}
               style={{
                 width: "100%",
@@ -156,7 +158,7 @@ export default function NpsPrompt() {
               opacity: score === null ? 0.4 : 1,
             }}
           >
-            Gönder
+            {t.nps.submitBtn}
           </button>
         </>
       )}

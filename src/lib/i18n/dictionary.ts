@@ -410,6 +410,15 @@ export interface Dictionary {
     triggerHistoryEmpty: string;
     triggerHistoryCap: string;
   };
+  nps: {
+    header: string;
+    promptText: string;
+    ratingHint: string;
+    commentPlaceholder: string;
+    submitBtn: string;
+    thanksMsg: string;
+    dismissAria: string;
+  };
   annotations: {
     breadcrumb: string;
     title: string;

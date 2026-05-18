@@ -407,6 +407,15 @@ export const tr: Dictionary = {
     triggerHistoryEmpty: "Henüz tetiklenme yok.",
     triggerHistoryCap: "Son 50 tetiklenme gösterilir (daha eski kayıtlar 90 gün retention sonrası silinir).",
   },
+  nps: {
+    header: "Hızlı Anket",
+    promptText: "ERPAIO'yu bir arkadaşınıza önerir misiniz?",
+    ratingHint: "0-10 puan verin.",
+    commentPlaceholder: "Yorum (opsiyonel)",
+    submitBtn: "Gönder",
+    thanksMsg: "Teşekkürler!",
+    dismissAria: "Anketi kapat",
+  },
   annotations: {
     breadcrumb: "ERPAIO · ŞEMA AÇIKLAMALARI",
     title: "Şema Açıklamaları",

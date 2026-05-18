@@ -408,6 +408,15 @@ export const en: Dictionary = {
     triggerHistoryEmpty: "No triggers yet.",
     triggerHistoryCap: "Showing the most recent 50 triggers (older records are removed after the 90-day retention).",
   },
+  nps: {
+    header: "Quick Survey",
+    promptText: "Would you recommend ERPAIO to a friend?",
+    ratingHint: "Rate from 0 to 10.",
+    commentPlaceholder: "Comment (optional)",
+    submitBtn: "Submit",
+    thanksMsg: "Thanks!",
+    dismissAria: "Dismiss survey",
+  },
   annotations: {
     breadcrumb: "ERPAIO · SCHEMA ANNOTATIONS",
     title: "Schema Annotations",
