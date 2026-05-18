@@ -5,6 +5,7 @@ import { SkeletonList } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
 import { useI18n } from "@/lib/i18n/context";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -43,6 +44,23 @@ export default function AlertsPage() {
   // detayı açık; tekrar tıklayınca kapanır.
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [evidenceCache, setEvidenceCache] = useState<Record<string, unknown>>({});
+
+  /** Track OO — alerts CSV export (activity/consents/chat ile aynı pattern). */
+  const exportCsv = () => {
+    if (filtered.length === 0) return;
+    const rows = filtered.map((a) => ({
+      time: a.createdAt,
+      severity: a.severity,
+      title: a.title,
+      description: a.description ?? "",
+      module: a.module ?? "",
+      status: a.status,
+      falsePositiveAt: a.falsePositiveAt ?? "",
+    }));
+    const csv = rowsToCsv(rows, ["time", "severity", "title", "description", "module", "status", "falsePositiveAt"]);
+    const ts = new Date().toISOString().slice(0, 10);
+    downloadCsv(`erpaio-alerts-${ts}.csv`, csv);
+  };
 
   const toggleExpand = async (alert: Alert) => {
     if (expandedId === alert.id) {
@@ -174,16 +192,36 @@ export default function AlertsPage() {
       {!loading && error && <ErrorState onRetry={load} />}
 
       {!loading && !error && alerts.length > 0 && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-          <FilterPill label={t.alerts.filterAll} active={severityFilter === "all"} onClick={() => setSeverityFilter("all")} />
-          <FilterPill label={t.alerts.sevCritical} active={severityFilter === "critical"} onClick={() => setSeverityFilter("critical")} />
-          <FilterPill label={t.alerts.sevHigh} active={severityFilter === "high"} onClick={() => setSeverityFilter("high")} />
-          <FilterPill label={t.alerts.sevMedium} active={severityFilter === "medium"} onClick={() => setSeverityFilter("medium")} />
-          <FilterPill label={t.alerts.sevLow} active={severityFilter === "low"} onClick={() => setSeverityFilter("low")} />
-          <span style={{ width: 1, background: "rgba(10,10,10,0.08)", margin: "0 4px" }} />
-          <FilterPill label={t.alerts.statusAll} active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
-          <FilterPill label={t.alerts.statusOpen} active={statusFilter === "open"} onClick={() => setStatusFilter("open")} />
-          <FilterPill label={t.alerts.statusAcked} active={statusFilter === "acked"} onClick={() => setStatusFilter("acked")} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <FilterPill label={t.alerts.filterAll} active={severityFilter === "all"} onClick={() => setSeverityFilter("all")} />
+            <FilterPill label={t.alerts.sevCritical} active={severityFilter === "critical"} onClick={() => setSeverityFilter("critical")} />
+            <FilterPill label={t.alerts.sevHigh} active={severityFilter === "high"} onClick={() => setSeverityFilter("high")} />
+            <FilterPill label={t.alerts.sevMedium} active={severityFilter === "medium"} onClick={() => setSeverityFilter("medium")} />
+            <FilterPill label={t.alerts.sevLow} active={severityFilter === "low"} onClick={() => setSeverityFilter("low")} />
+            <span style={{ width: 1, background: "rgba(10,10,10,0.08)", margin: "0 4px" }} />
+            <FilterPill label={t.alerts.statusAll} active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
+            <FilterPill label={t.alerts.statusOpen} active={statusFilter === "open"} onClick={() => setStatusFilter("open")} />
+            <FilterPill label={t.alerts.statusAcked} active={statusFilter === "acked"} onClick={() => setStatusFilter("acked")} />
+          </div>
+          <button
+            onClick={exportCsv}
+            disabled={filtered.length === 0}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 100,
+              border: "1px solid rgba(10,10,10,0.12)",
+              background: "transparent",
+              color: "#525252",
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: filtered.length === 0 ? "not-allowed" : "pointer",
+              fontFamily: "inherit",
+              opacity: filtered.length === 0 ? 0.4 : 1,
+            }}
+          >
+            ↓ {t.audit.exportCsv}
+          </button>
         </div>
       )}
 
