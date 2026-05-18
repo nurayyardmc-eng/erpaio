@@ -11,6 +11,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acknowledgeAlert, bulkUpdateAlerts, getAlerts, type Alert } from "../lib/alerts";
+import { shareJson } from "../lib/share";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
@@ -159,8 +160,33 @@ export default function AlertsScreen({ navigation }: Props) {
       {/* Track RRRR — trial banner Alerts tab'da da. */}
       <TrialBanner />
       <View style={styles.header}>
-        <Text style={styles.brand}>{t.alerts.brand}</Text>
-        <Text style={styles.headerTitle}>{t.alerts.title}</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.brand}>{t.alerts.brand}</Text>
+            <Text style={styles.headerTitle}>{t.alerts.title}</Text>
+          </View>
+          {/* Track BBB — mobile alerts share (OO web CSV parity). */}
+          {(alertsQuery.data ?? []).length > 0 && (
+            <TouchableOpacity
+              onPress={async () => {
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  await shareJson(`erpaio-alerts-${filter}-${ts}.json`, {
+                    filter,
+                    count: (alertsQuery.data ?? []).length,
+                    alerts: alertsQuery.data,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={styles.tabs}>
           {(["open", "acked"] as const).map((k) => (
             <TouchableOpacity
@@ -384,4 +410,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2),
   },
   actionBtnSecondaryText: { color: colors.textInverse, fontFamily: font, fontSize: 12, fontWeight: "500" },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+    marginLeft: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
 });
