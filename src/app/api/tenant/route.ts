@@ -30,6 +30,10 @@ export async function GET(req: Request) {
       emailTo: true,
       emailEnabled: true,
       alertMinSeverity: true,
+      // Trial countdown banner için (AAAA). subscriptionStatus null veya
+      // "active" değilse banner gösterilir; trialEndsAt ile gün hesaplanır.
+      trialEndsAt: true,
+      subscriptionStatus: true,
       createdAt: true,
     },
   });

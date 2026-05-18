@@ -536,6 +536,16 @@ export const tr: Dictionary = {
     lastSeenLabel: "Son: ",
     addedLabel: "Eklendi: ",
   },
+  trialBanner: {
+    title: "Deneme süresi",
+    expiredTitle: "Deneme süresi sona erdi",
+    daysLeftPrefix: "",
+    daysLeftSuffix: " gün kaldı",
+    lastDayMessage: "son gün — planı yükseltmezsen okuma moduna düşersin",
+    expiredMessage: "yeni sorgular limitliyor, planı yükseltin",
+    upgradeBtn: "Planı yükselt",
+    dismissAria: "Bildirimi kapat",
+  },
   saved: {
     brand: "ERPAIO · KAYITLI",
     title: "Kayıtlı Sorgular",

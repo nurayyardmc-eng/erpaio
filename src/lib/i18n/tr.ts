@@ -231,6 +231,16 @@ export const tr: Dictionary = {
     linkLabel: "Hesap aktivitelerini gör",
     linkDescription: "Şifre değişimi, MFA, oturum gibi güvenlik işlemlerinin geçmişi.",
   },
+  trialBanner: {
+    title: "Deneme süresi",
+    expiredTitle: "Deneme süresi sona erdi",
+    daysLeftPrefix: "",
+    daysLeftSuffix: " gün kaldı",
+    lastDayMessage: "son gün — planı yükseltmezsen okuma moduna düşersin",
+    expiredMessage: "yeni sorgular limitliyor, planı yükseltin",
+    upgradeBtn: "Planı yükselt",
+    dismissAria: "Bildirimi kapat",
+  },
   consents: {
     brand: "KVKK ONAY GEÇMİŞİ",
     title: "Onay Geçmişi",

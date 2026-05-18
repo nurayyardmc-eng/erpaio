@@ -10,6 +10,9 @@ export interface TenantSettings {
   emailTo: string | null;
   emailEnabled: boolean;
   alertMinSeverity: "low" | "medium" | "high" | "critical";
+  /** Trial countdown banner (AAAA). null → non-trial veya paid plan. */
+  trialEndsAt?: string | null;
+  subscriptionStatus?: string | null;
   createdAt: string;
 }
 

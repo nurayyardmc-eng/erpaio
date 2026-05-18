@@ -537,6 +537,16 @@ export interface Dictionary {
     unnamedLabel: string;
     ownerOnly: string;
   };
+  trialBanner: {
+    title: string;
+    expiredTitle: string;
+    daysLeftPrefix: string;
+    daysLeftSuffix: string;
+    lastDayMessage: string;
+    expiredMessage: string;
+    upgradeBtn: string;
+    dismissAria: string;
+  };
   saved: {
     brand: string;
     title: string;

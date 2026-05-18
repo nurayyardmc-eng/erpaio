@@ -232,6 +232,16 @@ export const en: Dictionary = {
     linkLabel: "View account activity",
     linkDescription: "History of security events: password changes, MFA, sessions.",
   },
+  trialBanner: {
+    title: "Trial",
+    expiredTitle: "Trial ended",
+    daysLeftPrefix: "",
+    daysLeftSuffix: " days left",
+    lastDayMessage: "last day — upgrade to keep writing queries",
+    expiredMessage: "new queries limited, please upgrade",
+    upgradeBtn: "Upgrade",
+    dismissAria: "Dismiss notification",
+  },
   consents: {
     brand: "CONSENT HISTORY",
     title: "Consent History",

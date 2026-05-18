@@ -536,6 +536,16 @@ export const en: Dictionary = {
     lastSeenLabel: "Last: ",
     addedLabel: "Added: ",
   },
+  trialBanner: {
+    title: "Trial",
+    expiredTitle: "Trial ended",
+    daysLeftPrefix: "",
+    daysLeftSuffix: " days left",
+    lastDayMessage: "last day — upgrade to keep writing queries",
+    expiredMessage: "new queries limited, please upgrade",
+    upgradeBtn: "Upgrade",
+    dismissAria: "Dismiss notification",
+  },
   saved: {
     brand: "ERPAIO · SAVED",
     title: "Saved Queries",

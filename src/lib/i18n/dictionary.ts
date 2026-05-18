@@ -242,6 +242,16 @@ export interface Dictionary {
     linkLabel: string;
     linkDescription: string;
   };
+  trialBanner: {
+    title: string;
+    expiredTitle: string;
+    daysLeftPrefix: string;
+    daysLeftSuffix: string;
+    lastDayMessage: string;
+    expiredMessage: string;
+    upgradeBtn: string;
+    dismissAria: string;
+  };
   consents: {
     brand: string;
     title: string;

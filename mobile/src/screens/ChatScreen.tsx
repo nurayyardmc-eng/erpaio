@@ -26,6 +26,7 @@ import {
 } from "../lib/chat";
 import { getMe } from "../lib/auth";
 import { shareCsv } from "../lib/share";
+import TrialBanner from "../components/TrialBanner";
 import { apiErrorMessage } from "../lib/apiError";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import { useI18n } from "../lib/i18n/context";
@@ -404,6 +405,8 @@ export default function ChatScreen({ route, navigation }: Props) {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
+      {/* Trial countdown banner (AAAA) — null render olur >14 gün veya paid plan'da. */}
+      <TrialBanner />
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.navigate("Sessions")}
