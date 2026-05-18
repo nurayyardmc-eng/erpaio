@@ -3,6 +3,7 @@ import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } fr
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMyDevices, revokeMyDevice, type MyDevice } from "../lib/dashboard";
+import { shareJson } from "../lib/share";
 import { getCurrentPushToken } from "../lib/push";
 import { colors, font, fontMono, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -101,6 +102,36 @@ export default function DevicesScreen({ navigation }: Props) {
         title={t.devices.title}
         description={t.devices.description}
         onBack={() => navigation.goBack()}
+        right={
+          (q.data?.devices.length ?? 0) > 0 ? (
+            <TouchableOpacity
+              onPress={async () => {
+                /* Track MMM — devices share (push token audit). Token body
+                   share edilmez; sadece metadata (platform/lastSeen/createdAt). */
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  const sanitized = q.data!.devices.map((d) => ({
+                    id: d.id,
+                    platform: d.platform,
+                    deviceName: d.deviceName,
+                    lastSeenAt: d.lastSeenAt,
+                    createdAt: d.createdAt,
+                  }));
+                  await shareJson(`erpaio-devices-${ts}.json`, {
+                    count: sanitized.length,
+                    devices: sanitized,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
       {q.isLoading ? (
         <View style={{ padding: spacing(5) }}><SkeletonList count={4} height={70} gap={6} /></View>
@@ -130,6 +161,15 @@ export default function DevicesScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   row: {
     flexDirection: "row",
     alignItems: "center",
