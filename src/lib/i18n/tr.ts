@@ -243,6 +243,8 @@ export const tr: Dictionary = {
     emptyTitle: "Kayıt yok",
     emptyDesc: "Bu filtrede henüz aktivite yok. Sohbet ekranında soru sorunca buraya işlenir.",
     rowsSuffix: "satır",
+    refreshTitle: "Yenile",
+    refreshAria: "Audit logunu yenile",
   },
   alerts: {
     breadcrumb: "ERPAIO",

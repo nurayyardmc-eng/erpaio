@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Download, ScrollText } from "lucide-react";
+import { Download, RefreshCw, ScrollText } from "lucide-react";
 import Pagination from "@/components/Pagination";
 import EmptyState from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
@@ -29,7 +29,9 @@ export default function AuditPage() {
   const [filter, setFilter] = useState<"all" | "user" | "assistant" | "errors">("all");
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
+  // Track IIII — extract fetch so refresh button + filter change reuse.
+  const load = () => {
+    setLoading(true);
     const params = new URLSearchParams({ limit: "200" });
     if (filter === "user" || filter === "assistant") params.set("role", filter);
     if (filter === "errors") params.set("success", "false");
@@ -40,7 +42,10 @@ export default function AuditPage() {
         setLoading(false);
         setPage(1);
       });
-  }, [filter]);
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [filter]);
 
   const paged = messages.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -99,6 +104,28 @@ export default function AuditPage() {
           </button>
         ))}
         <span style={{ flex: 1 }} />
+        <button
+          onClick={load}
+          disabled={loading}
+          title={t.audit.refreshTitle}
+          aria-label={t.audit.refreshAria}
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid rgba(10,10,10,0.12)",
+            borderRadius: 100,
+            padding: "6px 12px",
+            color: "#525252",
+            fontSize: 12,
+            cursor: loading ? "wait" : "pointer",
+            fontFamily: "inherit",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            opacity: loading ? 0.5 : 1,
+          }}
+        >
+          <RefreshCw size={14} style={loading ? { animation: "spin 0.8s linear infinite" } : undefined} />
+        </button>
         <button
           onClick={exportCsv}
           disabled={messages.length === 0}

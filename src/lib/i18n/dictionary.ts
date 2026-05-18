@@ -253,6 +253,8 @@ export interface Dictionary {
     emptyTitle: string;
     emptyDesc: string;
     rowsSuffix: string;
+    refreshTitle: string;
+    refreshAria: string;
   };
   alerts: {
     breadcrumb: string;

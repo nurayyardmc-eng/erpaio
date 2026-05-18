@@ -244,6 +244,8 @@ export const en: Dictionary = {
     emptyDesc:
       "No activity yet for this filter. Activity is recorded when you ask questions in chat.",
     rowsSuffix: "rows",
+    refreshTitle: "Refresh",
+    refreshAria: "Refresh audit log",
   },
   alerts: {
     breadcrumb: "ERPAIO",
