@@ -18,9 +18,10 @@ export interface SlackPayload {
   metadata?: Record<string, unknown>;
 }
 
-export async function sendSlack(payload: SlackPayload): Promise<{ ok: boolean }> {
+// Exported for test (Track JJJJ). Pure block-kit builder, no I/O.
+export function buildSlackBody(payload: Omit<SlackPayload, "webhookUrl">) {
   const color = SEVERITY_COLORS[payload.severity] ?? "#9AA5B4";
-  const body = {
+  return {
     attachments: [
       {
         color,
@@ -44,6 +45,10 @@ export async function sendSlack(payload: SlackPayload): Promise<{ ok: boolean }>
       },
     ],
   };
+}
+
+export async function sendSlack(payload: SlackPayload): Promise<{ ok: boolean }> {
+  const body = buildSlackBody(payload);
 
   try {
     const res = await fetch(payload.webhookUrl, {
