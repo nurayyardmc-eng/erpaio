@@ -157,6 +157,8 @@ export interface Dictionary {
     ipAllowlistDesc: string;
     slowQueriesLabel: string;
     slowQueriesDesc: string;
+    notificationLogLabel: string;
+    notificationLogDesc: string;
     activityLabel: string;
     activityDesc: string;
     consentsLabel: string;
@@ -490,6 +492,25 @@ export interface Dictionary {
     unnamedDevice: string;
     lastSeenLabel: string;
     addedLabel: string;
+  };
+  notificationLog: {
+    brand: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    summary24hPrefix: string;
+    daysSuffix: string;
+    chanWhatsapp: string;
+    chanEmail: string;
+    chanPush: string;
+    chanSlack: string;
+    chanTeams: string;
+    chanWebhook: string;
+    statusSent: string;
+    statusFailed: string;
+    statusSkipped: string;
+    successRateLabel: string;
+    ownerOnly: string;
   };
   slowQueries: {
     brand: string;

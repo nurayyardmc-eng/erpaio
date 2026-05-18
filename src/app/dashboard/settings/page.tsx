@@ -482,6 +482,7 @@ export default function SettingsPage() {
                 { href: "/dashboard/activity", label: t.activity.linkLabel },
                 { href: "/dashboard/consents", label: t.consents.linkLabel },
                 { href: "/dashboard/slow-queries", label: t.slowQueries.linkLabel },
+                { href: "/dashboard/notification-log", label: "Bildirim audit logu" },
               ] as const).map((l) => (
                 <Link
                   key={l.href}

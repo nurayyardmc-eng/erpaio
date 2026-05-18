@@ -20,6 +20,7 @@ import DevicesScreen from "./DevicesScreen";
 import MfaEnableScreen from "./MfaEnableScreen";
 import IpAllowlistScreen from "./IpAllowlistScreen";
 import SlowQueriesScreen from "./SlowQueriesScreen";
+import NotificationLogScreen from "./NotificationLogScreen";
 
 export type MoreStackParamList = {
   More: undefined;
@@ -43,6 +44,7 @@ export type MoreStackParamList = {
   MfaEnable: undefined;
   IpAllowlist: undefined;
   SlowQueries: undefined;
+  NotificationLog: undefined;
 };
 
 const Stack = createNativeStackNavigator<MoreStackParamList>();
@@ -71,6 +73,7 @@ export default function MoreStackNav() {
       <Stack.Screen name="MfaEnable" component={MfaEnableScreen} />
       <Stack.Screen name="IpAllowlist" component={IpAllowlistScreen} />
       <Stack.Screen name="SlowQueries" component={SlowQueriesScreen} />
+      <Stack.Screen name="NotificationLog" component={NotificationLogScreen} />
     </Stack.Navigator>
   );
 }

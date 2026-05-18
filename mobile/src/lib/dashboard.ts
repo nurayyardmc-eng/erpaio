@@ -81,6 +81,48 @@ export async function exportTenantData(): Promise<Record<string, unknown>> {
   return api<Record<string, unknown>>(`/api/tenant/export`);
 }
 
+// ============= Tenant notification log (audit trail) =============
+export interface NotificationLogEntry {
+  id: string;
+  alertId: string | null;
+  channel: string;
+  status: "sent" | "failed" | "skipped" | string;
+  recipient: string | null;
+  error: string | null;
+  createdAt: string;
+}
+
+export interface NotificationChannelSummary {
+  sent: number;
+  failed: number;
+  skipped: number;
+  total: number;
+  successRate: number;
+}
+
+export interface NotificationLogResponse {
+  recent: NotificationLogEntry[];
+  summary: Record<string, NotificationChannelSummary>;
+  days: number;
+  generatedAt: string;
+}
+
+/**
+ * Tenant-scoped notification log. Owner/admin gerekir; non-admin 403.
+ * Last N days (default 7) içinde gönderilen tüm bildirimlerin audit trail'i.
+ */
+export async function getMyNotificationLog(
+  params: { days?: number; limit?: number; channel?: string; status?: string } = {},
+): Promise<NotificationLogResponse> {
+  const qs = new URLSearchParams();
+  if (params.days) qs.set("days", String(params.days));
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.channel) qs.set("channel", params.channel);
+  if (params.status) qs.set("status", params.status);
+  const query = qs.toString();
+  return api(`/api/me/notification-log${query ? `?${query}` : ""}`);
+}
+
 export async function deleteConnection(id: string): Promise<void> {
   await api(`/api/connections/${id}`, { method: "DELETE" });
 }

@@ -47,6 +47,7 @@ function buildGroups(t: Dictionary): MenuGroup[] {
         { route: "Security", label: t.menu.securityLabel, description: t.menu.securityDesc },
         { route: "IpAllowlist", label: t.menu.ipAllowlistLabel, description: t.menu.ipAllowlistDesc },
         { route: "SlowQueries", label: t.menu.slowQueriesLabel, description: t.menu.slowQueriesDesc },
+        { route: "NotificationLog", label: t.menu.notificationLogLabel, description: t.menu.notificationLogDesc },
       ],
     },
     {
