@@ -65,12 +65,14 @@ export async function findCustomItems(
   return customs;
 }
 
-function isCanonicalTable(name: string, profile: ErpProfile): boolean {
+// Exported for test (Track HHHH). Pure name check (no I/O).
+export function isCanonicalTable(name: string, profile: ErpProfile): boolean {
   const lower = name.toLowerCase();
   return Object.keys(profile.canonical_tables).some((t) => t.toLowerCase() === lower);
 }
 
-function tableReason(name: string): string {
+// Exported for test (Track HHHH). Pure pattern match → reason text.
+export function tableReason(name: string): string {
   if (/_(ozel|custom|user|temp|bk|backup|old|test)$/i.test(name)) {
     return "Adından özel/yedek tablo gibi görünüyor";
   }
