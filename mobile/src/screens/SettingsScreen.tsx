@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTenant, updateTenant, type TenantSettings } from "../lib/tenant";
 import { getConnections, type Connection } from "../lib/chat";
 import {
@@ -19,7 +19,7 @@ import {
   deleteTenant,
   type NotificationPrefs,
 } from "../lib/dashboard";
-import { getMe } from "../lib/auth";
+import { getMe, updateMyProfile } from "../lib/auth";
 import { confirmDialog } from "../components/Confirm";
 import { isBiometricSupported, isBiometricEnabled, setBiometricEnabled } from "../lib/biometric";
 import { useI18n } from "../lib/i18n/context";
@@ -112,6 +112,8 @@ export default function SettingsScreen({ onLogout }: Props) {
         <Text style={styles.brand}>{t.settings.brand}</Text>
         <Text style={styles.pageTitle}>{t.settings.title}</Text>
       </View>
+
+      <ProfileSection />
 
       <Section title={t.settings.sectionAccount}>
         <Field label={t.settings.fieldTenantName}>
@@ -306,6 +308,93 @@ export default function SettingsScreen({ onLogout }: Props) {
  * Onay metni locale'den bağımsız sabit (Turkish phrase) çünkü server'da
  * `z.literal("HESABIMI SİL")` ile kontrol ediliyor.
  */
+/**
+ * Profil section'ı — kullanıcının kendi adını düzenleyebileceği yer. E-posta
+ * read-only (değiştirmek password change kadar hassas, ayrı flow gerekir).
+ * Avatar mobile'da henüz yok (expo-image-picker dep gerekir → ayrı track).
+ *
+ * Server PATCH /api/me audit log entry yazar; getMe query invalidate edilir.
+ */
+function ProfileSection() {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const meQuery = useQuery({ queryKey: ["me-profile"], queryFn: getMe });
+
+  const [draftName, setDraftName] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Sync server'dan gelen current isim ile draft (kullanıcı edit etmediyse).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (meQuery.data?.user && draftName === null) {
+      setDraftName(meQuery.data.user.name ?? "");
+    }
+  }, [meQuery.data?.user, draftName]);
+
+  if (meQuery.isLoading || !meQuery.data) return null;
+  const currentName = meQuery.data.user.name ?? "";
+  const email = meQuery.data.user.email;
+  const dirty = draftName !== null && draftName.trim() !== currentName.trim();
+
+  const save = async () => {
+    if (!dirty || saving) return;
+    setSaving(true);
+    try {
+      const trimmed = (draftName ?? "").trim();
+      await updateMyProfile({ name: trimmed.length > 0 ? trimmed : null });
+      showToast(t.settings.profileSavedToast, "success");
+      // me-profile + me-role tüm getMe consumer'larını refresh
+      void qc.invalidateQueries({ queryKey: ["me-profile"] });
+      void qc.invalidateQueries({ queryKey: ["me-role"] });
+      void qc.invalidateQueries({ queryKey: ["me-role-conn"] });
+      void qc.invalidateQueries({ queryKey: ["me-role-slowq"] });
+      void qc.invalidateQueries({ queryKey: ["me-role-allowlist"] });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t.settings.profileSaveFailedToast;
+      showToast(msg, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Section title={t.settings.sectionProfile}>
+      <Field label={t.settings.fieldProfileEmail}>
+        <Text
+          selectable
+          style={[styles.input, { color: colors.textMuted, paddingVertical: spacing(2.5) }]}
+        >
+          {email}
+        </Text>
+      </Field>
+      <Field label={t.settings.fieldProfileName}>
+        <TextInput
+          value={draftName ?? ""}
+          onChangeText={setDraftName}
+          placeholder={t.settings.fieldProfileNamePlaceholder}
+          placeholderTextColor={colors.textSubtle}
+          autoCapitalize="words"
+          maxLength={80}
+          style={styles.input}
+        />
+      </Field>
+      <TouchableOpacity
+        onPress={save}
+        disabled={!dirty || saving}
+        style={[
+          styles.profileSaveBtn,
+          (!dirty || saving) && { opacity: 0.4 },
+        ]}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.profileSaveBtnText}>
+          {saving ? t.settings.profileSavingBtn : t.settings.profileSaveBtn}
+        </Text>
+      </TouchableOpacity>
+    </Section>
+  );
+}
+
 function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
   const { t } = useI18n();
   const meQuery = useQuery({ queryKey: ["me-role"], queryFn: getMe });
@@ -670,4 +759,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2.5),
   },
   cancelBtnText: { color: colors.text, fontFamily: font, fontSize: 13, fontWeight: "500" },
+  profileSaveBtn: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.brand,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2.5),
+    marginTop: spacing(2),
+  },
+  profileSaveBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 13, fontWeight: "600" },
 });

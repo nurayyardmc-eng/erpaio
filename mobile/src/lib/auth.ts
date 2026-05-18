@@ -56,6 +56,30 @@ export async function getMe(): Promise<{ user: MobileUser } | null> {
   }
 }
 
+/**
+ * Profil güncelleme — şu anda yalnızca isim. Avatar mobile'da henüz desteklenmiyor
+ * (expo-image-picker dep gerekir; ileride ayrı track).
+ * Server `recordActivity('profile.update')` audit log entry yazar.
+ *
+ * Server response { user: { id, email, name, avatarBase64 } } — role + tenantId
+ * stripped olduğundan tam MobileUser dönmez. Caller success sonrası getMe()
+ * çağrısı yapabilir (full hydrate) ya da yalnızca yeni name değerini kullanabilir.
+ */
+export interface ProfileUpdateResponse {
+  id: string;
+  email: string;
+  name: string | null;
+  avatarBase64?: string | null;
+}
+
+export async function updateMyProfile(input: { name: string | null }): Promise<ProfileUpdateResponse> {
+  const res = await api<{ user: ProfileUpdateResponse }>("/api/me", {
+    method: "PATCH",
+    body: input,
+  });
+  return res.user;
+}
+
 // Single-flight refresh guard — concurrent caller'lar aynı in-flight Promise'i
 // bekler. App launch'ta refreshIfNeeded() çağrılır + kullanıcı hemen chat'e
 // gider; iki POST/api/auth/mobile-refresh paralel çıkmasın (server eski

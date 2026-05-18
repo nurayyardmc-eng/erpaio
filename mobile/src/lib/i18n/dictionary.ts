@@ -44,6 +44,14 @@ export interface Dictionary {
     brand: string;
     sectionAccount: string;
     fieldTenantName: string;
+    sectionProfile: string;
+    fieldProfileName: string;
+    fieldProfileNamePlaceholder: string;
+    fieldProfileEmail: string;
+    profileSaveBtn: string;
+    profileSavingBtn: string;
+    profileSavedToast: string;
+    profileSaveFailedToast: string;
     fieldPlan: string;
     sectionWhatsapp: string;
     toggleWhatsappEnabled: string;
