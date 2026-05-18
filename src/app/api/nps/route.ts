@@ -53,6 +53,7 @@ export async function GET(req: Request) {
       comment: true,
       respondedAt: true,
       tenantId: true,
+      tenant: { select: { name: true } },
     },
   });
 
@@ -62,9 +63,35 @@ export async function GET(req: Request) {
   const total = responses.length;
   const nps = total > 0 ? Math.round(((promoters - detractors) / total) * 100) : 0;
 
+  // Tenant breakdown — Track VVVV. /admin/nps sayfası hangi tenant'lar
+  // unhappy görmek istiyor. tenantId + name + per-tenant aggregate.
+  const byTenant: Record<string, { name: string; promoters: number; passives: number; detractors: number; total: number }> = {};
+  for (const r of responses) {
+    const key = r.tenantId;
+    if (!byTenant[key]) {
+      byTenant[key] = { name: r.tenant.name, promoters: 0, passives: 0, detractors: 0, total: 0 };
+    }
+    if (r.score >= 9) byTenant[key].promoters++;
+    else if (r.score >= 7) byTenant[key].passives++;
+    else byTenant[key].detractors++;
+    byTenant[key].total++;
+  }
+  const tenants = Object.entries(byTenant)
+    .map(([tenantId, agg]) => ({
+      tenantId,
+      name: agg.name,
+      total: agg.total,
+      nps: agg.total > 0 ? Math.round(((agg.promoters - agg.detractors) / agg.total) * 100) : 0,
+      promoters: agg.promoters,
+      passives: agg.passives,
+      detractors: agg.detractors,
+    }))
+    .sort((a, b) => a.nps - b.nps); // En unhappy önce.
+
   return Response.json({
     nps,
     breakdown: { promoters, passives, detractors, total },
     responses,
+    tenants,
   });
 }

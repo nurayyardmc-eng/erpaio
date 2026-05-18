@@ -58,6 +58,7 @@ export default function AdminPage() {
       <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
         {([
           { href: "/admin/health-scores", label: "Health Scores" },
+          { href: "/admin/nps", label: "NPS" },
           { href: "/admin/cron-runs", label: "Cron Runs" },
           { href: "/admin/slow-queries", label: "Slow Queries" },
           { href: "/admin/notifications", label: "Notifications" },
