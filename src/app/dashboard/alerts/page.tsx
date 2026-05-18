@@ -32,6 +32,9 @@ export default function AlertsPage() {
   const [error, setError] = useState(false);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  // Track JJJJ — bulk select state. Map yerine Set: O(1) lookup.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -63,6 +66,58 @@ export default function AlertsPage() {
       body: JSON.stringify({ id, status: "acked" }),
     });
     setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: "acked" } : a));
+  };
+
+  /** Track JJJJ — bulk state transition. */
+  const bulkUpdate = async (status: "acked" | "resolved") => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/alerts/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, status }),
+      });
+      if (!res.ok) {
+        setBulkBusy(false);
+        return;
+      }
+      const data = (await res.json()) as { count: number };
+      // Update local state: hangi id'ler güncellendiyse onların status'unu değiştir.
+      setAlerts((prev) =>
+        prev.map((a) => (selected.has(a.id) ? { ...a, status } : a)),
+      );
+      setSelected(new Set());
+      // Optional toast — varsa kullan
+      if (typeof window !== "undefined" && data.count > 0) {
+        // simple inline ack feedback için window event, varolan toaster yok bu sayfada
+      }
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllVisible = (visibleIds: string[]) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      const allSelected = visibleIds.every((id) => next.has(id));
+      if (allSelected) {
+        visibleIds.forEach((id) => next.delete(id));
+      } else {
+        visibleIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
   };
 
   /** Yanlış alarm toggle — Track MMM. Engine learning loop sinyali. */
@@ -120,6 +175,45 @@ export default function AlertsPage() {
         />
       )}
 
+      {!loading && !error && filtered.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, padding: "8px 14px", background: selected.size > 0 ? "#0A0A0A" : "transparent", border: selected.size > 0 ? "none" : "1px dashed rgba(10,10,10,0.12)", borderRadius: 8, color: selected.size > 0 ? "#FAFAF8" : "#475569", fontSize: 12, transition: "background 0.15s" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+            <input
+              type="checkbox"
+              checked={filtered.length > 0 && filtered.every((a) => selected.has(a.id))}
+              onChange={() => selectAllVisible(filtered.map((a) => a.id))}
+              aria-label="Tümünü seç"
+            />
+            <span>{selected.size > 0 ? `${selected.size} bildirim seçili` : "Toplu işlem için seç"}</span>
+          </label>
+          {selected.size > 0 && (
+            <>
+              <button
+                onClick={() => bulkUpdate("acked")}
+                disabled={bulkBusy}
+                style={{ marginLeft: "auto", background: "#FAFAF8", border: "1px solid #FAFAF8", borderRadius: 6, padding: "4px 12px", color: "#0A0A0A", fontSize: 11, cursor: bulkBusy ? "wait" : "pointer", fontFamily: "inherit", opacity: bulkBusy ? 0.5 : 1 }}
+              >
+                Okundu işaretle
+              </button>
+              <button
+                onClick={() => bulkUpdate("resolved")}
+                disabled={bulkBusy}
+                style={{ background: "transparent", border: "1px solid #FAFAF8", borderRadius: 6, padding: "4px 12px", color: "#FAFAF8", fontSize: 11, cursor: bulkBusy ? "wait" : "pointer", fontFamily: "inherit", opacity: bulkBusy ? 0.5 : 1 }}
+              >
+                Çöz
+              </button>
+              <button
+                onClick={() => setSelected(new Set())}
+                disabled={bulkBusy}
+                style={{ background: "transparent", border: "none", color: "#FAFAF8", fontSize: 11, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }}
+              >
+                Temizle
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {filtered.map((alert) => (
         <div key={alert.id} className="elevated" style={{
           background: "#FFFFFF",
@@ -132,7 +226,14 @@ export default function AlertsPage() {
           justifyContent: "space-between",
           alignItems: "center",
         }}>
-          <div>
+          <input
+            type="checkbox"
+            checked={selected.has(alert.id)}
+            onChange={() => toggleSelected(alert.id)}
+            aria-label={`${alert.title} seç`}
+            style={{ marginRight: 14, cursor: "pointer", flexShrink: 0 }}
+          />
+          <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
               <span style={{ fontSize: 9, color: SEVERITY_COLOR[alert.severity], background: `${SEVERITY_COLOR[alert.severity]}20`, padding: "2px 6px", borderRadius: 3, letterSpacing: 1 }}>
                 {alert.severity.toUpperCase()}
