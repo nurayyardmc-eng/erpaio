@@ -1,10 +1,11 @@
 "use client";
 import { confirmDialog } from "@/components/Confirm";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Eye } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/lib/i18n/context";
 import { showToast } from "@/components/Toaster";
+import { computeSparkline } from "@/lib/watchlist/sparkline";
 
 interface Watchlist {
   id: string;
@@ -285,7 +286,9 @@ export default function WatchlistsPage() {
 
               {/* Track NNNN — Trigger history (son 50). Hep gösterilir;
                   henüz tetiklenmediyse empty state. Threshold tweak yaparken
-                  user bu listede geçmiş hit'leri görür → bilinçli karar verir. */}
+                  user bu listede geçmiş hit'leri görür → bilinçli karar verir.
+                  Track XXXX — sparkline list'in üstünde, threshold çizgisi
+                  ile visual tuning hint. */}
               <div style={triggerHistoryBox}>
                 <div style={triggerHistoryTitle}>{t.watchlists.triggerHistoryTitle}</div>
                 {triggersLoading ? (
@@ -296,6 +299,7 @@ export default function WatchlistsPage() {
                   </div>
                 ) : (
                   <div>
+                    <TriggerSparkline triggers={triggers} thresholdVal={editForm.thresholdVal} />
                     {triggers.map((tr) => (
                       <div key={tr.id} style={triggerRow}>
                         <code style={{ color: "#0F172A", fontSize: 11, fontFamily: "ui-monospace, monospace" }}>
@@ -344,6 +348,67 @@ export default function WatchlistsPage() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Track XXXX — value-over-time sparkline. 40px yüksek inline SVG.
+ * Trigger değerlerini en eski → en yeni soldan sağa çizer; threshold çizgisi
+ * dashed amber. Tek nokta = dot; çoklu = polyline.
+ */
+function TriggerSparkline({
+  triggers,
+  thresholdVal,
+}: {
+  triggers: Trigger[];
+  thresholdVal: number;
+}) {
+  const data = useMemo(
+    () => computeSparkline(triggers, thresholdVal),
+    [triggers, thresholdVal],
+  );
+
+  if (!data.hasData) return null;
+
+  const W = 280;
+  const H = 40;
+  const PAD = 4;
+
+  const xPx = (x: number) => PAD + x * (W - 2 * PAD);
+  // SVG y ekseni ters çevrilir (0 üstte) — line/threshold tepeyi gösterir.
+  const yPx = (y: number) => H - PAD - y * (H - 2 * PAD);
+
+  const polyline = data.points.map((p) => `${xPx(p.x)},${yPx(p.y)}`).join(" ");
+  const thresholdYpx = yPx(data.thresholdY);
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <svg width={W} height={H} role="img" aria-label="Trigger value over time">
+        {/* Threshold reference line — dashed amber */}
+        <line
+          x1={PAD}
+          x2={W - PAD}
+          y1={thresholdYpx}
+          y2={thresholdYpx}
+          stroke="#F59E0B"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+        />
+        {data.points.length === 1 ? (
+          <circle cx={xPx(data.points[0].x)} cy={yPx(data.points[0].y)} r={3} fill="#0A0A0A" />
+        ) : (
+          <>
+            <polyline points={polyline} fill="none" stroke="#0A0A0A" strokeWidth={1.5} />
+            {data.points.map((p, i) => (
+              <circle key={i} cx={xPx(p.x)} cy={yPx(p.y)} r={2} fill="#0A0A0A" />
+            ))}
+          </>
+        )}
+      </svg>
+      <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 2, fontFamily: "ui-monospace, monospace" }}>
+        min: {data.minVal} · max: {data.maxVal}
+      </div>
     </div>
   );
 }

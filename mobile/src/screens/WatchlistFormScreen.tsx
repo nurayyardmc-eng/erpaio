@@ -11,7 +11,9 @@ import {
   View,
 } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Svg, { Circle, Line, Polyline } from "react-native-svg";
 import { createWatchlist, getConnections, getWatchlistTriggers, updateWatchlist, type CreateWatchlistInput } from "../lib/dashboard";
+import { computeSparkline } from "../lib/watchlist/sparkline";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
@@ -249,6 +251,11 @@ export default function WatchlistFormScreen({ navigation, route }: Props) {
                 <Text style={styles.triggerEmpty}>{t.watchlistForm.triggerHistoryEmpty}</Text>
               ) : (
                 <>
+                  {/* Track XXXX — sparkline value-over-time, threshold dashed */}
+                  <TriggerSparkline
+                    triggers={triggersQuery.data?.triggers ?? []}
+                    thresholdVal={parseFloat(thresholdVal) || 0}
+                  />
                   {(triggersQuery.data?.triggers ?? []).map((tr) => (
                     <View key={tr.id} style={styles.triggerRow}>
                       <Text style={styles.triggerValue}>
@@ -283,6 +290,58 @@ export default function WatchlistFormScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+/**
+ * Track XXXX — value-over-time sparkline. react-native-svg ile (zaten dep).
+ * Web TriggerSparkline ile aynı pattern; computeSparkline pure helper aynı.
+ */
+function TriggerSparkline({
+  triggers,
+  thresholdVal,
+}: {
+  triggers: { value: number; triggeredAt: string }[];
+  thresholdVal: number;
+}) {
+  const data = computeSparkline(triggers, thresholdVal);
+  if (!data.hasData) return null;
+
+  const W = 280;
+  const H = 40;
+  const PAD = 4;
+  const xPx = (x: number) => PAD + x * (W - 2 * PAD);
+  const yPx = (y: number) => H - PAD - y * (H - 2 * PAD);
+  const polyline = data.points.map((p) => `${xPx(p.x)},${yPx(p.y)}`).join(" ");
+  const thresholdYpx = yPx(data.thresholdY);
+
+  return (
+    <View style={{ marginBottom: spacing(2) }}>
+      <Svg width={W} height={H}>
+        <Line
+          x1={PAD}
+          x2={W - PAD}
+          y1={thresholdYpx}
+          y2={thresholdYpx}
+          stroke="#F59E0B"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+        />
+        {data.points.length === 1 ? (
+          <Circle cx={xPx(data.points[0].x)} cy={yPx(data.points[0].y)} r={3} fill={colors.text} />
+        ) : (
+          <>
+            <Polyline points={polyline} fill="none" stroke={colors.text} strokeWidth={1.5} />
+            {data.points.map((p, i) => (
+              <Circle key={i} cx={xPx(p.x)} cy={yPx(p.y)} r={2} fill={colors.text} />
+            ))}
+          </>
+        )}
+      </Svg>
+      <Text style={{ fontSize: 10, color: colors.textSubtle, fontFamily: "Menlo, monospace", marginTop: 2 }}>
+        min: {data.minVal} · max: {data.maxVal}
+      </Text>
     </View>
   );
 }
