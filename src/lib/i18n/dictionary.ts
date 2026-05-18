@@ -287,6 +287,10 @@ export interface Dictionary {
     testSendBtn: string;
     testTitle: string;
     testDescription: string;
+    detailShow: string;
+    detailHide: string;
+    metaType: string;
+    sectionEvidence: string;
   };
   activity: {
     brand: string;

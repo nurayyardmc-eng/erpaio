@@ -277,6 +277,10 @@ export const tr: Dictionary = {
     testSendBtn: "Test Bildirimi Gönder",
     testTitle: "Test: Stok kritik seviyede",
     testDescription: "5 ürün kritik stok seviyesinin altına düştü.",
+    detailShow: "Detayı göster",
+    detailHide: "Detayı gizle",
+    metaType: "Tip",
+    sectionEvidence: "KANIT (raw)",
   },
   activity: {
     brand: "GÜVENLİK AKTİVİTESİ",

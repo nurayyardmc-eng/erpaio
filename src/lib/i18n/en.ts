@@ -278,6 +278,10 @@ export const en: Dictionary = {
     testSendBtn: "Send Test Alert",
     testTitle: "Test: Stock at critical level",
     testDescription: "5 products fell below the critical stock threshold.",
+    detailShow: "Show detail",
+    detailHide: "Hide detail",
+    metaType: "Type",
+    sectionEvidence: "EVIDENCE (raw)",
   },
   activity: {
     brand: "SECURITY ACTIVITY",

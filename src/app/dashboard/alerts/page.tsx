@@ -18,11 +18,13 @@ type StatusFilter = "all" | "open" | "acked";
 
 interface Alert {
   id: string;
+  type?: string;
   severity: string;
   title: string;
   description: string | null;
   module: string | null;
   status: string;
+  evidence?: unknown;
   falsePositiveAt?: string | null;
   createdAt: string;
 }
@@ -37,6 +39,30 @@ export default function AlertsPage() {
   // Track JJJJ — bulk select state. Map yerine Set: O(1) lookup.
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  // Track NN — detay expand-in-place (mobile parity). Aynı anda 1 alert
+  // detayı açık; tekrar tıklayınca kapanır.
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [evidenceCache, setEvidenceCache] = useState<Record<string, unknown>>({});
+
+  const toggleExpand = async (alert: Alert) => {
+    if (expandedId === alert.id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(alert.id);
+    // Lazy-load full alert (evidence) — list endpoint sadece kısa fields döner.
+    if (!(alert.id in evidenceCache)) {
+      try {
+        const res = await fetch(`/api/alerts/${encodeURIComponent(alert.id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setEvidenceCache((prev) => ({ ...prev, [alert.id]: data.evidence ?? null }));
+        }
+      } catch {
+        // Sessiz fail — kullanıcı kapatıp tekrar açabilir.
+      }
+    }
+  };
 
   const load = () => {
     setLoading(true);
@@ -224,6 +250,8 @@ export default function AlertsPage() {
           borderRadius: 12,
           padding: 18,
           marginBottom: 12,
+        }}>
+        <div style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -282,7 +310,35 @@ export default function AlertsPage() {
             >
               {alert.falsePositiveAt ? t.alerts.fpClearBtn : t.alerts.fpMarkBtn}
             </button>
+            <button
+              onClick={() => toggleExpand(alert)}
+              style={{ background: "transparent", border: "none", color: "#94A3B8", fontSize: 10, cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}
+            >
+              {expandedId === alert.id ? t.alerts.detailHide : t.alerts.detailShow}
+            </button>
           </div>
+        </div>
+        {expandedId === alert.id && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px dashed #E5E7EB" }}>
+            {alert.type && (
+              <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 8 }}>
+                <strong>{t.alerts.metaType}:</strong> <code style={{ color: "#0F172A", fontFamily: "ui-monospace, monospace" }}>{alert.type}</code>
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: "#475569", marginBottom: 8, fontWeight: 600 }}>
+              {t.alerts.sectionEvidence}
+            </div>
+            {evidenceCache[alert.id] === undefined ? (
+              <div style={{ fontSize: 11, color: "#94A3B8" }}>{t.common.loading}</div>
+            ) : evidenceCache[alert.id] === null ? (
+              <div style={{ fontSize: 11, color: "#94A3B8", fontStyle: "italic" }}>—</div>
+            ) : (
+              <pre style={{ background: "#F9FAFB", padding: 12, borderRadius: 8, fontSize: 11, color: "#0F172A", overflow: "auto", margin: 0, fontFamily: "ui-monospace, monospace" }}>
+                {JSON.stringify(evidenceCache[alert.id], null, 2)}
+              </pre>
+            )}
+          </div>
+        )}
         </div>
       ))}
 
