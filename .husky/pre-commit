@@ -1,1 +1,27 @@
-npx lint-staged
+#!/bin/sh
+# Lint staged files (ESLint --fix --max-warnings=0 via lint-staged config in package.json).
+npx lint-staged || exit 1
+
+# Cross-file typecheck — CI runs the same. Pre-commit'in lint-staged'i sadece
+# staged dosyaları görür; bir staged değişiklik başka bir dosyaya tip hatası
+# enjekte ederse (örn: interface'i kullanan başka screen) lokal yakalanmaz,
+# CI mailleri ile fark ederiz. Track DDDD'de SessionListItem.updatedAt
+# regression'u tam bu pattern'le 12 commit boyunca CI'yı kırdı.
+#
+# Conditional: ilgili kod taşıyan path varsa çalıştır (skip when no .ts/.tsx
+# changes; doc-only commits hızlı kalsın).
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+
+WEB_TS_CHANGED=$(echo "$STAGED" | grep -E '\.(ts|tsx)$' | grep -v '^mobile/' || true)
+MOBILE_TS_CHANGED=$(echo "$STAGED" | grep -E '^mobile/.*\.(ts|tsx)$' || true)
+
+if [ -n "$WEB_TS_CHANGED" ]; then
+  echo "→ tsc (web)..."
+  npx tsc --noEmit || { echo "✗ Web tsc failed"; exit 1; }
+fi
+
+if [ -n "$MOBILE_TS_CHANGED" ]; then
+  echo "→ tsc (mobile)..."
+  (cd mobile && npx tsc --noEmit) || { echo "✗ Mobile tsc failed"; exit 1; }
+fi
