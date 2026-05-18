@@ -556,6 +556,8 @@ export const en: Dictionary = {
     lastUsedLabel: "Last: ",
     emptyTitle: "No saved queries yet",
     emptyDesc: "Successful chat queries are automatically cached.",
+    rerunBtn: "Run again in chat",
+    rerunHint: "Open in chat",
   },
   insights: {
     brand: "ERPAIO · INSIGHTS",

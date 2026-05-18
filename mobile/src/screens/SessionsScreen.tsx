@@ -33,7 +33,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 export type ChatStackParamList = {
   Sessions: undefined;
-  Chat: { sessionId?: string; title?: string };
+  Chat: { sessionId?: string; title?: string; prefillQuestion?: string };
 };
 
 interface Props {

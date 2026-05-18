@@ -61,7 +61,7 @@ export default function ChatScreen({ route, navigation }: Props) {
   const initialSessionId = route.params?.sessionId;
   const [sessionId, setSessionId] = useState<string | undefined>(initialSessionId);
   const [messages, setMessages] = useState<Msg[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(() => route.params?.prefillQuestion ?? "");
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState<string>("");
 
@@ -70,6 +70,21 @@ export default function ChatScreen({ route, navigation }: Props) {
       if (d?.user) setUserName(d.user.name || d.user.email.split("@")[0]);
     }).catch(() => {});
   }, []);
+
+  // Prefill question — saved query rerun veya benzeri kaynaktan gelirse
+  // input'a yaz + param'ı consume edip route.params'ı temizle (kullanıcı
+  // mesajı düzenleyip gönderdikten sonra reset olmasın).
+  useEffect(() => {
+    const prefill = route.params?.prefillQuestion;
+    if (prefill && prefill !== input) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInput(prefill);
+      navigation.setParams({ prefillQuestion: undefined } as never);
+    }
+    // input dependency'sini bilerek dışarda bırakıyoruz — yalnızca route
+    // değişiminde tetiklenmeli.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.params?.prefillQuestion]);
   const listRef = useRef<FlatList<Msg>>(null);
 
   const connQuery = useQuery({ queryKey: ["connections"], queryFn: getConnections });

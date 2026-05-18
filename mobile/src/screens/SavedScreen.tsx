@@ -1,4 +1,4 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useQuery } from "@tanstack/react-query";
 import { getSavedQueries, type SavedQuery } from "../lib/dashboard";
@@ -7,6 +7,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { showToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
@@ -19,8 +20,33 @@ export default function SavedScreen({ navigation }: Props) {
   const { t } = useI18n();
   const q = useQuery({ queryKey: ["saved-queries"], queryFn: getSavedQueries });
 
+  /**
+   * Tıklanan saved query'yi Chat tab'ına prefill ederek götür.
+   * MoreStack → parent (Tabs) → "Sohbet" tab → Chat screen. KKK push-deep-link
+   * pattern'ı ile aynı navigate hierarchy.
+   */
+  const rerun = (item: SavedQuery) => {
+    const parent = navigation.getParent() as
+      | { navigate: (name: string, params?: unknown) => void }
+      | undefined;
+    if (!parent) {
+      showToast(t.common.error, "error");
+      return;
+    }
+    parent.navigate("Sohbet", {
+      screen: "Chat",
+      params: { prefillQuestion: item.question },
+    });
+  };
+
   const renderItem = ({ item }: { item: SavedQuery }) => (
-    <View style={styles.card}>
+    <TouchableOpacity
+      onPress={() => rerun(item)}
+      activeOpacity={0.7}
+      style={styles.card}
+      accessibilityRole="button"
+      accessibilityLabel={`${t.saved.rerunBtn}: ${item.question}`}
+    >
       <Text style={styles.question}>{item.question}</Text>
       <View style={styles.sqlBox}>
         <Text style={styles.sqlText} numberOfLines={3}>{item.sqlQuery}</Text>
@@ -32,8 +58,11 @@ export default function SavedScreen({ navigation }: Props) {
         <Text style={styles.meta}>·</Text>
         <Text style={styles.meta}>{item.successCount} {t.saved.successLabel} / {item.failCount} {t.saved.failLabel}</Text>
       </View>
-      <Text style={styles.timestamp}>{t.saved.lastUsedLabel}{new Date(item.lastUsedAt).toLocaleDateString("tr-TR")}</Text>
-    </View>
+      <View style={styles.footerRow}>
+        <Text style={styles.timestamp}>{t.saved.lastUsedLabel}{new Date(item.lastUsedAt).toLocaleDateString("tr-TR")}</Text>
+        <Text style={styles.rerunHint}>{t.saved.rerunHint} →</Text>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -88,4 +117,16 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: "row", alignItems: "center", gap: spacing(1.5), marginBottom: spacing(1) },
   meta: { color: colors.textSubtle, fontFamily: font, fontSize: 11 },
   timestamp: { color: colors.textSubtle, fontFamily: font, fontSize: 11 },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: spacing(0.5),
+  },
+  rerunHint: {
+    color: colors.brand,
+    fontFamily: font,
+    fontSize: 11,
+    fontWeight: "600",
+  },
 });

@@ -556,6 +556,8 @@ export const tr: Dictionary = {
     lastUsedLabel: "Son: ",
     emptyTitle: "Henüz kayıtlı sorgu yok",
     emptyDesc: "Sohbette başarılı sorgular otomatik cache'lenir.",
+    rerunBtn: "Sohbette tekrar çalıştır",
+    rerunHint: "Sohbete getir",
   },
   insights: {
     brand: "ERPAIO · ANALİZ",

@@ -557,6 +557,8 @@ export interface Dictionary {
     lastUsedLabel: string;
     emptyTitle: string;
     emptyDesc: string;
+    rerunBtn: string;
+    rerunHint: string;
   };
   insights: {
     brand: string;
