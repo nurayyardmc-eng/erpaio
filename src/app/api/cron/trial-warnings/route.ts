@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
   const startedAt = Date.now();
   const requestId = getOrCreateRequestId(req);
 
-  const auth = verifyCronAuth(req);
+  const auth = await verifyCronAuth(req);
   if (!auth.ok) {
     return NextResponse.json(
       { error: auth.reason },

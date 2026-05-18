@@ -1,6 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { showToast } from "@/components/Toaster";
+
+const TRIGGER_JOBS = [
+  { jobName: "anomaly-detection", path: "/api/cron/anomaly-detection" },
+  { jobName: "watchlists", path: "/api/cron/watchlists" },
+  { jobName: "scheduled-reports", path: "/api/cron/scheduled-reports" },
+  { jobName: "cleanup", path: "/api/cron/cleanup" },
+  { jobName: "trial-warnings", path: "/api/cron/trial-warnings" },
+] as const;
 
 interface CronRun {
   id: string;
@@ -44,6 +53,7 @@ export default function CronRunsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [triggering, setTriggering] = useState<string | null>(null);
 
   const load = (filter?: string) => {
     setLoading(true);
@@ -73,6 +83,23 @@ export default function CronRunsPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, []);
 
+  /**
+   * Track JJ — manuel cron trigger. Sysadmin session ile verifyCronAuth
+   * geçer (cron-secret bypass). Cron route long-running olabilir (5dk);
+   * await edip beklemiyoruz — fire-and-forget + 2s sonra list refresh
+   * (RUNNING entry görünür).
+   */
+  const trigger = (jobName: string, path: string) => {
+    if (triggering) return;
+    setTriggering(jobName);
+    fetch(path).catch(() => {});
+    showToast(`${jobName} tetiklendi`, "success");
+    setTimeout(() => {
+      setTriggering(null);
+      load(statusFilter || undefined);
+    }, 2500);
+  };
+
   if (error) {
     return (
       <div style={{ minHeight: "100vh", background: "#F9FAFB", padding: 40 }}>
@@ -88,7 +115,40 @@ export default function CronRunsPage() {
         ← Admin
       </Link>
       <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · CRON HEALTH</div>
-      <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 32px", letterSpacing: -0.5 }}>Cron Run Geçmişi</h1>
+      <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 16px", letterSpacing: -0.5 }}>Cron Run Geçmişi</h1>
+
+      {/* Manuel trigger — Track JJ */}
+      <div style={{ marginBottom: 24, padding: 16, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12 }}>
+        <h3 style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#475569", margin: "0 0 12px" }}>
+          Manuel Çalıştır
+        </h3>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {TRIGGER_JOBS.map((j) => (
+            <button
+              key={j.jobName}
+              onClick={() => trigger(j.jobName, j.path)}
+              disabled={triggering !== null}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 100,
+                fontSize: 12,
+                fontWeight: 500,
+                border: "1px solid #0A0A0A20",
+                background: triggering === j.jobName ? "#0A0A0A" : "#FAFAF8",
+                color: triggering === j.jobName ? "#FAFAF8" : "#0A0A0A",
+                cursor: triggering ? "wait" : "pointer",
+                fontFamily: "inherit",
+                opacity: triggering && triggering !== j.jobName ? 0.4 : 1,
+              }}
+            >
+              {triggering === j.jobName ? "..." : j.jobName} ▶
+            </button>
+          ))}
+        </div>
+        <p style={{ fontSize: 11, color: "#94A3B8", margin: "8px 0 0" }}>
+          Sysadmin yetkisi gerekir. Cron lock duplicate run&apos;ları engeller; halihazırda çalışan job için 409 döner.
+        </p>
+      </div>
 
       {/* Son 24h özet */}
       <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 12px" }}>Son 24 saat — özet</h2>

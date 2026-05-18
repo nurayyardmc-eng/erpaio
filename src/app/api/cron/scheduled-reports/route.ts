@@ -21,7 +21,7 @@ const SCHEDULE_FILTER: Record<string, () => boolean> = {
 };
 
 export async function GET(req: NextRequest) {
-  const auth = verifyCronAuth(req);
+  const auth = await verifyCronAuth(req);
   if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: 401 });
 
   const lock = await acquireCronLock("scheduled-reports");
