@@ -394,6 +394,9 @@ export const en: Dictionary = {
     editTitle: "Edit Watchlist",
     editDescription: "Update threshold, question, and email recipient. Connection cannot be changed.",
     updatedToast: "Watchlist updated",
+    triggerHistoryTitle: "Trigger history",
+    triggerHistoryEmpty: "No triggers yet.",
+    triggerHistoryCap: "Showing the most recent 50 triggers (older records removed after 90 days).",
   },
   scheduledReports: {
     brand: "ERPAIO · REPORTS",

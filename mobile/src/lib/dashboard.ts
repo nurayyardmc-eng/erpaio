@@ -271,6 +271,24 @@ export async function updateWatchlist(
   });
 }
 
+/**
+ * Track NNNN — watchlist trigger history. Son 50 tetiklenme (DESC).
+ * 90 gün retention sonrası eski kayıtlar cleanup cron tarafından silinir.
+ */
+export interface WatchlistTrigger {
+  id: string;
+  value: number;
+  thresholdOp: string;
+  thresholdVal: number;
+  triggeredAt: string;
+}
+
+export async function getWatchlistTriggers(
+  id: string,
+): Promise<{ triggers: WatchlistTrigger[] }> {
+  return api(`/api/watchlists/${encodeURIComponent(id)}/triggers`);
+}
+
 // ============= Scheduled Reports =============
 export interface ScheduledReport {
   id: string;

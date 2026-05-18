@@ -394,6 +394,9 @@ export const tr: Dictionary = {
     editTitle: "Watchlist Düzenle",
     editDescription: "Eşik, soru ve email alıcısını güncelleyin. Bağlantı değiştirilemez.",
     updatedToast: "Watchlist güncellendi",
+    triggerHistoryTitle: "Tetiklenme geçmişi",
+    triggerHistoryEmpty: "Henüz tetiklenme yok.",
+    triggerHistoryCap: "Son 50 tetiklenme gösterilir (90 gün sonrası silinir).",
   },
   scheduledReports: {
     brand: "ERPAIO · RAPORLAR",

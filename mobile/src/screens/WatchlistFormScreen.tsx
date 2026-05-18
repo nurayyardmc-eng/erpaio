@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createWatchlist, getConnections, updateWatchlist, type CreateWatchlistInput } from "../lib/dashboard";
+import { createWatchlist, getConnections, getWatchlistTriggers, updateWatchlist, type CreateWatchlistInput } from "../lib/dashboard";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import { showToast } from "../components/Toast";
@@ -43,6 +43,14 @@ export default function WatchlistFormScreen({ navigation, route }: Props) {
     queryKey: ["connections"],
     queryFn: getConnections,
     enabled: !isEdit,
+  });
+
+  // Track OOOO — trigger history (sadece edit modunda). useFocusEffect değil
+  // ekran açılışı yeterli; user save'den önce geçmişi inceler, sonra ekran kapanır.
+  const triggersQuery = useQuery({
+    queryKey: ["watchlist-triggers", editWatchlist?.id ?? ""],
+    queryFn: () => getWatchlistTriggers(editWatchlist!.id),
+    enabled: isEdit,
   });
 
   const [name, setName] = useState(editWatchlist?.name ?? "");
@@ -231,6 +239,34 @@ export default function WatchlistFormScreen({ navigation, route }: Props) {
             </View>
           )}
 
+          {/* Trigger history — Track OOOO, sadece edit modunda */}
+          {isEdit && (
+            <View style={styles.triggerBox}>
+              <Text style={styles.triggerTitle}>{t.watchlistForm.triggerHistoryTitle}</Text>
+              {triggersQuery.isLoading ? (
+                <Text style={styles.triggerEmpty}>{t.common.loading}</Text>
+              ) : (triggersQuery.data?.triggers ?? []).length === 0 ? (
+                <Text style={styles.triggerEmpty}>{t.watchlistForm.triggerHistoryEmpty}</Text>
+              ) : (
+                <>
+                  {(triggersQuery.data?.triggers ?? []).map((tr) => (
+                    <View key={tr.id} style={styles.triggerRow}>
+                      <Text style={styles.triggerValue}>
+                        {tr.value} {tr.thresholdOp} {tr.thresholdVal}
+                      </Text>
+                      <Text style={styles.triggerTime}>
+                        {new Date(tr.triggeredAt).toLocaleString()}
+                      </Text>
+                    </View>
+                  ))}
+                  {(triggersQuery.data?.triggers ?? []).length === 50 && (
+                    <Text style={styles.triggerCap}>{t.watchlistForm.triggerHistoryCap}</Text>
+                  )}
+                </>
+              )}
+            </View>
+          )}
+
           <TouchableOpacity
             onPress={onSubmit}
             disabled={mutation.isPending || (!isEdit && activeConns.length === 0)}
@@ -313,4 +349,32 @@ const styles = StyleSheet.create({
     marginTop: spacing(2),
   },
   submitText: { color: colors.textInverse, fontFamily: font, fontSize: 15, fontWeight: "600" },
+  triggerBox: {
+    marginTop: spacing(3),
+    marginBottom: spacing(2),
+    paddingTop: spacing(3),
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+  },
+  triggerTitle: {
+    color: colors.textSubtle,
+    fontFamily: font,
+    fontSize: 11,
+    letterSpacing: 1,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginBottom: spacing(2),
+  },
+  triggerEmpty: { color: colors.textSubtle, fontFamily: font, fontSize: 13, fontStyle: "italic" },
+  triggerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: spacing(1.5),
+    borderBottomColor: colors.borderSubtle,
+    borderBottomWidth: 1,
+  },
+  triggerValue: { color: colors.text, fontFamily: "Menlo, monospace", fontSize: 12, fontWeight: "500" },
+  triggerTime: { color: colors.textSubtle, fontFamily: font, fontSize: 11 },
+  triggerCap: { color: colors.textSubtle, fontFamily: font, fontSize: 11, fontStyle: "italic", marginTop: spacing(2) },
 });

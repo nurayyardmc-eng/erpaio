@@ -400,6 +400,9 @@ export interface Dictionary {
     editTitle: string;
     editDescription: string;
     updatedToast: string;
+    triggerHistoryTitle: string;
+    triggerHistoryEmpty: string;
+    triggerHistoryCap: string;
   };
   scheduledReports: {
     brand: string;
