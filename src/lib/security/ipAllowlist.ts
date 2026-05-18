@@ -3,11 +3,12 @@ import { prisma } from "@/lib/db/prisma";
 const cache = new Map<string, { cidrs: string[]; ts: number }>();
 const TTL_MS = 5 * 60_000;
 
-function ipToInt(ip: string): number {
+// Exported for test (Track TTT). Pure helpers, no side effects.
+export function ipToInt(ip: string): number {
   return ip.split(".").reduce((acc, p) => (acc << 8) + Number(p), 0) >>> 0;
 }
 
-function cidrMatch(ip: string, cidr: string): boolean {
+export function cidrMatch(ip: string, cidr: string): boolean {
   if (!ip || !cidr) return false;
   if (!cidr.includes("/")) return ip === cidr;
   const [base, bitsStr] = cidr.split("/");
