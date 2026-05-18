@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useQuery } from "@tanstack/react-query";
 import { getConnections, getInsights } from "../lib/dashboard";
@@ -8,6 +8,8 @@ import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
+import { showToast } from "../components/Toast";
+import { shareJson } from "../lib/share";
 import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MoreStackParamList } from "./MoreStackNav";
@@ -47,6 +49,32 @@ export default function InsightsScreen({ navigation }: Props) {
         title={t.insights.title}
         description={t.insights.description}
         onBack={() => navigation.goBack()}
+        right={
+          insightsQuery.data && (
+            (insightsQuery.data.inferredForeignKeys.length > 0 ||
+              insightsQuery.data.customItems.length > 0) ? (
+              <TouchableOpacity
+                onPress={async () => {
+                  /* Track LLL — insights share (schema audit / FK migration). */
+                  const ts = new Date().toISOString().slice(0, 10);
+                  try {
+                    await shareJson(`erpaio-insights-${ts}.json`, {
+                      connectionId: connId,
+                      inferredForeignKeys: insightsQuery.data!.inferredForeignKeys,
+                      customItems: insightsQuery.data!.customItems,
+                    });
+                  } catch {
+                    showToast(t.common.error, "error");
+                  }
+                }}
+                style={styles.exportBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.exportBtnText}>↓</Text>
+              </TouchableOpacity>
+            ) : null
+          )
+        }
       />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing(5), paddingBottom: 200 }}>
         {connsQuery.isError ? (
@@ -104,6 +132,15 @@ export default function InsightsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   sectionTitle: { color: colors.text, fontFamily: font, fontSize: 16, fontWeight: "600", marginBottom: 4 },
   sectionDesc: { color: colors.textMuted, fontFamily: font, fontSize: 12, marginBottom: spacing(3) },
   card: {
