@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Send,
   Eye,
+  Activity,
   Plus,
   X,
 } from "lucide-react";
@@ -46,6 +47,7 @@ export default function DashboardSidebar() {
         { href: "/dashboard/connections", label: t.sidebar.navConnections, Icon: Database },
         { href: "/dashboard/annotations", label: t.sidebar.navAnnotations, Icon: FileText },
         { href: "/dashboard/watchlists", label: t.sidebar.navWatchlists, Icon: Eye },
+        { href: "/dashboard/custom-metrics", label: t.sidebar.navCustomMetrics, Icon: Activity },
       ],
     },
     {

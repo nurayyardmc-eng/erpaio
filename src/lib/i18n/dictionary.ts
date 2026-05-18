@@ -54,6 +54,7 @@ export interface Dictionary {
     navConnections: string;
     navAnnotations: string;
     navWatchlists: string;
+    navCustomMetrics: string;
     navInsights: string;
     navReports: string;
     navAudit: string;
@@ -421,6 +422,34 @@ export interface Dictionary {
     triggerHistoryTitle: string;
     triggerHistoryEmpty: string;
     triggerHistoryCap: string;
+  };
+  customMetrics: {
+    title: string;
+    description: string;
+    newTitle: string;
+    existingTitle: string;
+    fieldKey: string;
+    fieldLabel: string;
+    fieldLabelPlaceholder: string;
+    fieldDescription: string;
+    fieldDescriptionPlaceholder: string;
+    fieldConnection: string;
+    fieldSchedule: string;
+    fieldAlgorithm: string;
+    fieldDirection: string;
+    fieldSql: string;
+    scheduleHourly: string;
+    scheduleDaily: string;
+    directionDrop: string;
+    directionSpike: string;
+    directionBoth: string;
+    sqlHint: string;
+    createdToast: string;
+    deletedToast: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessageSuffix: string;
+    emptyTitle: string;
+    emptyDesc: string;
   };
   nps: {
     header: string;
