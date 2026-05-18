@@ -45,6 +45,19 @@ export async function syncConnectionSchema(id: string): Promise<{
   return api(`/api/connections/${encodeURIComponent(id)}/sync`, { method: "POST" });
 }
 
+// ============= Tenant token usage (monthly budget) =============
+export interface TenantUsage {
+  used: number;
+  budget: number;
+  remaining: number;
+  percentUsed: number;
+  resetsOn: string; // ISO date
+}
+
+export async function getTenantUsage(): Promise<TenantUsage> {
+  return api(`/api/tenant/usage`);
+}
+
 export async function deleteConnection(id: string): Promise<void> {
   await api(`/api/connections/${id}`, { method: "DELETE" });
 }

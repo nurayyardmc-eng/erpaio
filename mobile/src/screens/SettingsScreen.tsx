@@ -17,9 +17,15 @@ import {
   getMyNotificationPrefs,
   updateMyNotificationPrefs,
   deleteTenant,
+  getTenantUsage,
   type NotificationPrefs,
 } from "../lib/dashboard";
 import { getMe, updateMyProfile } from "../lib/auth";
+import {
+  budgetStatusLevel,
+  daysUntilReset,
+  formatTokens,
+} from "../lib/budgetFormat";
 import { confirmDialog } from "../components/Confirm";
 import { isBiometricSupported, isBiometricEnabled, setBiometricEnabled } from "../lib/biometric";
 import { useI18n } from "../lib/i18n/context";
@@ -114,6 +120,8 @@ export default function SettingsScreen({ onLogout }: Props) {
       </View>
 
       <ProfileSection />
+
+      <UsageSection />
 
       <Section title={t.settings.sectionAccount}>
         <Field label={t.settings.fieldTenantName}>
@@ -308,6 +316,87 @@ export default function SettingsScreen({ onLogout }: Props) {
  * Onay metni locale'den bağımsız sabit (Turkish phrase) çünkü server'da
  * `z.literal("HESABIMI SİL")` ile kontrol ediliyor.
  */
+/**
+ * Aylık token bütçesi paneli — kullanıcı kendi tenant'ının kullanımını görür.
+ * Web /dashboard/settings'teki aynı panel'in mobile karşılığı. Plan limitine
+ * yaklaştıkça uyarı renkleri (ok/warning/danger).
+ */
+function UsageSection() {
+  const { t, locale } = useI18n();
+  const q = useQuery({
+    queryKey: ["tenant-usage"],
+    queryFn: getTenantUsage,
+    // 60s stale — kullanıcı her settings açışında fresh çekmesin
+    staleTime: 60_000,
+  });
+
+  if (q.isLoading) {
+    return (
+      <Section title={t.settings.sectionUsage}>
+        <ActivityIndicator color={colors.brand} />
+      </Section>
+    );
+  }
+  if (!q.data) {
+    // Hata veya 404 — sessizce skip et (settings ana akışını bozmasın).
+    return null;
+  }
+
+  const { used, budget, percentUsed, resetsOn } = q.data;
+  const pctClamped = Math.min(100, Math.max(0, percentUsed));
+  const level = budgetStatusLevel(percentUsed);
+  const daysLeft = daysUntilReset(resetsOn);
+  const STATUS_COLORS = {
+    ok: { bg: colors.successSoft, fg: colors.success, label: t.settings.usageStatusOk },
+    warning: { bg: colors.warningSoft, fg: colors.warning, label: t.settings.usageStatusWarning },
+    danger: { bg: colors.errorSoft, fg: colors.error, label: t.settings.usageStatusDanger },
+  } as const;
+  const sc = STATUS_COLORS[level];
+
+  return (
+    <Section title={t.settings.sectionUsage}>
+      <Text style={[styles.muted, { marginBottom: spacing(3), lineHeight: 18 }]}>
+        {t.settings.usageHint}
+      </Text>
+
+      {/* Sayılar + status badge */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing(2.5) }}>
+        <Text style={{ color: colors.text, fontFamily: font, fontSize: 14 }}>
+          <Text style={{ fontWeight: "700" }}>{formatTokens(used)}</Text>
+          <Text style={{ color: colors.textMuted }}>{` / ${formatTokens(budget)} ${t.settings.usageProgressLabel}`}</Text>
+        </Text>
+        <View style={[styles.usageBadge, { backgroundColor: sc.bg }]}>
+          <Text style={[styles.usageBadgeText, { color: sc.fg }]}>{sc.label}</Text>
+        </View>
+      </View>
+
+      {/* Progress bar — accessible */}
+      <View
+        style={styles.usageBarTrack}
+        accessibilityRole="progressbar"
+        accessibilityValue={{ min: 0, max: 100, now: Math.round(pctClamped) }}
+      >
+        <View
+          style={[
+            styles.usageBarFill,
+            { width: `${pctClamped}%`, backgroundColor: sc.fg },
+          ]}
+        />
+      </View>
+
+      {/* % + reset countdown */}
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: spacing(2) }}>
+        <Text style={[styles.muted, { fontSize: 12 }]}>%{Math.round(pctClamped)}</Text>
+        <Text style={[styles.muted, { fontSize: 12 }]}>
+          {locale === "en"
+            ? `${t.settings.usageDaysUntilResetPrefix}${daysLeft}${t.settings.usageDaysUntilResetSuffix}`
+            : `${daysLeft}${t.settings.usageDaysUntilResetSuffix}`}
+        </Text>
+      </View>
+    </Section>
+  );
+}
+
 /**
  * Profil section'ı — kullanıcının kendi adını düzenleyebileceği yer. E-posta
  * read-only (değiştirmek password change kadar hassas, ayrı flow gerekir).
@@ -768,4 +857,25 @@ const styles = StyleSheet.create({
     marginTop: spacing(2),
   },
   profileSaveBtnText: { color: colors.textInverse, fontFamily: font, fontSize: 13, fontWeight: "600" },
+  usageBadge: {
+    paddingHorizontal: spacing(2),
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+  },
+  usageBadgeText: {
+    fontFamily: font,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+  },
+  usageBarTrack: {
+    height: 8,
+    backgroundColor: colors.bgSubtle,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  usageBarFill: {
+    height: 8,
+    borderRadius: 4,
+  },
 });

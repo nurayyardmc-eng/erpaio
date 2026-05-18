@@ -44,6 +44,14 @@ export interface Dictionary {
     brand: string;
     sectionAccount: string;
     fieldTenantName: string;
+    sectionUsage: string;
+    usageHint: string;
+    usageProgressLabel: string;
+    usageDaysUntilResetPrefix: string;
+    usageDaysUntilResetSuffix: string;
+    usageStatusOk: string;
+    usageStatusWarning: string;
+    usageStatusDanger: string;
     sectionProfile: string;
     fieldProfileName: string;
     fieldProfileNamePlaceholder: string;
