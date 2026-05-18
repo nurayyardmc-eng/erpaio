@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface AdminTenant {
   id: string;
@@ -79,6 +80,34 @@ export default function AdminPage() {
           </Link>
         ))}
       </div>
+
+      {tenants.length > 0 && (
+        <button
+          onClick={() => {
+            /* Track TT — sysadmin tenant listesi CSV (monthly report / BI). */
+            const rows = tenants.map((t) => ({
+              id: t.id,
+              name: t.name,
+              slug: t.slug,
+              plan: t.plan,
+              tokensUsed: t.monthlyTokensUsed,
+              tokensBudget: t.monthlyTokenBudget,
+              users: t._count.users,
+              connections: t._count.connections,
+              alerts: t._count.alerts,
+              queryCache: t._count.queryCache,
+              trialEndsAt: t.trialEndsAt ?? "",
+              createdAt: t.createdAt,
+            }));
+            const csv = rowsToCsv(rows, ["id", "name", "slug", "plan", "tokensUsed", "tokensBudget", "users", "connections", "alerts", "queryCache", "trialEndsAt", "createdAt"]);
+            const ts = new Date().toISOString().slice(0, 10);
+            downloadCsv(`erpaio-tenants-${ts}.csv`, csv);
+          }}
+          style={{ marginBottom: 16, padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          ↓ CSV ({tenants.length})
+        </button>
+      )}
 
       {loading && <div style={{ color: "#94A3B8" }}>Yükleniyor...</div>}
 
