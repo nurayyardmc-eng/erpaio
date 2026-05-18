@@ -460,6 +460,8 @@ export const tr: Dictionary = {
     disableBtn: "Devre dışı bırak",
     enabledToast: "Rapor etkinleştirildi",
     disabledToast: "Rapor devre dışı bırakıldı",
+    testRunBtn: "Test çalıştır",
+    testRunResultPrefix: "Satır sayısı:",
   },
   scheduledReportForm: {
     brand: "ERPAIO · YENİ RAPOR",

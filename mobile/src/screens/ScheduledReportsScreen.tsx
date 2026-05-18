@@ -2,7 +2,7 @@ import { FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, Vi
 import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteScheduledReport, getScheduledReports, updateScheduledReport, type ScheduledReport } from "../lib/dashboard";
+import { deleteScheduledReport, getScheduledReports, runScheduledReportTest, updateScheduledReport, type ScheduledReport } from "../lib/dashboard";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -49,6 +49,20 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
   const onToggle = (r: ScheduledReport) => {
     setMenuFor(null);
     toggleMutation.mutate({ id: r.id, enabled: !r.enabled });
+  };
+
+  // Track ZZ — test run mutation (cron beklemeden önizleme).
+  const testMutation = useMutation({
+    mutationFn: (id: string) => runScheduledReportTest(id),
+    onSuccess: (data) => {
+      showToast(`${t.scheduledReports.testRunResultPrefix} ${data.rowCount}`, "success");
+    },
+    onError: () => showToast(t.common.error, "error"),
+  });
+
+  const onTest = (r: ScheduledReport) => {
+    setMenuFor(null);
+    testMutation.mutate(r.id);
   };
 
   const deleteMutation = useMutation({
@@ -143,6 +157,16 @@ export default function ScheduledReportsScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setMenuFor(null)}>
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.name}</Text>
+              <TouchableOpacity
+                onPress={() => onTest(menuFor)}
+                style={styles.sheetItem}
+                activeOpacity={0.6}
+                disabled={testMutation.isPending}
+              >
+                <Text style={styles.sheetText}>
+                  {testMutation.isPending ? "..." : t.scheduledReports.testRunBtn}
+                </Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => onToggle(menuFor)}
                 style={styles.sheetItem}

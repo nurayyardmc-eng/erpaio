@@ -390,6 +390,18 @@ export async function updateScheduledReport(
   });
 }
 
+/**
+ * Track ZZ — scheduled report preview run (YY mobile parity). Email yok,
+ * persist yok; sadece SQL execute → rowCount + ilk 5 sample row.
+ */
+export async function runScheduledReportTest(
+  id: string,
+): Promise<{ rowCount: number; sample: Record<string, unknown>[]; columns: string[] }> {
+  return api(`/api/scheduled-reports/${encodeURIComponent(id)}/run`, {
+    method: "POST",
+  });
+}
+
 // ============= Team =============
 export interface TeamUser {
   id: string;

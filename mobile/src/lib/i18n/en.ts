@@ -460,6 +460,8 @@ export const en: Dictionary = {
     disableBtn: "Disable",
     enabledToast: "Report enabled",
     disabledToast: "Report disabled",
+    testRunBtn: "Run test",
+    testRunResultPrefix: "Row count:",
   },
   scheduledReportForm: {
     brand: "ERPAIO · NEW REPORT",

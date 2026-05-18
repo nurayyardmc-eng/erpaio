@@ -465,6 +465,8 @@ export interface Dictionary {
     disableBtn: string;
     enabledToast: string;
     disabledToast: string;
+    testRunBtn: string;
+    testRunResultPrefix: string;
   };
   scheduledReportForm: {
     brand: string;
