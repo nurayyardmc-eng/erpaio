@@ -454,6 +454,8 @@ export const en: Dictionary = {
     deleteConfirmMessageSuffix: "will be permanently deleted.",
     emptyTitle: "No custom metrics yet",
     emptyDesc: "Define your own metric using the form above. The engine runs it automatically in cron runs.",
+    testRunBtn: "Run test",
+    testRunResultPrefix: "Current value:",
   },
   nps: {
     header: "Quick Survey",

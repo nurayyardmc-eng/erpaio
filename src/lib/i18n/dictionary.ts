@@ -454,6 +454,8 @@ export interface Dictionary {
     deleteConfirmMessageSuffix: string;
     emptyTitle: string;
     emptyDesc: string;
+    testRunBtn: string;
+    testRunResultPrefix: string;
   };
   nps: {
     header: string;

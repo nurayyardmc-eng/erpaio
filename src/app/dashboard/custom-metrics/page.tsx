@@ -57,6 +57,8 @@ export default function CustomMetricsPage() {
     sql: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  // Track BB — test çalıştır per-metric. Map id → result/loading flag.
+  const [testResults, setTestResults] = useState<Record<string, { value: number } | "loading" | "error">>({});
 
   const refresh = () => {
     Promise.all([
@@ -107,6 +109,25 @@ export default function CustomMetricsPage() {
       refresh();
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const runTest = async (m: CustomMetric) => {
+    setTestResults((prev) => ({ ...prev, [m.id]: "loading" }));
+    try {
+      const res = await fetch(`/api/custom-metrics/${encodeURIComponent(m.id)}/run`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || t.common.error, "error");
+        setTestResults((prev) => ({ ...prev, [m.id]: "error" }));
+        return;
+      }
+      setTestResults((prev) => ({ ...prev, [m.id]: { value: data.value } }));
+    } catch {
+      showToast(t.common.error, "error");
+      setTestResults((prev) => ({ ...prev, [m.id]: "error" }));
     }
   };
 
@@ -260,12 +281,24 @@ export default function CustomMetricsPage() {
                   <span>· {m.direction}</span>
                 </div>
               </div>
-              {canManage && (
-                <button onClick={() => remove(m)} style={btnDanger}>
-                  {t.common.delete}
-                </button>
-              )}
+              <div style={{ display: "flex", gap: 6, alignItems: "flex-start", flexDirection: "column" }}>
+                {canManage && (
+                  <button onClick={() => runTest(m)} style={btnSecondary} type="button" disabled={testResults[m.id] === "loading"}>
+                    {testResults[m.id] === "loading" ? "..." : t.customMetrics.testRunBtn}
+                  </button>
+                )}
+                {canManage && (
+                  <button onClick={() => remove(m)} style={btnDanger}>
+                    {t.common.delete}
+                  </button>
+                )}
+              </div>
             </div>
+            {testResults[m.id] && testResults[m.id] !== "loading" && testResults[m.id] !== "error" && (
+              <div style={{ marginTop: 10, padding: "6px 12px", background: "#D1FAE5", color: "#065F46", borderRadius: 100, fontSize: 12, fontWeight: 600, display: "inline-block" }}>
+                {t.customMetrics.testRunResultPrefix} {(testResults[m.id] as { value: number }).value}
+              </div>
+            )}
           </div>
         ))
       )}
@@ -298,6 +331,10 @@ const btnPrimary: React.CSSProperties = {
 const btnDanger: React.CSSProperties = {
   background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)",
   borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit",
+};
+const btnSecondary: React.CSSProperties = {
+  background: colors.card, border: `1px solid ${colors.border}`,
+  borderRadius: 4, padding: "4px 10px", color: colors.text, fontSize: 10, cursor: "pointer", fontFamily: "inherit",
 };
 const badgeDisabled: React.CSSProperties = {
   background: "#F1F5F9", border: "1px solid #E5E7EB", color: "#64748B",

@@ -453,6 +453,8 @@ export const tr: Dictionary = {
     deleteConfirmMessageSuffix: "kalıcı olarak silinecek.",
     emptyTitle: "Henüz custom metric yok",
     emptyDesc: "Yukarıdaki formla kendi metric'inizi tanımlayın. Engine cron run'larında otomatik çalıştırır.",
+    testRunBtn: "Test çalıştır",
+    testRunResultPrefix: "Şu anki değer:",
   },
   nps: {
     header: "Hızlı Anket",
