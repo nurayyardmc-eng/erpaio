@@ -163,6 +163,16 @@ export const tr: Dictionary = {
     accountSecurityDescription:
       "İki faktörlü doğrulama (MFA), güven listesi (IP allowlist) ve API token yönetimi ayrı sayfada.",
     accountSecurityLink: "Güvenlik ayarlarına git →",
+    tenantNpsTitle: "Tenant NPS Skoru",
+    tenantNpsDescription:
+      "Bu org'daki kullanıcılarınızın bıraktığı NPS yanıtları. Owner ve admin görür. Skor -100 (kötü) ile +100 (mükemmel) arasında; 30+ sağlıklı kabul edilir.",
+    tenantNpsEmpty: "Henüz NPS yanıtı yok. Kullanıcılar app'i 30 saniye kullandıktan sonra anket çıkar.",
+    tenantNpsScoreLabel: "NPS",
+    tenantNpsResponsesLabel: "yanıt",
+    tenantNpsPromoters: "Promoter (9-10)",
+    tenantNpsPassives: "Pasif (7-8)",
+    tenantNpsDetractors: "Detractor (0-6)",
+    tenantNpsRecentComments: "Son yorumlar",
     tenantExportTitle: "Veri Export (KVKK md. 20)",
     tenantExportDescription:
       "Tenant'ınızın tüm verisini (sohbetler, mesajlar, alert'ler, bağlantı bilgileri, kullanıcılar, ayarlar) tek bir JSON dosyası olarak indirir. KVKK md. 11 / GDPR Art. 20 kapsamında veri taşınabilirlik hakkı. Hassas alanlar (şifre hash'leri, şifrelenmiş secret'lar, push token'lar) DAHIL EDILMEZ.",

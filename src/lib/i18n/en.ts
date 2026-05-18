@@ -163,6 +163,16 @@ export const en: Dictionary = {
     accountSecurityDescription:
       "Two-factor authentication (MFA), IP allowlist and API token management are on a separate page.",
     accountSecurityLink: "Go to security settings →",
+    tenantNpsTitle: "Tenant NPS Score",
+    tenantNpsDescription:
+      "NPS responses from users in this org. Visible to owner and admin. Score ranges from -100 (poor) to +100 (excellent); 30+ is considered healthy.",
+    tenantNpsEmpty: "No NPS responses yet. The survey appears 30 seconds after users start the app.",
+    tenantNpsScoreLabel: "NPS",
+    tenantNpsResponsesLabel: "responses",
+    tenantNpsPromoters: "Promoters (9-10)",
+    tenantNpsPassives: "Passives (7-8)",
+    tenantNpsDetractors: "Detractors (0-6)",
+    tenantNpsRecentComments: "Recent comments",
     tenantExportTitle: "Data Export (GDPR Art. 20)",
     tenantExportDescription:
       "Download all of your tenant's data (chats, messages, alerts, connection info, users, settings) as a single JSON file. Per GDPR Art. 20 / KVKK md. 11 right to data portability. Sensitive fields (password hashes, encrypted secrets, push tokens) are NOT INCLUDED.",

@@ -181,6 +181,15 @@ export interface Dictionary {
     notifPrefsSaveError: string;
     notifPrefsToggleOn: string;
     notifPrefsToggleOff: string;
+    tenantNpsTitle: string;
+    tenantNpsDescription: string;
+    tenantNpsEmpty: string;
+    tenantNpsScoreLabel: string;
+    tenantNpsResponsesLabel: string;
+    tenantNpsPromoters: string;
+    tenantNpsPassives: string;
+    tenantNpsDetractors: string;
+    tenantNpsRecentComments: string;
     tenantExportTitle: string;
     tenantExportDescription: string;
     tenantExportBtn: string;

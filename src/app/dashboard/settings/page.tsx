@@ -505,6 +505,8 @@ export default function SettingsPage() {
             </div>
           </Section>
 
+          <TenantNpsSection t={t} />
+
           <TenantExportSection t={t} />
 
           <DangerZone t={t} />
@@ -513,6 +515,110 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+/**
+ * Tenant-scoped NPS aggregate — Track UUUU. Owner + admin görür; non-owner için
+ * gizlenir (server gate de var). Sysadmin /api/nps cross-tenant aggregate'i ayrı.
+ *
+ * Veri: nps puanı (-100..+100), promoter/passive/detractor breakdown, son 100
+ * yanıt detayı. Henüz cevap yoksa empty state.
+ */
+interface TenantNpsData {
+  nps: number;
+  breakdown: { promoters: number; passives: number; detractors: number; total: number };
+  responses: { score: number; comment: string | null; respondedAt: string }[];
+}
+
+function TenantNpsSection({ t }: { t: Dictionary }) {
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [data, setData] = useState<TenantNpsData | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((d: { user?: { role?: string } } | null) => {
+        const role = d?.user?.role ?? null;
+        setUserRole(role);
+        if (role === "owner" || role === "admin") {
+          setLoading(true);
+          return fetch("/api/tenant/nps")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d: TenantNpsData | null) => setData(d))
+            .catch(() => {})
+            .finally(() => setLoading(false));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  if (userRole !== "owner" && userRole !== "admin") return null;
+
+  const scoreColor = data && data.nps >= 30
+    ? colors.success
+    : data && data.nps >= 0
+      ? "#F59E0B"
+      : colors.error;
+
+  return (
+    <Section title={t.settings.tenantNpsTitle}>
+      <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 16px" }}>
+        {t.settings.tenantNpsDescription}
+      </p>
+      {loading ? (
+        <div style={{ color: colors.textMuted, fontSize: 12 }}>{t.common.loading}</div>
+      ) : !data || data.breakdown.total === 0 ? (
+        <div style={{ color: colors.textMuted, fontSize: 13, fontStyle: "italic" }}>
+          {t.settings.tenantNpsEmpty}
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16 }}>
+            <span style={{ fontSize: 48, fontWeight: 700, color: scoreColor, lineHeight: 1 }}>
+              {data.nps > 0 ? "+" : ""}{data.nps}
+            </span>
+            <span style={{ fontSize: 12, color: colors.textMuted }}>
+              {t.settings.tenantNpsScoreLabel} · {data.breakdown.total} {t.settings.tenantNpsResponsesLabel}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16, fontSize: 11 }}>
+            <span style={{ ...npsBadgeStyle, background: "#D1FAE5", color: "#065F46" }}>
+              {t.settings.tenantNpsPromoters}: {data.breakdown.promoters}
+            </span>
+            <span style={{ ...npsBadgeStyle, background: "#F1F5F9", color: "#475569" }}>
+              {t.settings.tenantNpsPassives}: {data.breakdown.passives}
+            </span>
+            <span style={{ ...npsBadgeStyle, background: "#FEE2E2", color: "#991B1B" }}>
+              {t.settings.tenantNpsDetractors}: {data.breakdown.detractors}
+            </span>
+          </div>
+          {data.responses.filter((r) => r.comment).length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 8 }}>
+                {t.settings.tenantNpsRecentComments}
+              </div>
+              {data.responses.filter((r) => r.comment).slice(0, 5).map((r, i) => (
+                <div key={i} style={{ borderLeft: `3px solid ${r.score >= 9 ? "#10B981" : r.score >= 7 ? "#F59E0B" : "#EF4444"}`, paddingLeft: 10, marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: colors.textMuted }}>
+                    {r.score}/10 · {new Date(r.respondedAt).toLocaleDateString()}
+                  </div>
+                  <div style={{ fontSize: 13, color: colors.text, marginTop: 2 }}>{r.comment}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+const npsBadgeStyle: React.CSSProperties = {
+  padding: "3px 10px",
+  borderRadius: 100,
+  fontWeight: 600,
+  letterSpacing: 0.3,
+};
 
 /**
  * Tenant data export — KVKK md. 11 / GDPR Art. 20 right to data portability.
