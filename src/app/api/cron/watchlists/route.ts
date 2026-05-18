@@ -78,6 +78,20 @@ export async function GET(req: NextRequest) {
         triggered++;
         const msg = `${w.name}: ${firstNumeric} ${w.thresholdOp} ${w.thresholdVal} ✓`;
 
+        // Track NNNN — trigger history. Watchlist.triggeredAt overwrite
+        // ediliyor zaten; bu kayıt "ne sıklıkta hit ediyor" sorusu için.
+        // Threshold op/val snapshot edilir — user sonra threshold değiştirir
+        // ama eski tetiklenmeleri o anki eşikle yorumlayabilelim.
+        await prisma.watchlistTrigger.create({
+          data: {
+            watchlistId: w.id,
+            tenantId: w.tenantId,
+            value: firstNumeric,
+            thresholdOp: w.thresholdOp,
+            thresholdVal: w.thresholdVal,
+          },
+        });
+
         await prisma.alert.create({
           data: {
             tenantId: w.tenantId,

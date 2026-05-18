@@ -403,6 +403,9 @@ export const tr: Dictionary = {
     disabledToast: "Watchlist devre dışı bırakıldı.",
     disabledBadge: "Devre dışı",
     updatedToast: "Watchlist güncellendi.",
+    triggerHistoryTitle: "Tetiklenme geçmişi",
+    triggerHistoryEmpty: "Henüz tetiklenme yok.",
+    triggerHistoryCap: "Son 50 tetiklenme gösterilir (daha eski kayıtlar 90 gün retention sonrası silinir).",
   },
   annotations: {
     breadcrumb: "ERPAIO · ŞEMA AÇIKLAMALARI",

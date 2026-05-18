@@ -40,6 +40,7 @@ model Tenant {
   invitations          Invitation[]
   scheduledReports     ScheduledReport[]
   watchlists           Watchlist[]
+  watchlistTriggers    WatchlistTrigger[]
   integrations         TenantIntegration[]
   ipAllowlist          TenantIpAllowlist[]
   tableEmbeddings      TableEmbedding[]
@@ -413,11 +414,35 @@ model Watchlist {
   tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   connection ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  triggers   WatchlistTrigger[]
 
   @@index([tenantId])
   @@index([userId])
   @@index([connectionId])
   @@index([enabled])
+}
+
+// Watchlist trigger history — Track NNNN. Önceden Watchlist.triggeredAt
+// her tetiklenmede overwrite ediliyordu; kullanıcı "ne sıklıkta fire
+// ediyor" sorusunu cevaplayamıyordu (eşik çok düşük/yüksek mi tuning'i
+// yapılamıyor). Şimdi her hit ayrı kayıt — son N (default 50) liste.
+//
+// tenantId denormalize: tenant-scoped retention/cleanup query'leri
+// Watchlist join'siz çalışsın (90d retention cleanup cron'da).
+model WatchlistTrigger {
+  id           String   @id @default(cuid())
+  watchlistId  String
+  tenantId     String
+  value        Float
+  thresholdOp  String
+  thresholdVal Float
+  triggeredAt  DateTime @default(now())
+
+  watchlist Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([watchlistId, triggeredAt(sort: Desc)])
+  @@index([tenantId, triggeredAt(sort: Desc)])
 }
 
 model TenantIntegration {

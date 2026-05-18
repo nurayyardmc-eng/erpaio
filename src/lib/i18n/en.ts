@@ -404,6 +404,9 @@ export const en: Dictionary = {
     disabledToast: "Watchlist disabled.",
     disabledBadge: "Disabled",
     updatedToast: "Watchlist updated.",
+    triggerHistoryTitle: "Trigger history",
+    triggerHistoryEmpty: "No triggers yet.",
+    triggerHistoryCap: "Showing the most recent 50 triggers (older records are removed after the 90-day retention).",
   },
   annotations: {
     breadcrumb: "ERPAIO · SCHEMA ANNOTATIONS",

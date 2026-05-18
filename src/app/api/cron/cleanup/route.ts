@@ -26,6 +26,9 @@ const ONE_DAY_MS = 24 * 60 * 60_000;
  * - AnomalyBaseline: 90 gün. Engine `take: historyWindow+1` (default 30)
  *   ile son N kayıtları okur; 90 gün rolling history yeterli + yıllık
  *   metric scale'de tablo şişmesini engeller.
+ * - WatchlistTrigger: 90 gün. Detay sayfası son 50 tetiklenmeyi gösterir;
+ *   günde ortalama 1 hit'te 90 gün ≈ 90 tetiklenme — limit'in üstünde.
+ *   Sık tetiklenen watchlist'lerde de tablo unbounded grow olmaz.
  *
  * SAKLI TUTULANLAR (silinmiyor):
  * - ConsentLog: KVKK md. 7 + 11 audit trail, kalıcı.
@@ -45,6 +48,7 @@ const RETENTION = {
   notificationLogDays: 180,
   slowQueryLogDays: 30,
   anomalyBaselineDays: 90,
+  watchlistTriggerDays: 90,
 } as const;
 
 export async function GET(req: NextRequest) {
@@ -153,6 +157,18 @@ export async function GET(req: NextRequest) {
         where: { capturedAt: { lt: before } },
       });
       results.anomalyBaseline = r.count;
+      totalDeleted += r.count;
+    }
+
+    // WatchlistTrigger — Track NNNN. Her watchlist hit'i 1 row; sık
+    // tetiklenenler tablo şişirir. Detay UI son 50'yi gösteriyor,
+    // 90 gün rolling history bu cap'in üstünde + tablo bounded.
+    {
+      const before = new Date(now - RETENTION.watchlistTriggerDays * ONE_DAY_MS);
+      const r = await prisma.watchlistTrigger.deleteMany({
+        where: { triggeredAt: { lt: before } },
+      });
+      results.watchlistTrigger = r.count;
       totalDeleted += r.count;
     }
   } catch (err) {

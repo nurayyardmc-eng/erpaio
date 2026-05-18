@@ -19,10 +19,18 @@ interface Watchlist {
   triggeredAt: string | null;
 }
 
+interface Trigger {
+  id: string;
+  value: number;
+  thresholdOp: string;
+  thresholdVal: number;
+  triggeredAt: string;
+}
+
 interface Connection { id: string; dbName: string; status: string }
 
 export default function WatchlistsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +54,9 @@ export default function WatchlistsPage() {
     emailTo: "",
   });
   const [editSaving, setEditSaving] = useState(false);
+  // Track NNNN — trigger history (sadece edit modunda yüklenir).
+  const [triggers, setTriggers] = useState<Trigger[]>([]);
+  const [triggersLoading, setTriggersLoading] = useState(false);
 
   const refresh = () => {
     Promise.all([
@@ -110,10 +121,20 @@ export default function WatchlistsPage() {
       thresholdVal: w.thresholdVal,
       emailTo: w.emailTo ?? "",
     });
+    // Trigger history lazy-load (Track NNNN). Edit modu kapatılınca state
+    // temizlenir; her edit açılışında fresh fetch yapılır.
+    setTriggers([]);
+    setTriggersLoading(true);
+    fetch(`/api/watchlists/${encodeURIComponent(w.id)}/triggers`)
+      .then((r) => r.ok ? r.json() : { triggers: [] })
+      .then((d: { triggers: Trigger[] }) => setTriggers(d.triggers ?? []))
+      .catch(() => setTriggers([]))
+      .finally(() => setTriggersLoading(false));
   };
 
   const cancelEdit = () => {
     setEditId(null);
+    setTriggers([]);
   };
 
   const saveEdit = async (id: string) => {
@@ -138,6 +159,7 @@ export default function WatchlistsPage() {
       }
       showToast(t.watchlists.updatedToast, "success");
       setEditId(null);
+      setTriggers([]);
       refresh();
     } catch {
       showToast(t.common.error, "error");
@@ -260,6 +282,38 @@ export default function WatchlistsPage() {
                   {t.common.cancel}
                 </button>
               </div>
+
+              {/* Track NNNN — Trigger history (son 50). Hep gösterilir;
+                  henüz tetiklenmediyse empty state. Threshold tweak yaparken
+                  user bu listede geçmiş hit'leri görür → bilinçli karar verir. */}
+              <div style={triggerHistoryBox}>
+                <div style={triggerHistoryTitle}>{t.watchlists.triggerHistoryTitle}</div>
+                {triggersLoading ? (
+                  <div style={{ color: "#94A3B8", fontSize: 11 }}>{t.common.loading}</div>
+                ) : triggers.length === 0 ? (
+                  <div style={{ color: "#94A3B8", fontSize: 11, fontStyle: "italic" }}>
+                    {t.watchlists.triggerHistoryEmpty}
+                  </div>
+                ) : (
+                  <div>
+                    {triggers.map((tr) => (
+                      <div key={tr.id} style={triggerRow}>
+                        <code style={{ color: "#0F172A", fontSize: 11, fontFamily: "ui-monospace, monospace" }}>
+                          {tr.value} {tr.thresholdOp} {tr.thresholdVal}
+                        </code>
+                        <span style={{ color: "#94A3B8", fontSize: 10 }}>
+                          {new Date(tr.triggeredAt).toLocaleString(locale === "en" ? "en-US" : "tr-TR")}
+                        </span>
+                      </div>
+                    ))}
+                    {triggers.length === 50 && (
+                      <div style={{ color: "#94A3B8", fontSize: 10, marginTop: 6, fontStyle: "italic" }}>
+                        {t.watchlists.triggerHistoryCap}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -327,4 +381,15 @@ const btnSecondary: React.CSSProperties = {
 const badgeDisabled: React.CSSProperties = {
   background: "#F1F5F9", border: "1px solid #E5E7EB", color: "#64748B",
   borderRadius: 100, padding: "1px 8px", fontSize: 9, fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase",
+};
+const triggerHistoryBox: React.CSSProperties = {
+  marginTop: 16, paddingTop: 14, borderTop: "1px solid #E5E7EB",
+};
+const triggerHistoryTitle: React.CSSProperties = {
+  color: "#475569", fontSize: 10, letterSpacing: 1, textTransform: "uppercase",
+  fontWeight: 600, marginBottom: 8,
+};
+const triggerRow: React.CSSProperties = {
+  display: "flex", justifyContent: "space-between", alignItems: "center",
+  padding: "4px 0", borderBottom: "1px solid #F1F5F9",
 };

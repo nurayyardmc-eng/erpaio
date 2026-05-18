@@ -406,6 +406,9 @@ export interface Dictionary {
     disabledToast: string;
     disabledBadge: string;
     updatedToast: string;
+    triggerHistoryTitle: string;
+    triggerHistoryEmpty: string;
+    triggerHistoryCap: string;
   };
   annotations: {
     breadcrumb: string;
