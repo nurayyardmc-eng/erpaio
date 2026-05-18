@@ -163,6 +163,12 @@ export const en: Dictionary = {
     accountSecurityDescription:
       "Two-factor authentication (MFA), IP allowlist and API token management are on a separate page.",
     accountSecurityLink: "Go to security settings →",
+    tenantExportTitle: "Data Export (GDPR Art. 20)",
+    tenantExportDescription:
+      "Download all of your tenant's data (chats, messages, alerts, connection info, users, settings) as a single JSON file. Per GDPR Art. 20 / KVKK md. 11 right to data portability. Sensitive fields (password hashes, encrypted secrets, push tokens) are NOT INCLUDED.",
+    tenantExportBtn: "Download as JSON",
+    tenantExportDownloadingBtn: "Downloading...",
+    tenantExportNote: "Queries all tenant tables; for large tenants this can take a few seconds. Recorded in the audit log.",
     dangerZone: "Danger Zone",
     dangerZoneDescription:
       "I want to delete my account. This action is covered by GDPR/KVKK right-to-erasure. All data is cascade-deleted permanently.",

@@ -45,6 +45,7 @@ const ACTION_LABELS_TR: Record<string, string> = {
   "connection.schema.sync": "ERP şeması senkronize edildi",
   "email.change.request": "Email değişikliği talebi",
   "email.change.complete": "Email değişikliği tamamlandı",
+  "tenant.export": "Tenant veri export'u (KVKK md. 20)",
 };
 
 const ACTION_LABELS_EN: Record<string, string> = {
@@ -75,6 +76,7 @@ const ACTION_LABELS_EN: Record<string, string> = {
   "connection.schema.sync": "ERP schema synced",
   "email.change.request": "Email change requested",
   "email.change.complete": "Email change completed",
+  "tenant.export": "Tenant data export (GDPR Art. 20)",
 };
 
 export default function ActivityPage() {

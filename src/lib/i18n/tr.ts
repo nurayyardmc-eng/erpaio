@@ -163,6 +163,12 @@ export const tr: Dictionary = {
     accountSecurityDescription:
       "İki faktörlü doğrulama (MFA), güven listesi (IP allowlist) ve API token yönetimi ayrı sayfada.",
     accountSecurityLink: "Güvenlik ayarlarına git →",
+    tenantExportTitle: "Veri Export (KVKK md. 20)",
+    tenantExportDescription:
+      "Tenant'ınızın tüm verisini (sohbetler, mesajlar, alert'ler, bağlantı bilgileri, kullanıcılar, ayarlar) tek bir JSON dosyası olarak indirir. KVKK md. 11 / GDPR Art. 20 kapsamında veri taşınabilirlik hakkı. Hassas alanlar (şifre hash'leri, şifrelenmiş secret'lar, push token'lar) DAHIL EDILMEZ.",
+    tenantExportBtn: "JSON olarak indir",
+    tenantExportDownloadingBtn: "İndiriliyor...",
+    tenantExportNote: "Bu işlem tenant'ın tüm tablolarını sorgular, büyük tenant'larda birkaç saniye sürebilir. Audit log'a kaydedilir.",
     dangerZone: "Tehlikeli Bölge",
     dangerZoneDescription:
       "Hesabımı silmek istiyorum. Bu işlem KVKK md. 7 silinme hakkı kapsamındadır. Tüm veriler kaskat (cascade) olarak kalıcı silinir.",

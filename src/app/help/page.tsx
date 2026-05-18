@@ -36,7 +36,7 @@ const faqs: { group: string; items: FaqItem[] }[] = [
     items: [
       { q: "Plan nasıl yükseltilir?", a: "Şu an pilot dönemde manuel faturalandırma. support@erpaio.com'a yazın, plan değişikliği 24 saat içinde yapılır." },
       { q: "Hesabımı nasıl silerim?", a: "Settings → Tehlikeli Bölge → Hesabı Sil. Şifre + 'HESABIMI SİL' yazarak onaylanır. Tüm veriler kaskat (cascade) olarak kalıcı silinir (KVKK md. 7)." },
-      { q: "Verilerimi nasıl indiririm?", a: "Settings → Veri Export (yakında UI'a eklenecek). Şu an /api/tenant/export endpoint'inden GET ile JSON olarak indirebilirsiniz (KVKK md. 11 + GDPR Art. 20)." },
+      { q: "Verilerimi nasıl indiririm?", a: "Settings → Veri Export bölümünden owner kullanıcı tüm tenant verisini JSON olarak indirebilir. Mobile'da aynı bölümde Share intent ile paylaşılır. KVKK md. 11 / GDPR Art. 20 (data portability) hakkı kapsamındadır." },
     ],
   },
 ];

@@ -70,6 +70,17 @@ export async function getTenantUsage(): Promise<TenantUsage> {
   return api(`/api/tenant/usage`);
 }
 
+/**
+ * Tenant data export — KVKK md. 11 / GDPR Art. 20 right to data portability.
+ * Owner-only (server gate 403). Tüm tenant verisini JSON object olarak döner;
+ * caller `shareJson()` ile dosya olarak paylaşır. Server audit log entry yazar.
+ *
+ * maxDuration server'da 300s — büyük tenant'larda birkaç saniye sürebilir.
+ */
+export async function exportTenantData(): Promise<Record<string, unknown>> {
+  return api<Record<string, unknown>>(`/api/tenant/export`);
+}
+
 export async function deleteConnection(id: string): Promise<void> {
   await api(`/api/connections/${id}`, { method: "DELETE" });
 }

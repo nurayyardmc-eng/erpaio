@@ -95,6 +95,13 @@ export interface Dictionary {
     linkPrivacy: string;
     linkTerms: string;
     linkSupport: string;
+    tenantExportTitle: string;
+    tenantExportDescription: string;
+    tenantExportBtn: string;
+    tenantExportDownloadingBtn: string;
+    tenantExportNote: string;
+    tenantExportSharedToast: string;
+    tenantExportFailedToast: string;
     dangerZone: string;
     dangerZoneDescription: string;
     deleteAccountBtn: string;

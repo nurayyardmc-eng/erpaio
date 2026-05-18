@@ -28,3 +28,20 @@ export async function shareCsv(
     });
   }
 }
+
+/**
+ * JSON dosyasını paylaş — tenant export (ZZZ) + future feature'lar.
+ * Pretty-printed (2-space indent) — kullanıcı dosyayı açtığında okunabilir.
+ */
+export async function shareJson(filename: string, data: unknown): Promise<void> {
+  const json = JSON.stringify(data, null, 2);
+  const path = (FileSystem.cacheDirectory ?? "") + filename;
+  await FileSystem.writeAsStringAsync(path, json);
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(path, {
+      mimeType: "application/json",
+      dialogTitle: "ERPAIO veri export'unu paylaş",
+      UTI: "public.json",
+    });
+  }
+}

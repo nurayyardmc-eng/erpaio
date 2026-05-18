@@ -17,9 +17,11 @@ import {
   getMyNotificationPrefs,
   updateMyNotificationPrefs,
   deleteTenant,
+  exportTenantData,
   getTenantUsage,
   type NotificationPrefs,
 } from "../lib/dashboard";
+import { shareJson } from "../lib/share";
 import { getMe, requestEmailChange, updateMyProfile } from "../lib/auth";
 import {
   budgetStatusLevel,
@@ -297,6 +299,8 @@ export default function SettingsScreen({ onLogout }: Props) {
           <Text style={styles.link}>{t.settings.linkSupport}</Text>
         </TouchableOpacity>
       </Section>
+
+      <TenantExportSection />
 
       <DangerZoneSection onLogout={onLogout} />
 
@@ -589,6 +593,60 @@ function EmailChangeRow({ currentEmail }: { currentEmail: string }) {
         {t.settings.emailChangeNote}
       </Text>
     </View>
+  );
+}
+
+/**
+ * Tenant data export — KVKK md. 11 / GDPR Art. 20 right to data portability.
+ * Owner-only (server 403 dönüyor, UI rolü çekip butonu non-owner için gizler).
+ * Click → API JSON çek → shareJson() ile Native Share intent ile dosya
+ * paylaşılır. Server audit log entry yazar (tenant.export action).
+ */
+function TenantExportSection() {
+  const { t } = useI18n();
+  const meQuery = useQuery({ queryKey: ["me-role-export"], queryFn: getMe });
+  const [downloading, setDownloading] = useState(false);
+
+  if (meQuery.isLoading || !meQuery.data) return null;
+  if (meQuery.data.user.role !== "owner") return null;
+
+  const download = async () => {
+    setDownloading(true);
+    try {
+      const data = await exportTenantData();
+      const ts = new Date().toISOString().slice(0, 10);
+      await shareJson(`erpaio-export-${ts}.json`, data);
+      showToast(t.settings.tenantExportSharedToast, "success");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t.settings.tenantExportFailedToast;
+      showToast(msg, "error");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <Section title={t.settings.tenantExportTitle}>
+      <Text style={[styles.muted, { lineHeight: 18, marginBottom: spacing(3) }]}>
+        {t.settings.tenantExportDescription}
+      </Text>
+      <TouchableOpacity
+        onPress={download}
+        disabled={downloading}
+        style={[
+          styles.profileSaveBtn,
+          downloading && { opacity: 0.5 },
+        ]}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.profileSaveBtnText}>
+          {downloading ? t.settings.tenantExportDownloadingBtn : t.settings.tenantExportBtn}
+        </Text>
+      </TouchableOpacity>
+      <Text style={[styles.muted, { fontSize: 11, marginTop: spacing(2), lineHeight: 16 }]}>
+        {t.settings.tenantExportNote}
+      </Text>
+    </Section>
   );
 }
 

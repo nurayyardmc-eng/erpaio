@@ -84,6 +84,14 @@ export const tr: Dictionary = {
     linkPrivacy: "Gizlilik Politikası →",
     linkTerms: "Kullanım Koşulları →",
     linkSupport: "support@erpaio.com →",
+    tenantExportTitle: "Veri Export (KVKK md. 20)",
+    tenantExportDescription:
+      "Tenant'ının tüm verisini (sohbetler, mesajlar, alert'ler, bağlantı bilgileri, kullanıcılar, ayarlar) tek bir JSON dosyası olarak indirir. KVKK md. 11 / GDPR Art. 20 kapsamında veri taşınabilirlik. Hassas alanlar (şifre hash'leri, şifrelenmiş secret'lar) DAHIL EDILMEZ.",
+    tenantExportBtn: "JSON olarak paylaş",
+    tenantExportDownloadingBtn: "Hazırlanıyor...",
+    tenantExportNote: "İşlem birkaç saniye sürebilir. Audit log'a kaydedilir.",
+    tenantExportSharedToast: "Veri export'u hazır, paylaşım sayfası açıldı.",
+    tenantExportFailedToast: "Veri export'u alınamadı.",
     dangerZone: "Tehlikeli Bölge",
     dangerZoneDescription:
       "Hesabınızı silerseniz tenant'ınız, sohbet geçmişiniz, bağlantılarınız ve tüm kullanıcılar geri dönülmez şekilde silinir. KVKK md. 11 + GDPR Art. 17 (silinme hakkı) kapsamındadır. Yalnızca tenant sahibi (owner) silebilir.",

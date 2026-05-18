@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
 export const maxDuration = 300;
 
@@ -76,11 +77,28 @@ export async function GET(req: Request) {
     npsResponses,
   };
 
+  const totalMessages = sessions.reduce((acc, s) => acc + s.messages.length, 0);
   log.info({
     sessions: sessions.length,
-    messages: sessions.reduce((acc, s) => acc + s.messages.length, 0),
+    messages: totalMessages,
     alerts: alerts.length,
   }, "Tenant data export generated");
+
+  // KVKK md. 13 + GDPR Art. 20 — export her gerçekleştiğinde audit log.
+  // Hassas işlem (tüm tenant verisi dışarı) — kim, ne zaman, hangi IP'den.
+  await recordActivity({
+    userId: session.user.id,
+    tenantId,
+    email: session.user.email ?? null,
+    action: "tenant.export",
+    metadata: {
+      sessions: sessions.length,
+      messages: totalMessages,
+      alerts: alerts.length,
+      users: users.length,
+    },
+    ...activityContextFromRequest(req),
+  });
 
   return new Response(JSON.stringify(exportBundle, null, 2), {
     headers: {

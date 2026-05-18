@@ -181,6 +181,11 @@ export interface Dictionary {
     notifPrefsSaveError: string;
     notifPrefsToggleOn: string;
     notifPrefsToggleOff: string;
+    tenantExportTitle: string;
+    tenantExportDescription: string;
+    tenantExportBtn: string;
+    tenantExportDownloadingBtn: string;
+    tenantExportNote: string;
     dangerZone: string;
     dangerZoneDescription: string;
     deleteAccount: string;

@@ -504,10 +504,72 @@ export default function SettingsPage() {
             </div>
           </Section>
 
+          <TenantExportSection t={t} />
+
           <DangerZone t={t} />
         </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * Tenant data export — KVKK md. 11 / GDPR Art. 20 right to data portability.
+ * Owner-only (server gate); UI rolü çekip butonu non-owner için gizler.
+ * Click → window.location.assign(/api/tenant/export) — browser otomatik
+ * indirir (Content-Disposition + cookie auth). Audit log entry kaydedilir
+ * (server'da, hassas işlem).
+ */
+function TenantExportSection({ t }: { t: Dictionary }) {
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((d: { user?: { role?: string } } | null) => setUserRole(d?.user?.role ?? null))
+      .catch(() => {});
+  }, []);
+
+  if (userRole !== "owner") return null;
+
+  const download = () => {
+    setDownloading(true);
+    // Browser cookie auth ile direkt navigate — Content-Disposition tetikler.
+    // setDownloading flag kısa süreli (anlık feedback); browser indirme
+    // event'i biz görmüyoruz, 2s sonra geri al.
+    window.location.assign("/api/tenant/export");
+    setTimeout(() => setDownloading(false), 2000);
+  };
+
+  return (
+    <Section title={t.settings.tenantExportTitle}>
+      <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 16px" }}>
+        {t.settings.tenantExportDescription}
+      </p>
+      <button
+        onClick={download}
+        disabled={downloading}
+        style={{
+          alignSelf: "flex-start",
+          background: colors.text,
+          color: colors.textInverse,
+          border: "none",
+          borderRadius: 100,
+          padding: "10px 20px",
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: downloading ? "not-allowed" : "pointer",
+          opacity: downloading ? 0.5 : 1,
+          fontFamily: "inherit",
+        }}
+      >
+        {downloading ? t.settings.tenantExportDownloadingBtn : t.settings.tenantExportBtn}
+      </button>
+      <p style={{ color: colors.textSubtle, fontSize: 11, marginTop: 12, lineHeight: 1.5 }}>
+        {t.settings.tenantExportNote}
+      </p>
+    </Section>
   );
 }
 

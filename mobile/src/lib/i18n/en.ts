@@ -80,6 +80,14 @@ export const en: Dictionary = {
     biometricLabel: "Biometric lock (Face ID / Touch ID)",
     biometricOn: "Biometric enabled.",
     biometricOff: "Biometric disabled.",
+    tenantExportTitle: "Data Export (GDPR Art. 20)",
+    tenantExportDescription:
+      "Download all of your tenant's data (chats, messages, alerts, connection info, users, settings) as a single JSON file. Per GDPR Art. 20 / KVKK md. 11 data portability. Sensitive fields (password hashes, encrypted secrets) are NOT INCLUDED.",
+    tenantExportBtn: "Share as JSON",
+    tenantExportDownloadingBtn: "Preparing...",
+    tenantExportNote: "Operation may take a few seconds. Recorded in the audit log.",
+    tenantExportSharedToast: "Export ready, share sheet opened.",
+    tenantExportFailedToast: "Failed to retrieve data export.",
     dangerZone: "Danger Zone",
     dangerZoneDescription:
       "Deleting your account will permanently remove your tenant, chat history, connections, and all users. This is irreversible. Provided under GDPR Art. 17 / KVKK md. 11 (right to erasure). Only the tenant owner can delete.",
