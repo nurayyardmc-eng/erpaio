@@ -248,6 +248,29 @@ export async function deleteWatchlist(id: string): Promise<void> {
   await api(`/api/watchlists?id=${id}`, { method: "DELETE" });
 }
 
+/**
+ * Watchlist partial update — Track GGGG. enabled toggle veya threshold/email
+ * tweak için. Boş PATCH 400 dönüyor; en az 1 alan eklenmeli.
+ */
+export interface UpdateWatchlistInput {
+  name?: string;
+  question?: string;
+  thresholdOp?: "lt" | "lte" | "gt" | "gte" | "eq";
+  thresholdVal?: number;
+  emailTo?: string | null;
+  enabled?: boolean;
+}
+
+export async function updateWatchlist(
+  id: string,
+  patch: UpdateWatchlistInput,
+): Promise<{ watchlist: Watchlist }> {
+  return api(`/api/watchlists/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: patch,
+  });
+}
+
 // ============= Scheduled Reports =============
 export interface ScheduledReport {
   id: string;

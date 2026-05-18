@@ -366,6 +366,11 @@ export interface Dictionary {
     deleteConfirmYes: string;
     triggerLabel: string;
     lastValueLabel: string;
+    enable: string;
+    disable: string;
+    enabledToast: string;
+    disabledToast: string;
+    disabledBadge: string;
   };
   annotations: {
     breadcrumb: string;

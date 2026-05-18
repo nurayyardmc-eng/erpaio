@@ -359,6 +359,10 @@ export const tr: Dictionary = {
     deleteConfirmMessageSuffix: " kalıcı olarak silinecek.",
     deleteConfirmYes: "Sil",
     deletedToast: "Watchlist silindi",
+    enableBtn: "Etkinleştir",
+    disableBtn: "Devre dışı bırak",
+    enabledToast: "Watchlist etkinleştirildi",
+    disabledToast: "Watchlist devre dışı bırakıldı",
   },
   watchlistForm: {
     brand: "ERPAIO · YENİ WATCHLIST",

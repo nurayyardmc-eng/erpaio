@@ -364,6 +364,11 @@ export const en: Dictionary = {
     deleteConfirmYes: "Yes, delete",
     triggerLabel: "Trigger",
     lastValueLabel: "Last",
+    enable: "Enable",
+    disable: "Disable",
+    enabledToast: "Watchlist enabled.",
+    disabledToast: "Watchlist disabled.",
+    disabledBadge: "Disabled",
   },
   annotations: {
     breadcrumb: "ERPAIO · SCHEMA ANNOTATIONS",

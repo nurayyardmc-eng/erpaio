@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/lib/i18n/context";
+import { showToast } from "@/components/Toaster";
 
 interface Watchlist {
   id: string;
@@ -90,6 +91,30 @@ export default function WatchlistsPage() {
     refresh();
   };
 
+  const toggleEnabled = async (w: Watchlist) => {
+    const next = !w.enabled;
+    // Optimistic update
+    setWatchlists((prev) => prev.map((x) => (x.id === w.id ? { ...x, enabled: next } : x)));
+    try {
+      const res = await fetch(`/api/watchlists/${encodeURIComponent(w.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setWatchlists((prev) => prev.map((x) => (x.id === w.id ? { ...x, enabled: w.enabled } : x)));
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || t.common.error, "error");
+        return;
+      }
+      showToast(next ? t.watchlists.enabledToast : t.watchlists.disabledToast, "success");
+    } catch {
+      setWatchlists((prev) => prev.map((x) => (x.id === w.id ? { ...x, enabled: w.enabled } : x)));
+      showToast(t.common.error, "error");
+    }
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
       <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.watchlists.breadcrumb}</div>
@@ -147,7 +172,12 @@ export default function WatchlistsPage() {
         <div key={w.id} style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600 }}>{w.name}</div>
+              <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                {w.name}
+                {!w.enabled && (
+                  <span style={badgeDisabled}>{t.watchlists.disabledBadge}</span>
+                )}
+              </div>
               <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{w.question}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
                 {t.watchlists.triggerLabel}: <code style={{ color: "#0A0A0A" }}>{w.thresholdOp} {w.thresholdVal}</code>
@@ -155,7 +185,12 @@ export default function WatchlistsPage() {
                 {w.lastRunAt && <> · {new Date(w.lastRunAt).toLocaleString("tr-TR")}</>}
               </div>
             </div>
-            <button onClick={() => remove(w.id)} style={btnDanger}>{t.watchlists.delete}</button>
+            <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+              <button onClick={() => toggleEnabled(w)} style={btnSecondary}>
+                {w.enabled ? t.watchlists.disable : t.watchlists.enable}
+              </button>
+              <button onClick={() => remove(w.id)} style={btnDanger}>{t.watchlists.delete}</button>
+            </div>
           </div>
         </div>
       ))}
@@ -188,4 +223,12 @@ const btnPrimary: React.CSSProperties = {
 const btnDanger: React.CSSProperties = {
   background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)",
   borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit",
+};
+const btnSecondary: React.CSSProperties = {
+  background: "#FFFFFF", border: "1px solid #E5E7EB",
+  borderRadius: 4, padding: "4px 10px", color: "#0F172A", fontSize: 10, cursor: "pointer", fontFamily: "inherit",
+};
+const badgeDisabled: React.CSSProperties = {
+  background: "#F1F5F9", border: "1px solid #E5E7EB", color: "#64748B",
+  borderRadius: 100, padding: "1px 8px", fontSize: 9, fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase",
 };

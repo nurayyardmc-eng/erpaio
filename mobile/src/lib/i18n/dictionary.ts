@@ -365,6 +365,10 @@ export interface Dictionary {
     deleteConfirmMessageSuffix: string;
     deleteConfirmYes: string;
     deletedToast: string;
+    enableBtn: string;
+    disableBtn: string;
+    enabledToast: string;
+    disabledToast: string;
   };
   watchlistForm: {
     brand: string;

@@ -359,6 +359,10 @@ export const en: Dictionary = {
     deleteConfirmMessageSuffix: " will be permanently deleted.",
     deleteConfirmYes: "Delete",
     deletedToast: "Watchlist deleted",
+    enableBtn: "Enable",
+    disableBtn: "Disable",
+    enabledToast: "Watchlist enabled",
+    disabledToast: "Watchlist disabled",
   },
   watchlistForm: {
     brand: "ERPAIO · NEW WATCHLIST",

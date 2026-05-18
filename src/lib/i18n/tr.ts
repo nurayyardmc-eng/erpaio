@@ -363,6 +363,11 @@ export const tr: Dictionary = {
     deleteConfirmYes: "Evet, sil",
     triggerLabel: "Tetikleme",
     lastValueLabel: "Son",
+    enable: "Etkinleştir",
+    disable: "Devre dışı bırak",
+    enabledToast: "Watchlist etkinleştirildi.",
+    disabledToast: "Watchlist devre dışı bırakıldı.",
+    disabledBadge: "Devre dışı",
   },
   annotations: {
     breadcrumb: "ERPAIO · ŞEMA AÇIKLAMALARI",

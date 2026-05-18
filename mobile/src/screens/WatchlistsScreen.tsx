@@ -2,7 +2,7 @@ import { FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, Vi
 import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteWatchlist, getWatchlists, type Watchlist } from "../lib/dashboard";
+import { deleteWatchlist, getWatchlists, updateWatchlist, type Watchlist } from "../lib/dashboard";
 import { colors, font, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -34,6 +34,17 @@ export default function WatchlistsScreen({ navigation }: Props) {
     onError: (e: Error) => showToast(apiErrorMessage(e, t), "error"),
   });
 
+  // Track GGGG — enable/disable toggle. Optimistic update + invalidate.
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
+      updateWatchlist(id, { enabled }),
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["watchlists"] });
+      showToast(vars.enabled ? t.watchlists.enabledToast : t.watchlists.disabledToast, "success");
+    },
+    onError: (e: Error) => showToast(apiErrorMessage(e, t), "error"),
+  });
+
   const onDelete = async (w: Watchlist) => {
     setMenuFor(null);
     const ok = await confirmDialog({
@@ -44,6 +55,11 @@ export default function WatchlistsScreen({ navigation }: Props) {
     });
     if (!ok) return;
     deleteMutation.mutate(w.id);
+  };
+
+  const onToggle = (w: Watchlist) => {
+    setMenuFor(null);
+    toggleMutation.mutate({ id: w.id, enabled: !w.enabled });
   };
 
   const renderItem = ({ item }: { item: Watchlist }) => (
@@ -120,6 +136,16 @@ export default function WatchlistsScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setMenuFor(null)}>
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.name}</Text>
+              <TouchableOpacity
+                onPress={() => onToggle(menuFor)}
+                style={styles.sheetItem}
+                activeOpacity={0.6}
+                disabled={toggleMutation.isPending}
+              >
+                <Text style={styles.sheetText}>
+                  {menuFor.enabled ? t.watchlists.disableBtn : t.watchlists.enableBtn}
+                </Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={() => onDelete(menuFor)} style={styles.sheetItem} activeOpacity={0.6}>
                 <Text style={[styles.sheetText, { color: colors.error }]}>{t.common.delete}</Text>
               </TouchableOpacity>
