@@ -2,6 +2,7 @@ import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } fr
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getSavedQueries, pinSavedQuery, type SavedQuery } from "../lib/dashboard";
+import { shareJson } from "../lib/share";
 import { colors, font, fontMono, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -116,6 +117,28 @@ export default function SavedScreen({ navigation }: Props) {
         title={t.saved.title}
         description={t.saved.description}
         onBack={() => navigation.goBack()}
+        right={
+          (q.data?.queries.length ?? 0) > 0 ? (
+            <TouchableOpacity
+              onPress={async () => {
+                /* Track EEE — saved queries share (XX mobile parity). */
+                const ts = new Date().toISOString().slice(0, 10);
+                try {
+                  await shareJson(`erpaio-saved-queries-${ts}.json`, {
+                    count: q.data!.queries.length,
+                    queries: q.data!.queries,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
       {q.isLoading ? (
         <View style={{ padding: spacing(5) }}><SkeletonList count={3} height={140} gap={10} /></View>
@@ -142,6 +165,15 @@ export default function SavedScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   card: {
     backgroundColor: colors.card,
     borderColor: colors.border,
