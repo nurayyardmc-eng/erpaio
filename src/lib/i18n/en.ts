@@ -403,6 +403,8 @@ export const en: Dictionary = {
     enabledToast: "Report enabled.",
     disabledToast: "Report disabled.",
     disabledBadge: "Disabled",
+    testRunBtn: "Run test",
+    testRunResultPrefix: "Row count:",
   },
   watchlists: {
     breadcrumb: "ERPAIO · WATCHLIST",

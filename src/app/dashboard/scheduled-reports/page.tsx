@@ -98,6 +98,26 @@ export default function ScheduledReportsPage() {
     refresh();
   };
 
+  // Track YY — test run state per-row.
+  const [testResults, setTestResults] = useState<Record<string, { rowCount: number } | "loading" | "error">>({});
+
+  const runTest = async (r: Report) => {
+    setTestResults((prev) => ({ ...prev, [r.id]: "loading" }));
+    try {
+      const res = await fetch(`/api/scheduled-reports/${encodeURIComponent(r.id)}/run`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || t.common.error, "error");
+        setTestResults((prev) => ({ ...prev, [r.id]: "error" }));
+        return;
+      }
+      setTestResults((prev) => ({ ...prev, [r.id]: { rowCount: data.rowCount } }));
+    } catch {
+      showToast(t.common.error, "error");
+      setTestResults((prev) => ({ ...prev, [r.id]: "error" }));
+    }
+  };
+
   /** Track KK — enable/disable toggle (cron run filtreler, persist yan etki yok). */
   const toggleEnabled = async (r: Report) => {
     const next = !r.enabled;
@@ -183,13 +203,21 @@ export default function ScheduledReportsPage() {
               </div>
               {r.lastError && <div style={{ color: "#EF4444", fontSize: 10, marginTop: 4 }}>⚠ {r.lastError}</div>}
             </div>
-            <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "flex-start", flexDirection: "column" }}>
+              <button onClick={() => runTest(r)} style={btnSecondary} type="button" disabled={testResults[r.id] === "loading"}>
+                {testResults[r.id] === "loading" ? "..." : t.scheduledReports.testRunBtn}
+              </button>
               <button onClick={() => toggleEnabled(r)} style={btnSecondary}>
                 {r.enabled ? t.scheduledReports.disable : t.scheduledReports.enable}
               </button>
               <button onClick={() => remove(r.id)} style={btnDanger}>{t.scheduledReports.delete}</button>
             </div>
           </div>
+          {testResults[r.id] && testResults[r.id] !== "loading" && testResults[r.id] !== "error" && (
+            <div style={{ marginTop: 10, padding: "6px 12px", background: "#D1FAE5", color: "#065F46", borderRadius: 100, fontSize: 12, fontWeight: 600, display: "inline-block" }}>
+              {t.scheduledReports.testRunResultPrefix} {(testResults[r.id] as { rowCount: number }).rowCount}
+            </div>
+          )}
         </div>
       ))}
     </div>

@@ -402,6 +402,8 @@ export const tr: Dictionary = {
     enabledToast: "Rapor etkinleştirildi.",
     disabledToast: "Rapor devre dışı bırakıldı.",
     disabledBadge: "Devre dışı",
+    testRunBtn: "Test çalıştır",
+    testRunResultPrefix: "Satır sayısı:",
   },
   watchlists: {
     breadcrumb: "ERPAIO · WATCHLIST",

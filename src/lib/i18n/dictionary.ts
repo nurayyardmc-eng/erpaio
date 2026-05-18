@@ -405,6 +405,8 @@ export interface Dictionary {
     enabledToast: string;
     disabledToast: string;
     disabledBadge: string;
+    testRunBtn: string;
+    testRunResultPrefix: string;
   };
   watchlists: {
     breadcrumb: string;
