@@ -45,6 +45,18 @@ export async function syncConnectionSchema(id: string): Promise<{
   return api(`/api/connections/${encodeURIComponent(id)}/sync`, { method: "POST" });
 }
 
+/**
+ * Bağlantı sağlığını test et — ERP'ye INFORMATION_SCHEMA.TABLES query yollar,
+ * dönen satır sayısını tableCount olarak verir. Server connection.status'unu
+ * "active" veya "error" olarak günceller.
+ *
+ * Hata durumunda server 503 + {ok: false, error}. api() throw eder; caller
+ * apiErrorMessage helper'ı ile insanca mesaj çıkarır.
+ */
+export async function testConnection(id: string): Promise<{ ok: true; tableCount: number }> {
+  return api(`/api/connections/${encodeURIComponent(id)}/test`);
+}
+
 // ============= Tenant token usage (monthly budget) =============
 export interface TenantUsage {
   used: number;

@@ -263,6 +263,10 @@ export interface Dictionary {
     syncedToast: string;
     syncFailedToast: string;
     syncOwnerOnly: string;
+    testNowBtn: string;
+    testingNowBtn: string;
+    testedToast: string;
+    testFailedToast: string;
   };
   connectionForm: {
     brand: string;

@@ -256,6 +256,10 @@ export const en: Dictionary = {
     syncedToast: "Schema synced.",
     syncFailedToast: "Schema sync failed.",
     syncOwnerOnly: "Only owner/admin can trigger sync.",
+    testNowBtn: "Test connection",
+    testingNowBtn: "Testing...",
+    testedToast: "Connection healthy",
+    testFailedToast: "Connection failed",
   },
   connectionForm: {
     brand: "ERPAIO · NEW CONNECTION",

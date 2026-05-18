@@ -256,6 +256,10 @@ export const tr: Dictionary = {
     syncedToast: "Şema senkronlandı.",
     syncFailedToast: "Şema senkronu başarısız.",
     syncOwnerOnly: "Yalnızca owner/admin senkron tetikleyebilir.",
+    testNowBtn: "Bağlantıyı test et",
+    testingNowBtn: "Test ediliyor...",
+    testedToast: "Bağlantı başarılı",
+    testFailedToast: "Bağlantı başarısız",
   },
   connectionForm: {
     brand: "ERPAIO · YENİ BAĞLANTI",

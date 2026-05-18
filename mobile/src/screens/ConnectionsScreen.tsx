@@ -5,6 +5,7 @@ import {
   deleteConnection,
   getConnections,
   syncConnectionSchema,
+  testConnection,
   type ErpConnection,
 } from "../lib/dashboard";
 import { getMe } from "../lib/auth";
@@ -61,6 +62,17 @@ export default function ConnectionsScreen({ navigation }: Props) {
     onError: (e: Error) => showToast(apiErrorMessage(e, t) || t.connections.syncFailedToast, "error"),
   });
 
+  const testMutation = useMutation({
+    mutationFn: (id: string) => testConnection(id),
+    onSuccess: (data) => {
+      // Server status'u "active"/"error" olarak günceller; listeyi tazele.
+      queryClient.invalidateQueries({ queryKey: ["dash-connections"] });
+      queryClient.invalidateQueries({ queryKey: ["connections"] });
+      showToast(`${t.connections.testedToast} (${data.tableCount} tablo)`, "success");
+    },
+    onError: (e: Error) => showToast(apiErrorMessage(e, t) || t.connections.testFailedToast, "error"),
+  });
+
   // Owner/admin role check — sheet'te "Re-sync" item'ı koşullu göstermek için.
   const meQuery = useQuery({ queryKey: ["me-role-conn"], queryFn: getMe });
   const isOwnerOrAdmin =
@@ -73,6 +85,13 @@ export default function ConnectionsScreen({ navigation }: Props) {
       return;
     }
     syncMutation.mutate(item.id);
+  };
+
+  const onTest = (item: ErpConnection) => {
+    setMenuFor(null);
+    // Test endpoint herkese açık (test route'da role guard yok) — owner/admin
+    // gate'i sync'a özel. Tüm kullanıcılar bağlantı sağlığını görebilir.
+    testMutation.mutate(item.id);
   };
 
   const onDelete = async (item: ErpConnection) => {
@@ -208,6 +227,16 @@ export default function ConnectionsScreen({ navigation }: Props) {
           >
             <View style={styles.sheet}>
               <Text style={styles.sheetTitle} numberOfLines={1}>{menuFor.dbName}</Text>
+              <TouchableOpacity
+                onPress={() => onTest(menuFor)}
+                style={styles.sheetItem}
+                activeOpacity={0.6}
+                disabled={testMutation.isPending}
+              >
+                <Text style={styles.sheetText}>
+                  {testMutation.isPending ? t.connections.testingNowBtn : t.connections.testNowBtn}
+                </Text>
+              </TouchableOpacity>
               {isOwnerOrAdmin && (
                 <TouchableOpacity
                   onPress={() => onSync(menuFor)}
