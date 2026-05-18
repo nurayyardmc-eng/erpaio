@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { colors } from "@/lib/theme";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface LogEntry {
   id: string;
@@ -157,6 +158,31 @@ export default function NotificationLogPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Track QQ — CSV export. Çoğunlukla notification debugging için
+          (delivery failures audit, deliverability report). */}
+      {recent.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <button
+            onClick={() => {
+              const rows = recent.map((r) => ({
+                time: r.createdAt,
+                channel: r.channel,
+                status: r.status,
+                recipient: r.recipient ?? "",
+                error: r.error ?? "",
+                alertId: r.alertId ?? "",
+              }));
+              const csv = rowsToCsv(rows, ["time", "channel", "status", "recipient", "error", "alertId"]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`erpaio-notification-log-${ts}.csv`, csv);
+            }}
+            style={{ padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ↓ CSV
+          </button>
         </div>
       )}
 
