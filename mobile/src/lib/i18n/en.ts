@@ -128,6 +128,7 @@ export const en: Dictionary = {
   menu: {
     title: "Menu",
     brand: "ERPAIO · MENU",
+    profileCardA11y: "Open profile",
     sectionDaily: "Daily",
     sectionSetup: "Setup",
     sectionAnalysis: "Analysis",

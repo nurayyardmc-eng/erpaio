@@ -134,6 +134,7 @@ export interface Dictionary {
   menu: {
     title: string;
     brand: string;
+    profileCardA11y: string;
     sectionDaily: string;
     sectionSetup: string;
     sectionAnalysis: string;

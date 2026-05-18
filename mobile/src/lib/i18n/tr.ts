@@ -128,6 +128,7 @@ export const tr: Dictionary = {
   menu: {
     title: "Menü",
     brand: "ERPAIO · MENÜ",
+    profileCardA11y: "Profili aç",
     sectionDaily: "Günlük",
     sectionSetup: "Kurulum",
     sectionAnalysis: "Analiz",

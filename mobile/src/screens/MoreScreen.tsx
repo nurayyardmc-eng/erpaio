@@ -1,8 +1,10 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "../lib/i18n/context";
 import type { Dictionary } from "../lib/i18n/dictionary";
+import { getMe } from "../lib/auth";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -64,6 +66,23 @@ function buildGroups(t: Dictionary): MenuGroup[] {
 export default function MoreScreen({ navigation }: Props) {
   const { t } = useI18n();
   const groups = buildGroups(t);
+  const meQuery = useQuery({ queryKey: ["me-profile"], queryFn: getMe });
+  const user = meQuery.data?.user;
+  const displayName = (user?.name && user.name.trim()) || user?.email || "";
+  const initial = (displayName || "?").charAt(0).toUpperCase();
+
+  /**
+   * Track QQQQ — profil kartı tap edilince Ayarlar tab'ına geç. Cross-tab
+   * navigation: MoreStack → parent (Tabs) → "Ayarlar" tab. Web sidebar
+   * avatar tıklaması da settings'e gider; aynı pattern.
+   */
+  const onProfilePress = () => {
+    const parent = navigation.getParent() as
+      | { navigate: (name: string, params?: unknown) => void }
+      | undefined;
+    parent?.navigate("Ayarlar");
+  };
+
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
       <ScrollView
@@ -75,6 +94,31 @@ export default function MoreScreen({ navigation }: Props) {
           <Text style={styles.brand}>{t.menu.brand}</Text>
           <Text style={styles.pageTitle}>{t.menu.title}</Text>
         </View>
+
+        {user && (
+          <TouchableOpacity
+            onPress={onProfilePress}
+            activeOpacity={0.7}
+            style={styles.profileCard}
+            accessibilityRole="button"
+            accessibilityLabel={t.menu.profileCardA11y}
+          >
+            <View style={styles.profileAvatarWrap}>
+              {user.avatarBase64 ? (
+                <Image source={{ uri: user.avatarBase64 }} style={styles.profileAvatar} />
+              ) : (
+                <View style={[styles.profileAvatar, styles.profileAvatarPlaceholder]}>
+                  <Text style={styles.profileInitial}>{initial}</Text>
+                </View>
+              )}
+            </View>
+            <View style={{ flex: 1 }}>
+              {user.name ? <Text style={styles.profileName} numberOfLines={1}>{user.name}</Text> : null}
+              <Text style={styles.profileEmail} numberOfLines={1}>{user.email}</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+        )}
 
         {groups.map((group) => (
           <View key={group.title} style={styles.group}>
@@ -102,6 +146,40 @@ export default function MoreScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  profileCard: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing(4),
+    marginBottom: spacing(3),
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profileAvatarWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    marginRight: spacing(3),
+  },
+  profileAvatar: { width: "100%", height: "100%" },
+  profileAvatarPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bgSubtle,
+  },
+  profileInitial: {
+    color: colors.textMuted,
+    fontFamily: fontSerif,
+    fontSize: 22,
+    fontWeight: "400",
+  },
+  profileName: { color: colors.text, fontFamily: font, fontSize: 15, fontWeight: "600" },
+  profileEmail: { color: colors.textMuted, fontFamily: font, fontSize: 12, marginTop: 2 },
   brand: {
     color: colors.textSubtle,
     fontFamily: font,
