@@ -18,7 +18,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
-      - run: npm test
+      - name: Run tests (verbose, captured)
+        run: |
+          set -o pipefail
+          npx vitest run --reporter=verbose 2>&1 | tee /tmp/test-output.log
+      - name: Print test output on failure
+        if: failure()
+        run: |
+          echo "=== LAST 200 LINES ==="
+          tail -200 /tmp/test-output.log || true
       - name: Generate Next.js route types
         run: npx next typegen
       - name: TypeScript (web)
