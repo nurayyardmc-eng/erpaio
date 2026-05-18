@@ -6,6 +6,7 @@ import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/lib/i18n/context";
 import { showToast } from "@/components/Toaster";
 import { computeSparkline } from "@/lib/watchlist/sparkline";
+import { rowsToCsv, downloadCsv } from "@/lib/csv";
 
 interface Watchlist {
   id: string;
@@ -199,6 +200,25 @@ export default function WatchlistsPage() {
     }
   };
 
+  /** Track PP — watchlist list CSV export. Quick audit / report. */
+  const exportCsv = () => {
+    if (watchlists.length === 0) return;
+    const rows = watchlists.map((w) => ({
+      name: w.name,
+      question: w.question,
+      thresholdOp: w.thresholdOp,
+      thresholdVal: w.thresholdVal,
+      emailTo: w.emailTo ?? "",
+      enabled: String(w.enabled),
+      lastRunAt: w.lastRunAt ?? "",
+      lastValue: w.lastValue ?? "",
+      triggeredAt: w.triggeredAt ?? "",
+    }));
+    const csv = rowsToCsv(rows, ["name", "question", "thresholdOp", "thresholdVal", "emailTo", "enabled", "lastRunAt", "lastValue", "triggeredAt"]);
+    const ts = new Date().toISOString().slice(0, 10);
+    downloadCsv(`erpaio-watchlists-${ts}.csv`, csv);
+  };
+
   const toggleEnabled = async (w: Watchlist) => {
     const next = !w.enabled;
     // Optimistic update
@@ -267,7 +287,17 @@ export default function WatchlistsPage() {
         {status && <span style={{ marginLeft: 12, color: status.kind === "ok" ? "#10B981" : "#EF4444", fontSize: 11 }}>{status.msg}</span>}
       </form>
 
-      <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 12 }}>{t.watchlists.existingTitle} ({watchlists.length})</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <h2 style={{ ...sectionTitle, color: "#94A3B8", marginBottom: 0 }}>{t.watchlists.existingTitle} ({watchlists.length})</h2>
+        {watchlists.length > 0 && (
+          <button
+            onClick={exportCsv}
+            style={{ padding: "4px 12px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ↓ {t.audit.exportCsv}
+          </button>
+        )}
+      </div>
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
       {!loading && watchlists.length === 0 && (
         <EmptyState
