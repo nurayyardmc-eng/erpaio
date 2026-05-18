@@ -11,7 +11,8 @@ export async function GET(req: Request) {
       tenantId: session.user.tenantId,
       successCount: { gte: 2 },
     },
-    orderBy: { lastUsedAt: "desc" },
+    // Track EEEE: pinned sorgular önce; aynı pin durumunda lastUsedAt desc.
+    orderBy: [{ pinned: "desc" }, { lastUsedAt: "desc" }],
     take: 50,
     select: {
       id: true,
@@ -19,6 +20,7 @@ export async function GET(req: Request) {
       sqlQuery: true,
       successCount: true,
       failCount: true,
+      pinned: true,
       lastUsedAt: true,
     },
   });

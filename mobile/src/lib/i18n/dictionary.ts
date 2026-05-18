@@ -580,6 +580,12 @@ export interface Dictionary {
     emptyDesc: string;
     rerunBtn: string;
     rerunHint: string;
+    pinnedLabel: string;
+    pinnedToast: string;
+    unpinnedToast: string;
+    pinFailedToast: string;
+    longPressPinHint: string;
+    longPressUnpinHint: string;
   };
   insights: {
     brand: string;

@@ -580,6 +580,12 @@ export const en: Dictionary = {
     emptyDesc: "Successful chat queries are automatically cached.",
     rerunBtn: "Run again in chat",
     rerunHint: "Open in chat",
+    pinnedLabel: "PINNED",
+    pinnedToast: "Query pinned.",
+    unpinnedToast: "Unpinned.",
+    pinFailedToast: "Action failed.",
+    longPressPinHint: "Long-press to pin",
+    longPressUnpinHint: "Long-press to unpin",
   },
   insights: {
     brand: "ERPAIO · INSIGHTS",

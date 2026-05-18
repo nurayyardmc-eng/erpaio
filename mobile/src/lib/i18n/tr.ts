@@ -580,6 +580,12 @@ export const tr: Dictionary = {
     emptyDesc: "Sohbette başarılı sorgular otomatik cache'lenir.",
     rerunBtn: "Sohbette tekrar çalıştır",
     rerunHint: "Sohbete getir",
+    pinnedLabel: "SABİTLENMİŞ",
+    pinnedToast: "Sorgu sabitlendi.",
+    unpinnedToast: "Sabitleme kaldırıldı.",
+    pinFailedToast: "İşlem başarısız.",
+    longPressPinHint: "Uzun basıp sabitle",
+    longPressUnpinHint: "Uzun basıp sabitlemeyi kaldır",
   },
   insights: {
     brand: "ERPAIO · ANALİZ",

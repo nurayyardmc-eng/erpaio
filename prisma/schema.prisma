@@ -538,6 +538,9 @@ model QueryCache {
   sqlQuery     String
   successCount Int      @default(0)
   failCount    Int      @default(0)
+  /// Track EEEE — sık kullanılan sorgular için pin. Pinned sorular saved
+  /// listenin üstünde gösterilir (pin desc → lastUsedAt desc).
+  pinned       Boolean  @default(false)
   lastUsedAt   DateTime @default(now())
   createdAt    DateTime @default(now())
 
@@ -545,6 +548,7 @@ model QueryCache {
 
   @@unique([tenantId, questionHash])
   @@index([tenantId, lastUsedAt(sort: Desc)])
+  @@index([tenantId, pinned, lastUsedAt(sort: Desc)])
 }
 
 /// Notification delivery log — alert sender'larından (whatsapp/email/push/

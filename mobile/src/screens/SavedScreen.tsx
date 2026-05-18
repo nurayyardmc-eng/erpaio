@@ -1,7 +1,7 @@
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { useQuery } from "@tanstack/react-query";
-import { getSavedQueries, type SavedQuery } from "../lib/dashboard";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getSavedQueries, pinSavedQuery, type SavedQuery } from "../lib/dashboard";
 import { colors, font, fontMono, radius, spacing } from "../lib/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import EmptyState from "../components/EmptyState";
@@ -18,6 +18,7 @@ interface Props {
 
 export default function SavedScreen({ navigation }: Props) {
   const { t } = useI18n();
+  const queryClient = useQueryClient();
   const q = useQuery({ queryKey: ["saved-queries"], queryFn: getSavedQueries });
 
   /**
@@ -39,15 +40,56 @@ export default function SavedScreen({ navigation }: Props) {
     });
   };
 
+  // Track EEEE — pin/unpin toggle (long-press). Optimistic update +
+  // server sırasında local state'i hemen değiştir, fail'de revert.
+  const pinMutation = useMutation({
+    mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => pinSavedQuery(id, pinned),
+    onMutate: async ({ id, pinned }) => {
+      await queryClient.cancelQueries({ queryKey: ["saved-queries"] });
+      const prev = queryClient.getQueryData<{ queries: SavedQuery[] }>(["saved-queries"]);
+      if (prev) {
+        const updated = prev.queries.map((p) => (p.id === id ? { ...p, pinned } : p));
+        // Sort: pinned desc + lastUsedAt desc — server orderBy ile uyumlu.
+        updated.sort((a, b) => {
+          if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+          return new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime();
+        });
+        queryClient.setQueryData(["saved-queries"], { queries: updated });
+      }
+      return { prev };
+    },
+    onError: (_e, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["saved-queries"], ctx.prev);
+      showToast(t.saved.pinFailedToast, "error");
+    },
+    onSuccess: (_d, { pinned }) => {
+      showToast(pinned ? t.saved.pinnedToast : t.saved.unpinnedToast, "success");
+    },
+  });
+
+  const onLongPress = (item: SavedQuery) => {
+    pinMutation.mutate({ id: item.id, pinned: !item.pinned });
+  };
+
   const renderItem = ({ item }: { item: SavedQuery }) => (
     <TouchableOpacity
       onPress={() => rerun(item)}
+      onLongPress={() => onLongPress(item)}
       activeOpacity={0.7}
-      style={styles.card}
+      style={[styles.card, item.pinned && styles.cardPinned]}
       accessibilityRole="button"
       accessibilityLabel={`${t.saved.rerunBtn}: ${item.question}`}
     >
-      <Text style={styles.question}>{item.question}</Text>
+      <View style={styles.headerRow}>
+        {item.pinned && (
+          <View style={styles.pinBadge}>
+            <Text style={styles.pinBadgeText}>📌 {t.saved.pinnedLabel}</Text>
+          </View>
+        )}
+        <Text style={[styles.question, item.pinned && { fontWeight: "700", flex: 1 }]}>
+          {item.question}
+        </Text>
+      </View>
       <View style={styles.sqlBox}>
         <Text style={styles.sqlText} numberOfLines={3}>{item.sqlQuery}</Text>
       </View>
@@ -60,7 +102,9 @@ export default function SavedScreen({ navigation }: Props) {
       </View>
       <View style={styles.footerRow}>
         <Text style={styles.timestamp}>{t.saved.lastUsedLabel}{new Date(item.lastUsedAt).toLocaleDateString("tr-TR")}</Text>
-        <Text style={styles.rerunHint}>{t.saved.rerunHint} →</Text>
+        <Text style={styles.rerunHint}>
+          {item.pinned ? t.saved.longPressUnpinHint : t.saved.longPressPinHint}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -106,6 +150,18 @@ const styles = StyleSheet.create({
     padding: spacing(4),
     marginBottom: spacing(3),
   },
+  cardPinned: {
+    borderColor: colors.warning,
+    borderWidth: 1.5,
+  },
+  headerRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2), marginBottom: spacing(2), flexWrap: "wrap" },
+  pinBadge: {
+    backgroundColor: colors.warningSoft,
+    paddingHorizontal: spacing(2),
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  pinBadgeText: { color: colors.warning, fontFamily: font, fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
   question: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "500", marginBottom: spacing(2) },
   sqlBox: {
     backgroundColor: colors.bgSubtle,

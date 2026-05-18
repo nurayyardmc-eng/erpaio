@@ -135,11 +135,25 @@ export interface SavedQuery {
   successCount: number;
   failCount: number;
   reliability: number;
+  /** Track EEEE — pinned sorgular saved listenin üstünde gösterilir. */
+  pinned?: boolean;
   lastUsedAt: string;
 }
 
 export async function getSavedQueries(): Promise<{ queries: SavedQuery[] }> {
   return api("/api/saved-queries");
+}
+
+/**
+ * Track EEEE — pin/unpin toggle. Idempotent; aynı değer set edilince no-op.
+ * Optimistic update için caller önce local state'i değiştirip API'yi
+ * çağırabilir; fail durumunda revert.
+ */
+export async function pinSavedQuery(id: string, pinned: boolean): Promise<{ ok: true; pinned: boolean }> {
+  return api(`/api/saved-queries/${encodeURIComponent(id)}/pin`, {
+    method: "POST",
+    body: { pinned },
+  });
 }
 
 // ============= Annotations =============
