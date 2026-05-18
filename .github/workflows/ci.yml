@@ -27,6 +27,13 @@ jobs:
         run: |
           echo "=== LAST 200 LINES ==="
           tail -200 /tmp/test-output.log || true
+          {
+            echo "## Test failure output"
+            echo ''
+            echo '```'
+            tail -200 /tmp/test-output.log 2>/dev/null || echo "(log empty)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Generate Next.js route types
         run: npx next typegen
       - name: TypeScript (web)
