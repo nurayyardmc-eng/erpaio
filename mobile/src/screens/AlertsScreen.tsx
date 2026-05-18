@@ -16,6 +16,7 @@ import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { SkeletonList } from "../components/Skeleton";
 import { showToast } from "../components/Toast";
+import TrialBanner from "../components/TrialBanner";
 import { useI18n } from "../lib/i18n/context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AlertsStackParamList } from "./AlertsStackNav";
@@ -155,6 +156,8 @@ export default function AlertsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
+      {/* Track RRRR — trial banner Alerts tab'da da. */}
+      <TrialBanner />
       <View style={styles.header}>
         <Text style={styles.brand}>{t.alerts.brand}</Text>
         <Text style={styles.headerTitle}>{t.alerts.title}</Text>

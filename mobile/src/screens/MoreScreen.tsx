@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "../lib/i18n/context";
 import type { Dictionary } from "../lib/i18n/dictionary";
 import { getMe } from "../lib/auth";
+import TrialBanner from "../components/TrialBanner";
 import { colors, font, fontSerif, radius, spacing } from "../lib/theme";
 import type { MoreStackParamList } from "./MoreStackNav";
 
@@ -85,6 +86,8 @@ export default function MoreScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { paddingTop: 50 }]}>
+      {/* Track RRRR — trial banner More tab'da da (ChatScreen ile parity). */}
+      <TrialBanner />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: spacing(5), paddingBottom: 200, flexGrow: 1 }}
