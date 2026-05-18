@@ -393,6 +393,11 @@ export const tr: Dictionary = {
     scheduleDaily18: "Her gün 21:00",
     scheduleWeeklyMonday: "Her Pazartesi 09:00",
     scheduleMonthlyFirst: "Her ayın 1'i 09:00",
+    enable: "Etkinleştir",
+    disable: "Devre dışı bırak",
+    enabledToast: "Rapor etkinleştirildi.",
+    disabledToast: "Rapor devre dışı bırakıldı.",
+    disabledBadge: "Devre dışı",
   },
   watchlists: {
     breadcrumb: "ERPAIO · WATCHLIST",

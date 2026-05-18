@@ -5,6 +5,7 @@ import { Send } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/lib/i18n/context";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { showToast } from "@/components/Toaster";
 
 interface Report {
   id: string;
@@ -97,6 +98,30 @@ export default function ScheduledReportsPage() {
     refresh();
   };
 
+  /** Track KK — enable/disable toggle (cron run filtreler, persist yan etki yok). */
+  const toggleEnabled = async (r: Report) => {
+    const next = !r.enabled;
+    // Optimistic update
+    setReports((prev) => prev.map((x) => (x.id === r.id ? { ...x, enabled: next } : x)));
+    try {
+      const res = await fetch(`/api/scheduled-reports/${encodeURIComponent(r.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setReports((prev) => prev.map((x) => (x.id === r.id ? { ...x, enabled: r.enabled } : x)));
+        showToast(t.common.error, "error");
+        return;
+      }
+      showToast(next ? t.scheduledReports.enabledToast : t.scheduledReports.disabledToast, "success");
+    } catch {
+      setReports((prev) => prev.map((x) => (x.id === r.id ? { ...x, enabled: r.enabled } : x)));
+      showToast(t.common.error, "error");
+    }
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
       <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.scheduledReports.breadcrumb}</div>
@@ -143,7 +168,14 @@ export default function ScheduledReportsPage() {
         <div key={r.id} style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600 }}>{r.name}</div>
+              <div style={{ color: "#0F172A", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                {r.name}
+                {!r.enabled && (
+                  <span style={{ background: "#F1F5F9", border: "1px solid #E5E7EB", color: "#64748B", borderRadius: 100, padding: "1px 8px", fontSize: 9, fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                    {t.scheduledReports.disabledBadge}
+                  </span>
+                )}
+              </div>
               <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{r.question}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
                 {scheduleLabel(t, r.schedule)} · {r.emailTo}
@@ -151,7 +183,12 @@ export default function ScheduledReportsPage() {
               </div>
               {r.lastError && <div style={{ color: "#EF4444", fontSize: 10, marginTop: 4 }}>⚠ {r.lastError}</div>}
             </div>
-            <button onClick={() => remove(r.id)} style={btnDanger}>{t.scheduledReports.delete}</button>
+            <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+              <button onClick={() => toggleEnabled(r)} style={btnSecondary}>
+                {r.enabled ? t.scheduledReports.disable : t.scheduledReports.enable}
+              </button>
+              <button onClick={() => remove(r.id)} style={btnDanger}>{t.scheduledReports.delete}</button>
+            </div>
           </div>
         </div>
       ))}
@@ -173,3 +210,4 @@ const sectionTitle: React.CSSProperties = { fontSize: 13, color: "#0A0A0A", marg
 const input: React.CSSProperties = { width: "100%", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6, padding: "8px 10px", color: "#0F172A", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", outline: "none" };
 const btnPrimary: React.CSSProperties = { background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6, padding: "8px 16px", color: "#0A0A0A", fontSize: 12, cursor: "pointer", fontFamily: "inherit" };
 const btnDanger: React.CSSProperties = { background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.4)", borderRadius: 4, padding: "4px 10px", color: "#EF4444", fontSize: 10, cursor: "pointer", fontFamily: "inherit" };
+const btnSecondary: React.CSSProperties = { background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 4, padding: "4px 10px", color: "#0F172A", fontSize: 10, cursor: "pointer", fontFamily: "inherit" };

@@ -394,6 +394,11 @@ export const en: Dictionary = {
     scheduleDaily18: "Every day 21:00",
     scheduleWeeklyMonday: "Every Monday 09:00",
     scheduleMonthlyFirst: "1st of each month 09:00",
+    enable: "Enable",
+    disable: "Disable",
+    enabledToast: "Report enabled.",
+    disabledToast: "Report disabled.",
+    disabledBadge: "Disabled",
   },
   watchlists: {
     breadcrumb: "ERPAIO · WATCHLIST",

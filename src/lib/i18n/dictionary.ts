@@ -396,6 +396,11 @@ export interface Dictionary {
     scheduleDaily18: string;
     scheduleWeeklyMonday: string;
     scheduleMonthlyFirst: string;
+    enable: string;
+    disable: string;
+    enabledToast: string;
+    disabledToast: string;
+    disabledBadge: string;
   };
   watchlists: {
     breadcrumb: string;
