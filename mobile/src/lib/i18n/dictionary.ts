@@ -192,6 +192,11 @@ export interface Dictionary {
     welcomeHint: string;
     noConnections: string;
     selectConnection: string;
+    suggestedLabel: string;
+    suggestedQ1: string;
+    suggestedQ2: string;
+    suggestedQ3: string;
+    suggestedQ4: string;
     inputPlaceholderReady: string;
     inputPlaceholderNoConn: string;
     inputA11y: string;

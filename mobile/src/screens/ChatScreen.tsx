@@ -480,6 +480,23 @@ export default function ChatScreen({ route, navigation }: Props) {
                 <Text style={styles.welcomeBtnText}>{t.chat.selectConnection} →</Text>
               </TouchableOpacity>
             )}
+            {/* Track II — onboarding suggested questions (HH mobile parity).
+                Connection var ama mesaj yok: kullanıcı ne yazacağını bilmiyor. */}
+            {selectedConn && (
+              <View style={styles.suggestedWrap}>
+                <Text style={styles.suggestedLabel}>{t.chat.suggestedLabel}</Text>
+                {[t.chat.suggestedQ1, t.chat.suggestedQ2, t.chat.suggestedQ3, t.chat.suggestedQ4].map((q) => (
+                  <TouchableOpacity
+                    key={q}
+                    onPress={() => setInput(q)}
+                    style={styles.suggestedChip}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.suggestedChipText}>{q}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         }
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
@@ -574,6 +591,36 @@ const styles = StyleSheet.create({
     fontFamily: font,
     fontSize: 14,
     fontWeight: "600",
+  },
+  suggestedWrap: {
+    marginTop: spacing(4),
+    width: "100%",
+    gap: spacing(2),
+  },
+  suggestedLabel: {
+    color: colors.textSubtle,
+    fontFamily: font,
+    fontSize: 10,
+    letterSpacing: 1,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginBottom: spacing(1),
+    textAlign: "center",
+  },
+  suggestedChip: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(2.5),
+    alignSelf: "center",
+  },
+  suggestedChipText: {
+    color: colors.text,
+    fontFamily: font,
+    fontSize: 13,
+    fontWeight: "500",
   },
   connChip: {
     backgroundColor: colors.bg,
