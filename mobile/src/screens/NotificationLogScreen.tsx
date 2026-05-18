@@ -1,6 +1,8 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useQuery } from "@tanstack/react-query";
+import { shareJson } from "../lib/share";
+import { showToast } from "../components/Toast";
 import {
   getMyNotificationLog,
   type NotificationLogEntry,
@@ -93,6 +95,31 @@ export default function NotificationLogScreen({ navigation }: Props) {
         title={t.notificationLog.title}
         description={t.notificationLog.description}
         onBack={() => navigation.goBack()}
+        right={
+          isOwnerOrAdmin && (q.data?.recent.length ?? 0) > 0 ? (
+            <TouchableOpacity
+              onPress={async () => {
+                /* Track AAA — notification log share (mobile CSV parity).
+                   JSON paylaşımı (web CSV indirme'ye eşdeğer; mobile
+                   Native Share intent kullanıyor). */
+                try {
+                  const ts = new Date().toISOString().slice(0, 10);
+                  await shareJson(`erpaio-notification-log-${ts}.json`, {
+                    days: q.data!.days,
+                    summary: q.data!.summary,
+                    recent: q.data!.recent,
+                  });
+                } catch {
+                  showToast(t.common.error, "error");
+                }
+              }}
+              style={styles.exportBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exportBtnText}>↓</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
 
       {!isOwnerOrAdmin && !meQuery.isLoading ? (
@@ -155,6 +182,16 @@ export default function NotificationLogScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bgSubtle },
+  exportBtn: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+    marginLeft: spacing(2),
+  },
+  exportBtnText: { color: colors.text, fontFamily: font, fontSize: 14, fontWeight: "700" },
   ownerOnlyBox: {
     backgroundColor: colors.warningSoft,
     borderRadius: radius.md,
