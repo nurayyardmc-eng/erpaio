@@ -22,18 +22,13 @@ jobs:
         run: |
           set -o pipefail
           npx vitest run --reporter=verbose --reporter=github-actions 2>&1 | tee /tmp/test-output.log
-      - name: "Echo failing lines as error annotations"
-        if: failure()
-        run: |
-          tail -200 /tmp/test-output.log || true
-          # Emit any FAIL / Error / AssertionError lines as ::error:: so they appear in check-runs annotations (visible via public API).
-          if [ -f /tmp/test-output.log ]; then
-            grep -E "FAIL|Error:|AssertionError|expected|Received|at .*\.test\.ts" /tmp/test-output.log | head -50 | while IFS= read -r line; do
-              esc="${line//$'\n'/%0A}"
-              esc="${esc//:/%3A}"
-              echo "::error::${esc}"
-            done
-          fi
+      - name: Upload test output as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-output
+          path: /tmp/test-output.log
+          retention-days: 7
       - name: Generate Next.js route types
         run: npx next typegen
       - name: TypeScript (web)
