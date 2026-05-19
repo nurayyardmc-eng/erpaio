@@ -18,22 +18,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
-      - name: Run tests (verbose, captured)
+      - name: Run tests (verbose + github-actions reporter for annotations)
         run: |
           set -o pipefail
-          npx vitest run --reporter=verbose 2>&1 | tee /tmp/test-output.log
-      - name: Print test output on failure
+          npx vitest run --reporter=verbose --reporter=github-actions 2>&1 | tee /tmp/test-output.log
+      - name: Echo failing lines as ::error:: for annotations
         if: failure()
         run: |
-          echo "=== LAST 200 LINES ==="
           tail -200 /tmp/test-output.log || true
-          {
-            echo "## Test failure output"
-            echo ''
-            echo '```'
-            tail -200 /tmp/test-output.log 2>/dev/null || echo "(log empty)"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          # Emit any FAIL / Error / AssertionError lines as ::error:: so they appear in check-runs annotations (visible via public API).
+          if [ -f /tmp/test-output.log ]; then
+            grep -E "FAIL|Error:|AssertionError|expected|Received|at .*\.test\.ts" /tmp/test-output.log | head -50 | while IFS= read -r line; do
+              esc="${line//$'\n'/%0A}"
+              esc="${esc//:/%3A}"
+              echo "::error::${esc}"
+            done
+          fi
       - name: Generate Next.js route types
         run: npx next typegen
       - name: TypeScript (web)
