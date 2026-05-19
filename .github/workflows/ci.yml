@@ -22,7 +22,7 @@ jobs:
         run: |
           set -o pipefail
           npx vitest run --reporter=verbose --reporter=github-actions 2>&1 | tee /tmp/test-output.log
-      - name: Echo failing lines as ::error:: for annotations
+      - name: "Echo failing lines as error annotations"
         if: failure()
         run: |
           tail -200 /tmp/test-output.log || true
