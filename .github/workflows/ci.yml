@@ -10,6 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,12 +39,15 @@ jobs:
           tail -150 /tmp/test-output.log > /tmp/tail.txt
           # Build JSON safely (jq escapes correctly).
           jq -Rs --arg sha "${{ github.sha }}" '{body: ("### Test failure tail (\($sha[0:7]))\n\n```\n" + . + "\n```")}' /tmp/tail.txt > /tmp/comment.json
-          curl -sS -X POST \
+          http_code=$(curl -sS -o /tmp/api-resp.json -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
-            --data @/tmp/comment.json | head -c 200
+            --data @/tmp/comment.json)
+          echo "HTTP $http_code"
+          cat /tmp/api-resp.json | head -c 500
           echo
+          [ "$http_code" = "201" ] || exit 1
       - name: Generate Next.js route types
         run: npx next typegen
       - name: TypeScript (web)
