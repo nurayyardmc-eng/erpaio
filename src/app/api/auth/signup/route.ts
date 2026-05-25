@@ -9,6 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { recordConsent, consentContextFromRequest } from "@/lib/auth/consent";
 import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
+import { slugify } from "@/lib/auth/slugify";
 
 const BodySchema = z.object({
   email: z.string().email().max(200),
@@ -23,16 +24,6 @@ const BodySchema = z.object({
 
 // Email enumeration brute force koruması — IP başına saatte 3 deneme
 const SIGNUP_LIMIT = { prefix: "signup", max: 3, windowMs: 60 * 60_000 };
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40) || `t-${Math.random().toString(36).slice(2, 8)}`;
-}
 
 export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
