@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n/context";
+import { shouldShowNps, nextDismissedUntil } from "@/lib/nps/eligibility";
 
 const NPS_DISMISSED_KEY = "erpaio_nps_dismissed_until";
 const NPS_SUBMITTED_KEY = "erpaio_nps_submitted";
@@ -26,12 +27,16 @@ export default function NpsPrompt() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const submittedAt = localStorage.getItem(NPS_SUBMITTED_KEY);
-    if (submittedAt && Date.now() - Number(submittedAt) < 90 * 24 * 60 * 60_000) return;
-
-    const dismissedUntil = localStorage.getItem(NPS_DISMISSED_KEY);
-    if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
-
+    const submittedAtStr = localStorage.getItem(NPS_SUBMITTED_KEY);
+    const dismissedUntilStr = localStorage.getItem(NPS_DISMISSED_KEY);
+    if (
+      !shouldShowNps({
+        submittedAt: submittedAtStr ? Number(submittedAtStr) : null,
+        dismissedUntil: dismissedUntilStr ? Number(dismissedUntilStr) : null,
+      })
+    ) {
+      return;
+    }
     const t = setTimeout(() => setShow(true), 30_000);
     return () => clearTimeout(t);
   }, []);
@@ -56,7 +61,7 @@ export default function NpsPrompt() {
   const dismiss = () => {
     setShow(false);
     if (typeof window !== "undefined") {
-      localStorage.setItem(NPS_DISMISSED_KEY, String(Date.now() + 14 * 24 * 60 * 60_000));
+      localStorage.setItem(NPS_DISMISSED_KEY, String(nextDismissedUntil()));
     }
   };
 
