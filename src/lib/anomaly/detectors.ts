@@ -215,22 +215,19 @@ export function detectThreshold(params: ThresholdParams): AnomalyResult {
   };
 }
 
+// Track XXXX: deduped — implementation lives in @/lib/threshold/compare.
+import { compareThreshold, thresholdOpSymbol } from "@/lib/threshold/compare";
+
 function matchCondition(
   value: number,
   condition: ThresholdParams["rules"][0]["condition"],
   threshold: number,
 ): boolean {
-  switch (condition) {
-    case "lt": return value < threshold;
-    case "lte": return value <= threshold;
-    case "gt": return value > threshold;
-    case "gte": return value >= threshold;
-    case "eq": return value === threshold;
-  }
+  return compareThreshold(condition, value, threshold);
 }
 
 function conditionToTr(c: ThresholdParams["rules"][0]["condition"]): string {
-  return { lt: "<", lte: "≤", gt: ">", gte: "≥", eq: "=" }[c];
+  return thresholdOpSymbol(c);
 }
 
 function normalResult(

@@ -7,22 +7,12 @@ import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { childLogger } from "@/lib/observability/logger";
+import { compareThreshold } from "@/lib/threshold/compare";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const log = childLogger({ component: "cron-watchlists" });
-
-function compare(op: string, a: number, b: number): boolean {
-  switch (op) {
-    case "lt": return a < b;
-    case "lte": return a <= b;
-    case "gt": return a > b;
-    case "gte": return a >= b;
-    case "eq": return a === b;
-    default: return false;
-  }
-}
 
 export async function GET(req: NextRequest) {
   const auth = await verifyCronAuth(req);
@@ -67,7 +57,7 @@ export async function GET(req: NextRequest) {
       const firstNumeric = Object.values(firstRow).find((v) => typeof v === "number");
       if (typeof firstNumeric !== "number") continue;
 
-      const hit = compare(w.thresholdOp, firstNumeric, w.thresholdVal);
+      const hit = compareThreshold(w.thresholdOp, firstNumeric, w.thresholdVal);
 
       await prisma.watchlist.update({
         where: { id: w.id },
