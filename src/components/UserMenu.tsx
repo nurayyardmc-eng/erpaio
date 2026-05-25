@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown, LogOut, Settings, Shield, HelpCircle } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { userInitials } from "@/lib/auth/initials";
 
 async function manualSignOut() {
   try {
@@ -54,7 +55,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
 
   const displayName = liveName ?? name ?? "";
   const displayEmail = liveEmail ?? email;
-  const initials = (displayName || displayEmail).split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
+  const initials = userInitials(displayName, displayEmail);
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
