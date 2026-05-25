@@ -5,15 +5,10 @@ import { queryERP } from "@/lib/db/connector";
 import { embedAndStore } from "@/lib/embeddings";
 import { childLogger } from "@/lib/observability/logger";
 import { loadProfile } from "@/lib/erpProfiles";
+import { groupColumnsByTable, buildEmbeddingText, type SchemaRow } from "@/lib/embeddings/buildText";
 
 export const maxDuration = 300;
 const log = childLogger({ component: "embeddings-build" });
-
-interface SchemaRow {
-  TABLE_NAME: string;
-  COLUMN_NAME: string;
-  DATA_TYPE: string;
-}
 
 export async function GET(req: NextRequest) {
   const auth = await verifyCronAuth(req);
@@ -51,17 +46,16 @@ export async function GET(req: NextRequest) {
         const profileSlug = conn.erpProfile ?? (conn.erpType === "nebim_v3" ? "nebim_v3" : null);
         const profile = profileSlug ? loadProfile(profileSlug) : null;
 
-        const tableMap = new Map<string, string[]>();
-        for (const r of rows) {
-          if (!tableMap.has(r.TABLE_NAME)) tableMap.set(r.TABLE_NAME, []);
-          tableMap.get(r.TABLE_NAME)!.push(`${r.COLUMN_NAME}:${r.DATA_TYPE}`);
-        }
+        const tableMap = groupColumnsByTable(rows);
 
         for (const [table, cols] of tableMap) {
           const profileMeta = profile?.canonical_tables?.[table];
-          const description = profileMeta?.description ?? "";
-          const aliases = profileMeta?.aliases?.join(", ") ?? "";
-          const text = `${table} ${description} ${aliases} ${cols.slice(0, 10).join(" ")}`.trim();
+          const text = buildEmbeddingText(
+            table,
+            profileMeta?.description ?? "",
+            profileMeta?.aliases ?? [],
+            cols,
+          );
 
           await prisma.tableEmbedding.upsert({
             where: {
