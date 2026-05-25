@@ -20,6 +20,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { filterCommands, groupByCategory } from "@/lib/command-palette/filter";
 
 interface Cmd {
   id: string;
@@ -67,9 +68,7 @@ export default function CommandPalette() {
     }},
   ];
 
-  const filtered = commands.filter((c) =>
-    c.label.toLowerCase().includes(query.toLowerCase()),
-  );
+  const filtered = filterCommands(commands, query);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -113,10 +112,7 @@ export default function CommandPalette() {
 
   if (!open) return null;
 
-  const groups = filtered.reduce<Record<string, Cmd[]>>((acc, c) => {
-    (acc[c.group] = acc[c.group] || []).push(c);
-    return acc;
-  }, {});
+  const groups = groupByCategory(filtered);
 
   let runningIndex = -1;
 
