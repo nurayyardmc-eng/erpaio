@@ -158,3 +158,36 @@ describe("analytics/healthScore/calculateHealthScore", () => {
     expect(Number.isInteger(r.score)).toBe(true);
   });
 });
+
+import { healthScoreGrade } from "./healthScore";
+
+describe("analytics/healthScoreGrade", () => {
+  describe("boundaries (≥ inclusive)", () => {
+    it("100 → A", () => expect(healthScoreGrade(100)).toBe("A"));
+    it("85 → A (inclusive)", () => expect(healthScoreGrade(85)).toBe("A"));
+    it("84 → B (just below A)", () => expect(healthScoreGrade(84)).toBe("B"));
+    it("70 → B (inclusive)", () => expect(healthScoreGrade(70)).toBe("B"));
+    it("69 → C (just below B)", () => expect(healthScoreGrade(69)).toBe("C"));
+    it("55 → C (inclusive)", () => expect(healthScoreGrade(55)).toBe("C"));
+    it("54 → D (just below C)", () => expect(healthScoreGrade(54)).toBe("D"));
+    it("40 → D (inclusive)", () => expect(healthScoreGrade(40)).toBe("D"));
+    it("39 → F (just below D)", () => expect(healthScoreGrade(39)).toBe("F"));
+    it("0 → F", () => expect(healthScoreGrade(0)).toBe("F"));
+  });
+
+  describe("out of range (defensive)", () => {
+    it("> 100 still A", () => expect(healthScoreGrade(150)).toBe("A"));
+    it("negative still F", () => expect(healthScoreGrade(-10)).toBe("F"));
+    it("NaN → F (no boundary matches)", () => expect(healthScoreGrade(NaN)).toBe("F"));
+  });
+
+  describe("typical case sweep", () => {
+    it("samples produce expected grade", () => {
+      expect(healthScoreGrade(95)).toBe("A");
+      expect(healthScoreGrade(75)).toBe("B");
+      expect(healthScoreGrade(60)).toBe("C");
+      expect(healthScoreGrade(45)).toBe("D");
+      expect(healthScoreGrade(20)).toBe("F");
+    });
+  });
+});

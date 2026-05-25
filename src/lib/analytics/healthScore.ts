@@ -39,8 +39,7 @@ export function calculateHealthScore(input: HealthScoreInput): HealthScore {
     activity * 25 + qualityRate * 25 + feedbackRate * 15 + cacheHitRate * 15 + dayRate * 20,
   );
 
-  const grade: HealthScore["grade"] =
-    score >= 85 ? "A" : score >= 70 ? "B" : score >= 55 ? "C" : score >= 40 ? "D" : "F";
+  const grade = healthScoreGrade(score);
 
   return {
     score,
@@ -104,4 +103,21 @@ export async function computeHealthScore(tenantId: string): Promise<HealthScore>
     cacheFail: qc._sum.failCount ?? 0,
     daysActive: distinctDays.length,
   });
+}
+
+/**
+ * Map a 0..100 health score to its grade letter (A/B/C/D/F).
+ *
+ * Track PPPPPP — extracted so admin/health-scores page and other UI can
+ * compute the grade consistently with `calculateHealthScore`. Boundaries
+ * (≥85=A, ≥70=B, ≥55=C, ≥40=D, else F) regression marker.
+ */
+export type HealthGrade = "A" | "B" | "C" | "D" | "F";
+
+export function healthScoreGrade(score: number): HealthGrade {
+  if (score >= 85) return "A";
+  if (score >= 70) return "B";
+  if (score >= 55) return "C";
+  if (score >= 40) return "D";
+  return "F";
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { formatPercent } from "@/lib/format/percent";
+import { healthScoreGrade } from "@/lib/analytics/healthScore";
 
 interface TenantHealth {
   tenant: {
@@ -225,11 +226,7 @@ export default function HealthScoresPage() {
 }
 
 function gradeColorFor(score: number): string {
-  if (score >= 85) return GRADE_COLORS.A.fg;
-  if (score >= 70) return GRADE_COLORS.B.fg;
-  if (score >= 55) return GRADE_COLORS.C.fg;
-  if (score >= 40) return GRADE_COLORS.D.fg;
-  return GRADE_COLORS.F.fg;
+  return GRADE_COLORS[healthScoreGrade(score)].fg;
 }
 
 const summaryCard: React.CSSProperties = {
