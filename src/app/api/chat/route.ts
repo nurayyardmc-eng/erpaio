@@ -19,6 +19,7 @@ import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
 import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect } from "@/lib/ai/dialect";
+import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
 
 const client = new Anthropic();
 
@@ -34,25 +35,14 @@ const BodySchema = z.object({
 async function loadConversationHistory(
   sessionId: string,
   tenantId: string,
-): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
+) {
   const messages = await prisma.chatMessage.findMany({
     where: { session: { id: sessionId, tenantId } },
     orderBy: { createdAt: "desc" },
     take: 6,
     select: { role: true, content: true, sqlQuery: true, success: true, rowCount: true },
   });
-  return messages
-    .reverse()
-    .filter((m) => m.success)
-    .map((m) => {
-      if (m.role === "user") {
-        return { role: "user" as const, content: m.content };
-      }
-      const summary = m.sqlQuery
-        ? `${m.sqlQuery}\n\n(${m.rowCount ?? 0} satır döndü)`
-        : m.content;
-      return { role: "assistant" as const, content: summary };
-    });
+  return formatChatHistoryForAi(messages);
 }
 
 export async function POST(req: Request) {
