@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatPercent } from "@/lib/format/percent";
 
 type Channel = "whatsapp" | "email" | "push" | "slack" | "teams" | "webhook";
 type Status = "sent" | "failed" | "skipped";
@@ -122,7 +123,7 @@ export default function AdminNotificationsPage() {
               }}>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{ch}</div>
                 <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 4, color: healthColor }}>
-                  {(rate * 100).toFixed(0)}%
+                  {formatPercent(rate)}
                 </div>
                 <div style={{ fontSize: 11, color: "#475569" }}>
                   <span style={{ color: "#10B981" }}>✓ {s.sent}</span>

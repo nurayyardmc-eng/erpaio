@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { colors } from "@/lib/theme";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatPercentInt } from "@/lib/format/percent";
 
 interface LogEntry {
   id: string;
@@ -137,7 +138,7 @@ export default function NotificationLogPage() {
       {Object.keys(summary).length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 32 }}>
           {Object.entries(summary).map(([ch, s]) => {
-            const successPct = Math.round(s.successRate * 100);
+            const successPct = Number(formatPercentInt(s.successRate));
             const healthy = s.failed === 0;
             return (
               <div key={ch} style={{

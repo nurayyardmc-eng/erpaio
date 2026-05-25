@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatPercent } from "@/lib/format/percent";
 
 interface TenantHealth {
   tenant: {
@@ -206,12 +207,12 @@ export default function HealthScoresPage() {
                       fontSize: 11,
                     }}>{it.health.grade}</span>
                   </td>
-                  <td style={td}>{(it.health.signals.activity * 100).toFixed(0)}%</td>
-                  <td style={td}>{(it.health.signals.qualityRate * 100).toFixed(0)}%</td>
-                  <td style={td}>{(it.health.signals.cacheHitRate * 100).toFixed(0)}%</td>
+                  <td style={td}>{formatPercent(it.health.signals.activity)}</td>
+                  <td style={td}>{formatPercent(it.health.signals.qualityRate)}</td>
+                  <td style={td}>{formatPercent(it.health.signals.cacheHitRate)}</td>
                   <td style={td}>{it.health.signals.daysActive}</td>
                   <td style={{ ...td, color: it.health.signals.errorRate > 0.2 ? "#EF4444" : "#0F172A" }}>
-                    {(it.health.signals.errorRate * 100).toFixed(0)}%
+                    {formatPercent(it.health.signals.errorRate)}
                   </td>
                 </tr>
               ))}

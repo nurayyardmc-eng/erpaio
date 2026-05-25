@@ -7,6 +7,7 @@ import ErrorState from "@/components/ErrorState";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
+import { formatPercentInt } from "@/lib/format/percent";
 
 interface SavedQuery {
   id: string;
@@ -183,7 +184,7 @@ export default function SavedQueriesPage() {
               }}>{q.sqlQuery}</pre>
               <div style={{ display: "flex", gap: 12, fontSize: 9, color: "#94A3B8" }}>
                 <span style={{ color: q.reliability > 0.9 ? "#10B981" : q.reliability > 0.7 ? "#F59E0B" : "#EF4444" }}>
-                  Güvenilirlik: %{(q.reliability * 100).toFixed(0)}
+                  Güvenilirlik: %{formatPercentInt(q.reliability)}
                 </span>
                 <span>·</span>
                 <span>{q.successCount} başarılı / {q.failCount} hata</span>
