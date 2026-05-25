@@ -54,13 +54,18 @@ async function buildSchema(connectionId: string): Promise<string> {
   });
   const dialect = getDialect(dialectFromErpType(conn?.erpType ?? "nebim_v3"));
   const rows = await queryERP(connectionId, dialect.schemaQuery);
+  return formatSchemaRows(rows as Array<{ TABLE_NAME: string; COLUMN_NAME: string; DATA_TYPE: string }>);
+}
 
+// Exported for test (Track PPPP). Pure: group rows by table, format "col(type)" pairs.
+export function formatSchemaRows(
+  rows: Array<{ TABLE_NAME: string; COLUMN_NAME: string; DATA_TYPE: string }>,
+): string {
   const grouped: Record<string, string[]> = {};
-  for (const row of rows as Array<{ TABLE_NAME: string; COLUMN_NAME: string; DATA_TYPE: string }>) {
+  for (const row of rows) {
     if (!grouped[row.TABLE_NAME]) grouped[row.TABLE_NAME] = [];
     grouped[row.TABLE_NAME].push(`${row.COLUMN_NAME}(${row.DATA_TYPE})`);
   }
-
   return Object.entries(grouped)
     .map(([t, cols]) => `${t}: ${cols.join(", ")}`)
     .join("\n");
