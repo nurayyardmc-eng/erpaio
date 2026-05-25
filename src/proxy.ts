@@ -1,43 +1,40 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-
-const PUBLIC_PATHS = ["/login", "/privacy", "/terms", "/signup", "/forgot-password", "/reset-password", "/pricing", "/docs", "/status", "/accept-invite", "/verify-email", "/maintenance"];
-
-const MAINTENANCE_BYPASS = ["/maintenance", "/status", "/api/health", "/api/cron"];
+import {
+  isPathPublic,
+  isMaintenanceBypassed,
+  isApiPath,
+  pickLandingFile,
+  isSupportedLandingLang,
+} from "@/lib/proxy-helpers";
 
 export default auth((req) => {
   const path = req.nextUrl.pathname;
 
   if (process.env.MAINTENANCE_MODE === "true") {
-    const allowed = MAINTENANCE_BYPASS.some((p) => path === p || path.startsWith(p + "/"));
-    if (!allowed) {
+    if (!isMaintenanceBypassed(path)) {
       return Response.redirect(new URL("/maintenance", req.url));
     }
   }
 
   const isLoggedIn = !!req.auth;
   const isRoot = path === "/";
-  const isPublic = isRoot || PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
-  const isApi = path.startsWith("/api");
 
   // Lang query param → set cookie + redirect (clean URL)
   const langParam = req.nextUrl.searchParams.get("lang");
-  if (isRoot && langParam && ["en", "tr", "ar"].includes(langParam)) {
+  if (isRoot && isSupportedLandingLang(langParam)) {
     const res = NextResponse.redirect(new URL("/", req.url));
-    res.cookies.set("erpaio_lang", langParam, { maxAge: 60 * 60 * 24 * 365, path: "/" });
+    res.cookies.set("erpaio_lang", langParam!, { maxAge: 60 * 60 * 24 * 365, path: "/" });
     return res;
   }
 
   // Unauth user on root → serve static landing.html based on cookie language
   if (isRoot && !isLoggedIn) {
     const lang = req.cookies.get("erpaio_lang")?.value;
-    const file = lang === "tr" ? "/landing-tr.html"
-      : lang === "ar" ? "/landing-ar.html"
-      : "/landing.html";
-    return NextResponse.rewrite(new URL(file, req.url));
+    return NextResponse.rewrite(new URL(pickLandingFile(lang), req.url));
   }
 
-  if (!isLoggedIn && !isPublic && !isApi) {
+  if (!isLoggedIn && !isPathPublic(path) && !isApiPath(path)) {
     return Response.redirect(new URL("/login", req.url));
   }
 });
