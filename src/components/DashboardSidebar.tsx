@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
+import { isNavActive } from "@/lib/nav/active";
 
 interface NavItem { href: string; label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>; }
 
@@ -112,7 +113,7 @@ export default function DashboardSidebar() {
             width: "calc(100% - 12px)",
           }}>
             {group.items.map(({ href, label, Icon }) => {
-              const active = pathname === href || pathname.startsWith(href + "/");
+              const active = isNavActive(pathname, href);
               return (
                 <Link
                   key={href}
