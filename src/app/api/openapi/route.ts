@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
+import { wantsYamlFormat } from "@/lib/http/contentNegotiation";
 
 export const runtime = "nodejs";
 // force-dynamic: post-deploy YAML değişikliklerini anında yansıt (ISR cache
@@ -24,12 +25,7 @@ export async function GET(req: Request) {
     return Response.json({ error: "OpenAPI spec not available." }, { status: 500 });
   }
 
-  const url = new URL(req.url);
-  const wantsYaml =
-    url.searchParams.get("format") === "yaml" ||
-    /yaml/.test(req.headers.get("accept") ?? "");
-
-  if (wantsYaml) {
+  if (wantsYamlFormat(req)) {
     return new Response(yaml, {
       headers: {
         "Content-Type": "application/yaml; charset=utf-8",
