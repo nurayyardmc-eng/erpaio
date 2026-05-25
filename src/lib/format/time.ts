@@ -36,6 +36,29 @@ export function formatRelativeTime(
 }
 
 /**
+ * Locale-aware absolute timestamp ("DD.MM.YYYY HH:MM:SS" TR / "M/D/YYYY" EN).
+ *
+ * Extracted (Track EEEEEE) — 14 inline `new Date(x).toLocaleString("tr-TR")`
+ * sites across admin + dashboard pages. Some use locale-conditional form,
+ * others hardcode "tr-TR". Unified here.
+ *
+ * Locale arg accepts the i18n string ("en"/"tr"/...) and maps to the right
+ * BCP-47 tag. Unknown → "tr-TR" default.
+ *
+ * Null/undefined/invalid date → "—" placeholder.
+ */
+export function formatTimestamp(
+  iso: string | Date | null | undefined,
+  locale: string = "tr",
+): string {
+  if (!iso) return "—";
+  const date = iso instanceof Date ? iso : new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  const tag = locale === "en" ? "en-US" : "tr-TR";
+  return date.toLocaleString(tag);
+}
+
+/**
  * Compact token counter for usage badges:
  *   ≥ 1M → "X.YM"
  *   ≥ 1k → "Xk" (no decimal — settings UI is narrow)

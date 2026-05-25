@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatRelativeTime, formatTokens } from "./time";
+import { formatRelativeTime, formatTokens, formatTimestamp } from "./time";
 
 const NOW = new Date("2026-05-26T12:00:00Z").getTime();
 const MIN = 60_000;
@@ -145,5 +145,54 @@ describe("format/time/formatTokens", () => {
   it("exactly 1_000_000 boundary moves to M tier", () => {
     expect(formatTokens(999_999)).toBe("1000k");
     expect(formatTokens(1_000_000)).toBe("1.0M");
+  });
+});
+
+describe("format/time/formatTimestamp", () => {
+  const FIXED_ISO = "2026-05-26T12:34:56Z";
+
+  it("null/undefined → '—'", () => {
+    expect(formatTimestamp(null)).toBe("—");
+    expect(formatTimestamp(undefined)).toBe("—");
+  });
+
+  it("empty string → '—'", () => {
+    expect(formatTimestamp("")).toBe("—");
+  });
+
+  it("invalid ISO → '—'", () => {
+    expect(formatTimestamp("not-a-date")).toBe("—");
+  });
+
+  it("TR locale (default) produces a TR-tagged string", () => {
+    const r = formatTimestamp(FIXED_ISO, "tr");
+    // Locale string format varies by Node version, just assert key signals.
+    expect(r).toContain("2026");
+    expect(typeof r).toBe("string");
+    expect(r).not.toBe("—");
+  });
+
+  it("EN locale produces a different formatted string", () => {
+    const tr = formatTimestamp(FIXED_ISO, "tr");
+    const en = formatTimestamp(FIXED_ISO, "en");
+    expect(en).not.toBe(tr);
+    expect(en).toContain("2026");
+  });
+
+  it("unknown locale → falls back to TR", () => {
+    const r = formatTimestamp(FIXED_ISO, "ar");
+    const tr = formatTimestamp(FIXED_ISO, "tr");
+    expect(r).toBe(tr);
+  });
+
+  it("accepts Date instance directly", () => {
+    const d = new Date(FIXED_ISO);
+    const fromDate = formatTimestamp(d);
+    const fromIso = formatTimestamp(FIXED_ISO);
+    expect(fromDate).toBe(fromIso);
+  });
+
+  it("default locale is TR (omitting arg)", () => {
+    expect(formatTimestamp(FIXED_ISO)).toBe(formatTimestamp(FIXED_ISO, "tr"));
   });
 });
