@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { showToast } from "@/components/Toaster";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatDurationMs } from "@/lib/format/duration";
 
 const TRIGGER_JOBS = [
   { jobName: "anomaly-detection", path: "/api/cron/anomaly-detection" },
@@ -267,7 +268,7 @@ export default function CronRunsPage() {
                     }}>{r.status}</span>
                   </td>
                   <td style={td}>{new Date(r.startedAt).toLocaleString("tr-TR")}</td>
-                  <td style={td}>{r.durationMs !== null ? `${(r.durationMs / 1000).toFixed(1)}s` : "—"}</td>
+                  <td style={td}>{formatDurationMs(r.durationMs)}</td>
                   <td style={td}>{r.tenantsOk}/{r.tenantsTotal}{r.tenantsFail > 0 ? <span style={{ color: "#EF4444" }}> ({r.tenantsFail} fail)</span> : null}</td>
                   <td style={td}>{r.alertsCreated || "—"}</td>
                   <td style={{ ...td, textAlign: "left", fontSize: 11, color: "#EF4444", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

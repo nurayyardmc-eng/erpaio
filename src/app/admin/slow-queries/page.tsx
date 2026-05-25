@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatDurationMs } from "@/lib/format/duration";
 
 interface SlowQueryRow {
   id: string;
@@ -109,7 +110,7 @@ export default function SlowQueriesAdminPage() {
 
       {/* Son 24h özet */}
       <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 12px" }}>
-        Son 24 saat · {totalIn24h} kayıt · max {(maxIn24h / 1000).toFixed(1)}s
+        Son 24 saat · {totalIn24h} kayıt · max {formatDurationMs(maxIn24h)}
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, marginBottom: 32 }}>
         {summary.length === 0 ? (
@@ -137,10 +138,10 @@ export default function SlowQueriesAdminPage() {
                 {s.tenantSlug && <span style={{ color: "#94A3B8", fontWeight: 400, marginLeft: 6 }}>· {s.tenantSlug}</span>}
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
-                {(s.maxMs / 1000).toFixed(1)}s <span style={{ fontSize: 11, color: "#737373", fontWeight: 400 }}>(max)</span>
+                {formatDurationMs(s.maxMs)} <span style={{ fontSize: 11, color: "#737373", fontWeight: 400 }}>(max)</span>
               </div>
               <div style={{ fontSize: 11, color: "#737373" }}>
-                {s.count} query · avg {(s.avgMs / 1000).toFixed(1)}s
+                {s.count} query · avg {formatDurationMs(s.avgMs)}
               </div>
             </button>
           ))

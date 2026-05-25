@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatDurationMs } from "@/lib/format/duration";
 
 interface SlowQueryRow {
   id: string;
@@ -93,9 +94,9 @@ export default function SlowQueriesPage() {
           ) : (
             <>
               {t.slowQueries.summary24hPrefix}{summary.count}{t.slowQueries.summary24hSeparator}
-              <strong>{(summary.maxMs / 1000).toFixed(1)}s</strong>
+              <strong>{formatDurationMs(summary.maxMs)}</strong>
               {" · "}
-              {t.slowQueries.summary24hAvgPrefix}{(summary.avgMs / 1000).toFixed(1)}s
+              {t.slowQueries.summary24hAvgPrefix}{formatDurationMs(summary.avgMs)}
             </>
           )}
         </h2>
