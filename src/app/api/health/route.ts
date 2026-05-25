@@ -1,11 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
+import { aggregateCronHealth, type CronHealth } from "@/lib/cron/aggregateHealth";
 
 export const dynamic = "force-dynamic";
-
-interface CronHealth {
-  ok: boolean;
-  jobs: Record<string, { runs: number; failed: number; lastRunAt: string | null }>;
-}
 
 /**
  * /api/health — public uptime check.
@@ -40,22 +36,7 @@ export async function GET(req: Request) {
         select: { jobName: true, status: true, startedAt: true },
         orderBy: { startedAt: "desc" },
       });
-
-      const jobs: Record<string, { runs: number; failed: number; lastRunAt: string | null }> = {};
-      for (const r of runs) {
-        if (!jobs[r.jobName]) jobs[r.jobName] = { runs: 0, failed: 0, lastRunAt: null };
-        const j = jobs[r.jobName];
-        j.runs++;
-        if (r.status === "FAILED") j.failed++;
-        if (!j.lastRunAt) j.lastRunAt = r.startedAt.toISOString();
-      }
-
-      const totalFailed = Object.values(jobs).reduce((a, j) => a + j.failed, 0);
-      const totalRuns = Object.values(jobs).reduce((a, j) => a + j.runs, 0);
-      // "ok" = en az bir job çalıştı ve failure rate < %50
-      const ok = totalRuns > 0 && totalFailed / totalRuns < 0.5;
-
-      cronHealth = { ok, jobs };
+      cronHealth = aggregateCronHealth(runs);
     } catch (err) {
       cronHealth = { ok: false, jobs: {} };
       // Cron check failure ana health'i bozmasın — DB hâlâ ok ise 200 dönmeye devam
