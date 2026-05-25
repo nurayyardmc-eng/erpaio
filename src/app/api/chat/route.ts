@@ -17,6 +17,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
+import { confidenceBucket } from "@/lib/ai/confidence";
 
 const client = new Anthropic();
 
@@ -258,8 +259,7 @@ ${schema}`;
       if (typeof usage.cache_read_input_tokens === "number" && usage.cache_read_input_tokens > 0) {
         Sentry.setTag("chat.prompt_cache_hit", true);
       }
-      Sentry.setTag("chat.confidence_bucket",
-        confidence >= 0.95 ? "high" : confidence >= 0.7 ? "med" : confidence >= 0.4 ? "low" : "very_low");
+      Sentry.setTag("chat.confidence_bucket", confidenceBucket(confidence));
     }
 
     if (!cacheHit && confidence < CONFIDENCE_THRESHOLD && !forceRun) {
