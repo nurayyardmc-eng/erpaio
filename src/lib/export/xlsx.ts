@@ -2,6 +2,28 @@
 // diye lazy import. Sadece kullanıcı "XLSX indir" butonuna basınca yüklenir.
 
 /**
+ * Calculate column widths (`wch` units, ≈ character count) clamped to
+ * [10, 50]. Exported for test (Track OOOO) — pure math, deterministic.
+ *
+ * Why clamping:
+ *  - min 10: very short headers like "id" still readable
+ *  - max 50: prevents one giant cell forcing horizontal scroll
+ *  - +2 padding accounts for default cell margin
+ */
+export function calculateColumnWidths(
+  rows: Record<string, unknown>[],
+  columns: string[],
+): Array<{ wch: number }> {
+  return columns.map((col) => {
+    const maxLen = Math.max(
+      col.length,
+      ...rows.map((r) => String(r[col] ?? "").length),
+    );
+    return { wch: Math.min(50, Math.max(10, maxLen + 2)) };
+  });
+}
+
+/**
  * Generate XLSX blob from rows. Async because xlsx is dynamically imported
  * (5+ MB savings on first-load JS for dashboard pages).
  */
@@ -13,13 +35,7 @@ export async function rowsToXlsxBlob(
 
   const ws = XLSX.utils.json_to_sheet(rows, { header: columns });
 
-  ws["!cols"] = columns.map((col) => {
-    const maxLen = Math.max(
-      col.length,
-      ...rows.map((r) => String(r[col] ?? "").length),
-    );
-    return { wch: Math.min(50, Math.max(10, maxLen + 2)) };
-  });
+  ws["!cols"] = calculateColumnWidths(rows, columns);
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "ERPAIO");
