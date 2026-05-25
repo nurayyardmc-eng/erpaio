@@ -21,6 +21,7 @@ import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect } from "@/lib/ai/dialect";
 import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
 import { calculateBillableTokens, isPromptCacheHit } from "@/lib/ai/tokenUsage";
+import { truncateRows } from "@/lib/chat/rowLimit";
 
 const client = new Anthropic();
 
@@ -299,16 +300,15 @@ ${schema}`;
       "Chat query succeeded",
     );
 
-    const ROW_LIMIT = 500;
-    const truncated = rows.length > ROW_LIMIT;
+    const t = truncateRows(rows);
 
     return Response.json({
       sql,
-      results: rows.slice(0, ROW_LIMIT),
+      results: t.results,
       columns,
-      total: rows.length,
-      truncated,
-      rowLimit: ROW_LIMIT,
+      total: t.total,
+      truncated: t.truncated,
+      rowLimit: t.rowLimit,
       latencyMs,
       sessionId: sid,
       messageId: assistantMsg?.id,

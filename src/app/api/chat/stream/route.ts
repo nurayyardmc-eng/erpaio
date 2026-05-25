@@ -17,6 +17,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
+import { truncateRows } from "@/lib/chat/rowLimit";
 
 const client = new Anthropic();
 export const maxDuration = 60;
@@ -158,13 +159,13 @@ ${schema}`;
           ],
         });
 
-        const ROW_LIMIT = 500;
+        const t = truncateRows(rows);
         send("result", {
           sql,
-          results: rows.slice(0, ROW_LIMIT),
+          results: t.results,
           columns,
-          total: rows.length,
-          truncated: rows.length > ROW_LIMIT,
+          total: t.total,
+          truncated: t.truncated,
           latencyMs,
           sessionId: sid,
           cacheHit,
