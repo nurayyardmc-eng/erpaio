@@ -5,6 +5,7 @@
 // için tablo silinmemeli — md. 7 + denetim dengesini bu sağlar.
 
 import { prisma } from "@/lib/db/prisma";
+import { extractClientIp } from "@/lib/http/clientIp";
 
 export type ConsentType =
   | "kvkk_signup"
@@ -52,7 +53,7 @@ export async function recordConsent(input: RecordConsentInput): Promise<void> {
 
 /** Extract IP + UA from a Request — call site responsibility, kept here for reuse. */
 export function consentContextFromRequest(req: Request): { ipAddress: string; userAgent: string } {
-  const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ipAddress = extractClientIp(req);
   const userAgent = req.headers.get("user-agent") ?? "unknown";
   return { ipAddress, userAgent };
 }

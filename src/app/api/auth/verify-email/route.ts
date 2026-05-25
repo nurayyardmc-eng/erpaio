@@ -5,11 +5,12 @@ import { childLogger } from "@/lib/observability/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { jsonError } from "@/lib/i18n/server";
 
+import { extractClientIp } from "@/lib/http/clientIp";
 const BodySchema = z.object({ token: z.string().min(8) });
 
 export async function POST(req: Request) {
   // Brute force koruması: IP başına saatte 10 deneme
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = extractClientIp(req);
   const limit = await rateLimit(ip, RATE_LIMITS.VERIFY_EMAIL);
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 

@@ -11,6 +11,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { slugify } from "@/lib/auth/slugify";
 
+import { extractClientIp } from "@/lib/http/clientIp";
 const BodySchema = z.object({
   email: z.string().email().max(200),
   password: z.string().min(8).max(200),
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = extractClientIp(req);
   const limit = await rateLimit(ip, SIGNUP_LIMIT);
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 

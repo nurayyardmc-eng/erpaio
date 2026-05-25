@@ -6,6 +6,7 @@ import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 
+import { extractClientIp } from "@/lib/http/clientIp";
 /**
  * Email change verification.
  *
@@ -27,7 +28,7 @@ import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity
 const BodySchema = z.object({ token: z.string().min(8) });
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = extractClientIp(req);
   const limit = await rateLimit(ip, RATE_LIMITS.VERIFY_EMAIL);
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 

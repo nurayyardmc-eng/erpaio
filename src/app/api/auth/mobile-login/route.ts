@@ -7,6 +7,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, serverMessages } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
+import { extractClientIp } from "@/lib/http/clientIp";
 
 const BodySchema = z.object({
   email: z.string().email(),
@@ -20,9 +21,7 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    ?? req.headers.get("x-real-ip")
-    ?? "unknown";
+  const ip = extractClientIp(req);
   const limit = await rateLimit(ip, LOGIN_LIMIT);
   if (!limit.success) {
     // Retry-After header'ı korumak için manuel response (jsonError header desteklemiyor)

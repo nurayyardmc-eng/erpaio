@@ -6,6 +6,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@prisma/client";
+import { extractClientIp } from "@/lib/http/clientIp";
 
 /** Standardized action names — yeni eklerken buraya yaz. */
 export type ActivityAction =
@@ -80,8 +81,7 @@ export function activityContextFromRequest(req: Request): {
   ipAddress: string;
   userAgent: string;
 } {
-  const ipAddress =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ipAddress = extractClientIp(req);
   const userAgent = req.headers.get("user-agent") ?? "unknown";
   return { ipAddress, userAgent };
 }

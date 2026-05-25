@@ -8,6 +8,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 
+import { extractClientIp } from "@/lib/http/clientIp";
 const BodySchema = z.object({ email: z.string().email() });
 const LIMIT = { prefix: "forgot-pw", max: 3, windowMs: 60 * 60_000 };
 
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = extractClientIp(req);
   const limit = await rateLimit(ip, LIMIT);
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 

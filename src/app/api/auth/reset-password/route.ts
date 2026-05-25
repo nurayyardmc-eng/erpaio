@@ -7,6 +7,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 
+import { extractClientIp } from "@/lib/http/clientIp";
 const BodySchema = z.object({
   token: z.string().min(8),
   password: z.string().min(8).max(200),
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   // Brute force koruması: IP başına saatte 5 deneme
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = extractClientIp(req);
   const limit = await rateLimit(ip, RATE_LIMITS.RESET_PASSWORD);
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
