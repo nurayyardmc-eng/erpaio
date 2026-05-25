@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatNullableN } from "@/lib/charts/format";
+import { changeDelta } from "@/lib/format/changeDelta";
 
 interface DashboardMetric {
   key: string;
@@ -66,8 +67,7 @@ export default function OverviewPage() {
 function MetricCard({ metric }: { metric: DashboardMetric }) {
   const hasData = metric.latest !== null;
   const change = metric.changePercent;
-  const changeColor =
-    change === null ? "#94A3B8" : change > 0 ? "#10B981" : change < 0 ? "#EF4444" : "#475569";
+  const delta = changeDelta(change);
 
   return (
     <div style={{
@@ -93,9 +93,9 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
             <div style={{ fontSize: 22, color: "#0A0A0A", fontWeight: 700 }}>
               {formatValue(metric.latest)}
             </div>
-            {change !== null && (
-              <div style={{ fontSize: 11, color: changeColor }}>
-                {change > 0 ? "↑" : change < 0 ? "↓" : "→"} {Math.abs(change).toFixed(1)}%
+            {!delta.isMissing && (
+              <div style={{ fontSize: 11, color: delta.color }}>
+                {delta.arrow} {delta.absText}%
               </div>
             )}
           </div>
