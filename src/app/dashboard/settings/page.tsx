@@ -9,6 +9,7 @@ import { confirmDialog } from "@/components/Confirm";
 import { useI18n } from "@/lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Dictionary, type Locale } from "@/lib/i18n/dictionary";
 import { colors } from "@/lib/theme";
+import { formatRelativeTime, formatTokens } from "@/lib/format/time";
 
 interface TenantSettings {
   id: string;
@@ -555,23 +556,7 @@ interface JobHealthData {
   alertsCreated: number;
 }
 
-function formatRelativeTime(iso: string | null, locale: string): string {
-  if (!iso) return "—";
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60_000);
-  const hour = Math.floor(diff / 3_600_000);
-  const day = Math.floor(diff / 86_400_000);
-  if (locale === "en") {
-    if (min < 1) return "just now";
-    if (min < 60) return `${min}m ago`;
-    if (hour < 24) return `${hour}h ago`;
-    return `${day}d ago`;
-  }
-  if (min < 1) return "az önce";
-  if (min < 60) return `${min}d önce`;
-  if (hour < 24) return `${hour}sa önce`;
-  return `${day}g önce`;
-}
+// formatRelativeTime + formatTokens moved to @/lib/format/time (Track XXXXX)
 
 function TenantCronHealthSection({ t }: { t: Dictionary }) {
   const { locale } = useI18n();
@@ -1317,8 +1302,4 @@ const secondaryBtn: React.CSSProperties = {
   fontWeight: 600,
 };
 
-function formatTokens(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-  return n.toLocaleString();
-}
+// formatTokens moved to @/lib/format/time (Track XXXXX)
