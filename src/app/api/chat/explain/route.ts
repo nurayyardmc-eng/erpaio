@@ -7,6 +7,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { buildExplainPrompt } from "@/lib/ai/explainPrompt";
 
 const client = new Anthropic();
 
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
       system: "Türkçe iş zekası uzmanısın. SQL sorusunu, üretilen SQL'i ve dönen ilk satırları gör. Türkçe, 2-4 cümlelik kısa bir özet yaz: ne sorgulandı, sonuç ne anlama geliyor, dikkat çekici nokta varsa belirt. Sadece düz metin, başka hiçbir şey yazma. Sayıları yorumla, '%X artış' gibi.",
       messages: [{
         role: "user",
-        content: `Soru: "${question}"\nSQL: ${sql.slice(0, 800)}\nToplam satır: ${totalRows}\nİlk satırlar:\n${JSON.stringify(topRows.slice(0, 10))}\n\nKısa Türkçe yorumun:`,
+        content: buildExplainPrompt(question, sql, topRows, totalRows),
       }],
     });
 
