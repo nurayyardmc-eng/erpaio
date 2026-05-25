@@ -6,7 +6,8 @@
 // Token format: 32 random bytes encoded as base64url (43 chars, no padding).
 // Lookup key: SHA-256 hash of the raw token, stored in ApiToken.tokenHash.
 
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
+import { sha256Hex } from "@/lib/crypto/hash";
 
 /** Generate a fresh API token. Plaintext shown ONCE to the user. */
 export function generateApiToken(): string {
@@ -15,5 +16,5 @@ export function generateApiToken(): string {
 
 /** SHA-256 hash of an API token — the value stored in DB and used for lookup. */
 export function hashApiToken(raw: string): string {
-  return createHash("sha256").update(raw).digest("hex");
+  return sha256Hex(raw);
 }

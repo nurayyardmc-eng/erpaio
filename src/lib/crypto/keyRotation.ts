@@ -1,15 +1,15 @@
-import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
+import { sha256Hex } from "./hash";
 
 const log = childLogger({ component: "key-rotation" });
 
 /**
  * Encryption key'i hash'le — DB'de plaintext key tutmamak için.
- * SHA-256 hex output. Deterministic.
+ * SHA-256 hex output. Deterministic. Track MMMMMM: delegates to sha256Hex.
  */
 export function hashEncryptionKey(raw: string): string {
-  return createHash("sha256").update(raw).digest("hex");
+  return sha256Hex(raw);
 }
 
 export async function registerCurrentKey(): Promise<{ version: number; isNew: boolean }> {
