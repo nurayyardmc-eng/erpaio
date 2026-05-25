@@ -9,6 +9,7 @@ import { jsonError, localizedError, resolveLocale } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
+import { maskEmail } from "@/lib/auth/maskEmail";
 
 /**
  * Email change isteği başlatma.
@@ -137,15 +138,4 @@ export async function POST(req: Request) {
   return Response.json({ ok: true });
 }
 
-/**
- * Email mask: t***@example.com — audit log'da raw görünmesin.
- * Pure helper test edilebilir; basit + defensive.
- */
-function maskEmail(email: string): string {
-  const at = email.indexOf("@");
-  if (at <= 0) return "***";
-  const local = email.slice(0, at);
-  const domain = email.slice(at);
-  if (local.length <= 1) return `*${domain}`;
-  return `${local[0]}***${domain}`;
-}
+// maskEmail moved to @/lib/auth/maskEmail (Track LLLLLL).
