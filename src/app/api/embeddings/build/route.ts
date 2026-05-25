@@ -4,7 +4,7 @@ import { verifyCronAuth } from "@/lib/cron/auth";
 import { queryERP } from "@/lib/db/connector";
 import { embedAndStore } from "@/lib/embeddings";
 import { childLogger } from "@/lib/observability/logger";
-import { loadProfile } from "@/lib/erpProfiles";
+import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { groupColumnsByTable, buildEmbeddingText, type SchemaRow } from "@/lib/embeddings/buildText";
 
 export const maxDuration = 300;
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
            WHERE t.TABLE_TYPE = 'BASE TABLE'`,
         )) as unknown as SchemaRow[];
 
-        const profileSlug = conn.erpProfile ?? (conn.erpType === "nebim_v3" ? "nebim_v3" : null);
+        const profileSlug = resolveProfileSlug(conn.erpType, conn.erpProfile);
         const profile = profileSlug ? loadProfile(profileSlug) : null;
 
         const tableMap = groupColumnsByTable(rows);

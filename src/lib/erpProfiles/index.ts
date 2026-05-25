@@ -53,6 +53,8 @@ export interface ErpProfile {
 
 const cache = new Map<string, ErpProfile>();
 
+export { resolveProfileSlug } from "./resolveSlug";
+
 export function loadProfile(slug: string): ErpProfile | null {
   if (cache.has(slug)) return cache.get(slug)!;
 

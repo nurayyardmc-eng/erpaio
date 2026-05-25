@@ -10,7 +10,7 @@ import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
-import { loadProfile, profileToPromptContext } from "@/lib/erpProfiles";
+import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
 import Anthropic from "@anthropic-ai/sdk";
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
           send("cache_hit", { sql, cacheId });
         } else {
           send("phase", { phase: "ai" });
-          const profileSlug = conn.erpProfile ?? (conn.erpType === "nebim_v3" ? "nebim_v3" : null);
+          const profileSlug = resolveProfileSlug(conn.erpType, conn.erpProfile);
           const erpProfile = profileSlug ? loadProfile(profileSlug) : null;
           const schema = await getSchema(connectionId);
           const profileContext = erpProfile ? profileToPromptContext(erpProfile) : "";
