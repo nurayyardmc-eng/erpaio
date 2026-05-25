@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth/dual";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { isValidAvatarDataUrl, pickProfileUpdateAction } from "@/lib/auth/avatar";
 
 export async function GET(req: Request) {
   const result = await requireAuth(req);
@@ -57,7 +58,7 @@ export async function PATCH(req: Request) {
     changedFields.push("name");
   }
   if (body.data.avatarBase64 !== undefined) {
-    if (body.data.avatarBase64 && !body.data.avatarBase64.startsWith("data:image/")) {
+    if (!isValidAvatarDataUrl(body.data.avatarBase64)) {
       return localizedError(req, 400, {
         tr: "Geçersiz görsel formatı.",
         en: "Invalid image format.",
@@ -81,9 +82,7 @@ export async function PATCH(req: Request) {
     userId: user.id,
     tenantId: user.tenantId,
     email: updated.email,
-    action: changedFields.includes("avatar") && changedFields.length === 1
-      ? "profile.avatar.update"
-      : "profile.update",
+    action: pickProfileUpdateAction(changedFields),
     metadata: { fields: changedFields },
     ipAddress,
     userAgent,
