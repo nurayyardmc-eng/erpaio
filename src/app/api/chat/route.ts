@@ -16,6 +16,7 @@ import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotati
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
+import { parseAiResponse } from "@/lib/ai/parseResponse";
 
 const client = new Anthropic();
 
@@ -27,13 +28,6 @@ const BodySchema = z.object({
   sessionId: z.string().nullish(),
   forceRun: z.boolean().nullish(),
 });
-
-interface AiResponse {
-  sql: string;
-  confidence: number;
-  explanation: string;
-  ambiguity: string | null;
-}
 
 async function loadConversationHistory(
   sessionId: string,
@@ -57,33 +51,6 @@ async function loadConversationHistory(
         : m.content;
       return { role: "assistant" as const, content: summary };
     });
-}
-
-function parseAiResponse(raw: string): AiResponse {
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim();
-
-  try {
-    const parsed = JSON.parse(cleaned) as Partial<AiResponse>;
-    return {
-      sql: typeof parsed.sql === "string" ? parsed.sql.trim() : "",
-      confidence:
-        typeof parsed.confidence === "number" && parsed.confidence >= 0 && parsed.confidence <= 1
-          ? parsed.confidence
-          : 0.5,
-      explanation: typeof parsed.explanation === "string" ? parsed.explanation : "",
-      ambiguity: typeof parsed.ambiguity === "string" ? parsed.ambiguity : null,
-    };
-  } catch {
-    return {
-      sql: cleaned,
-      confidence: 0.7,
-      explanation: "",
-      ambiguity: null,
-    };
-  }
 }
 
 export async function POST(req: Request) {
