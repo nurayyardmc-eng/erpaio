@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { extractMetricValue, PREVIEW_METRIC_ALIASES } from "@/lib/anomaly/extractMetricValue";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -42,31 +43,22 @@ export async function POST(
 
   try {
     const rows = await queryERP(m.connectionId, m.sql);
-    const row = rows[0];
-    if (!row) {
+    if (!rows[0]) {
       return localizedError(req, 422, {
         tr: "SQL hiç satır döndürmedi.",
         en: "SQL returned no rows.",
       });
     }
-    // CustomMetric SQL schema POST'ta validate: metric_value (veya value/val)
-    // kolonu zorunlu. cron executeMetricQuery row.metric_value bekler, ama
-    // POST regex value/val da kabul ediyordu. Burada üçünü de dene.
-    const raw = row.metric_value ?? row.value ?? row.val;
-    if (raw === undefined || raw === null) {
-      return localizedError(req, 422, {
-        tr: "SQL sonucunda metric_value kolonu bulunamadı.",
-        en: "SQL result missing metric_value column.",
-      });
+    // CustomMetric SQL schema POST'ta validate: metric_value / value / val
+    // alias'larını kabul ediyor. Cron strict (sadece metric_value); preview
+    // burada PREVIEW_METRIC_ALIASES ile esnek. Track SSSSS — extracted.
+    const r = extractMetricValue(rows[0], PREVIEW_METRIC_ALIASES);
+    if (!r.ok) {
+      return localizedError(req, 422, r.reason === "missing"
+        ? { tr: "SQL sonucunda metric_value kolonu bulunamadı.", en: "SQL result missing metric_value column." }
+        : { tr: "metric_value sayısal değil.", en: "metric_value is not numeric." });
     }
-    const value = Number(raw);
-    if (Number.isNaN(value)) {
-      return localizedError(req, 422, {
-        tr: "metric_value sayısal değil.",
-        en: "metric_value is not numeric.",
-      });
-    }
-    return Response.json({ value, key: m.key, label: m.label });
+    return Response.json({ value: r.value, key: m.key, label: m.label });
   } catch (err) {
     return localizedError(req, 500, {
       tr: err instanceof Error ? `SQL hatası: ${err.message}` : "SQL hatası",

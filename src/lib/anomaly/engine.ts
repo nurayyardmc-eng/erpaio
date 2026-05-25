@@ -15,6 +15,7 @@ import {
   FP_SUPPRESS_WINDOW_DAYS,
   shouldSuppressByFpCount,
 } from "./suppression";
+import { extractMetricValue } from "./extractMetricValue";
 
 export interface TenantRunResult {
   tenantId: string;
@@ -194,16 +195,15 @@ async function executeMetricQuery(
   const result = await pool.request().query(query.sql);
   const row = result.recordset?.[0];
 
-  if (!row || row.metric_value === undefined || row.metric_value === null) {
-    throw new Error(`Query "${query.key}" returned no rows or null metric_value`);
+  const r = extractMetricValue(row);
+  if (!r.ok) {
+    const msg =
+      r.reason === "missing"
+        ? "returned no rows or null metric_value"
+        : "returned non-numeric metric_value";
+    throw new Error(`Query "${query.key}" ${msg}`);
   }
-
-  const value = Number(row.metric_value);
-  if (Number.isNaN(value)) {
-    throw new Error(`Query "${query.key}" returned non-numeric metric_value`);
-  }
-
-  return value;
+  return r.value;
 }
 
 // Exported for test (Track MMMM). Pure algorithm dispatcher.
