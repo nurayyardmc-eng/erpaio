@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
+import { timingSafeEqual } from "./timingSafeEqual";
 
 /**
  * Cron auth — bearer secret (production: GitHub Actions / Vercel cron) ya da
@@ -39,11 +40,3 @@ export async function verifyCronAuth(req: NextRequest): Promise<{ ok: boolean; r
   return { ok: false, reason: "Missing Authorization header" };
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
-}
