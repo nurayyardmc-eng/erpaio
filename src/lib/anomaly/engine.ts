@@ -206,7 +206,8 @@ async function executeMetricQuery(
   return value;
 }
 
-function runDetector(
+// Exported for test (Track MMMM). Pure algorithm dispatcher.
+export function runDetector(
   query: MetricQuery, current: number, history: number[],
 ): AnomalyResult {
   switch (query.algorithm) {
