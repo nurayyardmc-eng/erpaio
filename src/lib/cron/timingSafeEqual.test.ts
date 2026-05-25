@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { timingSafeEqual } from "./timingSafeEqual";
+import { timingSafeEqual, verifyBearerHeader } from "./timingSafeEqual";
 
 describe("cron/auth/timingSafeEqual", () => {
   it("identical strings → true", () => {
@@ -59,5 +59,76 @@ describe("cron/auth/timingSafeEqual", () => {
   it("differs only in whitespace → false", () => {
     expect(timingSafeEqual("abc", "abc ")).toBe(false);
     expect(timingSafeEqual(" abc", "abc")).toBe(false);
+  });
+});
+
+describe("cron/auth/verifyBearerHeader", () => {
+  it("null/empty header → matched=false (caller does fallback)", () => {
+    expect(verifyBearerHeader(null, "secret")).toEqual({ matched: false });
+    expect(verifyBearerHeader("", "secret")).toEqual({ matched: false });
+  });
+
+  it("header present, no CRON_SECRET configured → ok=false with reason", () => {
+    const r = verifyBearerHeader("Bearer abc", undefined);
+    expect(r).toEqual({
+      matched: true,
+      ok: false,
+      reason: "CRON_SECRET not configured",
+    });
+  });
+
+  it("correct Bearer + secret → matched + ok", () => {
+    expect(verifyBearerHeader("Bearer s3cret", "s3cret")).toEqual({
+      matched: true,
+      ok: true,
+    });
+  });
+
+  it("mismatch secret → matched=true ok=false with 'Invalid cron secret'", () => {
+    expect(verifyBearerHeader("Bearer wrong", "right")).toEqual({
+      matched: true,
+      ok: false,
+      reason: "Invalid cron secret",
+    });
+  });
+
+  it("Bearer prefix required (no prefix → mismatch reason)", () => {
+    expect(verifyBearerHeader("s3cret", "s3cret")).toEqual({
+      matched: true,
+      ok: false,
+      reason: "Invalid cron secret",
+    });
+  });
+
+  it("Wrong prefix case (bearer vs Bearer) → mismatch (case-sensitive)", () => {
+    expect(verifyBearerHeader("bearer s3cret", "s3cret")).toEqual({
+      matched: true,
+      ok: false,
+      reason: "Invalid cron secret",
+    });
+  });
+
+  it("extra space after Bearer → mismatch", () => {
+    expect(verifyBearerHeader("Bearer  s3cret", "s3cret")).toEqual({
+      matched: true,
+      ok: false,
+      reason: "Invalid cron secret",
+    });
+  });
+
+  it("header with only 'Bearer ' (no secret) → mismatch", () => {
+    expect(verifyBearerHeader("Bearer ", "secret")).toEqual({
+      matched: true,
+      ok: false,
+      reason: "Invalid cron secret",
+    });
+  });
+
+  it("empty CRON_SECRET treated as 'not configured' (falsy)", () => {
+    expect(verifyBearerHeader("Bearer x", "")).toEqual({
+      matched: true,
+      ok: false,
+      reason: "CRON_SECRET not configured",
+    });
   });
 });

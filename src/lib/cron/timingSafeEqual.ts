@@ -14,3 +14,33 @@ export function timingSafeEqual(a: string, b: string): boolean {
   }
   return result === 0;
 }
+
+/**
+ * Pure bearer-header verifier for cron auth.
+ *
+ * Track SSSS extraction: separates the timing-safe + env-secret + missing-
+ * header decision tree from verifyCronAuth's NextAuth/Prisma fallback path
+ * so the hot path can be unit-tested without mocking.
+ *
+ * Returns:
+ *  - { matched: true, ok: true } — header present, matches CRON_SECRET
+ *  - { matched: true, ok: false, reason: "..." } — header present but rejected
+ *  - { matched: false }            — no Authorization header (caller does fallback)
+ */
+export function verifyBearerHeader(
+  authHeader: string | null,
+  cronSecret: string | undefined,
+):
+  | { matched: false }
+  | { matched: true; ok: true }
+  | { matched: true; ok: false; reason: string } {
+  if (!authHeader) return { matched: false };
+  if (!cronSecret) {
+    return { matched: true, ok: false, reason: "CRON_SECRET not configured" };
+  }
+  const expected = `Bearer ${cronSecret}`;
+  if (timingSafeEqual(authHeader, expected)) {
+    return { matched: true, ok: true };
+  }
+  return { matched: true, ok: false, reason: "Invalid cron secret" };
+}
