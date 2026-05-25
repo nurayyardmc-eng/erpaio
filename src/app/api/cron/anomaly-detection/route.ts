@@ -7,6 +7,7 @@ import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { runAnomalyDetectionForTenant } from "@/lib/anomaly/engine";
 import { childLogger } from "@/lib/observability/logger";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/observability/requestId";
+import { runWithConcurrency } from "@/lib/http/concurrency";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -173,31 +174,3 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function runWithConcurrency<T, R>(
-  items: T[],
-  concurrency: number,
-  worker: (item: T) => Promise<R>,
-): Promise<PromiseSettledResult<R>[]> {
-  const results: PromiseSettledResult<R>[] = new Array(items.length);
-  let nextIndex = 0;
-
-  async function runWorker() {
-    while (true) {
-      const i = nextIndex++;
-      if (i >= items.length) return;
-      try {
-        const value = await worker(items[i]);
-        results[i] = { status: "fulfilled", value };
-      } catch (reason) {
-        results[i] = { status: "rejected", reason };
-      }
-    }
-  }
-
-  const workers = Array.from(
-    { length: Math.min(concurrency, items.length) },
-    () => runWorker(),
-  );
-  await Promise.all(workers);
-  return results;
-}
