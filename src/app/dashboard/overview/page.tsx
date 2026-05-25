@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { formatNullableN } from "@/lib/charts/format";
 import { changeDelta } from "@/lib/format/changeDelta";
+import { sparklinePoints } from "@/lib/charts/sparkline";
 
 interface DashboardMetric {
   key: string;
@@ -116,19 +117,10 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 }
 
 function Sparkline({ values }: { values: number[] }) {
-  if (values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
   const w = 240;
   const h = 32;
-  const points = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * w;
-      const y = h - ((v - min) / range) * h;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  const points = sparklinePoints(values, w, h);
+  if (!points) return null;
   return (
     <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: "block" }}>
       <polyline points={points} fill="none" stroke="#0A0A0A" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
