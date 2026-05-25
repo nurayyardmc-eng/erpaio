@@ -27,6 +27,7 @@ import MiniChart from "@/components/MiniChart";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { useI18n } from "@/lib/i18n/context";
+import { sliceHighlight } from "@/lib/chat/highlight";
 
 interface Connection {
   id: string;
@@ -57,13 +58,11 @@ interface ChatSearchHit {
 
 /**
  * Snippet'te eşleşen kısımı bold + amber background ile vurgular.
- * matchStart -1 ise düz text döner. Pure render — module level.
+ * Pure slicing → @/lib/chat/highlight (Track WWWWW).
  */
 function renderHighlightedSnippet(text: string, matchStart: number, matchLength: number): React.ReactNode {
-  if (matchStart < 0 || matchLength <= 0) return text;
-  const before = text.slice(0, matchStart);
-  const match = text.slice(matchStart, matchStart + matchLength);
-  const after = text.slice(matchStart + matchLength);
+  const { before, match, after } = sliceHighlight(text, matchStart, matchLength);
+  if (!match) return text;
   return (
     <>
       {before}
