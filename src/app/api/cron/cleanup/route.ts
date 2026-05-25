@@ -5,51 +5,14 @@ import { verifyCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { sendCronHealthDigest } from "@/lib/cron/healthDigest";
 import { childLogger } from "@/lib/observability/logger";
+import { RETENTION, ONE_DAY_MS } from "@/lib/cron/retention";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const log = childLogger({ component: "cron-cleanup" });
 
-const ONE_DAY_MS = 24 * 60 * 60_000;
-
-/**
- * Retention policies — KVKK + GDPR + operational needs:
- *
- * - ProcessedWebhook: 30 gün. Stripe retry penceresi 3 gün, 30 gün safe margin.
- * - CronRun: 90 gün. Cron health dashboard'a yetecek geçmiş, sonsuz değil.
- * - PasswordResetToken: 7 gün (expired olanlar). Token zaten 1 saat geçerli.
- * - EmailVerificationToken: 30 gün (expired). 24 saat geçerli.
- * - Alert (resolved/acked): 180 gün. status="open" Alert'ler asla silinmez.
- * - SlowQueryLog: 30 gün. Eşik üstü ERP query trace; perf inceleme için
- *   son 30 gün yeterli, eski log noise yapar + tablo büyür.
- * - AnomalyBaseline: 90 gün. Engine `take: historyWindow+1` (default 30)
- *   ile son N kayıtları okur; 90 gün rolling history yeterli + yıllık
- *   metric scale'de tablo şişmesini engeller.
- * - WatchlistTrigger: 90 gün. Detay sayfası son 50 tetiklenmeyi gösterir;
- *   günde ortalama 1 hit'te 90 gün ≈ 90 tetiklenme — limit'in üstünde.
- *   Sık tetiklenen watchlist'lerde de tablo unbounded grow olmaz.
- *
- * SAKLI TUTULANLAR (silinmiyor):
- * - ConsentLog: KVKK md. 7 + 11 audit trail, kalıcı.
- * - ActivityLog: KVKK md. 13 işleme faaliyeti, en az 2 yıl. (Otomatik
- *   temizleme yok — büyürse manuel ya da ayrı policy.)
- * - MfaRecoveryCode: zaten consumeRecoveryCode kullandıktan sonra usedAt set
- *   ediliyor; user silinince cascade.
- * - Alert (open): kullanıcı işleme alana kadar tutulur.
- * - Tenant/User: business data, manuel.
- */
-const RETENTION = {
-  processedWebhookDays: 30,
-  cronRunDays: 90,
-  passwordResetTokenExpiredDays: 7,
-  emailVerificationTokenExpiredDays: 30,
-  resolvedAlertDays: 180,
-  notificationLogDays: 180,
-  slowQueryLogDays: 30,
-  anomalyBaselineDays: 90,
-  watchlistTriggerDays: 90,
-} as const;
+// Retention policy table moved to @/lib/cron/retention (Track IIIII).
 
 export async function GET(req: NextRequest) {
   const auth = await verifyCronAuth(req);
