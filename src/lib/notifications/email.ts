@@ -3,12 +3,13 @@ import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
 import { prisma } from "@/lib/db/prisma";
 import { recordNotification, maskRecipient } from "./log";
+import { pickEmailSender, fromDomainOf } from "./sender";
 
 const log = childLogger({ component: "email" });
 
 const apiKey = process.env.RESEND_API_KEY;
 const defaultFrom = process.env.RESEND_FROM ?? "ERPAIO <noreply@erpaio.app>";
-const fromDomain = (process.env.RESEND_FROM ?? "noreply@erpaio.app").match(/<?([^>]+@[^>]+)>?/)?.[1]?.split("@")[1] ?? "erpaio.app";
+const fromDomain = fromDomainOf(process.env.RESEND_FROM ?? "noreply@erpaio.app");
 
 const client = apiKey ? new Resend(apiKey) : null;
 
@@ -24,10 +25,7 @@ async function resolveSenderFor(tenantId: string): Promise<string> {
     select: { brandingSenderName: true, plan: true },
   }).catch(() => null);
 
-  const senderName = tenant?.brandingSenderName?.trim();
-  const from = senderName && tenant?.plan === "enterprise"
-    ? `${senderName} <noreply@${fromDomain}>`
-    : defaultFrom;
+  const from = pickEmailSender(tenant?.plan, tenant?.brandingSenderName, defaultFrom, fromDomain);
 
   senderCache.set(tenantId, { from, ts: Date.now() });
   return from;
