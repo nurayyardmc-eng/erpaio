@@ -1,5 +1,6 @@
 "use client";
 import type { ChartHint } from "@/lib/charts/detect";
+import { formatN } from "@/lib/charts/format";
 
 const COLORS = ["#0A0A0A", "#10B981", "#F59E0B", "#F59E0B", "#9C8AFF", "#EF4444"];
 
@@ -157,8 +158,4 @@ function ChartHeader({ title, reason }: { title: string; reason: string }) {
   );
 }
 
-function formatN(n: number): string {
-  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1) + "M";
-  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1) + "k";
-  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(n);
-}
+// formatN moved to @/lib/charts/format (Track NNNNN)
