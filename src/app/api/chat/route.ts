@@ -18,6 +18,7 @@ import { z } from "zod";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
 import { confidenceBucket } from "@/lib/ai/confidence";
+import { pickDialect } from "@/lib/ai/dialect";
 
 const client = new Anthropic();
 
@@ -141,10 +142,8 @@ export async function POST(req: Request) {
       const annotationsContext = annotationsToPromptContext(await getAnnotations(tenantId));
       const erpName = erpProfile?.name ?? "ERP";
 
-      // Dialect-aware: Postgres / MS SQL / MySQL syntax differences
-      const isPostgres = conn.erpType === "postgres";
-      const isMsSql = !isPostgres && (conn.erpType === "nebim_v3" || conn.erpType === "dynamics365" || !conn.erpProfile);
-      const dialectName = isPostgres ? "PostgreSQL" : isMsSql ? "SQL Server" : "ERP veritabanı";
+      // Dialect-aware: Postgres / MS SQL / MySQL syntax differences (DDDDD)
+      const { name: dialectName, isPostgres } = pickDialect(conn.erpType, conn.erpProfile);
 
       const dialectRules = isPostgres
         ? `- String literal: '...' (NVARCHAR yok). Türkçe karakterler doğrudan UTF-8.
