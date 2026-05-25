@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
+import { computeReliability } from "@/lib/cache/reliability";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
@@ -28,10 +29,7 @@ export async function GET(req: Request) {
   return Response.json({
     queries: cached.map((q) => ({
       ...q,
-      reliability:
-        q.successCount + q.failCount > 0
-          ? q.successCount / (q.successCount + q.failCount)
-          : 1,
+      reliability: computeReliability(q.successCount, q.failCount),
     })),
   });
 }
