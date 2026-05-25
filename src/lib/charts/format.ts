@@ -16,6 +16,15 @@ export function formatN(n: number): string {
   return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(n);
 }
 
+/**
+ * Nullable variant of formatN — null/undefined render as em-dash
+ * placeholder. Used by metric tiles that may not have data yet.
+ */
+export function formatNullableN(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "—";
+  return formatN(n);
+}
+
 export interface PieSliceInput {
   label: string;
   value: number;

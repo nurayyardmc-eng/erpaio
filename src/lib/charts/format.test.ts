@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatN, pieSlices } from "./format";
+import { formatN, pieSlices, formatNullableN } from "./format";
 
 describe("charts/format/formatN", () => {
   it("0 → '0'", () => {
@@ -133,5 +133,38 @@ describe("charts/format/pieSlices", () => {
     const r = pieSlices([{ label: "Sales", value: 1500 }]);
     expect(r[0].label).toBe("Sales");
     expect(r[0].value).toBe(1500);
+  });
+});
+
+describe("charts/format/formatNullableN", () => {
+  it("null → em-dash placeholder", () => {
+    expect(formatNullableN(null)).toBe("—");
+  });
+
+  it("undefined → em-dash placeholder", () => {
+    expect(formatNullableN(undefined)).toBe("—");
+  });
+
+  it("0 is shown (not treated as empty)", () => {
+    expect(formatNullableN(0)).toBe("0");
+  });
+
+  it("negative numbers delegate to formatN", () => {
+    expect(formatNullableN(-2500)).toBe("-2.5k");
+  });
+
+  it("M tier delegates", () => {
+    expect(formatNullableN(2_500_000)).toBe("2.5M");
+  });
+
+  it("k tier delegates", () => {
+    expect(formatNullableN(1500)).toBe("1.5k");
+  });
+
+  it("matches formatN output for every non-null value (delegation invariant)", () => {
+    const samples = [0, 1, 500, 999, 1000, 12345, 1_000_000, 5_500_000, -300];
+    for (const n of samples) {
+      expect(formatNullableN(n)).toBe(formatN(n));
+    }
   });
 });

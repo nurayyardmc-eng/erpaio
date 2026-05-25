@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { formatNullableN } from "@/lib/charts/format";
 
 interface DashboardMetric {
   key: string;
@@ -135,9 +136,5 @@ function Sparkline({ values }: { values: number[] }) {
   );
 }
 
-function formatValue(v: number | null): string {
-  if (v === null) return "—";
-  if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
-  if (Math.abs(v) >= 1_000) return (v / 1_000).toFixed(1) + "k";
-  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(v);
-}
+// formatValue moved to @/lib/charts/format → formatNullableN (Track YYYYY)
+const formatValue = formatNullableN;
