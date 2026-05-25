@@ -8,6 +8,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { escapeHtml } from "@/lib/html/escape";
 
 const PostSchema = z.object({
   email: z.string().email(),
@@ -108,6 +109,3 @@ export async function POST(req: Request) {
   return Response.json({ ok: true, invitationId: invitation.id });
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
-}

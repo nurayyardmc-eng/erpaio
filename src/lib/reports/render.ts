@@ -10,15 +10,10 @@
  * (UTC). Tests use vi.useFakeTimers to make them deterministic.
  */
 
-export function escHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[c]!));
-}
+// Track FFFFF: implementation moved to @/lib/html/escape. Re-export keeps
+// existing call sites + tests stable.
+import { escapeHtml as _escapeHtml } from "@/lib/html/escape";
+export const escHtml = _escapeHtml;
 
 export const SCHEDULE_FILTER: Record<string, () => boolean> = {
   hourly: () => true,
