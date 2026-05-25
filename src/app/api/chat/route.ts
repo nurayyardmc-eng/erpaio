@@ -20,6 +20,7 @@ import { parseAiResponse } from "@/lib/ai/parseResponse";
 import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect } from "@/lib/ai/dialect";
 import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
+import { calculateBillableTokens, isPromptCacheHit } from "@/lib/ai/tokenUsage";
 
 const client = new Anthropic();
 
@@ -227,10 +228,7 @@ ${schema}`;
         cache_creation_input_tokens?: number;
         cache_read_input_tokens?: number;
       };
-      const totalTokens =
-        usage.input_tokens +
-        usage.output_tokens +
-        (usage.cache_creation_input_tokens ?? 0);
+      const totalTokens = calculateBillableTokens(usage);
       void recordUsage(tenantId, totalTokens);
       log.info(
         {
@@ -245,7 +243,7 @@ ${schema}`;
         },
         "Claude generated SQL",
       );
-      if (typeof usage.cache_read_input_tokens === "number" && usage.cache_read_input_tokens > 0) {
+      if (isPromptCacheHit(usage)) {
         Sentry.setTag("chat.prompt_cache_hit", true);
       }
       Sentry.setTag("chat.confidence_bucket", confidenceBucket(confidence));
