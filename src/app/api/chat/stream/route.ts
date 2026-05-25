@@ -16,6 +16,7 @@ import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotati
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { sseFrame } from "@/lib/http/sse";
 
 const client = new Anthropic();
 export const maxDuration = 60;
@@ -25,10 +26,6 @@ const BodySchema = z.object({
   connectionId: z.string(),
   sessionId: z.string().nullish(),
 });
-
-function sse(event: string, data: unknown): string {
-  return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-}
 
 export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
@@ -77,7 +74,7 @@ export async function POST(req: Request) {
     async start(controller) {
       const encoder = new TextEncoder();
       const send = (event: string, data: unknown) => {
-        controller.enqueue(encoder.encode(sse(event, data)));
+        controller.enqueue(encoder.encode(sseFrame(event, data)));
       };
 
       try {
