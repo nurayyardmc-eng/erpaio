@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { compareThreshold, extractFirstNumeric } from "@/lib/threshold/compare";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -16,17 +17,9 @@ export const maxDuration = 30;
  *
  * Tenant-scope: id + tenantId match check başta; başka tenant'ın watchlist'i
  * 404.
+ *
+ * Track ZZZZ: compare + numeric extraction → @/lib/threshold/compare.
  */
-function compare(op: string, a: number, b: number): boolean {
-  switch (op) {
-    case "lt": return a < b;
-    case "lte": return a <= b;
-    case "gt": return a > b;
-    case "gte": return a >= b;
-    case "eq": return a === b;
-    default: return false;
-  }
-}
 
 export async function POST(
   req: Request,
@@ -72,13 +65,7 @@ export async function POST(
   let value: number | null = null;
   try {
     const rows = await queryERP(w.connectionId, sqlStr);
-    const firstRow = rows[0];
-    if (firstRow) {
-      const firstNumeric = Object.values(firstRow).find((v) => typeof v === "number");
-      if (typeof firstNumeric === "number") {
-        value = firstNumeric;
-      }
-    }
+    value = extractFirstNumeric(rows[0]);
   } catch (err) {
     return localizedError(req, 500, {
       tr: err instanceof Error ? `SQL hatası: ${err.message}` : "SQL hatası",
@@ -93,7 +80,7 @@ export async function POST(
     });
   }
 
-  const wouldTrigger = compare(w.thresholdOp, value, w.thresholdVal);
+  const wouldTrigger = compareThreshold(w.thresholdOp, value, w.thresholdVal);
 
   return Response.json({
     value,

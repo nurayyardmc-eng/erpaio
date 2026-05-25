@@ -28,3 +28,23 @@ export function compareThreshold(op: string, value: number, threshold: number): 
 export function thresholdOpSymbol(op: ThresholdOp): string {
   return { lt: "<", lte: "≤", gt: ">", gte: "≥", eq: "=" }[op];
 }
+
+/**
+ * Pulls the first numeric value out of a watchlist SQL result row.
+ *
+ * Watchlist users phrase the question naturally, so the SQL projection may
+ * include a label column ("Marka", "Tarih") before the metric. We scan
+ * columns in object-key order and return the first number-typed value.
+ *
+ * Returns null if no numeric column exists — caller maps this to a 422
+ * "could not extract a numeric value" response.
+ *
+ * Track ZZZZ — extracted to share between watchlists cron + preview route.
+ */
+export function extractFirstNumeric(row: Record<string, unknown> | undefined | null): number | null {
+  if (!row) return null;
+  for (const v of Object.values(row)) {
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+  }
+  return null;
+}

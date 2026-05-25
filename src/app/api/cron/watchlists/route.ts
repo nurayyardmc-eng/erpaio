@@ -7,7 +7,7 @@ import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { childLogger } from "@/lib/observability/logger";
-import { compareThreshold } from "@/lib/threshold/compare";
+import { compareThreshold, extractFirstNumeric } from "@/lib/threshold/compare";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -51,11 +51,8 @@ export async function GET(req: NextRequest) {
       if (!sql) continue;
 
       const rows = await queryERP(w.connectionId, sql);
-      const firstRow = rows[0];
-      if (!firstRow) continue;
-
-      const firstNumeric = Object.values(firstRow).find((v) => typeof v === "number");
-      if (typeof firstNumeric !== "number") continue;
+      const firstNumeric = extractFirstNumeric(rows[0]);
+      if (firstNumeric === null) continue;
 
       const hit = compareThreshold(w.thresholdOp, firstNumeric, w.thresholdVal);
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { compareThreshold, thresholdOpSymbol } from "./compare";
+import { compareThreshold, thresholdOpSymbol, extractFirstNumeric } from "./compare";
 
 describe("threshold/compare/compareThreshold", () => {
   describe("lt (less than)", () => {
@@ -95,5 +95,61 @@ describe("threshold/compare/thresholdOpSymbol", () => {
     expect(thresholdOpSymbol("gt")).toBe(">");
     expect(thresholdOpSymbol("gte")).toBe("≥");
     expect(thresholdOpSymbol("eq")).toBe("=");
+  });
+});
+
+describe("threshold/compare/extractFirstNumeric", () => {
+  it("null/undefined row → null", () => {
+    expect(extractFirstNumeric(null)).toBeNull();
+    expect(extractFirstNumeric(undefined)).toBeNull();
+  });
+
+  it("empty object → null (no numeric columns)", () => {
+    expect(extractFirstNumeric({})).toBeNull();
+  });
+
+  it("single numeric column → returns value", () => {
+    expect(extractFirstNumeric({ total: 42 })).toBe(42);
+  });
+
+  it("skips leading non-numeric columns (label + metric)", () => {
+    expect(extractFirstNumeric({ marka: "Nike", total: 150 })).toBe(150);
+  });
+
+  it("picks FIRST numeric (object-key order)", () => {
+    expect(extractFirstNumeric({ a: 10, b: 20, c: 30 })).toBe(10);
+  });
+
+  it("ignores string-like numbers", () => {
+    expect(extractFirstNumeric({ price: "100" })).toBeNull();
+  });
+
+  it("ignores booleans (typeof boolean !== number)", () => {
+    expect(extractFirstNumeric({ active: true, total: 5 })).toBe(5);
+  });
+
+  it("ignores null/undefined in cells", () => {
+    expect(extractFirstNumeric({ a: null, b: undefined, c: 7 })).toBe(7);
+  });
+
+  it("zero is a valid number (returned, not skipped)", () => {
+    expect(extractFirstNumeric({ count: 0 })).toBe(0);
+  });
+
+  it("negative numbers valid", () => {
+    expect(extractFirstNumeric({ delta: -50 })).toBe(-50);
+  });
+
+  it("NaN skipped (not finite)", () => {
+    expect(extractFirstNumeric({ x: NaN, y: 10 })).toBe(10);
+  });
+
+  it("Infinity skipped (not finite)", () => {
+    expect(extractFirstNumeric({ x: Infinity, y: 10 })).toBe(10);
+    expect(extractFirstNumeric({ x: -Infinity, y: 10 })).toBe(10);
+  });
+
+  it("Date objects not picked (typeof Date === 'object')", () => {
+    expect(extractFirstNumeric({ at: new Date(), total: 5 })).toBe(5);
   });
 });
