@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { stripe, PRICE_IDS, isStripeConfigured } from "@/lib/billing/stripe";
 import { isPaymentProviderConfigured, pickPaymentProvider } from "@/lib/billing/iyzico";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { isOwner } from "@/lib/auth/role";
+import { requireOwner } from "@/lib/auth/role";
 import { baseUrl } from "@/lib/url";
 
 const BodySchema = z.object({
@@ -36,9 +36,11 @@ export async function POST(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwner(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca tenant sahibi plan değiştirebilir.", en: "Only the tenant owner can change the plan." });
-  }
+  const denied = requireOwner(req, session.user.role, {
+    tr: "Yalnızca tenant sahibi plan değiştirebilir.",
+    en: "Only the tenant owner can change the plan.",
+  });
+  if (denied) return denied;
 
   const body = BodySchema.safeParse(await req.json());
   if (!body.success) return localizedError(req, 400, { tr: "Geçersiz plan.", en: "Invalid plan." });

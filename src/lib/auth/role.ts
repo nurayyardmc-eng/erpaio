@@ -43,13 +43,37 @@ import { localizedError } from "@/lib/i18n/server";
  * The early-return shape mirrors checkBodySize / parseJsonBody, which
  * keeps the route handlers' control flow uniform.
  */
-const DEFAULT_DENY = { tr: "Yalnızca admin.", en: "Admin only." } as const;
+const DEFAULT_DENY_ADMIN = { tr: "Yalnızca admin.", en: "Admin only." } as const;
 
 export function requireOwnerOrAdmin(
   req: Request,
   role: Role | null | undefined,
-  texts: { tr: string; en: string } = DEFAULT_DENY,
+  texts: { tr: string; en: string } = DEFAULT_DENY_ADMIN,
 ): Response | null {
   if (isOwnerOrAdmin(role)) return null;
+  return localizedError(req, 403, texts);
+}
+
+/**
+ * Owner-only gate — returns null when allowed, localized 403 when denied.
+ *
+ * Track TTTTTTT — parallel to requireOwnerOrAdmin for irreversible /
+ * billing actions (delete tenant, plan change, export, role transfer).
+ * 5 sites had the inline `if (!isOwner(role)) return localizedError(req,
+ * 403, { tr: "Yalnızca tenant sahibi...", en: "Only the tenant
+ * owner..." })` pattern with varying suffix copy. Each site provides its
+ * own `texts` arg because the action verb is part of the deny message.
+ */
+const DEFAULT_DENY_OWNER = {
+  tr: "Yalnızca tenant sahibi.",
+  en: "Only the tenant owner.",
+} as const;
+
+export function requireOwner(
+  req: Request,
+  role: Role | null | undefined,
+  texts: { tr: string; en: string } = DEFAULT_DENY_OWNER,
+): Response | null {
+  if (isOwner(role)) return null;
   return localizedError(req, 403, texts);
 }

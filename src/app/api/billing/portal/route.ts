@@ -2,7 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { stripe, isStripeConfigured } from "@/lib/billing/stripe";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { isOwner } from "@/lib/auth/role";
+import { requireOwner } from "@/lib/auth/role";
 import { baseUrl } from "@/lib/url";
 
 export async function POST(req: Request) {
@@ -12,9 +12,8 @@ export async function POST(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwner(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca tenant sahibi.", en: "Only the tenant owner." });
-  }
+  const denied = requireOwner(req, session.user.role);
+  if (denied) return denied;
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: session.user.tenantId },

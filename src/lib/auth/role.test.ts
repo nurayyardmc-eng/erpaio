@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isOwnerOrAdmin, isOwner, requireOwnerOrAdmin } from "./role";
+import { isOwnerOrAdmin, isOwner, requireOwnerOrAdmin, requireOwner } from "./role";
 
 function reqWithLang(lang: "tr" | "en"): Request {
   const headers = new Headers();
@@ -109,5 +109,38 @@ describe("auth/role/requireOwnerOrAdmin", () => {
   it("null/undefined role → 403 (defensive)", () => {
     expect(requireOwnerOrAdmin(reqWithLang("tr"), null)).not.toBeNull();
     expect(requireOwnerOrAdmin(reqWithLang("tr"), undefined)).not.toBeNull();
+  });
+});
+
+describe("auth/role/requireOwner", () => {
+  it("owner → null (allowed)", () => {
+    expect(requireOwner(reqWithLang("tr"), "owner")).toBeNull();
+  });
+
+  it("admin → 403 (stricter than requireOwnerOrAdmin)", async () => {
+    const res = requireOwner(reqWithLang("tr"), "admin");
+    expect(res).not.toBeNull();
+    expect(res!.status).toBe(403);
+  });
+
+  it("viewer → 403 with default tr message", async () => {
+    const res = requireOwner(reqWithLang("tr"), "viewer");
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe("Yalnızca tenant sahibi.");
+  });
+
+  it("viewer + en locale → en default", async () => {
+    const res = requireOwner(reqWithLang("en"), "viewer");
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe("Only the tenant owner.");
+  });
+
+  it("custom texts override", async () => {
+    const res = requireOwner(reqWithLang("tr"), "admin", {
+      tr: "Yalnızca tenant sahibi plan değiştirebilir.",
+      en: "Only the tenant owner can change the plan.",
+    });
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe("Yalnızca tenant sahibi plan değiştirebilir.");
   });
 });

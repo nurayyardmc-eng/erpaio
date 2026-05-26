@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
-import { isOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zTeamRole } from "@/lib/auth/schemas";
 
 const PatchSchema = z.object({
@@ -38,9 +38,11 @@ export async function PATCH(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwner(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca tenant sahibi rol değiştirebilir.", en: "Only the tenant owner can change roles." });
-  }
+  const denied = requireOwner(req, session.user.role, {
+    tr: "Yalnızca tenant sahibi rol değiştirebilir.",
+    en: "Only the tenant owner can change roles.",
+  });
+  if (denied) return denied;
 
   const body = PatchSchema.safeParse(await req.json());
   if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
