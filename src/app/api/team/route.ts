@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { activityContextFromRequest, recordActivity, recordUserActivity } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zTeamRole } from "@/lib/auth/schemas";
 
@@ -94,8 +94,6 @@ export async function DELETE(req: Request) {
   const userId = searchParams.get("userId");
   const invitationId = searchParams.get("invitationId");
 
-  const ctxDel = activityContextFromRequest(req);
-
   if (userId) {
     if (userId === session.user.id) {
       return localizedError(req, 400, { tr: "Kendi hesabınızı silmek için /dashboard/settings → Hesabı sil.", en: "To delete your own account, go to /dashboard/settings → Delete account." });
@@ -108,25 +106,17 @@ export async function DELETE(req: Request) {
       return localizedError(req, 400, { tr: "Owner silinemez.", en: "Owner cannot be deleted." });
     }
     await prisma.user.deleteMany({ where: { id: userId, tenantId: session.user.tenantId } });
-    await recordActivity({
-      userId: session.user.id,
-      tenantId: session.user.tenantId,
-      email: session.user.email ?? null,
+    await recordUserActivity(req, session, {
       action: "team.member.remove",
       target: userId,
       metadata: { removedEmail: target?.email ?? null, removedRole: target?.role ?? null },
-      ...ctxDel,
     });
   } else if (invitationId) {
     await prisma.invitation.deleteMany({ where: { id: invitationId, tenantId: session.user.tenantId } });
-    await recordActivity({
-      userId: session.user.id,
-      tenantId: session.user.tenantId,
-      email: session.user.email ?? null,
+    await recordUserActivity(req, session, {
       action: "team.member.remove",
       target: invitationId,
       metadata: { kind: "invitation" },
-      ...ctxDel,
     });
   } else {
     return localizedError(req, 400, { tr: "userId veya invitationId gerekli.", en: "userId or invitationId required." });
