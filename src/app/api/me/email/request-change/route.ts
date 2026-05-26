@@ -8,7 +8,7 @@ import { sendEmail } from "@/lib/notifications/email";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { jsonError, localizedError, resolveLocale } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
 import { maskEmail } from "@/lib/auth/maskEmail";
 import { emailChangeConfirmEmail } from "@/lib/auth/emailChangeEmail";
@@ -104,13 +104,10 @@ export async function POST(req: Request) {
     tenantId: user.tenantId,
   });
 
-  await recordActivity({
-    userId: user.id,
-    tenantId: user.tenantId,
-    email: user.email, // OLD email (audit kim talepte bulundu)
+  // OLD email — audit kim talepte bulundu (newEmail henüz doğrulanmadı).
+  await recordUserActivity(req, { user: { id: user.id, tenantId: user.tenantId, email: user.email } }, {
     action: "email.change.request",
     metadata: { newEmailMasked: maskEmail(newEmail) },
-    ...activityContextFromRequest(req),
   });
 
   log.info({ userId: user.id }, "Email change verification sent");

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { RATE_LIMITS, enforceIpRateLimit } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { isTokenUsable } from "@/lib/auth/oneTimeToken";
 /**
@@ -78,13 +78,10 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  await recordActivity({
-    userId: row.userId,
-    tenantId: row.user.tenantId,
-    email: row.newEmail, // YENI email (kayıt sonrası gerçek email)
+  // YENI email — kayıt sonrası gerçek email (row.newEmail).
+  await recordUserActivity(req, { user: { id: row.userId, tenantId: row.user.tenantId, email: row.newEmail } }, {
     action: "email.change.complete",
     metadata: { oldEmail: row.user.email, newEmail: row.newEmail },
-    ...activityContextFromRequest(req),
   });
 
   childLogger({ component: "verify-email-change" }).info(
