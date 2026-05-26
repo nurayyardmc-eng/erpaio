@@ -10,6 +10,7 @@ import { extractClientIp } from "@/lib/http/clientIp";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { generateSecureToken } from "@/lib/crypto/token";
 import { passwordResetEmail } from "@/lib/auth/passwordResetEmail";
+import { baseUrl } from "@/lib/url";
 const BodySchema = z.object({ email: z.string().email() });
 const LIMIT = { prefix: "forgot-pw", max: 3, windowMs: 60 * 60_000 };
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     data: { userId: user.id, tokenHash, expiresAt },
   });
 
-  const resetUrl = `${process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app"}/reset-password?token=${rawToken}`;
+  const resetUrl = `${baseUrl()}/reset-password?token=${rawToken}`;
   const { subject, html } = passwordResetEmail(resetUrl);
   void sendEmail({ to: email, subject, html });
 

@@ -12,6 +12,7 @@ import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity
 import { childLogger } from "@/lib/observability/logger";
 import { maskEmail } from "@/lib/auth/maskEmail";
 import { emailChangeConfirmEmail } from "@/lib/auth/emailChangeEmail";
+import { baseUrl } from "@/lib/url";
 
 /**
  * Email change isteği başlatma.
@@ -92,7 +93,7 @@ export async function POST(req: Request) {
   });
 
   const locale = resolveLocale(req);
-  const verifyUrl = `${process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app"}/auth/email-changed?token=${raw}`;
+  const verifyUrl = `${baseUrl()}/auth/email-changed?token=${raw}`;
   const { subject, html: bodyHtml } = emailChangeConfirmEmail(locale, verifyUrl);
 
   void sendEmail({

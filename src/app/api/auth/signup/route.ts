@@ -15,6 +15,7 @@ import { welcomeEmailHtml } from "@/lib/auth/welcomeEmail";
 
 import { extractClientIp } from "@/lib/http/clientIp";
 import { zPassword, zEmail } from "@/lib/auth/schemas";
+import { baseUrl } from "@/lib/url";
 const BodySchema = z.object({
   email: zEmail(),
   password: zPassword(),
@@ -128,8 +129,7 @@ export async function POST(req: Request) {
     },
   });
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app";
-  const verifyUrl = `${baseUrl}/verify-email?token=${verifyToken}`;
+  const verifyUrl = `${baseUrl()}/verify-email?token=${verifyToken}`;
 
   void sendEmail({
     to: email,

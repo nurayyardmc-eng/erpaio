@@ -6,6 +6,7 @@ import { jsonError, localizedError } from "@/lib/i18n/server";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { generateSecureToken } from "@/lib/crypto/token";
 import { emailVerificationEmail } from "@/lib/auth/emailVerifyEmail";
+import { baseUrl } from "@/lib/url";
 
 export async function POST(req: Request) {
   const session = await getAuth(req);
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
     data: { userId: session.user.id, tokenHash, expiresAt },
   });
 
-  const verifyUrl = `${process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app"}/verify-email?token=${rawToken}`;
+  const verifyUrl = `${baseUrl()}/verify-email?token=${rawToken}`;
   const { subject, html } = emailVerificationEmail(verifyUrl);
   void sendEmail({ to: user.email, subject, html, tenantId: session.user.tenantId });
 

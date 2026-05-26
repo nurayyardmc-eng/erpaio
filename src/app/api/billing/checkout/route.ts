@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { stripe, PRICE_IDS, isStripeConfigured } from "@/lib/billing/stripe";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { isOwner } from "@/lib/auth/role";
+import { baseUrl } from "@/lib/url";
 
 const BodySchema = z.object({
   plan: z.enum(["pro", "enterprise"]),
@@ -56,8 +57,8 @@ export async function POST(req: Request) {
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app"}/dashboard/settings?upgrade=success`,
-    cancel_url: `${process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app"}/pricing?upgrade=cancelled`,
+    success_url: `${baseUrl()}/dashboard/settings?upgrade=success`,
+    cancel_url: `${baseUrl()}/pricing?upgrade=cancelled`,
     metadata: { tenantId: tenant.id, plan },
     subscription_data: { metadata: { tenantId: tenant.id, plan } },
   });

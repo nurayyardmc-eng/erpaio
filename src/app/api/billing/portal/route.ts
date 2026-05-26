@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { stripe, isStripeConfigured } from "@/lib/billing/stripe";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { isOwner } from "@/lib/auth/role";
+import { baseUrl } from "@/lib/url";
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
 
   const portal = await stripe!.billingPortal.sessions.create({
     customer: tenant.stripeCustomerId,
-    return_url: `${process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app"}/dashboard/settings`,
+    return_url: `${baseUrl()}/dashboard/settings`,
   });
 
   return Response.json({ url: portal.url });

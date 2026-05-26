@@ -12,6 +12,7 @@ import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity
 import { escapeHtml } from "@/lib/html/escape";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
 import { zInviteRole } from "@/lib/auth/schemas";
+import { baseUrl } from "@/lib/url";
 
 const PostSchema = z.object({
   email: z.string().email(),
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
     },
   });
 
-  const acceptUrl = `${process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app"}/accept-invite?token=${rawToken}`;
+  const acceptUrl = `${baseUrl()}/accept-invite?token=${rawToken}`;
 
   void sendEmail({
     to: email,
