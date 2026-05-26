@@ -4,6 +4,7 @@ import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { formatDate } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
+import { formatTokens } from "@/lib/budget/format";
 
 interface AdminTenant {
   id: string;
@@ -139,7 +140,7 @@ export default function AdminPage() {
                     <td style={{ padding: "8px 10px", color: "#475569" }}>{t._count.alerts}</td>
                     <td style={{ padding: "8px 10px" }}>
                       <div style={{ color: usagePct > 80 ? "#EF4444" : usagePct > 50 ? "#F59E0B" : "#475569" }}>
-                        {(t.monthlyTokensUsed / 1000).toFixed(0)}k / {(t.monthlyTokenBudget / 1000).toFixed(0)}k
+                        {formatTokens(t.monthlyTokensUsed)} / {formatTokens(t.monthlyTokenBudget)}
                       </div>
                       <div style={{ height: 3, background: "#E5E7EB", borderRadius: 2, overflow: "hidden", marginTop: 2 }}>
                         <div style={{
