@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { colors } from "@/lib/theme";
 
 interface ConfirmOpts {
   id: number;
@@ -66,7 +67,7 @@ export default function ConfirmHost() {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#FFFFFF",
+          background: colors.card,
           borderRadius: 16,
           padding: 28,
           maxWidth: 440,
@@ -78,27 +79,27 @@ export default function ConfirmHost() {
           <div style={{
             width: 44,
             height: 44,
-            background: "#FEE2E2",
+            background: colors.errorSoft,
             borderRadius: 12,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 16,
           }}>
-            <AlertTriangle size={22} color="#EF4444" />
+            <AlertTriangle size={22} color={colors.error} />
           </div>
         )}
         <h3 style={{
           fontFamily: "var(--font-playfair), Georgia, serif",
           fontSize: 22,
           fontWeight: 400,
-          color: "#0A0A0A",
+          color: colors.text,
           margin: "0 0 8px",
           letterSpacing: -0.5,
         }}>
           {top.title}
         </h3>
-        <p style={{ color: "#525252", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
+        <p style={{ color: colors.textMuted, fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
           {top.message}
         </p>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -108,8 +109,8 @@ export default function ConfirmHost() {
               padding: "10px 20px",
               borderRadius: 100,
               background: "transparent",
-              border: "1px solid rgba(10,10,10,0.12)",
-              color: "#0A0A0A",
+              border: `1px solid ${colors.borderStrong}`,
+              color: colors.text,
               fontSize: 14,
               fontWeight: 500,
               cursor: "pointer",
@@ -123,9 +124,9 @@ export default function ConfirmHost() {
             style={{
               padding: "10px 20px",
               borderRadius: 100,
-              background: top.destructive ? "#EF4444" : "#0A0A0A",
+              background: top.destructive ? colors.error : colors.brand,
               border: "none",
-              color: "#FFFFFF",
+              color: colors.textInverse,
               fontSize: 14,
               fontWeight: 500,
               cursor: "pointer",
