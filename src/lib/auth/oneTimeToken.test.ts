@@ -34,8 +34,16 @@ describe("auth/oneTimeToken/isTokenUsable", () => {
     ).toBe(false);
   });
 
-  it("exactly at expiry boundary → false (expiresAt < now, strict)", () => {
-    expect(isTokenUsable({ usedAt: null, expiresAt: NOW }, NOW)).toBe(false);
+  it("exactly at expiry boundary → true (strict `<`, preserves original semantics)", () => {
+    // Original inline code was `row.expiresAt < new Date()` (strict less-than).
+    // At the exact boundary moment, the token is technically still usable.
+    // Production this is a sub-millisecond window so practical impact is nil.
+    expect(isTokenUsable({ usedAt: null, expiresAt: NOW }, NOW)).toBe(true);
+  });
+
+  it("1ms after expiry → false (strict `<` rejects)", () => {
+    const justAfter = new Date(NOW.getTime() - 1);
+    expect(isTokenUsable({ usedAt: null, expiresAt: justAfter }, NOW)).toBe(false);
   });
 
   it("1ms before expiry → true", () => {
