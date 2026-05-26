@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { parseQuery, parseJsonBody, zNumber, zBoolean, zIsoDate, zCuid } from "./searchParams";
+import { parseQuery, parseJsonBody, zNumber, zBoolean, zIsoDate, zCuid, noFieldsToUpdateError } from "./searchParams";
+
+function reqWithLang(lang: "tr" | "en"): Request {
+  return new Request("https://example.com/api/test", {
+    headers: { "accept-language": lang },
+  });
+}
 
 function mkReq(query: string, body?: unknown): Request {
   const url = `https://example.com/api/test${query ? `?${query}` : ""}`;
@@ -226,5 +232,24 @@ describe("zCuid", () => {
 
   it("rejects empty string", () => {
     expect(() => zCuid().parse("")).toThrow();
+  });
+});
+
+describe("noFieldsToUpdateError", () => {
+  it("returns 400 Response", () => {
+    const res = noFieldsToUpdateError(reqWithLang("tr"));
+    expect(res.status).toBe(400);
+  });
+
+  it("TR locale body — 'Güncellenecek alan yok.'", async () => {
+    const res = noFieldsToUpdateError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Güncellenecek alan yok.");
+  });
+
+  it("EN locale body — 'No fields to update.'", async () => {
+    const res = noFieldsToUpdateError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("No fields to update.");
   });
 });
