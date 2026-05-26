@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { assertOwnedConnection } from "@/lib/db/erpConnection";
 import { validateSQL } from "@/lib/validators/sql";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
@@ -59,11 +60,8 @@ export async function POST(req: Request) {
     });
   }
 
-  const conn = await prisma.erpConnection.findFirst({
-    where: { id: body.connectionId, tenantId: session.user.tenantId },
-    select: { id: true },
-  });
-  if (!conn) return localizedError(req, 404, { tr: "Bağlantı bulunamadı.", en: "Connection not found." });
+  const notFound = await assertOwnedConnection(req, body.connectionId, session.user.tenantId);
+  if (notFound) return notFound;
 
   const metric = await prisma.customMetric.upsert({
     where: { tenantId_key: { tenantId: session.user.tenantId, key: body.key } },

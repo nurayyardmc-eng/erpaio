@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { assertOwnedConnection } from "@/lib/db/erpConnection";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
@@ -35,11 +36,8 @@ export async function POST(req: Request) {
   const body = await parseJsonBody(req, PostSchema);
   if (body instanceof Response) return body;
 
-  const conn = await prisma.erpConnection.findFirst({
-    where: { id: body.connectionId, tenantId: session.user.tenantId },
-    select: { id: true },
-  });
-  if (!conn) return localizedError(req, 404, { tr: "Bağlantı bulunamadı.", en: "Connection not found." });
+  const notFound = await assertOwnedConnection(req, body.connectionId, session.user.tenantId);
+  if (notFound) return notFound;
 
   const watchlist = await prisma.watchlist.create({
     data: {
