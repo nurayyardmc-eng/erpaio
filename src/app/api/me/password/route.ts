@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
@@ -18,8 +18,8 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.PASSWORD_CHANGE);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.PASSWORD_CHANGE);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;

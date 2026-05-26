@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
 import { recordUserActivity } from "@/lib/audit/activity";
 
 /**
@@ -20,8 +20,8 @@ export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
+  if (limited) return limited;
 
   // Mobile çağrıdaysa kendi token'ını query'de geçirip "Bu cihaz" rozeti almak
   // için işaretlenmesini ister. Server token'ları response'a vermez — sadece
@@ -56,8 +56,8 @@ export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
+  if (limited) return limited;
 
   const { searchParams } = new URL(req.url);
   const parsed = DeleteSchema.safeParse({ id: searchParams.get("id") });

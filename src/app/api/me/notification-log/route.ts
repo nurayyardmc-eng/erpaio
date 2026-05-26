@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { getAuth } from "@/lib/auth/dual";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
 import { ONE_DAY_MS } from "@/lib/time/units";
@@ -34,8 +34,8 @@ export async function GET(req: Request) {
     });
   }
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.ADMIN_READ);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.ADMIN_READ);
+  if (limited) return limited;
 
   const q = parseQuery(req, QuerySchema);
   if (q instanceof Response) return q;

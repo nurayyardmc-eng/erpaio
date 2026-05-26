@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateSchema, getSchema } from "@/lib/cache/schema";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
 import { recordUserActivity } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
@@ -35,8 +35,8 @@ export async function POST(
     });
   }
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.CONNECTION_SCHEMA_SYNC);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.CONNECTION_SCHEMA_SYNC);
+  if (limited) return limited;
 
   const { id } = await context.params;
 

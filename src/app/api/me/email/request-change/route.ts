@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
 import { jsonError, localizedError, resolveLocale } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
@@ -42,8 +42,8 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.EMAIL_CHANGE_REQUEST);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.EMAIL_CHANGE_REQUEST);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;

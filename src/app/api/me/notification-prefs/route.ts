@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { recordUserActivity } from "@/lib/audit/activity";
@@ -33,8 +33,8 @@ export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
+  if (limited) return limited;
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -55,8 +55,8 @@ export async function PATCH(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.NOTIFICATION_PREFS);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, PatchSchema);
   if (body instanceof Response) return body;

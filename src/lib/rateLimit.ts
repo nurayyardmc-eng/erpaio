@@ -135,3 +135,25 @@ export async function enforceIpRateLimit(
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
   return null;
 }
+
+/**
+ * User-scoped rate limit gate — auth'lu endpoint'ler icin.
+ *
+ * Track CCCCCCCC — 11 endpoint'te IDENTIK 2-satirlik pattern vardi:
+ *   const limit = await rateLimit(session.user.id, RATE_LIMITS.X);
+ *   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+ *
+ * Helper signature enforceIpRateLimit ile uyumlu (pass → null, deny →
+ * Response). Identifier IP yerine userId — kullanici-bazli quota
+ * (mobile launch'larda push token re-register burst'unu absorbe etmek
+ * gibi).
+ */
+export async function enforceUserRateLimit(
+  req: Request,
+  userId: string,
+  config: { prefix: string; max: number; windowMs: number },
+): Promise<Response | null> {
+  const limit = await rateLimit(userId, config);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  return null;
+}
