@@ -99,6 +99,28 @@ export async function parseJsonBody<S extends ZodTypeAny>(req: Request, schema: 
   return result.data;
 }
 
+/**
+ * Empty-data response for partial PATCH endpoints.
+ *
+ * Track KKKKKKKKK — 2 PATCH route (watchlists/[id], scheduled-reports/[id])
+ * IDENTIK 4-satirlik blok yapiyordu:
+ *   if (Object.keys(data).length === 0) {
+ *     return localizedError(req, 400, {
+ *       tr: "Güncellenecek alan yok.",
+ *       en: "No fields to update.",
+ *     });
+ *   }
+ *
+ * Empty PATCH is logically a no-op — returning 400 protects clients
+ * from silent partial updates. This helper centralizes the wording.
+ */
+export function noFieldsToUpdateError(req: Request): Response {
+  return localizedError(req, 400, {
+    tr: "Güncellenecek alan yok.",
+    en: "No fields to update.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, noFieldsToUpdateError } from "@/lib/http/searchParams";
 
 /**
  * Watchlist partial update — Track GGGG. Önceden sadece create+delete vardı;
@@ -53,12 +53,7 @@ export async function PATCH(
   if (body.emailTo !== undefined) data.emailTo = body.emailTo;
   if (body.enabled !== undefined) data.enabled = body.enabled;
 
-  if (Object.keys(data).length === 0) {
-    return localizedError(req, 400, {
-      tr: "Güncellenecek alan yok.",
-      en: "No fields to update.",
-    });
-  }
+  if (Object.keys(data).length === 0) return noFieldsToUpdateError(req);
 
   const result = await prisma.watchlist.updateMany({
     where: { id, tenantId: session.user.tenantId },
