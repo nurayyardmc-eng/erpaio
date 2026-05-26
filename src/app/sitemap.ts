@@ -1,72 +1,23 @@
 import type { MetadataRoute } from "next";
+import { baseUrl } from "@/lib/url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app";
+  const base = baseUrl();
   const lastModified = new Date();
 
   return [
     // Landing (en yüksek priority)
-    {
-      url: baseUrl,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 1.0,
-    },
+    { url: base, lastModified, changeFrequency: "weekly", priority: 1.0 },
     // Marketing pages
-    {
-      url: `${baseUrl}/pricing`,
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/help`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/docs`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/docs/api`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/changelog`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/status`,
-      lastModified,
-      changeFrequency: "daily",
-      priority: 0.5,
-    },
+    { url: `${base}/pricing`, lastModified, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/about`, lastModified, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/help`, lastModified, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/docs`, lastModified, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/docs/api`, lastModified, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${base}/changelog`, lastModified, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${base}/status`, lastModified, changeFrequency: "daily", priority: 0.5 },
     // Legal
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified,
-      changeFrequency: "yearly",
-      priority: 0.4,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified,
-      changeFrequency: "yearly",
-      priority: 0.4,
-    },
+    { url: `${base}/privacy`, lastModified, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/terms`, lastModified, changeFrequency: "yearly", priority: 0.4 },
   ];
 }

@@ -12,12 +12,13 @@
  * server-issued token).
  */
 import { escapeHtml } from "@/lib/html/escape";
+import { baseUrl as defaultBaseUrl } from "@/lib/url";
 
 export function welcomeEmailHtml(
   name: string,
   tenantName: string,
   verifyUrl: string,
-  baseUrl: string = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app",
+  baseUrl: string = defaultBaseUrl(),
 ): string {
   return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
     <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:40px">

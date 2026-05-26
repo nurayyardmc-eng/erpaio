@@ -3,6 +3,8 @@
 // booting Prisma / NextRequest. Imported by:
 //   src/app/api/cron/trial-warnings/route.ts
 
+import { baseUrl as defaultBaseUrl } from "@/lib/url";
+
 export interface TrialEmailContent {
   subject: string;
   html: string;
@@ -31,7 +33,7 @@ export function calcTrialDaysLeft(trialEndsAt: Date, now: number = Date.now()): 
 export function buildTrialWarningEmail(
   daysLeft: number,
   tenantName: string,
-  baseUrl: string = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app",
+  baseUrl: string = defaultBaseUrl(),
 ): TrialEmailContent | null {
   const wrap = (title: string, body: string, ctaLabel: string, ctaUrl: string): TrialEmailContent => ({
     subject: `ERPAIO — ${title}`,

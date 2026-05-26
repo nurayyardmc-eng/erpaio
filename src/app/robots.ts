@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { baseUrl } from "@/lib/url";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app";
+  const base = baseUrl();
 
   return {
     rules: [
@@ -38,6 +39,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/dashboard/", "/admin/"],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${base}/sitemap.xml`,
   };
 }
