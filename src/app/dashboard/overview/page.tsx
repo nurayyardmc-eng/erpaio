@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { formatNullableN } from "@/lib/charts/format";
 import { changeDelta } from "@/lib/format/changeDelta";
 import { sparklinePoints } from "@/lib/charts/sparkline";
+import SetupChecklist from "@/components/SetupChecklist";
 
 interface DashboardMetric {
   key: string;
@@ -44,6 +45,8 @@ export default function OverviewPage() {
         Pre-computed — saatlik/günlük cron snapshotlarından, sıfır bekleme.
         {data && ` Son güncelleme: ${new Date(data.generatedAt).toLocaleString("tr-TR")}`}
       </p>
+
+      <SetupChecklist />
 
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
