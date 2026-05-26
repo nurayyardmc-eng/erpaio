@@ -16,6 +16,7 @@ import { welcomeEmailHtml } from "@/lib/auth/welcomeEmail";
 import { extractClientIp } from "@/lib/http/clientIp";
 import { zPassword, zEmail } from "@/lib/auth/schemas";
 import { baseUrl } from "@/lib/url";
+import { daysFromNow } from "@/lib/time/units";
 const BodySchema = z.object({
   email: zEmail(),
   password: zPassword(),
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
     slug = `${slugify(tenantName)}-${Math.random().toString(36).slice(2, 6)}`;
   }
 
-  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60_000);
+  const trialEndsAt = daysFromNow(14);
   const passwordHash = await bcrypt.hash(password, 12);
 
   const tenant = await prisma.tenant.create({
@@ -125,7 +126,7 @@ export async function POST(req: Request) {
     data: {
       userId: tenant.users[0].id,
       tokenHash,
-      expiresAt: new Date(Date.now() + 24 * 60 * 60_000),
+      expiresAt: daysFromNow(1),
     },
   });
 

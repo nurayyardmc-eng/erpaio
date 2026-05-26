@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { aggregateCronHealth, type CronHealth } from "@/lib/cron/aggregateHealth";
+import { daysAgo } from "@/lib/time/units";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export async function GET(req: Request) {
   let cronHealth: CronHealth | undefined;
   if (deep && dbOk) {
     try {
-      const last24h = new Date(Date.now() - 24 * 60 * 60_000);
+      const last24h = daysAgo(1);
       const runs = await prisma.cronRun.findMany({
         where: { startedAt: { gt: last24h } },
         select: { jobName: true, status: true, startedAt: true },

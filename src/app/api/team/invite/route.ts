@@ -13,6 +13,7 @@ import { escapeHtml } from "@/lib/html/escape";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
 import { zInviteRole } from "@/lib/auth/schemas";
 import { baseUrl } from "@/lib/url";
+import { daysFromNow } from "@/lib/time/units";
 
 const PostSchema = z.object({
   email: z.string().email(),
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
 
   const rawToken = generateSecureToken();
   const tokenHash = sha256Hex(rawToken);
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60_000);
+  const expiresAt = daysFromNow(7);
 
   const invitation = await prisma.invitation.upsert({
     where: { tenantId_email: { tenantId: session.user.tenantId, email } },

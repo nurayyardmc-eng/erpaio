@@ -5,6 +5,7 @@ import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { daysAgo } from "@/lib/time/units";
 
 /**
  * Tenant-scoped slow query görünümü — owner + admin role'leri kendi
@@ -57,7 +58,7 @@ export async function GET(req: Request) {
   });
 
   // Son 24h tenant özet — count + maxMs + avgMs (perf trend için)
-  const last24h = new Date(Date.now() - 24 * 60 * 60_000);
+  const last24h = daysAgo(1);
   const agg = await prisma.slowQueryLog.aggregate({
     where: { tenantId: session.user.tenantId, createdAt: { gt: last24h } },
     _count: { _all: true },

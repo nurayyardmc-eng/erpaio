@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
+import { daysAgo } from "@/lib/time/units";
 
 const log = childLogger({ component: "cron-health-digest" });
 
@@ -166,7 +167,7 @@ export async function sendCronHealthDigest(): Promise<{ ok: boolean; failuresFou
     return { ok: true, failuresFound: 0 };
   }
 
-  const since = new Date(Date.now() - 24 * 60 * 60_000);
+  const since = daysAgo(1);
   const runs = await prisma.cronRun.findMany({
     where: { startedAt: { gt: since }, status: { in: ["FAILED", "PARTIAL_FAILURE"] } },
     select: {

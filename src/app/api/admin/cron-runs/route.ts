@@ -4,6 +4,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { requireSysAdmin } from "@/lib/auth/sysadmin";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
+import { daysAgo } from "@/lib/time/units";
 
 const QuerySchema = z.object({
   limit: zNumber({ min: 1, max: 200, default: 50, int: true }),
@@ -49,7 +50,7 @@ export async function GET(req: Request) {
   });
 
   // Aggregate: son 24 saatte job-bazlı özet (admin dashboard summary için)
-  const last24h = new Date(Date.now() - 24 * 60 * 60_000);
+  const last24h = daysAgo(1);
   const recent = await prisma.cronRun.groupBy({
     by: ["jobName", "status"],
     where: { startedAt: { gt: last24h } },

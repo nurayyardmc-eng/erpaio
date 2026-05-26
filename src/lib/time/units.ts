@@ -24,3 +24,32 @@ export const ONE_HOUR_MS = 60 * 60_000;
 
 /** One day in milliseconds (24 * 60 * 60 * 1000 = 86_400_000). */
 export const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+
+/**
+ * `Date` exactly N days in the future relative to `now`.
+ *
+ * Used by token/trial expiry sites: signup trial end, email-verification
+ * expiry (+24h), team invite (+7d), mobile refresh tokens (+90d).
+ *
+ * `now` arg defaults to `Date.now()` so production callers can drop in
+ * without passing it; tests inject a frozen clock for determinism.
+ *
+ * Track QQQQQQQ — extracted to replace 7 inline `new Date(Date.now() + N *
+ * 24 * 60 * 60_000)` sites with a self-documenting helper.
+ */
+export function daysFromNow(days: number, now: number = Date.now()): Date {
+  return new Date(now + days * ONE_DAY_MS);
+}
+
+/**
+ * `Date` exactly N days in the past relative to `now`.
+ *
+ * Used by analytics windowing sites: health dashboard last-24h cards,
+ * admin recent-activity scrolls, cron health digest, suggested-alerts
+ * 30-day baseline.
+ *
+ * See `daysFromNow` for the rationale on the `now` parameter.
+ */
+export function daysAgo(days: number, now: number = Date.now()): Date {
+  return new Date(now - days * ONE_DAY_MS);
+}

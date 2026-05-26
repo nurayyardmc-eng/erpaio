@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { METRIC_QUERIES } from "@/lib/anomaly/queries";
 import { linearForecast } from "@/lib/analytics/forecast";
 import { jsonError } from "@/lib/i18n/server";
+import { daysAgo } from "@/lib/time/units";
 
 interface Suggestion {
   metricKey: string;
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const baselines = await prisma.anomalyBaseline.findMany({
-    where: { tenantId: session.user.tenantId, capturedAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60_000) } },
+    where: { tenantId: session.user.tenantId, capturedAt: { gte: daysAgo(30) } },
     orderBy: { capturedAt: "asc" },
     select: { metricKey: true, value: true },
   });

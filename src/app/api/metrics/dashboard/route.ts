@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { METRIC_QUERIES } from "@/lib/anomaly/queries";
 import { jsonError } from "@/lib/i18n/server";
+import { daysAgo } from "@/lib/time/units";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
@@ -9,7 +10,7 @@ export async function GET(req: Request) {
 
   const tenantId = session.user.tenantId;
 
-  const since = new Date(Date.now() - 24 * 60 * 60_000);
+  const since = daysAgo(1);
   const baselines = await prisma.anomalyBaseline.findMany({
     where: { tenantId, capturedAt: { gte: since } },
     orderBy: { capturedAt: "asc" },

@@ -4,6 +4,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { requireSysAdmin } from "@/lib/auth/sysadmin";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
+import { daysAgo } from "@/lib/time/units";
 
 const QuerySchema = z.object({
   limit: zNumber({ min: 1, max: 200, default: 100, int: true }),
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
   });
 
   // Action breakdown last 24h
-  const last24h = new Date(Date.now() - 24 * 60 * 60_000);
+  const last24h = daysAgo(1);
   const breakdown = await prisma.activityLog.groupBy({
     by: ["action"],
     where: { createdAt: { gt: last24h } },

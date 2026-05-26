@@ -4,6 +4,7 @@ import { generateApiToken, hashApiToken } from "@/lib/auth/apiToken";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { daysFromNow } from "@/lib/time/units";
 
 const log = childLogger({ component: "mobile-refresh" });
 
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
 
   const raw = generateApiToken();
   const tokenHash = hashApiToken(raw);
-  const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60_000);
+  const expiresAt = daysFromNow(90);
 
   // Atomic rotation — eski revoke + yeni create tek transaction'da
   await prisma.$transaction([

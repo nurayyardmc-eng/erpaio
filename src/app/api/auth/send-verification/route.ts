@@ -7,6 +7,7 @@ import { sha256Hex } from "@/lib/crypto/hash";
 import { generateSecureToken } from "@/lib/crypto/token";
 import { emailVerificationEmail } from "@/lib/auth/emailVerifyEmail";
 import { baseUrl } from "@/lib/url";
+import { daysFromNow } from "@/lib/time/units";
 
 export async function POST(req: Request) {
   const session = await getAuth(req);
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
 
   const rawToken = generateSecureToken();
   const tokenHash = sha256Hex(rawToken);
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60_000);
+  const expiresAt = daysFromNow(1);
 
   await prisma.emailVerificationToken.create({
     data: { userId: session.user.id, tokenHash, expiresAt },

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { daysAgo } from "@/lib/time/units";
 
 /**
  * Pure-math input for calculateHealthScore. Test edilebilir;
@@ -69,7 +70,7 @@ export interface HealthScore {
 }
 
 export async function computeHealthScore(tenantId: string): Promise<HealthScore> {
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60_000);
+  const since = daysAgo(30);
 
   const [messages, distinctDays] = await Promise.all([
     prisma.chatMessage.findMany({

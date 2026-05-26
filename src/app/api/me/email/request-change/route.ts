@@ -13,6 +13,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { maskEmail } from "@/lib/auth/maskEmail";
 import { emailChangeConfirmEmail } from "@/lib/auth/emailChangeEmail";
 import { baseUrl } from "@/lib/url";
+import { daysFromNow } from "@/lib/time/units";
 
 /**
  * Email change isteği başlatma.
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
   // Token üret + hash sakla. 24h geçerli.
   const raw = generateSecureToken();
   const tokenHash = sha256Hex(raw);
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60_000);
+  const expiresAt = daysFromNow(1);
 
   await prisma.emailChangeToken.create({
     data: { userId: user.id, newEmail, tokenHash, expiresAt },
