@@ -138,3 +138,93 @@ describe("parseJsonBody", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("zNumber", () => {
+  it("parses string number", () => {
+    expect(zNumber().parse("42")).toBe(42);
+  });
+
+  it("parses fractional number", () => {
+    expect(zNumber().parse("3.14")).toBe(3.14);
+  });
+
+  it("int constraint rejects fractional", () => {
+    expect(() => zNumber({ int: true }).parse("3.14")).toThrow();
+  });
+
+  it("int constraint accepts integer", () => {
+    expect(zNumber({ int: true }).parse("42")).toBe(42);
+  });
+
+  it("min constraint enforced", () => {
+    expect(() => zNumber({ min: 10 }).parse("5")).toThrow();
+    expect(zNumber({ min: 10 }).parse("15")).toBe(15);
+  });
+
+  it("max constraint enforced", () => {
+    expect(() => zNumber({ max: 100 }).parse("200")).toThrow();
+    expect(zNumber({ max: 100 }).parse("50")).toBe(50);
+  });
+
+  it("default applied when undefined input", () => {
+    expect(zNumber({ default: 25 }).parse(undefined)).toBe(25);
+  });
+
+  it("combined min+max+int+default", () => {
+    const schema = zNumber({ min: 1, max: 50, default: 20, int: true });
+    expect(schema.parse(undefined)).toBe(20);
+    expect(schema.parse("10")).toBe(10);
+    expect(() => schema.parse("100")).toThrow();
+    expect(() => schema.parse("0")).toThrow();
+  });
+
+  it("Infinity rejected (refine Number.isFinite)", () => {
+    expect(() => zNumber().parse("Infinity")).toThrow();
+  });
+
+  it("NaN rejected", () => {
+    expect(() => zNumber().parse("not-a-number")).toThrow();
+  });
+});
+
+describe("zIsoDate", () => {
+  it("parses valid ISO string into Date", () => {
+    const r = zIsoDate().parse("2026-05-26T12:00:00Z");
+    expect(r).toBeInstanceOf(Date);
+    expect(r.getUTCFullYear()).toBe(2026);
+  });
+
+  it("parses date-only format", () => {
+    const r = zIsoDate().parse("2026-05-26");
+    expect(r).toBeInstanceOf(Date);
+  });
+
+  it("rejects invalid date string", () => {
+    expect(() => zIsoDate().parse("not-a-date")).toThrow();
+  });
+
+  it("rejects empty string", () => {
+    expect(() => zIsoDate().parse("")).toThrow();
+  });
+
+  it("rejects gibberish", () => {
+    expect(() => zIsoDate().parse("2026-13-45")).toThrow();
+  });
+
+  it("composes inside object schema", () => {
+    const schema = z.object({ from: zIsoDate() });
+    const r = schema.parse({ from: "2026-01-01T00:00:00Z" });
+    expect(r.from).toBeInstanceOf(Date);
+  });
+});
+
+describe("zCuid", () => {
+  it("accepts cuid-shaped strings", () => {
+    // cuid format: c + 24 chars (lowercase alphanumeric)
+    expect(zCuid().parse("clxabcdefghijklmnopqrstu")).toBe("clxabcdefghijklmnopqrstu");
+  });
+
+  it("rejects empty string", () => {
+    expect(() => zCuid().parse("")).toThrow();
+  });
+});
