@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { stripe, PRICE_IDS, isStripeConfigured } from "@/lib/billing/stripe";
 import { isPaymentProviderConfigured, pickPaymentProvider } from "@/lib/billing/iyzico";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { requireOwner } from "@/lib/auth/role";
 import { baseUrl } from "@/lib/url";
 
@@ -42,10 +43,10 @@ export async function POST(req: Request) {
   });
   if (denied) return denied;
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: "Geçersiz plan.", en: "Invalid plan." });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { plan } = body.data;
+  const { plan } = body;
   const priceId = PRICE_IDS[plan];
   if (!priceId) {
     return localizedError(req, 503, { tr: `${plan} fiyat ID'si yapılandırılmamış.`, en: `${plan} price ID not configured.` });

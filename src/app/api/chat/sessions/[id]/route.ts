@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { z } from "zod";
 
 export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
@@ -49,10 +50,8 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/chat/sessions/
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const { id } = await ctx.params;
-  const body = PatchSchema.safeParse(await req.json());
-  if (!body.success) {
-    return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
-  }
+  const body = await parseJsonBody(req, PatchSchema);
+  if (body instanceof Response) return body;
 
   const owned = await prisma.chatSession.findFirst({
     where: { id, tenantId: session.user.tenantId, userId: session.user.id },
@@ -61,10 +60,10 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/chat/sessions/
   if (!owned) return jsonError(req, "api.notFound", 404);
 
   const data: { title?: string; pinned?: boolean; archivedAt?: Date | null } = {};
-  if (typeof body.data.title === "string") data.title = body.data.title;
-  if (typeof body.data.pinned === "boolean") data.pinned = body.data.pinned;
-  if (typeof body.data.archived === "boolean") {
-    data.archivedAt = body.data.archived ? new Date() : null;
+  if (typeof body.title === "string") data.title = body.title;
+  if (typeof body.pinned === "boolean") data.pinned = body.pinned;
+  if (typeof body.archived === "boolean") {
+    data.archivedAt = body.archived ? new Date() : null;
   }
 
   const updated = await prisma.chatSession.update({
