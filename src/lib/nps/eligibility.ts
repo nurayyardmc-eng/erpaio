@@ -15,12 +15,12 @@
  * them rest).
  */
 
+import { ONE_DAY_MS as DAY_MS } from "@/lib/time/units";
+
 /** Days between repeat NPS prompts after a successful submission. */
 export const NPS_RESUBMIT_COOLDOWN_DAYS = 90;
 /** Days after explicit dismissal before re-prompting. */
 export const NPS_DISMISS_COOLDOWN_DAYS = 14;
-
-const DAY_MS = 24 * 60 * 60_000;
 
 export interface NpsEligibilityInput {
   /** Unix ms when user last submitted (null if never). */

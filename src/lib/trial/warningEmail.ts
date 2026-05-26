@@ -4,13 +4,12 @@
 //   src/app/api/cron/trial-warnings/route.ts
 
 import { baseUrl as defaultBaseUrl } from "@/lib/url";
+import { ONE_DAY_MS } from "@/lib/time/units";
 
 export interface TrialEmailContent {
   subject: string;
   html: string;
 }
-
-const ONE_DAY_MS = 24 * 60 * 60_000;
 
 /**
  * Days remaining on trial relative to `now`. Negative numbers mean the

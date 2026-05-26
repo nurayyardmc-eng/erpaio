@@ -18,6 +18,8 @@
  * Pure function — DB/network bağımsız, test edilir.
  */
 
+import { ONE_DAY_MS } from "@/lib/time/units";
+
 export type TrialUrgency = "info" | "warning" | "danger" | "expired";
 
 export interface TrialBannerStatus {
@@ -46,9 +48,8 @@ export function trialBannerStatus(
   if (Number.isNaN(target.getTime())) return null;
 
   const diffMs = target.getTime() - now.getTime();
-  const dayMs = 24 * 60 * 60_000;
   // Pozitif daysLeft = kalan; negatif = geçmiş.
-  const daysLeft = Math.ceil(diffMs / dayMs);
+  const daysLeft = Math.ceil(diffMs / ONE_DAY_MS);
 
   if (daysLeft <= 0) return { urgency: "expired", daysLeft };
   if (daysLeft > 14) return null;

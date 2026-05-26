@@ -17,7 +17,12 @@
  *  - Alert (status="open" — kullanıcı işleme alana kadar)
  *  - Tenant/User (business data, manuel)
  */
-export const ONE_DAY_MS = 24 * 60 * 60_000;
+import { ONE_DAY_MS } from "@/lib/time/units";
+
+// Re-exported so existing callers and tests (cron/retention.test.ts +
+// retentionCutoff() consumers) keep their import path. Canonical definition
+// lives in lib/time/units.ts (Track PPPPPPP).
+export { ONE_DAY_MS };
 
 export const RETENTION = {
   /** Stripe idempotency — retry penceresi 3 gün, 30 gün safe margin. */
