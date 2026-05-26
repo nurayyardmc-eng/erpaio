@@ -205,6 +205,19 @@ export function activeConnectionNotFoundError(req: Request): Response {
   });
 }
 
+/**
+ * Common "Geçersiz soru." 400. Track PPPPPPPPPP.
+ * Used by: chat/route, chat/stream — detectInjection(question) true
+ * dönünce kullanıcı sorusu reddedilir. Prompt injection defense
+ * boundary — i18n string'i tek noktada tutmak audit/log için kritik.
+ */
+export function invalidQuestionError(req: Request): Response {
+  return localizedError(req, 400, {
+    tr: "Geçersiz soru.",
+    en: "Invalid question.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

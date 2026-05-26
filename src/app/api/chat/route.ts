@@ -9,7 +9,11 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { parseJsonBody, activeConnectionNotFoundError } from "@/lib/http/searchParams";
+import {
+  parseJsonBody,
+  activeConnectionNotFoundError,
+  invalidQuestionError,
+} from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
@@ -73,7 +77,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (detectInjection(question)) return localizedError(req, 400, { tr: "Geçersiz soru.", en: "Invalid question." });
+  if (detectInjection(question)) return invalidQuestionError(req);
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: connectionId, tenantId, status: "active" },

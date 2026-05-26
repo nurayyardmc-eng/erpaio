@@ -14,6 +14,7 @@ import {
   watchlistNotFoundError,
   connectionNotFoundError,
   activeConnectionNotFoundError,
+  invalidQuestionError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -426,5 +427,24 @@ describe("activeConnectionNotFoundError", () => {
     const activeBody = (await active.json()) as { error: string };
     const plainBody = (await plain.json()) as { error: string };
     expect(activeBody.error).not.toBe(plainBody.error);
+  });
+});
+
+describe("invalidQuestionError", () => {
+  it("returns 400", () => {
+    const res = invalidQuestionError(reqWithLang("tr"));
+    expect(res.status).toBe(400);
+  });
+
+  it("TR body — 'Geçersiz soru.'", async () => {
+    const res = invalidQuestionError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Geçersiz soru.");
+  });
+
+  it("EN body — 'Invalid question.'", async () => {
+    const res = invalidQuestionError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Invalid question.");
   });
 });

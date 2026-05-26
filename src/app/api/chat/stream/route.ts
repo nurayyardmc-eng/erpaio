@@ -9,13 +9,17 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { parseJsonBody, activeConnectionNotFoundError } from "@/lib/http/searchParams";
+import {
+  parseJsonBody,
+  activeConnectionNotFoundError,
+  invalidQuestionError,
+} from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
 import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
 import { z } from "zod";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
 import { truncateRows } from "@/lib/chat/rowLimit";
 import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
@@ -54,7 +58,7 @@ export async function POST(req: Request) {
   }
 
   if (detectInjection(question)) {
-    return localizedError(req, 400, { tr: "Geçersiz soru.", en: "Invalid question." });
+    return invalidQuestionError(req);
   }
 
   const conn = await prisma.erpConnection.findFirst({
