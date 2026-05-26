@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 const PutSchema = z.object({
   tableName: z.string().min(1).max(128),
@@ -28,7 +29,7 @@ export async function PUT(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "admin" && session.user.role !== "owner") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return localizedError(req, 403, { tr: "Yalnızca yönetici düzenleyebilir.", en: "Only admins can edit." });
   }
 
@@ -64,7 +65,7 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "admin" && session.user.role !== "owner") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return localizedError(req, 403, { tr: "Yalnızca yönetici silebilir.", en: "Only admins can delete." });
   }
 

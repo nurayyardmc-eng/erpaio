@@ -3,13 +3,14 @@ import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { isOwner } from "@/lib/auth/role";
 
 export const maxDuration = 300;
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "owner") {
+  if (!isOwner(session.user.role)) {
     return localizedError(req, 403, { tr: "Yalnızca tenant sahibi export alabilir.", en: "Only the tenant owner can export." });
   }
 

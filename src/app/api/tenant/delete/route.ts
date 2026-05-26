@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordConsent, consentContextFromRequest } from "@/lib/auth/consent";
+import { isOwner } from "@/lib/auth/role";
 
 const BodySchema = z.object({
   password: z.string().min(1),
@@ -14,7 +15,7 @@ const BodySchema = z.object({
 export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "owner") {
+  if (!isOwner(session.user.role)) {
     return localizedError(req, 403, { tr: "Yalnızca tenant sahibi silebilir.", en: "Only the tenant owner can delete." });
   }
 

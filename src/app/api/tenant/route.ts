@@ -4,6 +4,7 @@ import { z } from "zod";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -48,7 +49,7 @@ export async function PATCH(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "admin" && session.user.role !== "owner") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return localizedError(req, 403, { tr: "Yalnızca yönetici düzenleyebilir.", en: "Only admins can edit." });
   }
 
