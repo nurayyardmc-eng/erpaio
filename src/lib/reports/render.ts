@@ -15,7 +15,21 @@
 import { escapeHtml as _escapeHtml } from "@/lib/html/escape";
 export const escHtml = _escapeHtml;
 
-export const SCHEDULE_FILTER: Record<string, () => boolean> = {
+/**
+ * Schedule frequency values used by scheduled-reports + watchlists UI.
+ * Track IIIIIIIIII — extracted from inline z.enum in 2 API routes to
+ * prevent drift (adding a new schedule in one site only breaks UI).
+ */
+export const SCHEDULE_VALUES = [
+  "hourly",
+  "daily_06",
+  "daily_18",
+  "weekly_monday",
+  "monthly_first",
+] as const;
+export type ScheduleValue = (typeof SCHEDULE_VALUES)[number];
+
+export const SCHEDULE_FILTER: Record<ScheduleValue, () => boolean> = {
   hourly: () => true,
   daily_06: () => new Date().getUTCHours() === 3,
   daily_18: () => new Date().getUTCHours() === 15,
@@ -24,7 +38,7 @@ export const SCHEDULE_FILTER: Record<string, () => boolean> = {
 };
 
 export function shouldFireSchedule(schedule: string): boolean {
-  const fn = SCHEDULE_FILTER[schedule];
+  const fn = (SCHEDULE_FILTER as Record<string, (() => boolean) | undefined>)[schedule];
   return !!fn && fn();
 }
 

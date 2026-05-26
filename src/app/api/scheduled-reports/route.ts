@@ -5,12 +5,13 @@ import { assertOwnedConnection } from "@/lib/db/erpConnection";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { SCHEDULE_VALUES } from "@/lib/reports/render";
 
 const PostSchema = z.object({
   name: z.string().min(1).max(120),
   question: z.string().min(1).max(500),
   connectionId: z.string(),
-  schedule: z.enum(["hourly", "daily_06", "daily_18", "weekly_monday", "monthly_first"]),
+  schedule: z.enum(SCHEDULE_VALUES),
   emailTo: z.string().email(),
 });
 

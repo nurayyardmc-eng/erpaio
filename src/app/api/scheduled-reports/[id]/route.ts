@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody, noFieldsToUpdateError } from "@/lib/http/searchParams";
+import { SCHEDULE_VALUES } from "@/lib/reports/render";
 
 /**
  * Scheduled report partial update — Track KK. Önceden sadece POST + DELETE
@@ -15,7 +16,7 @@ import { parseJsonBody, noFieldsToUpdateError } from "@/lib/http/searchParams";
 const PatchSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   question: z.string().min(1).max(500).optional(),
-  schedule: z.enum(["hourly", "daily_06", "daily_18", "weekly_monday", "monthly_first"]).optional(),
+  schedule: z.enum(SCHEDULE_VALUES).optional(),
   emailTo: z.string().email().optional(),
   enabled: z.boolean().optional(),
 });
