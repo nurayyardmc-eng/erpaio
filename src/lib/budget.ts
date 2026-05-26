@@ -48,6 +48,25 @@ export async function checkAndConsume(
   return { ok: true };
 }
 
+/**
+ * Total token count from an Anthropic message response.
+ *
+ * Track HHHHHHHHH — 2 chat route (explain, follow-ups) inline
+ * `msg.usage.input_tokens + msg.usage.output_tokens` yapiyordu.
+ * Anthropic SDK shape'i degisirse (cache_creation_input_tokens vb.
+ * ek field'lar eklenirse) tek dosyada update edilebilir.
+ *
+ * NOT: chat/route.ts ve chat/stream/route.ts farkli totalTokens
+ * hesabi yapiyor (cache hit / streaming aggregate); onlar bu helper'a
+ * gec(e)medi — tasarim gereksinimi farkli.
+ */
+export function totalAnthropicTokens(usage: {
+  input_tokens: number;
+  output_tokens: number;
+}): number {
+  return usage.input_tokens + usage.output_tokens;
+}
+
 export async function recordUsage(tenantId: string, tokens: number): Promise<void> {
   await prisma.tenant
     .update({

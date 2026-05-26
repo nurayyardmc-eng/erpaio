@@ -5,7 +5,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { checkAndConsume, recordUsage } from "@/lib/budget";
+import { checkAndConsume, recordUsage, totalAnthropicTokens } from "@/lib/budget";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       suggestions = [];
     }
 
-    void recordUsage(session.user.tenantId, msg.usage.input_tokens + msg.usage.output_tokens);
+    void recordUsage(session.user.tenantId, totalAnthropicTokens(msg.usage));
     log.info({ count: suggestions.length }, "Follow-up suggestions generated");
     return Response.json({ suggestions });
   } catch (err) {

@@ -1,5 +1,23 @@
 import { describe, it, expect } from "vitest";
-import { computeBudgetStatus } from "./budget";
+import { computeBudgetStatus, totalAnthropicTokens } from "./budget";
+
+describe("totalAnthropicTokens", () => {
+  it("sums input + output tokens", () => {
+    expect(totalAnthropicTokens({ input_tokens: 100, output_tokens: 50 })).toBe(150);
+  });
+
+  it("zero input/output → 0", () => {
+    expect(totalAnthropicTokens({ input_tokens: 0, output_tokens: 0 })).toBe(0);
+  });
+
+  it("only input has value", () => {
+    expect(totalAnthropicTokens({ input_tokens: 500, output_tokens: 0 })).toBe(500);
+  });
+
+  it("only output has value", () => {
+    expect(totalAnthropicTokens({ input_tokens: 0, output_tokens: 75 })).toBe(75);
+  });
+});
 
 describe("computeBudgetStatus", () => {
   const baseDate = new Date("2026-01-01T00:00:00Z");
