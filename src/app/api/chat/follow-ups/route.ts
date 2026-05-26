@@ -6,6 +6,7 @@ import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, totalAnthropicTokens } from "@/lib/budget";
+import { MODEL_HAIKU } from "@/lib/ai/models";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
 
   try {
     const msg = await client.messages.create({
-      model: "claude-haiku-4-5",
+      model: MODEL_HAIKU,
       max_tokens: 256,
       system: "Türkçe iş zekası uzmanısın. Kullanıcının az önce sorduğu soruyu ve sonucunu görüp, mantıklı 3 takip sorusu öner. Her biri kısa Türkçe (max 60 karakter), JSON array dön: [\"...\", \"...\", \"...\"]. Başka hiçbir şey yazma.",
       messages: [{

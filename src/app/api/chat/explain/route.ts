@@ -9,6 +9,7 @@ import { checkAndConsume, recordUsage, totalAnthropicTokens } from "@/lib/budget
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { buildExplainPrompt } from "@/lib/ai/explainPrompt";
+import { MODEL_HAIKU } from "@/lib/ai/models";
 
 const client = new Anthropic();
 
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
 
   try {
     const msg = await client.messages.create({
-      model: "claude-haiku-4-5",
+      model: MODEL_HAIKU,
       max_tokens: 350,
       system: "Türkçe iş zekası uzmanısın. SQL sorusunu, üretilen SQL'i ve dönen ilk satırları gör. Türkçe, 2-4 cümlelik kısa bir özet yaz: ne sorgulandı, sonuç ne anlama geliyor, dikkat çekici nokta varsa belirt. Sadece düz metin, başka hiçbir şey yazma. Sayıları yorumla, '%X artış' gibi.",
       messages: [{

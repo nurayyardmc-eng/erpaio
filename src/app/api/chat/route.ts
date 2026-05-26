@@ -22,6 +22,7 @@ import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect } from "@/lib/ai/dialect";
 import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
 import { calculateBillableTokens, isPromptCacheHit } from "@/lib/ai/tokenUsage";
+import { MODEL_SONNET } from "@/lib/ai/models";
 import { truncateRows } from "@/lib/chat/rowLimit";
 
 const client = new Anthropic();
@@ -185,7 +186,7 @@ ${schema}`;
         : [];
 
       const msg = await client.messages.create({
-        model: "claude-sonnet-4-5",
+        model: MODEL_SONNET,
         max_tokens: 1024,
         system: [
           {

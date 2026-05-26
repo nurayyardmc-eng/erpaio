@@ -19,6 +19,7 @@ import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
 import { truncateRows } from "@/lib/chat/rowLimit";
+import { MODEL_SONNET } from "@/lib/ai/models";
 
 const client = new Anthropic();
 export const maxDuration = 60;
@@ -112,7 +113,7 @@ ${schema}`;
           let buffer = "";
           await client.messages
             .stream({
-              model: "claude-sonnet-4-5",
+              model: MODEL_SONNET,
               max_tokens: 1024,
               system: [{ type: "text", text: systemText, cache_control: { type: "ephemeral" } }],
               messages: [{ role: "user", content: question }],
