@@ -18,3 +18,22 @@ export function formatDurationMs(ms: number | null | undefined): string {
   const seconds = (ms / 1000).toFixed(1);
   return `${seconds.replace(/\.0$/, "")}s`;
 }
+
+/**
+ * Seconds formatter with configurable precision (default 2 decimals).
+ *
+ * Track DDDDDDDDD — slow-query detayinda formatDurationMs (1 ondalik)
+ * yetersizdi; debug icin "2.34s" gibi 2-decimal precision gerekli. Bu
+ * helper o use case'i karsilar.
+ *
+ * Null/undefined → "—". Negatif → 0.
+ *
+ *   formatSeconds(2345) → "2.35s"
+ *   formatSeconds(2345, 1) → "2.3s"
+ *   formatSeconds(50) → "0.05s"
+ */
+export function formatSeconds(ms: number | null | undefined, precision: number = 2): string {
+  if (ms === null || ms === undefined) return "—";
+  const clamped = Math.max(0, ms);
+  return `${(clamped / 1000).toFixed(precision)}s`;
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDurationMs } from "./duration";
+import { formatDurationMs, formatSeconds } from "./duration";
 
 describe("format/duration/formatDurationMs", () => {
   describe("sub-second (ms tier)", () => {
@@ -82,5 +82,35 @@ describe("format/duration/formatDurationMs", () => {
     it("fast query 12ms", () => {
       expect(formatDurationMs(12)).toBe("12ms");
     });
+  });
+});
+
+describe("format/duration/formatSeconds", () => {
+  it("null/undefined → '—'", () => {
+    expect(formatSeconds(null)).toBe("—");
+    expect(formatSeconds(undefined)).toBe("—");
+  });
+
+  it("default 2-decimal precision", () => {
+    expect(formatSeconds(2345)).toBe("2.35s");
+    expect(formatSeconds(50)).toBe("0.05s");
+  });
+
+  it("custom precision (0, 1, 3)", () => {
+    expect(formatSeconds(2345, 0)).toBe("2s");
+    expect(formatSeconds(2345, 1)).toBe("2.3s");
+    expect(formatSeconds(2345, 3)).toBe("2.345s");
+  });
+
+  it("zero ms → '0.00s'", () => {
+    expect(formatSeconds(0)).toBe("0.00s");
+  });
+
+  it("negative clamped to 0", () => {
+    expect(formatSeconds(-100)).toBe("0.00s");
+  });
+
+  it("large values (long-running cron)", () => {
+    expect(formatSeconds(123_456)).toBe("123.46s");
   });
 });

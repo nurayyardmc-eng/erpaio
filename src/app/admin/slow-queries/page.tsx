@@ -4,7 +4,7 @@ import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { formatTimestamp } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
-import { formatDurationMs } from "@/lib/format/duration";
+import { formatDurationMs, formatSeconds } from "@/lib/format/duration";
 
 interface SlowQueryRow {
   id: string;
@@ -240,7 +240,7 @@ export default function SlowQueriesAdminPage() {
                 <tr key={r.id} style={{ borderBottom: "1px solid #E5E7EB" }}>
                   <td style={td}>
                     <strong style={{ color: r.durationMs > 10_000 ? "#EF4444" : r.durationMs > 5_000 ? "#F59E0B" : "#0F172A" }}>
-                      {(r.durationMs / 1000).toFixed(2)}s
+                      {formatSeconds(r.durationMs)}
                     </strong>
                   </td>
                   <td style={td}>

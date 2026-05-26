@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { exportFilename } from "@/lib/format/exportFilename";
-import { formatDurationMs } from "@/lib/format/duration";
+import { formatDurationMs, formatSeconds } from "@/lib/format/duration";
 
 interface SlowQueryRow {
   id: string;
@@ -187,7 +187,7 @@ export default function SlowQueriesPage() {
                   <tr key={r.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
                     <td style={td}>
                       <strong style={{ color: r.durationMs > 10_000 ? colors.error : r.durationMs > 5_000 ? colors.warning : colors.text }}>
-                        {(r.durationMs / 1000).toFixed(2)}s
+                        {formatSeconds(r.durationMs)}
                       </strong>
                     </td>
                     <td style={td}>
