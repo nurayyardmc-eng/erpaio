@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { stripe, PRICE_IDS, isStripeConfigured } from "@/lib/billing/stripe";
+import { isPaymentProviderConfigured, pickPaymentProvider } from "@/lib/billing/iyzico";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { isOwner } from "@/lib/auth/role";
 import { baseUrl } from "@/lib/url";
@@ -11,6 +12,21 @@ const BodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  // Track JJJJJJJ: provider gate Stripe → fallback iyzico (TR) → manual.
+  if (!isPaymentProviderConfigured()) {
+    return localizedError(req, 503, {
+      tr: "Ödeme sağlayıcı yapılandırılmamış. Yükseltme için support@erpaio.com ile iletişime geçin.",
+      en: "No payment provider configured. Contact support@erpaio.com to upgrade.",
+    });
+  }
+  // iyzico TR-priority. Currently iyzico stubbed → fall through to Stripe.
+  // Future: separate /api/billing/iyzico/checkout route.
+  if (pickPaymentProvider() === "iyzico" && !isStripeConfigured()) {
+    return localizedError(req, 501, {
+      tr: "iyzico checkout henüz hazır değil. support@erpaio.com ile iletişime geçin.",
+      en: "iyzico checkout not yet implemented. Contact support@erpaio.com.",
+    });
+  }
   if (!isStripeConfigured()) {
     return localizedError(req, 503, {
       tr: "Stripe yapılandırılmamış. Yükseltme için support@erpaio.com ile iletişime geçin.",
