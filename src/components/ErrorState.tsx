@@ -28,7 +28,7 @@ export default function ErrorState({ message, onRetry }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#EF4444",
+        color: colors.error,
       }}>
         <AlertCircle size={22} />
       </div>
