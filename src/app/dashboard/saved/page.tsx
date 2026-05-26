@@ -5,6 +5,7 @@ import { Bookmark, Pin, PinOff, Trash2 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { formatPercentInt } from "@/lib/format/percent";
@@ -147,8 +148,7 @@ export default function SavedQueriesPage() {
                 lastUsedAt: q.lastUsedAt,
               }));
               const csv = rowsToCsv(rows, ["question", "sqlQuery", "successCount", "failCount", "reliability", "pinned", "lastUsedAt"]);
-              const ts = new Date().toISOString().slice(0, 10);
-              downloadCsv(`erpaio-saved-queries-${ts}.csv`, csv);
+                            downloadCsv(exportFilename("saved-queries", "csv"), csv);
             }}
             style={{ padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
           >

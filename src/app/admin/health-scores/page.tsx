@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 import { formatPercent } from "@/lib/format/percent";
 import { healthScoreGrade } from "@/lib/analytics/healthScore";
 
@@ -145,8 +146,7 @@ export default function HealthScoresPage() {
                 createdAt: it.tenant.createdAt,
               }));
               const csv = rowsToCsv(rows, ["tenantId", "name", "plan", "score", "grade", "activity", "qualityRate", "feedbackRate", "cacheHitRate", "errorRate", "daysActive", "createdAt"]);
-              const ts = new Date().toISOString().slice(0, 10);
-              downloadCsv(`erpaio-health-scores-${ts}.csv`, csv);
+                            downloadCsv(exportFilename("health-scores", "csv"), csv);
             }}
             style={{
               marginLeft: "auto",

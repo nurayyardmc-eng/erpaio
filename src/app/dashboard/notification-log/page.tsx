@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { colors } from "@/lib/theme";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 import { formatPercentInt } from "@/lib/format/percent";
 
 interface LogEntry {
@@ -177,8 +178,7 @@ export default function NotificationLogPage() {
                 alertId: r.alertId ?? "",
               }));
               const csv = rowsToCsv(rows, ["time", "channel", "status", "recipient", "error", "alertId"]);
-              const ts = new Date().toISOString().slice(0, 10);
-              downloadCsv(`erpaio-notification-log-${ts}.csv`, csv);
+                            downloadCsv(exportFilename("notification-log", "csv"), csv);
             }}
             style={{ padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
           >

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { showToast } from "@/components/Toaster";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 import { formatDurationMs } from "@/lib/format/duration";
 
 const TRIGGER_JOBS = [
@@ -222,8 +223,7 @@ export default function CronRunsPage() {
                 errorMessage: r.errorMessage ?? "",
               }));
               const csv = rowsToCsv(csvRows, ["jobName", "status", "startedAt", "finishedAt", "durationMs", "tenantsTotal", "tenantsOk", "tenantsFail", "alertsCreated", "errorMessage"]);
-              const ts = new Date().toISOString().slice(0, 10);
-              downloadCsv(`erpaio-cron-runs-${ts}.csv`, csv);
+                            downloadCsv(exportFilename("cron-runs", "csv"), csv);
             }}
             style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
           >

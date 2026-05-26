@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 
 interface Activity {
   id: string;
@@ -124,8 +125,7 @@ export default function AdminActivityPage() {
               ip: a.ipAddress ?? "",
             }));
             const csv = rowsToCsv(rows, ["time", "tenant", "email", "action", "target", "ip"]);
-            const ts = new Date().toISOString().slice(0, 10);
-            downloadCsv(`erpaio-admin-activity-${ts}.csv`, csv);
+                        downloadCsv(exportFilename("admin-activity", "csv"), csv);
           }}
           style={{ padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
         >

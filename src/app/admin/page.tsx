@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 
 interface AdminTenant {
   id: string;
@@ -101,8 +102,7 @@ export default function AdminPage() {
               createdAt: t.createdAt,
             }));
             const csv = rowsToCsv(rows, ["id", "name", "slug", "plan", "tokensUsed", "tokensBudget", "users", "connections", "alerts", "queryCache", "trialEndsAt", "createdAt"]);
-            const ts = new Date().toISOString().slice(0, 10);
-            downloadCsv(`erpaio-tenants-${ts}.csv`, csv);
+                        downloadCsv(exportFilename("tenants", "csv"), csv);
           }}
           style={{ marginBottom: 16, padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
         >

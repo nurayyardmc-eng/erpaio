@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { showToast } from "@/components/Toaster";
 import { computeSparkline } from "@/lib/watchlist/sparkline";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 
 interface Watchlist {
   id: string;
@@ -215,8 +216,7 @@ export default function WatchlistsPage() {
       triggeredAt: w.triggeredAt ?? "",
     }));
     const csv = rowsToCsv(rows, ["name", "question", "thresholdOp", "thresholdVal", "emailTo", "enabled", "lastRunAt", "lastValue", "triggeredAt"]);
-    const ts = new Date().toISOString().slice(0, 10);
-    downloadCsv(`erpaio-watchlists-${ts}.csv`, csv);
+        downloadCsv(exportFilename("watchlists", "csv"), csv);
   };
 
   const toggleEnabled = async (w: Watchlist) => {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 
 interface Activity {
   id: string;
@@ -122,8 +123,7 @@ export default function ActivityPage() {
       userAgent: a.userAgent ?? "",
     }));
     const csv = rowsToCsv(rows, ["time", "action", "actionLabel", "target", "ip", "userAgent"]);
-    const ts = new Date().toISOString().slice(0, 10);
-    downloadCsv(`erpaio-activity-${ts}.csv`, csv);
+        downloadCsv(exportFilename("activity", "csv"), csv);
   };
 
   return (

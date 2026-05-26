@@ -6,6 +6,7 @@ import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
 import { useI18n } from "@/lib/i18n/context";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -58,8 +59,7 @@ export default function AlertsPage() {
       falsePositiveAt: a.falsePositiveAt ?? "",
     }));
     const csv = rowsToCsv(rows, ["time", "severity", "title", "description", "module", "status", "falsePositiveAt"]);
-    const ts = new Date().toISOString().slice(0, 10);
-    downloadCsv(`erpaio-alerts-${ts}.csv`, csv);
+        downloadCsv(exportFilename("alerts", "csv"), csv);
   };
 
   const toggleExpand = async (alert: Alert) => {

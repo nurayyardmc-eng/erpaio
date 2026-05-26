@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 import { formatDurationMs } from "@/lib/format/duration";
 
 interface SlowQueryRow {
@@ -139,8 +140,7 @@ export default function SlowQueriesPage() {
                 error: r.errorMessage ?? "",
               }));
               const csv = rowsToCsv(csvRows, ["time", "durationMs", "ok", "connection", "sqlSnippet", "error"]);
-              const ts = new Date().toISOString().slice(0, 10);
-              downloadCsv(`erpaio-slow-queries-${ts}.csv`, csv);
+                            downloadCsv(exportFilename("slow-queries", "csv"), csv);
             }}
             style={{
               marginLeft: "auto",

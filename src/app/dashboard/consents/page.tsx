@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { exportFilename } from "@/lib/format/exportFilename";
 
 interface ConsentEntry {
   id: string;
@@ -87,8 +88,7 @@ export default function ConsentsPage() {
       context: c.context ?? "",
     }));
     const csv = rowsToCsv(rows, ["time", "type", "typeLabel", "action", "actionLabel", "documentVer", "context"]);
-    const ts = new Date().toISOString().slice(0, 10);
-    downloadCsv(`erpaio-consents-${ts}.csv`, csv);
+        downloadCsv(exportFilename("consents", "csv"), csv);
   };
 
   return (
