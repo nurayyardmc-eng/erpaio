@@ -6,6 +6,7 @@ import EmptyState from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
 import { schemaAgeRelative, schemaAgeStatus, type SchemaAgeStatus } from "@/lib/schema/age";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 interface Connection {
   id: string;
@@ -66,7 +67,7 @@ export default function ConnectionsPage() {
       .catch(() => {});
   }, []);
 
-  const isOwnerOrAdmin = userRole === "owner" || userRole === "admin";
+  const canManage = isOwnerOrAdmin(userRole);
 
   const syncNow = async (id: string) => {
     setSyncingId(id);
@@ -422,7 +423,7 @@ export default function ConnectionsPage() {
                       {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                       {isActive ? "Aktif" : conn.status}
                     </span>
-                    {isOwnerOrAdmin && (
+                    {canManage && (
                       <button
                         onClick={() => syncNow(conn.id)}
                         disabled={syncingId === conn.id}

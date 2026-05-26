@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Dictionary, type Locale } from "@/lib/i18n/dictionary";
 import { colors } from "@/lib/theme";
 import { formatRelativeTime, formatTokens } from "@/lib/format/time";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 interface TenantSettings {
   id: string;
@@ -569,7 +570,7 @@ function TenantCronHealthSection({ t }: { t: Dictionary }) {
       .then((d: { user?: { role?: string } } | null) => {
         const role = d?.user?.role ?? null;
         setUserRole(role);
-        if (role === "owner" || role === "admin") {
+        if (isOwnerOrAdmin(role)) {
           return fetch("/api/tenant/cron-health")
             .then((r) => (r.ok ? r.json() : null))
             .then((d: { jobs: JobHealthData[] } | null) => setJobs(d?.jobs ?? null))
@@ -665,7 +666,7 @@ function TenantNpsSection({ t }: { t: Dictionary }) {
       .then((d: { user?: { role?: string } } | null) => {
         const role = d?.user?.role ?? null;
         setUserRole(role);
-        if (role === "owner" || role === "admin") {
+        if (isOwnerOrAdmin(role)) {
           setLoading(true);
           return fetch("/api/tenant/nps")
             .then((r) => (r.ok ? r.json() : null))

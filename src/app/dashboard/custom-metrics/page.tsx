@@ -6,6 +6,7 @@ import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 /**
  * Custom metrics yönetimi — Track ZZZZ. YYYY engine wiring sundu;
@@ -144,7 +145,7 @@ export default function CustomMetricsPage() {
     refresh();
   };
 
-  const canManage = userRole === "owner" || userRole === "admin";
+  const canManage = isOwnerOrAdmin(userRole);
 
   return (
     <div style={{ minHeight: "100vh", background: colors.bgSubtle, color: colors.text, padding: 40 }}>
