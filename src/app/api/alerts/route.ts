@@ -9,6 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError } from "@/lib/i18n/server";
 import { parseQuery, parseJsonBody } from "@/lib/http/searchParams";
+import { zSeverity } from "@/lib/auth/schemas";
 
 const QuerySchema = z.object({
   status: z.enum(["open", "acked", "resolved", "all"]).default("open"),
@@ -16,7 +17,7 @@ const QuerySchema = z.object({
 
 const PostSchema = z.object({
   type: z.string().min(1).max(80),
-  severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  severity: zSeverity().default("medium"),
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   module: z.string().max(80).optional(),

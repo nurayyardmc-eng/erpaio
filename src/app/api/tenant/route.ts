@@ -5,6 +5,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { zSeverity } from "@/lib/auth/schemas";
 
 const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -12,7 +13,7 @@ const PatchSchema = z.object({
   whatsappEnabled: z.boolean().optional(),
   emailTo: z.string().email().nullable().optional(),
   emailEnabled: z.boolean().optional(),
-  alertMinSeverity: z.enum(["low", "medium", "high", "critical"]).optional(),
+  alertMinSeverity: zSeverity().optional(),
 });
 
 export async function GET(req: Request) {

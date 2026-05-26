@@ -24,3 +24,27 @@ export const EMAIL_MAX_LENGTH = 200;
 export function zEmail(maxLength: number = EMAIL_MAX_LENGTH) {
   return z.string().email().max(maxLength);
 }
+
+/**
+ * Severity enum (matches anomaly engine + alerts).
+ * Track EEEEEEE — central source of truth for severity values.
+ */
+export const SEVERITY_VALUES = ["low", "medium", "high", "critical"] as const;
+export type SeverityValue = (typeof SEVERITY_VALUES)[number];
+export function zSeverity() {
+  return z.enum(SEVERITY_VALUES);
+}
+
+/**
+ * Team role values used in invitation + role-change endpoints.
+ * `owner` excluded from invitation flow (owners cannot be invited;
+ * they're created at signup).
+ */
+export const TEAM_ROLE_VALUES = ["viewer", "admin", "owner"] as const;
+export const INVITE_ROLE_VALUES = ["viewer", "admin"] as const;
+export function zTeamRole() {
+  return z.enum(TEAM_ROLE_VALUES);
+}
+export function zInviteRole() {
+  return z.enum(INVITE_ROLE_VALUES);
+}

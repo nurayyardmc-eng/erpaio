@@ -5,10 +5,11 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { isOwnerOrAdmin, isOwner } from "@/lib/auth/role";
+import { zTeamRole } from "@/lib/auth/schemas";
 
 const PatchSchema = z.object({
   userId: z.string(),
-  role: z.enum(["viewer", "admin", "owner"]),
+  role: zTeamRole(),
 });
 
 export async function GET(req: Request) {

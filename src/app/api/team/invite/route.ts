@@ -11,10 +11,11 @@ import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { escapeHtml } from "@/lib/html/escape";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { zInviteRole } from "@/lib/auth/schemas";
 
 const PostSchema = z.object({
   email: z.string().email(),
-  role: z.enum(["viewer", "admin"]),
+  role: zInviteRole(),
 });
 
 export async function POST(req: Request) {
