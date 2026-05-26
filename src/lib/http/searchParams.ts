@@ -178,6 +178,19 @@ export function watchlistNotFoundError(req: Request): Response {
   });
 }
 
+/**
+ * Common "Bağlantı bulunamadı." 404. Track NNNNNNNNNN.
+ * Used by: connections/[id] (DELETE/PATCH), connections/[id]/sync,
+ * lib/db/erpConnection assertOwnedConnection. Tenant-scope ownership
+ * check fail edince üç yer aynı i18n string'i veriyordu.
+ */
+export function connectionNotFoundError(req: Request): Response {
+  return localizedError(req, 404, {
+    tr: "Bağlantı bulunamadı.",
+    en: "Connection not found.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

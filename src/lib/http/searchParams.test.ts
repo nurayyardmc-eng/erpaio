@@ -12,6 +12,7 @@ import {
   tenantNotFoundError,
   getRequiredIdParam,
   watchlistNotFoundError,
+  connectionNotFoundError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -378,5 +379,24 @@ describe("watchlistNotFoundError", () => {
     const res = watchlistNotFoundError(reqWithLang("en"));
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("Watchlist not found.");
+  });
+});
+
+describe("connectionNotFoundError", () => {
+  it("returns 404", () => {
+    const res = connectionNotFoundError(reqWithLang("tr"));
+    expect(res.status).toBe(404);
+  });
+
+  it("TR body — 'Bağlantı bulunamadı.'", async () => {
+    const res = connectionNotFoundError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Bağlantı bulunamadı.");
+  });
+
+  it("EN body — 'Connection not found.'", async () => {
+    const res = connectionNotFoundError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Connection not found.");
   });
 });

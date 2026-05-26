@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
+import { connectionNotFoundError } from "@/lib/http/searchParams";
 
 export async function DELETE(
   req: Request,
@@ -17,7 +18,7 @@ export async function DELETE(
   });
 
   if (result.count === 0) {
-    return localizedError(req, 404, { tr: "Bağlantı bulunamadı.", en: "Connection not found." });
+    return connectionNotFoundError(req);
   }
 
   return Response.json({ ok: true });

@@ -18,12 +18,7 @@
  * require*-style helper'larla uyumlu (requireOwnerOrAdmin, requireOwner).
  */
 import { prisma } from "@/lib/db/prisma";
-import { localizedError } from "@/lib/i18n/server";
-
-const NOT_FOUND = {
-  tr: "Bağlantı bulunamadı.",
-  en: "Connection not found.",
-} as const;
+import { connectionNotFoundError } from "@/lib/http/searchParams";
 
 export async function assertOwnedConnection(
   req: Request,
@@ -34,6 +29,6 @@ export async function assertOwnedConnection(
     where: { id: connectionId, tenantId },
     select: { id: true },
   });
-  if (!conn) return localizedError(req, 404, NOT_FOUND);
+  if (!conn) return connectionNotFoundError(req);
   return null;
 }

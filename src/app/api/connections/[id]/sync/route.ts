@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateSchema, getSchema } from "@/lib/cache/schema";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { connectionNotFoundError } from "@/lib/http/searchParams";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
@@ -45,10 +46,7 @@ export async function POST(
     select: { id: true, status: true },
   });
   if (!conn) {
-    return localizedError(req, 404, {
-      tr: "Bağlantı bulunamadı.",
-      en: "Connection not found.",
-    });
+    return connectionNotFoundError(req);
   }
 
   const log = childLogger({ component: "schema-sync", connectionId: id, tenantId: session.user.tenantId });
