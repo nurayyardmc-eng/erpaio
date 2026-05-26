@@ -6,7 +6,7 @@ import { lookupCache, writeCache, recordOutcome } from "@/lib/cache/queryCache";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
-import { setSentryUser } from "@/lib/observability/sentryUser";
+import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
@@ -36,12 +36,7 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  setSentryUser({
-    id: session.user.id,
-    email: session.user.email,
-    tenantId: session.user.tenantId,
-    role: session.user.role,
-  });
+  setSentryUserFromSession(session);
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;

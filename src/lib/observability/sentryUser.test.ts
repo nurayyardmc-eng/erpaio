@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { setSentryUser } from "./sentryUser";
+import { setSentryUser, setSentryUserFromSession } from "./sentryUser";
 
 // Mock @sentry/nextjs to capture setUser calls without booting Sentry SDK.
 vi.mock("@sentry/nextjs", () => ({
@@ -65,5 +65,36 @@ describe("observability/sentryUser/setSentryUser", () => {
     expect(Sentry.setUser).toHaveBeenCalledTimes(1);
     setSentryUser({ id: "y", tenantId: "t2" });
     expect(Sentry.setUser).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("observability/sentryUser/setSentryUserFromSession", () => {
+  beforeEach(() => {
+    vi.mocked(Sentry.setUser).mockClear();
+  });
+
+  it("maps session.user fields to Sentry user shape", () => {
+    setSentryUserFromSession({
+      user: { id: "u1", tenantId: "t1", email: "a@b.co", role: "admin" },
+    });
+    expect(Sentry.setUser).toHaveBeenCalledWith({
+      id: "u1",
+      email: "a@b.co",
+      tenant_id: "t1",
+      role: "admin",
+    });
+  });
+
+  it("missing email/role → undefined (Sentry omits)", () => {
+    setSentryUserFromSession({ user: { id: "u1", tenantId: "t1" } });
+    const arg = vi.mocked(Sentry.setUser).mock.calls[0][0];
+    expect(arg).toHaveProperty("email", undefined);
+    expect(arg).toHaveProperty("role", undefined);
+  });
+
+  it("null email → undefined", () => {
+    setSentryUserFromSession({ user: { id: "u1", tenantId: "t1", email: null } });
+    const arg = vi.mocked(Sentry.setUser).mock.calls[0][0];
+    expect(arg).toHaveProperty("email", undefined);
   });
 });
