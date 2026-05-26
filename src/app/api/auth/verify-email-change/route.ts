@@ -5,6 +5,7 @@ import { RATE_LIMITS, enforceIpRateLimit } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { sha256Hex } from "@/lib/crypto/hash";
+import { isTokenUsable } from "@/lib/auth/oneTimeToken";
 /**
  * Email change verification.
  *
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
     },
   });
 
-  if (!row || row.usedAt || row.expiresAt < new Date()) {
+  if (!isTokenUsable(row)) {
     return jsonError(req, "auth.invalidToken", 400);
   }
 
