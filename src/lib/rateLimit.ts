@@ -97,8 +97,6 @@ export const RATE_LIMITS = {
   CHAT_FEEDBACK: { prefix: "chat-fb", max: 60, windowMs: 60_000 },
   CHAT_FOLLOW_UPS: { prefix: "follow-ups", max: 30, windowMs: 60_000 },
   CHAT_EXPLAIN: { prefix: "explain", max: 20, windowMs: 60_000 },
-  ALERT_CREATE: { prefix: "alert", max: 100, windowMs: 60_000 },
-  CONNECTION_TEST: { prefix: "conn-test", max: 10, windowMs: 60_000 },
   CONNECTION_SCHEMA_SYNC: { prefix: "conn-sync", max: 10, windowMs: ONE_HOUR_MS }, // 10/saat / user — re-sync ERP query'leri pahalı
   // --- Auth & security-critical (IP-based unless noted) ---
   RESET_PASSWORD: { prefix: "reset-pwd", max: 5, windowMs: ONE_HOUR_MS }, // 5/saat
