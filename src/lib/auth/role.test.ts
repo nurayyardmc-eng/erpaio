@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { isOwnerOrAdmin, isOwner, requireOwnerOrAdmin, requireOwner } from "./role";
+import {
+  isOwnerOrAdmin,
+  isOwner,
+  requireOwnerOrAdmin,
+  requireOwner,
+  DENY_OWNER_ADMIN_VIEW,
+  DENY_ADMIN_EDIT,
+} from "./role";
 
 function reqWithLang(lang: "tr" | "en"): Request {
   const headers = new Headers();
@@ -142,5 +149,31 @@ describe("auth/role/requireOwner", () => {
     });
     const body = (await res!.json()) as { error: string };
     expect(body.error).toBe("Yalnızca tenant sahibi plan değiştirebilir.");
+  });
+});
+
+describe("DENY constants (Track MMMMMMMMM)", () => {
+  it("DENY_OWNER_ADMIN_VIEW has tr + en messages", () => {
+    expect(DENY_OWNER_ADMIN_VIEW.tr).toBeTruthy();
+    expect(DENY_OWNER_ADMIN_VIEW.en).toBeTruthy();
+    expect(DENY_OWNER_ADMIN_VIEW.tr).not.toBe(DENY_OWNER_ADMIN_VIEW.en);
+  });
+
+  it("DENY_ADMIN_EDIT has tr + en messages", () => {
+    expect(DENY_ADMIN_EDIT.tr).toBeTruthy();
+    expect(DENY_ADMIN_EDIT.en).toBeTruthy();
+    expect(DENY_ADMIN_EDIT.tr).not.toBe(DENY_ADMIN_EDIT.en);
+  });
+
+  it("requireOwnerOrAdmin uses DENY_OWNER_ADMIN_VIEW correctly", async () => {
+    const res = requireOwnerOrAdmin(reqWithLang("tr"), "viewer", DENY_OWNER_ADMIN_VIEW);
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe(DENY_OWNER_ADMIN_VIEW.tr);
+  });
+
+  it("requireOwnerOrAdmin uses DENY_ADMIN_EDIT correctly", async () => {
+    const res = requireOwnerOrAdmin(reqWithLang("en"), "viewer", DENY_ADMIN_EDIT);
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe(DENY_ADMIN_EDIT.en);
   });
 });
