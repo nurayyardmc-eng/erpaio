@@ -1,6 +1,7 @@
 "use client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { computePagination } from "@/lib/pagination";
 
 interface Props {
   page: number;
@@ -10,11 +11,8 @@ interface Props {
 }
 
 export default function Pagination({ page, pageSize, total, onChange }: Props) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const { totalPages, start, end } = computePagination(page, pageSize, total);
   if (totalPages <= 1) return null;
-
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
 
   return (
     <div style={{
