@@ -4,7 +4,8 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { RATE_LIMITS, enforceIpRateLimit } from "@/lib/rateLimit";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { zPassword } from "@/lib/auth/schemas";
 const BodySchema = z.object({
@@ -20,15 +21,10 @@ export async function POST(req: Request) {
   const limited = await enforceIpRateLimit(req, RATE_LIMITS.RESET_PASSWORD);
   if (limited) return limited;
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) {
-    return localizedError(req, 400, {
-      tr: body.error.issues[0]?.message ?? "Geçersiz veri",
-      en: body.error.issues[0]?.message ?? "Invalid data",
-    });
-  }
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { token, password } = body.data;
+  const { token, password } = body;
   const log = childLogger({ component: "reset-password" });
 
   const tokenHash = sha256Hex(token);

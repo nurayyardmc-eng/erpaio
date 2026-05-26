@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/dual";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { isValidAvatarDataUrl, pickProfileUpdateAction } from "@/lib/auth/avatar";
 
@@ -43,28 +44,23 @@ export async function PATCH(req: Request) {
   if ("error" in result) return result.error;
   const { user } = result;
 
-  const body = PatchSchema.safeParse(await req.json());
-  if (!body.success) {
-    return localizedError(req, 400, {
-      tr: body.error.issues[0]?.message ?? "Geçersiz veri",
-      en: body.error.issues[0]?.message ?? "Invalid data",
-    });
-  }
+  const body = await parseJsonBody(req, PatchSchema);
+  if (body instanceof Response) return body;
 
   const data: { name?: string | null; avatarBase64?: string | null } = {};
   const changedFields: string[] = [];
-  if (body.data.name !== undefined) {
-    data.name = body.data.name?.trim() || null;
+  if (body.name !== undefined) {
+    data.name = body.name?.trim() || null;
     changedFields.push("name");
   }
-  if (body.data.avatarBase64 !== undefined) {
-    if (!isValidAvatarDataUrl(body.data.avatarBase64)) {
+  if (body.avatarBase64 !== undefined) {
+    if (!isValidAvatarDataUrl(body.avatarBase64)) {
       return localizedError(req, 400, {
         tr: "Geçersiz görsel formatı.",
         en: "Invalid image format.",
       });
     }
-    data.avatarBase64 = body.data.avatarBase64;
+    data.avatarBase64 = body.avatarBase64;
     changedFields.push("avatar");
   }
 
