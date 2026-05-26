@@ -34,14 +34,14 @@ export default function ErrorPage({
       <div style={{
         width: 64,
         height: 64,
-        background: "#FEE2E2",
+        background: colors.errorSoft,
         borderRadius: 16,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         marginTop: 8,
       }}>
-        <AlertOctagon size={28} color="#EF4444" />
+        <AlertOctagon size={28} color={colors.error} />
       </div>
       <h1 style={{
         fontFamily: "var(--font-playfair), Georgia, serif",
