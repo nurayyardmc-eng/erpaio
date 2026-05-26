@@ -143,3 +143,40 @@ describe("erpProfiles", () => {
     });
   });
 });
+
+describe("erpProfiles YAML parseability (regression)", () => {
+  it("every listProfiles entry loadProfile()'s successfully", () => {
+    for (const slug of listProfiles()) {
+      const profile = loadProfile(slug);
+      expect(profile).not.toBeNull();
+      expect(profile?.name).toBeTruthy();
+      expect(profile?.slug).toBe(slug);
+    }
+  });
+
+  it("every profile has canonical_tables with at least 1 entry", () => {
+    for (const slug of listProfiles()) {
+      const profile = loadProfile(slug)!;
+      expect(Object.keys(profile.canonical_tables).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("every canonical_table has important_columns array", () => {
+    for (const slug of listProfiles()) {
+      const profile = loadProfile(slug)!;
+      for (const [name, def] of Object.entries(profile.canonical_tables)) {
+        expect(Array.isArray(def.important_columns), `${slug}/${name}`).toBe(true);
+        expect(def.important_columns.length, `${slug}/${name}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("profileToPromptContext works on every profile (no parse/render errors)", () => {
+    for (const slug of listProfiles()) {
+      const profile = loadProfile(slug)!;
+      const ctx = profileToPromptContext(profile);
+      expect(ctx).toContain(profile.name);
+      expect(ctx.length).toBeGreaterThan(100);
+    }
+  });
+});
