@@ -8,6 +8,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { zPassword } from "@/lib/auth/schemas";
+import { isTokenUsable } from "@/lib/auth/oneTimeToken";
 const BodySchema = z.object({
   token: z.string().min(8),
   password: zPassword(),
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
   const tokenHash = sha256Hex(token);
   const row = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
 
-  if (!row || row.usedAt || row.expiresAt < new Date()) {
+  if (!isTokenUsable(row)) {
     return jsonError(req, "auth.invalidToken", 400);
   }
 

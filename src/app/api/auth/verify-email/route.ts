@@ -4,6 +4,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { RATE_LIMITS, enforceIpRateLimit } from "@/lib/rateLimit";
 import { jsonError } from "@/lib/i18n/server";
 import { sha256Hex } from "@/lib/crypto/hash";
+import { isTokenUsable } from "@/lib/auth/oneTimeToken";
 const BodySchema = z.object({ token: z.string().min(8) });
 
 export async function POST(req: Request) {
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   const tokenHash = sha256Hex(body.data.token);
   const row = await prisma.emailVerificationToken.findUnique({ where: { tokenHash } });
 
-  if (!row || row.usedAt || row.expiresAt < new Date()) {
+  if (!isTokenUsable(row)) {
     return jsonError(req, "auth.invalidToken", 400);
   }
 
