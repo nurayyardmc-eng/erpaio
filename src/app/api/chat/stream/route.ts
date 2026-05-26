@@ -10,7 +10,7 @@ import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { checkAndConsume, recordUsage } from "@/lib/budget";
+import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
 import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
   const budget = await checkAndConsume(tenantId, 5000);
   if (!budget.ok) {
-    return localizedError(req, 402, { tr: budget.reason, en: budget.reason });
+    return budgetExhaustedError(req, budget);
   }
 
   if (detectInjection(question)) {

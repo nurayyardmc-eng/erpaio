@@ -67,6 +67,23 @@ export function totalAnthropicTokens(usage: {
   return usage.input_tokens + usage.output_tokens;
 }
 
+/**
+ * 402 Payment Required response for token budget exhaustion.
+ *
+ * Track XXXXXXXXX — 3 chat sub-route (explain, follow-ups, stream)
+ * IDENTIK pattern yapiyordu:
+ *   if (!budget.ok) return localizedError(req, 402, {
+ *     tr: budget.reason, en: budget.reason
+ *   });
+ *
+ * chat/route.ts (main chat) ekstra remainingTokens field istiyor —
+ * bu helper'i kullanmiyor, intentional.
+ */
+import { localizedError } from "@/lib/i18n/server";
+export function budgetExhaustedError(req: Request, budget: { reason: string }): Response {
+  return localizedError(req, 402, { tr: budget.reason, en: budget.reason });
+}
+
 export async function recordUsage(tenantId: string, tokens: number): Promise<void> {
   await prisma.tenant
     .update({

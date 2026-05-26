@@ -4,10 +4,10 @@ import { getAuth } from "@/lib/auth/dual";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { checkAndConsume, recordUsage, totalAnthropicTokens } from "@/lib/budget";
+import { checkAndConsume, recordUsage, totalAnthropicTokens, budgetExhaustedError } from "@/lib/budget";
 import { MODEL_HAIKU, anthropicClient } from "@/lib/ai/models";
 import { childLogger } from "@/lib/observability/logger";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
 
 
 const BodySchema = z.object({
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
   const budget = await checkAndConsume(session.user.tenantId, 1500);
-  if (!budget.ok) return localizedError(req, 402, { tr: budget.reason, en: budget.reason });
+  if (!budget.ok) return budgetExhaustedError(req, budget);
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;
