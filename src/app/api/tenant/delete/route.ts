@@ -1,6 +1,7 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { getAuth } from "@/lib/auth/dual";
+import { userNotFoundError } from "@/lib/http/searchParams";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     where: { id: session.user.id },
     select: { passwordHash: true },
   });
-  if (!user) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
+  if (!user) return userNotFoundError(req);
 
   const valid = await bcrypt.compare(body.data.password, user.passwordHash);
   if (!valid) return localizedError(req, 401, { tr: "Şifre yanlış.", en: "Incorrect password." });

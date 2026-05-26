@@ -121,6 +121,28 @@ export function noFieldsToUpdateError(req: Request): Response {
   });
 }
 
+/**
+ * Common "Kullanıcı bulunamadı." 404. Track VVVVVVVVV.
+ * Used by: me/password, me/notification-prefs, tenant/delete, team/route.
+ */
+export function userNotFoundError(req: Request): Response {
+  return localizedError(req, 404, {
+    tr: "Kullanıcı bulunamadı.",
+    en: "User not found.",
+  });
+}
+
+/**
+ * Common "Tenant bulunamadı." 404. Track VVVVVVVVV.
+ * Used by: billing/checkout, team/invite.
+ */
+export function tenantNotFoundError(req: Request): Response {
+  return localizedError(req, 404, {
+    tr: "Tenant bulunamadı.",
+    en: "Tenant not found.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

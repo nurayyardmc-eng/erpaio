@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, userNotFoundError } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
@@ -58,7 +58,7 @@ export async function PATCH(req: Request) {
     where: { id: body.userId, tenantId: session.user.tenantId },
     select: { role: true },
   });
-  if (!target) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
+  if (!target) return userNotFoundError(req);
 
   // Son owner düşürülemez — tenant orphan kalmasın.
   if (target.role === "owner") {

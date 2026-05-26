@@ -7,7 +7,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { zPassword } from "@/lib/auth/schemas";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, userNotFoundError } from "@/lib/http/searchParams";
 
 const BodySchema = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     where: { id: session.user.id },
     select: { passwordHash: true },
   });
-  if (!user) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
+  if (!user) return userNotFoundError(req);
 
   const valid = await bcrypt.compare(body.currentPassword, user.passwordHash);
   if (!valid) return localizedError(req, 400, { tr: "Mevcut şifre hatalı.", en: "Current password is incorrect." });

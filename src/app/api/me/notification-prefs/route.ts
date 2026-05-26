@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, userNotFoundError } from "@/lib/http/searchParams";
 import { recordUserActivity } from "@/lib/audit/activity";
 
 /**
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     where: { id: session.user.id },
     select: { pushPrefAlerts: true, pushPrefAnomaly: true, pushPrefWatchlists: true },
   });
-  if (!user) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
+  if (!user) return userNotFoundError(req);
 
   return Response.json({
     prefs: PrefsResponseSchema.parse({

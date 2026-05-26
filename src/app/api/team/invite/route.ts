@@ -7,7 +7,7 @@ import { sendEmail } from "@/lib/notifications/email";
 import { getPlan } from "@/lib/plans";
 import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, tenantNotFoundError } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { escapeHtml } from "@/lib/html/escape";
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     where: { id: session.user.tenantId },
     select: { plan: true, name: true, _count: { select: { users: true } } },
   });
-  if (!tenant) return localizedError(req, 404, { tr: "Tenant bulunamadı.", en: "Tenant not found." });
+  if (!tenant) return tenantNotFoundError(req);
 
   const planLimits = getPlan(tenant.plan);
   const pendingCount = await prisma.invitation.count({

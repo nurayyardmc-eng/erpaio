@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { stripe, PRICE_IDS, isStripeConfigured } from "@/lib/billing/stripe";
 import { isPaymentProviderConfigured, pickPaymentProvider } from "@/lib/billing/iyzico";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, tenantNotFoundError } from "@/lib/http/searchParams";
 import { requireOwner } from "@/lib/auth/role";
 import { baseUrl } from "@/lib/url";
 
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     where: { id: session.user.tenantId },
     select: { id: true, name: true, stripeCustomerId: true },
   });
-  if (!tenant) return localizedError(req, 404, { tr: "Tenant bulunamadı.", en: "Tenant not found." });
+  if (!tenant) return tenantNotFoundError(req);
 
   let customerId = tenant.stripeCustomerId;
   if (!customerId) {
