@@ -2,8 +2,12 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
-import { jsonError, localizedError } from "@/lib/i18n/server";
-import { parseJsonBody, userNotFoundError } from "@/lib/http/searchParams";
+import { jsonError } from "@/lib/i18n/server";
+import {
+  parseJsonBody,
+  userNotFoundError,
+  noFieldsToUpdateError,
+} from "@/lib/http/searchParams";
 import { recordUserActivity } from "@/lib/audit/activity";
 
 /**
@@ -71,12 +75,7 @@ export async function PATCH(req: Request) {
   if (body.anomaly !== undefined) data.pushPrefAnomaly = body.anomaly;
   if (body.watchlists !== undefined) data.pushPrefWatchlists = body.watchlists;
 
-  if (Object.keys(data).length === 0) {
-    return localizedError(req, 400, {
-      tr: "Güncellenecek alan yok.",
-      en: "No fields to update.",
-    });
-  }
+  if (Object.keys(data).length === 0) return noFieldsToUpdateError(req);
 
   const user = await prisma.user.update({
     where: { id: session.user.id },
