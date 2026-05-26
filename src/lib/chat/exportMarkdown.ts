@@ -10,6 +10,8 @@
  * defensive olarak "" döner (caller "boş sohbet" mesajı gösterir).
  */
 
+import { exportFilenameTimestamp } from "@/lib/format/exportFilename";
+
 export interface ChatExportMessage {
   role: "user" | "assistant" | "system" | string;
   content: string;
@@ -122,7 +124,7 @@ export function chatSessionToMarkdown(
  * tarih eklenir, .md uzantısı. Boş title → "chat-session".
  */
 export function chatSessionFilename(session: ChatExportSession): string {
-  const ts = new Date().toISOString().slice(0, 10);
+  const ts = exportFilenameTimestamp();
   const titleSlug = (session.title ?? "")
     .toLowerCase()
     .normalize("NFD")
