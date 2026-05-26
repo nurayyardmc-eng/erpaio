@@ -6,10 +6,11 @@ import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { zPassword } from "@/lib/auth/schemas";
 
 const BodySchema = z.object({
   currentPassword: z.string().min(1).max(200),
-  newPassword: z.string().min(8).max(200),
+  newPassword: zPassword(),
 });
 
 export async function POST(req: Request) {

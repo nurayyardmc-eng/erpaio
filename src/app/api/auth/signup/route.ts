@@ -14,9 +14,10 @@ import { slugify } from "@/lib/auth/slugify";
 import { welcomeEmailHtml } from "@/lib/auth/welcomeEmail";
 
 import { extractClientIp } from "@/lib/http/clientIp";
+import { zPassword, zEmail } from "@/lib/auth/schemas";
 const BodySchema = z.object({
-  email: z.string().email().max(200),
-  password: z.string().min(8).max(200),
+  email: zEmail(),
+  password: zPassword(),
   name: z.string().min(1).max(80).optional(),
   tenantName: z.string().min(1).max(120),
   // KVKK/Privacy/Terms onayı — frontend signup formundan gelir

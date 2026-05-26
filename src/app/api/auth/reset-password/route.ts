@@ -7,9 +7,10 @@ import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { extractClientIp } from "@/lib/http/clientIp";
 import { sha256Hex } from "@/lib/crypto/hash";
+import { zPassword } from "@/lib/auth/schemas";
 const BodySchema = z.object({
   token: z.string().min(8),
-  password: z.string().min(8).max(200),
+  password: zPassword(),
 });
 
 export async function POST(req: Request) {

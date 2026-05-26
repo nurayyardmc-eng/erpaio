@@ -6,10 +6,11 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
+import { zPassword } from "@/lib/auth/schemas";
 
 const BodySchema = z.object({
   token: z.string().min(8),
-  password: z.string().min(8).max(200),
+  password: zPassword(),
   name: z.string().min(1).max(80).optional(),
 });
 
