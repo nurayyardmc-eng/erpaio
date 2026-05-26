@@ -6,6 +6,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { z } from "zod";
 
@@ -36,10 +37,10 @@ export async function PATCH(req: Request) {
     );
   }
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { messageId, feedback } = body.data;
+  const { messageId, feedback } = body;
   const tenantId = session.user.tenantId;
 
   const message = await prisma.chatMessage.findFirst({

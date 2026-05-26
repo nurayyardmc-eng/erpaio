@@ -7,6 +7,7 @@ import { sendEmail } from "@/lib/notifications/email";
 import { getPlan } from "@/lib/plans";
 import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { escapeHtml } from "@/lib/html/escape";
@@ -29,10 +30,10 @@ export async function POST(req: Request) {
   const denied = requireOwnerOrAdmin(req, session.user.role);
   if (denied) return denied;
 
-  const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, PostSchema);
+  if (body instanceof Response) return body;
 
-  const { email, role } = body.data;
+  const { email, role } = body;
   const log = childLogger({ component: "invite", tenantId: session.user.tenantId });
 
   const tenant = await prisma.tenant.findUnique({

@@ -2,7 +2,8 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { parseJsonBody } from "@/lib/http/searchParams";
+import { jsonError } from "@/lib/i18n/server";
 
 const PostSchema = z.object({
   score: z.number().int().min(0).max(10),
@@ -16,15 +17,15 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, PostSchema);
+  if (body instanceof Response) return body;
 
   await prisma.npsResponse.create({
     data: {
       tenantId: session.user.tenantId,
       userId: session.user.id,
-      score: body.data.score,
-      comment: body.data.comment ?? null,
+      score: body.score,
+      comment: body.comment ?? null,
       promptedAt: new Date(),
     },
   });

@@ -9,6 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
@@ -42,10 +43,10 @@ export async function POST(req: Request) {
     role: session.user.role,
   });
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { question, connectionId, sessionId } = body.data;
+  const { question, connectionId, sessionId } = body;
   const tenantId = session.user.tenantId;
 
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);

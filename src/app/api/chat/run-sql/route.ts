@@ -7,6 +7,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUser } from "@/lib/observability/sentryUser";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { z } from "zod";
 
@@ -39,10 +40,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
-  const { sql, connectionId, sessionId } = body.data;
+  const { sql, connectionId, sessionId } = body;
 
   const conn = await prisma.erpConnection.findFirst({
     where: { id: connectionId, tenantId, status: "active" },

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { requireOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
@@ -44,17 +45,17 @@ export async function PATCH(req: Request) {
   });
   if (denied) return denied;
 
-  const body = PatchSchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, PatchSchema);
+  if (body instanceof Response) return body;
 
   // Owner devri bu endpoint'ten yapılamaz — atomic transfer için ayrı endpoint gerekli.
-  if (body.data.role === "owner") {
+  if (body.role === "owner") {
     return localizedError(req, 400, { tr: "Owner devri için ayrı endpoint kullanın (henüz yok).", en: "Use a separate endpoint for owner transfer (not yet available)." });
   }
 
   // Hedef kullanıcı tenant içinde mevcut mu?
   const target = await prisma.user.findFirst({
-    where: { id: body.data.userId, tenantId: session.user.tenantId },
+    where: { id: body.userId, tenantId: session.user.tenantId },
     select: { role: true },
   });
   if (!target) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
@@ -70,8 +71,8 @@ export async function PATCH(req: Request) {
   }
 
   await prisma.user.updateMany({
-    where: { id: body.data.userId, tenantId: session.user.tenantId },
-    data: { role: body.data.role },
+    where: { id: body.userId, tenantId: session.user.tenantId },
+    data: { role: body.role },
   });
 
   const ctxRole = activityContextFromRequest(req);
@@ -80,8 +81,8 @@ export async function PATCH(req: Request) {
     tenantId: session.user.tenantId,
     email: session.user.email ?? null,
     action: "team.role.change",
-    target: body.data.userId,
-    metadata: { newRole: body.data.role },
+    target: body.userId,
+    metadata: { newRole: body.role },
     ...ctxRole,
   });
 

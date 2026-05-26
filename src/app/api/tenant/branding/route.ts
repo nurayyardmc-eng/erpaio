@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { hasFeature } from "@/lib/plans";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
@@ -49,12 +50,12 @@ export async function PATCH(req: Request) {
     return localizedError(req, 403, { tr: "White-label yalnızca Enterprise planda.", en: "White-label is only available on the Enterprise plan." });
   }
 
-  const body = PatchSchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, PatchSchema);
+  if (body instanceof Response) return body;
 
   const updated = await prisma.tenant.update({
     where: { id: session.user.tenantId },
-    data: body.data,
+    data: body,
     select: { brandingLogoUrl: true, brandingPrimary: true, brandingSenderName: true },
   });
   return Response.json({ branding: updated });

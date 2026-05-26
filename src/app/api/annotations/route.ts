@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
 
@@ -33,10 +34,10 @@ export async function PUT(req: Request) {
     return localizedError(req, 403, { tr: "Yalnızca yönetici düzenleyebilir.", en: "Only admins can edit." });
   }
 
-  const body = PutSchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, PutSchema);
+  if (body instanceof Response) return body;
 
-  const { tableName, columnName, description, hidden } = body.data;
+  const { tableName, columnName, description, hidden } = body;
 
   const annotation = await prisma.schemaAnnotation.upsert({
     where: {

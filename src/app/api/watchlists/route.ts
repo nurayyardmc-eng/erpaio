@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
+import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 
 const PostSchema = z.object({
@@ -31,19 +32,19 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, PostSchema);
+  if (body instanceof Response) return body;
 
   const conn = await prisma.erpConnection.findFirst({
-    where: { id: body.data.connectionId, tenantId: session.user.tenantId },
+    where: { id: body.connectionId, tenantId: session.user.tenantId },
     select: { id: true },
   });
   if (!conn) return localizedError(req, 404, { tr: "Bağlantı bulunamadı.", en: "Connection not found." });
 
   const watchlist = await prisma.watchlist.create({
     data: {
-      ...body.data,
-      emailTo: body.data.emailTo ?? null,
+      ...body,
+      emailTo: body.emailTo ?? null,
       tenantId: session.user.tenantId,
       userId: session.user.id,
     },

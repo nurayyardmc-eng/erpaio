@@ -7,6 +7,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { zPassword } from "@/lib/auth/schemas";
+import { parseJsonBody } from "@/lib/http/searchParams";
 
 const BodySchema = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -20,8 +21,8 @@ export async function POST(req: Request) {
   const limit = await rateLimit(session.user.id, RATE_LIMITS.PASSWORD_CHANGE);
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
-  const body = BodySchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, BodySchema);
+  if (body instanceof Response) return body;
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -29,14 +30,14 @@ export async function POST(req: Request) {
   });
   if (!user) return localizedError(req, 404, { tr: "Kullanıcı bulunamadı.", en: "User not found." });
 
-  const valid = await bcrypt.compare(body.data.currentPassword, user.passwordHash);
+  const valid = await bcrypt.compare(body.currentPassword, user.passwordHash);
   if (!valid) return localizedError(req, 400, { tr: "Mevcut şifre hatalı.", en: "Current password is incorrect." });
 
-  if (body.data.currentPassword === body.data.newPassword) {
+  if (body.currentPassword === body.newPassword) {
     return localizedError(req, 400, { tr: "Yeni şifre mevcut şifre ile aynı olamaz.", en: "New password cannot be the same as the current one." });
   }
 
-  const newHash = await bcrypt.hash(body.data.newPassword, 12);
+  const newHash = await bcrypt.hash(body.newPassword, 12);
   await prisma.user.update({
     where: { id: session.user.id },
     data: { passwordHash: newHash, failedLoginCount: 0, lockedUntil: null },

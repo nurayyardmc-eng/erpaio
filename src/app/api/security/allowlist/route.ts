@@ -5,6 +5,7 @@ import { invalidateAllowlist } from "@/lib/security/ipAllowlist";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
+import { parseJsonBody } from "@/lib/http/searchParams";
 
 const CidrSchema = z.string().regex(
   /^\d{1,3}(\.\d{1,3}){3}(\/(?:[0-9]|[12][0-9]|3[0-2]))?$/,
@@ -33,14 +34,14 @@ export async function POST(req: Request) {
   const denied = requireOwnerOrAdmin(req, session.user.role);
   if (denied) return denied;
 
-  const body = PostSchema.safeParse(await req.json());
-  if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
+  const body = await parseJsonBody(req, PostSchema);
+  if (body instanceof Response) return body;
 
   const entry = await prisma.tenantIpAllowlist.create({
     data: {
       tenantId: session.user.tenantId,
-      cidr: body.data.cidr,
-      label: body.data.label ?? null,
+      cidr: body.cidr,
+      label: body.label ?? null,
     },
   });
   invalidateAllowlist(session.user.tenantId);
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
     email: session.user.email ?? null,
     action: "ip_allowlist.add",
     target: entry.id,
-    metadata: { cidr: body.data.cidr, label: body.data.label ?? null },
+    metadata: { cidr: body.cidr, label: body.label ?? null },
     ...ctxAdd,
   });
 
