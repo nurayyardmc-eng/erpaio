@@ -66,7 +66,7 @@ export default function DashboardHeader({ email, name }: Props) {
         >
           <Logo size={36} variant="mark" />
         </Link>
-        <div className="hide-mobile" style={{ width: 1, height: 24, background: "rgba(10,10,10,0.08)" }} />
+        <div className="hide-mobile" style={{ width: 1, height: 24, background: colors.border }} />
         <div style={{
           fontFamily: "var(--font-playfair), Georgia, serif",
           fontSize: 20,
