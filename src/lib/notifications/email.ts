@@ -4,6 +4,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { prisma } from "@/lib/db/prisma";
 import { recordNotification, maskRecipient } from "./log";
 import { pickEmailSender, fromDomainOf } from "./sender";
+import { escapeHtml } from "@/lib/html/escape";
 
 const log = childLogger({ component: "email" });
 
@@ -119,6 +120,3 @@ export function alertEmailHtml(opts: { severity: string; title: string; descript
 </body></html>`;
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
-}

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { daysAgo } from "@/lib/time/units";
+import { escapeHtml } from "@/lib/html/escape";
 
 const log = childLogger({ component: "cron-health-digest" });
 
@@ -73,15 +74,6 @@ export function summarizeFailedRuns(runs: RecentFailedRun[]): FailureSummaryByJo
   });
 }
 
-/** HTML escape — error message kullanıcı girişi olmasa da defensive. */
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 /**
  * Pure: özet listeyi HTML email body'sine çevirir. Boş liste → boş string
