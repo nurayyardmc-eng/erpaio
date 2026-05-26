@@ -23,3 +23,27 @@ export function extractClientIp(req: Request): string {
   if (xri) return xri;
   return "unknown";
 }
+
+/**
+ * IP + User-Agent extraction — audit / consent / activity log'lar icin
+ * tek bir source-of-truth.
+ *
+ * Track AAAAAAAA — `activityContextFromRequest` (lib/audit) ve
+ * `consentContextFromRequest` (lib/auth/consent) literally IDENTIK
+ * fonksiyonlardi. Helper'i lib/http'ye tasidik; iki domain-spesifik
+ * wrapper backward-compat icin re-export ediyor.
+ *
+ * "unknown" fallback'i `extractClientIp` ile tutarli — NOT NULL DB
+ * columns icin kritik.
+ */
+export interface RequestContext {
+  ipAddress: string;
+  userAgent: string;
+}
+
+export function requestContext(req: Request): RequestContext {
+  return {
+    ipAddress: extractClientIp(req),
+    userAgent: req.headers.get("user-agent") ?? "unknown",
+  };
+}

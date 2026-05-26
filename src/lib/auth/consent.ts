@@ -5,7 +5,7 @@
 // için tablo silinmemeli — md. 7 + denetim dengesini bu sağlar.
 
 import { prisma } from "@/lib/db/prisma";
-import { extractClientIp } from "@/lib/http/clientIp";
+import { requestContext } from "@/lib/http/clientIp";
 
 export type ConsentType =
   | "kvkk_signup"
@@ -51,12 +51,12 @@ export async function recordConsent(input: RecordConsentInput): Promise<void> {
   }
 }
 
-/** Extract IP + UA from a Request — call site responsibility, kept here for reuse. */
-export function consentContextFromRequest(req: Request): { ipAddress: string; userAgent: string } {
-  const ipAddress = extractClientIp(req);
-  const userAgent = req.headers.get("user-agent") ?? "unknown";
-  return { ipAddress, userAgent };
-}
+/**
+ * Extract IP + UA from a Request — backward-compat alias.
+ * Track AAAAAAAA: implementation lives in lib/http/clientIp.requestContext
+ * to eliminate exact-duplicate with activityContextFromRequest.
+ */
+export const consentContextFromRequest = requestContext;
 
 /** List consent events for a user — used by KVKK md. 11 (bilgi talep) export. */
 export async function listUserConsents(userId: string) {

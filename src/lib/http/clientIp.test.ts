@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractClientIp } from "./clientIp";
+import { extractClientIp, requestContext } from "./clientIp";
 
 function mkReq(headers: Record<string, string>): Request {
   return new Request("https://example.com", { headers });
@@ -108,5 +108,26 @@ describe("http/clientIp/extractClientIp", () => {
         expect(result.length).toBeGreaterThan(0);
       }
     });
+  });
+});
+
+describe("http/clientIp/requestContext", () => {
+  it("returns ipAddress + userAgent from XFF + UA header", () => {
+    const ctx = requestContext(
+      mkReq({ "x-forwarded-for": "203.0.113.5", "user-agent": "Mozilla/5.0 ERPAIO" }),
+    );
+    expect(ctx).toEqual({ ipAddress: "203.0.113.5", userAgent: "Mozilla/5.0 ERPAIO" });
+  });
+
+  it('missing headers → both "unknown"', () => {
+    const ctx = requestContext(mkReq({}));
+    expect(ctx).toEqual({ ipAddress: "unknown", userAgent: "unknown" });
+  });
+
+  it("uses extractClientIp semantics (XFF first, then XRI)", () => {
+    const ctx = requestContext(
+      mkReq({ "x-real-ip": "198.51.100.1", "user-agent": "Test" }),
+    );
+    expect(ctx.ipAddress).toBe("198.51.100.1");
   });
 });

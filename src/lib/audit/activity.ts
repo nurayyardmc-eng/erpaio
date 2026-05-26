@@ -6,7 +6,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@prisma/client";
-import { extractClientIp } from "@/lib/http/clientIp";
+import { requestContext } from "@/lib/http/clientIp";
 
 /** Standardized action names — yeni eklerken buraya yaz. */
 export type ActivityAction =
@@ -76,15 +76,12 @@ export async function recordActivity(input: RecordActivityInput): Promise<void> 
   }
 }
 
-/** IP + UA helper — call site responsibility'sini sade tutar. */
-export function activityContextFromRequest(req: Request): {
-  ipAddress: string;
-  userAgent: string;
-} {
-  const ipAddress = extractClientIp(req);
-  const userAgent = req.headers.get("user-agent") ?? "unknown";
-  return { ipAddress, userAgent };
-}
+/**
+ * IP + UA helper — backward-compat alias for `requestContext`.
+ * Track AAAAAAAA: implementation moved to lib/http/clientIp to eliminate
+ * exact-duplicate with consentContextFromRequest.
+ */
+export const activityContextFromRequest = requestContext;
 
 /**
  * Convenience wrapper — auth'lu route'lar için recordActivity'nin tipik
