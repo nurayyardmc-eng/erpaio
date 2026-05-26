@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";

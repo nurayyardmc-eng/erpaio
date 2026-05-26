@@ -1,6 +1,6 @@
 import { getAuth } from "@/lib/auth/dual";
 import { jsonError } from "@/lib/i18n/server";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { listUserConsents } from "@/lib/auth/consent";
 
 /**

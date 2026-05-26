@@ -7,7 +7,7 @@ import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { jsonError, localizedError } from "@/lib/i18n/server";;
+import { jsonError, localizedError } from "@/lib/i18n/server";
 import { z } from "zod";
 
 const BodySchema = z.object({

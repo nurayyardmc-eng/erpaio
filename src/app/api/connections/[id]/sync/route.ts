@@ -3,10 +3,10 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateSchema, getSchema } from "@/lib/cache/schema";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
-import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
 /**
  * Manuel schema cache re-sync. Track RRR'de bağlantı kartında schema age
@@ -28,12 +28,11 @@ export async function POST(
 ) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, {
-      tr: "Yalnızca owner / admin schema sync tetikleyebilir.",
-      en: "Only owner / admin can trigger schema sync.",
-    });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role, {
+    tr: "Yalnızca owner / admin schema sync tetikleyebilir.",
+    en: "Only owner / admin can trigger schema sync.",
+  });
+  if (denied) return denied;
 
   const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.CONNECTION_SCHEMA_SYNC);
   if (limited) return limited;

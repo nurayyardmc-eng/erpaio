@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { generateSecret, provisioningUri, verifyCode } from "@/lib/auth/totp";
 import { hasFeature } from "@/lib/plans";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 
 export async function POST(req: Request) {

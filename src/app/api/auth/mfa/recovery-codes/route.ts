@@ -5,7 +5,7 @@ import {
   recoveryCodeStatus,
 } from "@/lib/auth/recovery";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 
 export async function GET(req: Request) {

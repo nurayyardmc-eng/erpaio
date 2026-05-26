@@ -2,10 +2,10 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { recordUserActivity } from "@/lib/audit/activity";
-import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zSeverity } from "@/lib/auth/schemas";
 
 const PatchSchema = z.object({
@@ -51,9 +51,11 @@ export async function PATCH(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca yönetici düzenleyebilir.", en: "Only admins can edit." });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role, {
+    tr: "Yalnızca yönetici düzenleyebilir.",
+    en: "Only admins can edit.",
+  });
+  if (denied) return denied;
 
   const body = await parseJsonBody(req, PatchSchema);
   if (body instanceof Response) return body;

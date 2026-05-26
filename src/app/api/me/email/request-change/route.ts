@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { jsonError, localizedError, resolveLocale } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";

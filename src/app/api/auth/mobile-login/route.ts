@@ -5,7 +5,7 @@ import { generateApiToken, hashApiToken } from "@/lib/auth/dual";
 import { rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
-import { jsonError } from "@/lib/i18n/server";;
+import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { extractClientIp } from "@/lib/http/clientIp";
 import { daysFromNow } from "@/lib/time/units";

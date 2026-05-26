@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 
 /**
  * KVKK md. 11 + GDPR Art. 15 — kullanıcının kendi hassas işlem geçmişine erişim.

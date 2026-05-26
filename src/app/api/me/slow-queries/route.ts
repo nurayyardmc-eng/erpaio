@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { jsonError, localizedError } from "@/lib/i18n/server";
-import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";;
+import { jsonError } from "@/lib/i18n/server";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
-import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwnerOrAdmin } from "@/lib/auth/role";
 import { daysAgo } from "@/lib/time/units";
 
 /**
@@ -23,12 +23,11 @@ const QuerySchema = z.object({
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, {
-      tr: "Bu sayfa yalnızca owner / admin rollerine açıktır.",
-      en: "This page is only available to owner / admin roles.",
-    });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role, {
+    tr: "Bu sayfa yalnızca owner / admin rollerine açıktır.",
+    en: "This page is only available to owner / admin roles.",
+  });
+  if (denied) return denied;
 
   const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.ADMIN_READ);
   if (limited) return limited;
