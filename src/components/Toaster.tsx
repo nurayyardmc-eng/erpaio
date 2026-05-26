@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import { colors } from "@/lib/theme";
 
 interface Toast {
   id: number;
@@ -50,19 +51,21 @@ export default function Toaster() {
 }
 
 function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
-  const colors = {
-    success: { fg: "#10B981", bg: "#D1FAE5", Icon: CheckCircle2 },
-    error: { fg: "#EF4444", bg: "#FEE2E2", Icon: AlertCircle },
-    info: { fg: "#0A0A0A", bg: "#F2F1EE", Icon: Info },
+  // Local kind-specific palette using theme tokens. Local var renamed `palette`
+  // to avoid shadowing imported `colors` from @/lib/theme.
+  const palette = {
+    success: { fg: colors.success, bg: colors.successSoft, Icon: CheckCircle2 },
+    error: { fg: colors.error, bg: colors.errorSoft, Icon: AlertCircle },
+    info: { fg: colors.brand, bg: colors.brandSoft, Icon: Info },
   }[toast.kind];
-  const Icon = colors.Icon;
+  const Icon = palette.Icon;
 
   return (
     <div style={{
       pointerEvents: "auto",
-      background: "#FFFFFF",
-      border: "1px solid rgba(10,10,10,0.08)",
-      borderLeft: `3px solid ${colors.fg}`,
+      background: colors.card,
+      border: `1px solid ${colors.border}`,
+      borderLeft: `3px solid ${palette.fg}`,
       borderRadius: 12,
       padding: "12px 16px",
       paddingRight: 36,
@@ -75,10 +78,10 @@ function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       boxShadow: "0 4px 12px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.06)",
       animation: "slideInRight 0.3s cubic-bezier(0.4,0,0.2,1)",
       fontSize: 14,
-      color: "#0A0A0A",
+      color: colors.text,
     }}>
-      <div style={{ background: colors.bg, borderRadius: 8, padding: 6, display: "flex" }}>
-        <Icon size={16} color={colors.fg} />
+      <div style={{ background: palette.bg, borderRadius: 8, padding: 6, display: "flex" }}>
+        <Icon size={16} color={palette.fg} />
       </div>
       <div style={{ flex: 1, paddingTop: 4, lineHeight: 1.4 }}>{toast.message}</div>
       <button
@@ -91,7 +94,7 @@ function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
           background: "transparent",
           border: "none",
           padding: 4,
-          color: "#737373",
+          color: colors.textSubtle,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
