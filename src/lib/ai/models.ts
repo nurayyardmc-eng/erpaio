@@ -19,3 +19,18 @@ export const MODEL_SONNET = "claude-sonnet-4-5";
 
 /** Fast/cheap model for explain + follow-up suggestion paths. */
 export const MODEL_HAIKU = "claude-haiku-4-5";
+
+/**
+ * Shared Anthropic client singleton.
+ *
+ * Track JJJJJJJJJ — 4 chat route'da IDENTIK `const client = new Anthropic()`
+ * pattern'i vardi. SDK module-level state'i paylaşabilir (rate limiter
+ * cache vb.) ama testte mock'lamak isteyen bir tane kullanmak isteyebilir.
+ * Tek dosyada export ederek paylaşım kolaylasti.
+ *
+ * NOT: Lazy-init degil — module load anında olusur. Route'lar zaten
+ * tum import time'da load oluyor; ekstra cost yok. Test'lerde
+ * `vi.mock("@anthropic-ai/sdk")` ile mock'lanabilir.
+ */
+import Anthropic from "@anthropic-ai/sdk";
+export const anthropicClient = new Anthropic();

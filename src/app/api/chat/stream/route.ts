@@ -14,14 +14,12 @@ import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
-import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
 import { truncateRows } from "@/lib/chat/rowLimit";
-import { MODEL_SONNET } from "@/lib/ai/models";
+import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
 
-const client = new Anthropic();
 export const maxDuration = 60;
 
 const BodySchema = z.object({
@@ -111,7 +109,7 @@ ${sampleContext}
 ${schema}`;
 
           let buffer = "";
-          await client.messages
+          await anthropicClient.messages
             .stream({
               model: MODEL_SONNET,
               max_tokens: 1024,

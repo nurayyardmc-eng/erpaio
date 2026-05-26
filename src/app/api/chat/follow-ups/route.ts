@@ -1,16 +1,14 @@
 import * as Sentry from "@sentry/nextjs";
-import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, totalAnthropicTokens } from "@/lib/budget";
-import { MODEL_HAIKU } from "@/lib/ai/models";
+import { MODEL_HAIKU, anthropicClient } from "@/lib/ai/models";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 
-const client = new Anthropic();
 
 const BodySchema = z.object({
   question: z.string().min(1).max(500),
@@ -38,7 +36,7 @@ export async function POST(req: Request) {
   const log = childLogger({ component: "follow-ups", tenantId: session.user.tenantId });
 
   try {
-    const msg = await client.messages.create({
+    const msg = await anthropicClient.messages.create({
       model: MODEL_HAIKU,
       max_tokens: 256,
       system: "Türkçe iş zekası uzmanısın. Kullanıcının az önce sorduğu soruyu ve sonucunu görüp, mantıklı 3 takip sorusu öner. Her biri kısa Türkçe (max 60 karakter), JSON array dön: [\"...\", \"...\", \"...\"]. Başka hiçbir şey yazma.",

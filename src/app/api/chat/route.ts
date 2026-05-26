@@ -14,7 +14,6 @@ import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
 import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
-import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
@@ -22,10 +21,9 @@ import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect } from "@/lib/ai/dialect";
 import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
 import { calculateBillableTokens, isPromptCacheHit } from "@/lib/ai/tokenUsage";
-import { MODEL_SONNET } from "@/lib/ai/models";
+import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
 import { truncateRows } from "@/lib/chat/rowLimit";
 
-const client = new Anthropic();
 
 const CONFIDENCE_THRESHOLD = 0.5;
 
@@ -185,7 +183,7 @@ ${schema}`;
         ? await loadConversationHistory(sessionId, tenantId)
         : [];
 
-      const msg = await client.messages.create({
+      const msg = await anthropicClient.messages.create({
         model: MODEL_SONNET,
         max_tokens: 1024,
         system: [
