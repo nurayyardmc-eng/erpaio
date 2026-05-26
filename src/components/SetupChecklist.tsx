@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, ArrowRight, X } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { safeLocalGet, safeLocalSet } from "@/lib/storage/safeLocalStorage";
 
 interface SetupStep {
   key: string;
@@ -31,10 +32,7 @@ const DISMISS_KEY = "erpaio_setup_checklist_dismissed";
  */
 export default function SetupChecklist() {
   const [score, setScore] = useState<SetupScore | null>(null);
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(DISMISS_KEY) === "1";
-  });
+  const [dismissed, setDismissed] = useState<boolean>(() => safeLocalGet(DISMISS_KEY) === "1");
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -49,9 +47,7 @@ export default function SetupChecklist() {
 
   const dismiss = () => {
     setDismissed(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(DISMISS_KEY, "1");
-    }
+    safeLocalSet(DISMISS_KEY, "1");
   };
 
   return (

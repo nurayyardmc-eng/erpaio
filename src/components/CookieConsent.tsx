@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
+import { safeLocalGet, safeLocalSetJson } from "@/lib/storage/safeLocalStorage";
 
 const CONSENT_KEY = "erpaio_cookie_consent";
 
@@ -11,15 +12,13 @@ export default function CookieConsent() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const v = localStorage.getItem(CONSENT_KEY);
     // One-time hydration from localStorage — must run after mount because localStorage isn't available during SSR.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!v) setShow(true);
+    if (!safeLocalGet(CONSENT_KEY)) setShow(true);
   }, []);
 
   const accept = () => {
-    localStorage.setItem(CONSENT_KEY, JSON.stringify({ accepted: true, at: Date.now() }));
+    safeLocalSetJson(CONSENT_KEY, { accepted: true, at: Date.now() });
     setShow(false);
   };
 

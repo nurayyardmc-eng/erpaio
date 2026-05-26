@@ -4,6 +4,7 @@ import { CheckCircle2, X } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n/context";
 import { shouldShowNps, nextDismissedUntil } from "@/lib/nps/eligibility";
+import { safeLocalGetNumber, safeLocalSet } from "@/lib/storage/safeLocalStorage";
 
 const NPS_DISMISSED_KEY = "erpaio_nps_dismissed_until";
 const NPS_SUBMITTED_KEY = "erpaio_nps_submitted";
@@ -26,13 +27,10 @@ export default function NpsPrompt() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const submittedAtStr = localStorage.getItem(NPS_SUBMITTED_KEY);
-    const dismissedUntilStr = localStorage.getItem(NPS_DISMISSED_KEY);
     if (
       !shouldShowNps({
-        submittedAt: submittedAtStr ? Number(submittedAtStr) : null,
-        dismissedUntil: dismissedUntilStr ? Number(dismissedUntilStr) : null,
+        submittedAt: safeLocalGetNumber(NPS_SUBMITTED_KEY),
+        dismissedUntil: safeLocalGetNumber(NPS_DISMISSED_KEY),
       })
     ) {
       return;
@@ -60,9 +58,7 @@ export default function NpsPrompt() {
 
   const dismiss = () => {
     setShow(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(NPS_DISMISSED_KEY, String(nextDismissedUntil()));
-    }
+    safeLocalSet(NPS_DISMISSED_KEY, String(nextDismissedUntil()));
   };
 
   const submit = async () => {
@@ -72,9 +68,7 @@ export default function NpsPrompt() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ score, comment: comment || undefined }),
     }).catch(() => {});
-    if (typeof window !== "undefined") {
-      localStorage.setItem(NPS_SUBMITTED_KEY, String(Date.now()));
-    }
+    safeLocalSet(NPS_SUBMITTED_KEY, String(Date.now()));
     setSubmitted(true);
     setTimeout(() => setShow(false), 2000);
   };
