@@ -13,6 +13,7 @@ import {
   getRequiredIdParam,
   watchlistNotFoundError,
   connectionNotFoundError,
+  activeConnectionNotFoundError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -398,5 +399,32 @@ describe("connectionNotFoundError", () => {
     const res = connectionNotFoundError(reqWithLang("en"));
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("Connection not found.");
+  });
+});
+
+describe("activeConnectionNotFoundError", () => {
+  it("returns 404", () => {
+    const res = activeConnectionNotFoundError(reqWithLang("tr"));
+    expect(res.status).toBe(404);
+  });
+
+  it("TR body — 'Aktif bağlantı bulunamadı.'", async () => {
+    const res = activeConnectionNotFoundError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Aktif bağlantı bulunamadı.");
+  });
+
+  it("EN body — 'No active connection found.'", async () => {
+    const res = activeConnectionNotFoundError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("No active connection found.");
+  });
+
+  it("differs from connectionNotFoundError (semantic distinction)", async () => {
+    const active = activeConnectionNotFoundError(reqWithLang("tr"));
+    const plain = connectionNotFoundError(reqWithLang("tr"));
+    const activeBody = (await active.json()) as { error: string };
+    const plainBody = (await plain.json()) as { error: string };
+    expect(activeBody.error).not.toBe(plainBody.error);
   });
 });

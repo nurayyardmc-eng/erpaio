@@ -191,6 +191,20 @@ export function connectionNotFoundError(req: Request): Response {
   });
 }
 
+/**
+ * Common "Aktif bağlantı bulunamadı." 404. Track OOOOOOOOOO.
+ * Used by: chat/route, chat/stream, chat/run-sql. Üçü aynı `findFirst
+ * status: "active"` ile bağlantı arıyor, null sonrası aynı i18n string.
+ * connectionNotFoundError'dan ayrı kalmalı: "aktif" filtresi semantik fark
+ * yaratır — kullanıcı bağlantısı var ama paused/disabled olabilir.
+ */
+export function activeConnectionNotFoundError(req: Request): Response {
+  return localizedError(req, 404, {
+    tr: "Aktif bağlantı bulunamadı.",
+    en: "No active connection found.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

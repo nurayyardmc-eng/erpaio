@@ -9,7 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, activeConnectionNotFoundError } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
 import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
 import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     where: { id: connectionId, tenantId, status: "active" },
     select: { id: true, erpType: true, erpProfile: true },
   });
-  if (!conn) return localizedError(req, 404, { tr: "Aktif bağlantı bulunamadı.", en: "No active connection found." });
+  if (!conn) return activeConnectionNotFoundError(req);
 
   const profileSlug = resolveProfileSlug(conn.erpType, conn.erpProfile);
   const erpProfile = profileSlug ? loadProfile(profileSlug) : null;
