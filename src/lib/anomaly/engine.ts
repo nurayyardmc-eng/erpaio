@@ -11,6 +11,7 @@ import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/wha
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
+import { ONE_DAY_MS } from "@/lib/time/units";
 import {
   FP_SUPPRESS_WINDOW_DAYS,
   shouldSuppressByFpCount,
@@ -104,7 +105,7 @@ export async function runAnomalyDetectionForTenant(
         // FP suppression check — son 30 günde aynı metricKey için 3+ FP varsa,
         // bu anomaly'yi YARATMA (kullanıcı zaten "bu yanlış alarm" diye
         // işaretlemiş). Engine learning loop kapanışı.
-        const fpSince = new Date(Date.now() - FP_SUPPRESS_WINDOW_DAYS * 24 * 60 * 60_000);
+        const fpSince = new Date(Date.now() - FP_SUPPRESS_WINDOW_DAYS * ONE_DAY_MS);
         const fpCount = await prisma.alert.count({
           where: {
             tenantId,

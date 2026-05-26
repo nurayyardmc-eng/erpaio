@@ -16,7 +16,7 @@ import { welcomeEmailHtml } from "@/lib/auth/welcomeEmail";
 import { extractClientIp } from "@/lib/http/clientIp";
 import { zPassword, zEmail } from "@/lib/auth/schemas";
 import { baseUrl } from "@/lib/url";
-import { daysFromNow } from "@/lib/time/units";
+import { daysFromNow, ONE_HOUR_MS } from "@/lib/time/units";
 const BodySchema = z.object({
   email: zEmail(),
   password: zPassword(),
@@ -29,7 +29,7 @@ const BodySchema = z.object({
 });
 
 // Email enumeration brute force koruması — IP başına saatte 3 deneme
-const SIGNUP_LIMIT = { prefix: "signup", max: 3, windowMs: 60 * 60_000 };
+const SIGNUP_LIMIT = { prefix: "signup", max: 3, windowMs: ONE_HOUR_MS };
 
 export async function POST(req: Request) {
   const tooBig = checkBodySize(req);

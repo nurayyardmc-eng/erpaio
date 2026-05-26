@@ -1,3 +1,5 @@
+import { ONE_DAY_MS } from "@/lib/time/units";
+
 /**
  * Tenant token usage formatters — web + mobile UI'da kullanılır.
  *
@@ -48,5 +50,5 @@ export function daysUntilReset(resetsOn: string | Date, now: Date = new Date()):
   if (Number.isNaN(target.getTime())) return 0;
   const diffMs = target.getTime() - now.getTime();
   if (diffMs <= 0) return 0;
-  return Math.floor(diffMs / (24 * 60 * 60_000));
+  return Math.floor(diffMs / ONE_DAY_MS);
 }

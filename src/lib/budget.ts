@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
+import { ONE_DAY_MS } from "@/lib/time/units";
 
 const log = childLogger({ component: "budget" });
 
@@ -26,7 +27,7 @@ export async function checkAndConsume(
 
   const now = new Date();
   const resetAge = now.getTime() - tenant.budgetResetAt.getTime();
-  if (resetAge > 30 * 24 * 60 * 60_000) {
+  if (resetAge > 30 * ONE_DAY_MS) {
     // Atomik reset — başka concurrent request reset'i tekrarlamasın
     await prisma.tenant.updateMany({
       where: { id: tenantId, budgetResetAt: tenant.budgetResetAt },
@@ -83,7 +84,7 @@ export function computeBudgetStatus(input: {
   const budget = input.monthlyTokenBudget;
   const remaining = Math.max(0, budget - used);
   const percentUsed = budget > 0 ? Math.min(100, (used / budget) * 100) : 0;
-  const resetsOn = new Date(input.budgetResetAt.getTime() + 30 * 24 * 60 * 60_000);
+  const resetsOn = new Date(input.budgetResetAt.getTime() + 30 * ONE_DAY_MS);
   return { used, budget, remaining, percentUsed, resetAt: input.budgetResetAt, resetsOn };
 }
 

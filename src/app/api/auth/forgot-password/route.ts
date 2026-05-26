@@ -11,8 +11,9 @@ import { sha256Hex } from "@/lib/crypto/hash";
 import { generateSecureToken } from "@/lib/crypto/token";
 import { passwordResetEmail } from "@/lib/auth/passwordResetEmail";
 import { baseUrl } from "@/lib/url";
+import { ONE_HOUR_MS } from "@/lib/time/units";
 const BodySchema = z.object({ email: z.string().email() });
-const LIMIT = { prefix: "forgot-pw", max: 3, windowMs: 60 * 60_000 };
+const LIMIT = { prefix: "forgot-pw", max: 3, windowMs: ONE_HOUR_MS };
 
 export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
 
   const rawToken = generateSecureToken();
   const tokenHash = sha256Hex(rawToken);
-  const expiresAt = new Date(Date.now() + 60 * 60_000);
+  const expiresAt = new Date(Date.now() + ONE_HOUR_MS);
 
   await prisma.passwordResetToken.create({
     data: { userId: user.id, tokenHash, expiresAt },

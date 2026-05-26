@@ -7,7 +7,7 @@ import { sha256Hex } from "@/lib/crypto/hash";
 import { generateSecureToken } from "@/lib/crypto/token";
 import { emailVerificationEmail } from "@/lib/auth/emailVerifyEmail";
 import { baseUrl } from "@/lib/url";
-import { daysFromNow } from "@/lib/time/units";
+import { daysFromNow, ONE_HOUR_MS } from "@/lib/time/units";
 
 export async function POST(req: Request) {
   const session = await getAuth(req);
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const limit = await rateLimit(session.user.id, {
     prefix: "verify-resend",
     max: 3,
-    windowMs: 60 * 60_000,
+    windowMs: ONE_HOUR_MS,
   });
   if (!limit.success) return localizedError(req, 429, { tr: "Çok fazla istek. 1 saat sonra deneyin.", en: "Too many requests. Try again in 1 hour." });
 

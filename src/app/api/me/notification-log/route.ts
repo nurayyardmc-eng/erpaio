@@ -5,6 +5,7 @@ import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { ONE_DAY_MS } from "@/lib/time/units";
 
 /**
  * Tenant-scoped NotificationLog — owner/admin son N gün delivery audit
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
   const q = parseQuery(req, QuerySchema);
   if (q instanceof Response) return q;
 
-  const since = new Date(Date.now() - q.days * 24 * 60 * 60_000);
+  const since = new Date(Date.now() - q.days * ONE_DAY_MS);
   const where: {
     tenantId: string;
     channel?: string;

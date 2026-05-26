@@ -1,6 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { childLogger } from "@/lib/observability/logger";
+import { ONE_HOUR_MS } from "@/lib/time/units";
 
 const log = childLogger({ component: "rate-limit" });
 
@@ -94,15 +95,15 @@ export const RATE_LIMITS = {
   CHAT_FEEDBACK: { prefix: "chat-fb", max: 60, windowMs: 60_000 },
   ALERT_CREATE: { prefix: "alert", max: 100, windowMs: 60_000 },
   CONNECTION_TEST: { prefix: "conn-test", max: 10, windowMs: 60_000 },
-  CONNECTION_SCHEMA_SYNC: { prefix: "conn-sync", max: 10, windowMs: 60 * 60_000 }, // 10/saat / user — re-sync ERP query'leri pahalı
+  CONNECTION_SCHEMA_SYNC: { prefix: "conn-sync", max: 10, windowMs: ONE_HOUR_MS }, // 10/saat / user — re-sync ERP query'leri pahalı
   // --- Auth & security-critical (IP-based unless noted) ---
-  RESET_PASSWORD: { prefix: "reset-pwd", max: 5, windowMs: 60 * 60_000 }, // 5/saat
-  VERIFY_EMAIL: { prefix: "verify-em", max: 10, windowMs: 60 * 60_000 }, // 10/saat
-  MFA_SETUP: { prefix: "mfa-setup", max: 5, windowMs: 60 * 60_000 }, // 5/saat / user
+  RESET_PASSWORD: { prefix: "reset-pwd", max: 5, windowMs: ONE_HOUR_MS }, // 5/saat
+  VERIFY_EMAIL: { prefix: "verify-em", max: 10, windowMs: ONE_HOUR_MS }, // 10/saat
+  MFA_SETUP: { prefix: "mfa-setup", max: 5, windowMs: ONE_HOUR_MS }, // 5/saat / user
   MFA_VERIFY: { prefix: "mfa-verify", max: 10, windowMs: 5 * 60_000 }, // 10/5dk / user (brute force)
-  RECOVERY_GEN: { prefix: "rec-gen", max: 3, windowMs: 60 * 60_000 }, // 3/saat / user
-  PASSWORD_CHANGE: { prefix: "pwd-change", max: 5, windowMs: 60 * 60_000 }, // 5/saat / user
-  EMAIL_CHANGE_REQUEST: { prefix: "email-chg", max: 3, windowMs: 60 * 60_000 }, // 3/saat / user — spam koruma; verify token ayrı IP-based
+  RECOVERY_GEN: { prefix: "rec-gen", max: 3, windowMs: ONE_HOUR_MS }, // 3/saat / user
+  PASSWORD_CHANGE: { prefix: "pwd-change", max: 5, windowMs: ONE_HOUR_MS }, // 5/saat / user
+  EMAIL_CHANGE_REQUEST: { prefix: "email-chg", max: 3, windowMs: ONE_HOUR_MS }, // 3/saat / user — spam koruma; verify token ayrı IP-based
   CONSENTS_READ: { prefix: "consents", max: 30, windowMs: 60_000 }, // 30/dk / user
   PUSH_TOKEN_REGISTER: { prefix: "push-reg", max: 10, windowMs: 60_000 }, // 10/dk / user (mobile launch'larda yeniden register'ı kapsar)
   NOTIFICATION_PREFS: { prefix: "notif-pref", max: 30, windowMs: 60_000 }, // 30/dk / user (GET ve PATCH ortak; UI toggle spam'i için bolca pay var)
