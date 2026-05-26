@@ -1,6 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { parseQuery, parseJsonBody, zNumber, zBoolean, zIsoDate, zCuid, noFieldsToUpdateError } from "./searchParams";
+import {
+  parseQuery,
+  parseJsonBody,
+  zNumber,
+  zBoolean,
+  zIsoDate,
+  zCuid,
+  noFieldsToUpdateError,
+  userNotFoundError,
+  tenantNotFoundError,
+} from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
   return new Request("https://example.com/api/test", {
@@ -251,5 +261,43 @@ describe("noFieldsToUpdateError", () => {
     const res = noFieldsToUpdateError(reqWithLang("en"));
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("No fields to update.");
+  });
+});
+
+describe("userNotFoundError", () => {
+  it("returns 404", () => {
+    const res = userNotFoundError(reqWithLang("tr"));
+    expect(res.status).toBe(404);
+  });
+
+  it("TR body — 'Kullanıcı bulunamadı.'", async () => {
+    const res = userNotFoundError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Kullanıcı bulunamadı.");
+  });
+
+  it("EN body — 'User not found.'", async () => {
+    const res = userNotFoundError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("User not found.");
+  });
+});
+
+describe("tenantNotFoundError", () => {
+  it("returns 404", () => {
+    const res = tenantNotFoundError(reqWithLang("tr"));
+    expect(res.status).toBe(404);
+  });
+
+  it("TR body — 'Tenant bulunamadı.'", async () => {
+    const res = tenantNotFoundError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Tenant bulunamadı.");
+  });
+
+  it("EN body — 'Tenant not found.'", async () => {
+    const res = tenantNotFoundError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Tenant not found.");
   });
 });
