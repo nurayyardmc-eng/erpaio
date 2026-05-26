@@ -11,7 +11,8 @@
  * Returns false for unknown operators rather than throwing — caller paths
  * may load `op` from DB / JSON config and shouldn't crash on stale data.
  */
-export type ThresholdOp = "lt" | "lte" | "gt" | "gte" | "eq";
+export const THRESHOLD_OPS = ["lt", "lte", "gt", "gte", "eq"] as const;
+export type ThresholdOp = (typeof THRESHOLD_OPS)[number];
 
 export function compareThreshold(op: string, value: number, threshold: number): boolean {
   switch (op) {

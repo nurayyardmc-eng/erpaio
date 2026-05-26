@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody, noFieldsToUpdateError } from "@/lib/http/searchParams";
+import { THRESHOLD_OPS } from "@/lib/threshold/compare";
 
 /**
  * Watchlist partial update — Track GGGG. Önceden sadece create+delete vardı;
@@ -16,7 +17,7 @@ import { parseJsonBody, noFieldsToUpdateError } from "@/lib/http/searchParams";
 const PatchSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   question: z.string().min(1).max(500).optional(),
-  thresholdOp: z.enum(["lt", "lte", "gt", "gte", "eq"]).optional(),
+  thresholdOp: z.enum(THRESHOLD_OPS).optional(),
   thresholdVal: z.number().optional(),
   emailTo: z.string().email().nullable().optional(),
   enabled: z.boolean().optional(),

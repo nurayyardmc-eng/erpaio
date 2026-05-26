@@ -5,12 +5,13 @@ import { assertOwnedConnection } from "@/lib/db/erpConnection";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { THRESHOLD_OPS } from "@/lib/threshold/compare";
 
 const PostSchema = z.object({
   name: z.string().min(1).max(120),
   question: z.string().min(1).max(500),
   connectionId: z.string(),
-  thresholdOp: z.enum(["lt", "lte", "gt", "gte", "eq"]),
+  thresholdOp: z.enum(THRESHOLD_OPS),
   thresholdVal: z.number(),
   emailTo: z.string().email().optional(),
 });
