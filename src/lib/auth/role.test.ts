@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { isOwnerOrAdmin, isOwner } from "./role";
+import { isOwnerOrAdmin, isOwner, requireOwnerOrAdmin } from "./role";
+
+function reqWithLang(lang: "tr" | "en"): Request {
+  const headers = new Headers();
+  headers.set("accept-language", lang);
+  return new Request("https://example.test/api/x", { headers });
+}
 
 describe("auth/role/isOwnerOrAdmin", () => {
   it("owner → true", () => {
@@ -65,5 +71,43 @@ describe("auth/role/isOwner", () => {
         expect(isOwnerOrAdmin(r)).toBe(true);
       }
     }
+  });
+});
+
+describe("auth/role/requireOwnerOrAdmin", () => {
+  it("owner → null (allowed)", () => {
+    expect(requireOwnerOrAdmin(reqWithLang("tr"), "owner")).toBeNull();
+  });
+
+  it("admin → null (allowed)", () => {
+    expect(requireOwnerOrAdmin(reqWithLang("tr"), "admin")).toBeNull();
+  });
+
+  it("viewer → 403 Response with default tr message", async () => {
+    const res = requireOwnerOrAdmin(reqWithLang("tr"), "viewer");
+    expect(res).not.toBeNull();
+    expect(res!.status).toBe(403);
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe("Yalnızca admin.");
+  });
+
+  it("viewer + en locale → 403 Response with en message", async () => {
+    const res = requireOwnerOrAdmin(reqWithLang("en"), "viewer");
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe("Admin only.");
+  });
+
+  it("custom texts override the default", async () => {
+    const res = requireOwnerOrAdmin(reqWithLang("tr"), "viewer", {
+      tr: "Yalnızca yönetici silebilir.",
+      en: "Only admins can delete.",
+    });
+    const body = (await res!.json()) as { error: string };
+    expect(body.error).toBe("Yalnızca yönetici silebilir.");
+  });
+
+  it("null/undefined role → 403 (defensive)", () => {
+    expect(requireOwnerOrAdmin(reqWithLang("tr"), null)).not.toBeNull();
+    expect(requireOwnerOrAdmin(reqWithLang("tr"), undefined)).not.toBeNull();
   });
 });

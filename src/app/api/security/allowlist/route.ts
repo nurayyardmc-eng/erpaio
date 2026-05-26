@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { invalidateAllowlist } from "@/lib/security/ipAllowlist";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
-import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
 const CidrSchema = z.string().regex(
   /^\d{1,3}(\.\d{1,3}){3}(\/(?:[0-9]|[12][0-9]|3[0-2]))?$/,
@@ -30,9 +30,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role);
+  if (denied) return denied;
 
   const body = PostSchema.safeParse(await req.json());
   if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });
@@ -63,9 +62,8 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role);
+  if (denied) return denied;
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

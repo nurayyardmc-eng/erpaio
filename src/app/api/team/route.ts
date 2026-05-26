@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
-import { isOwnerOrAdmin, isOwner } from "@/lib/auth/role";
+import { isOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zTeamRole } from "@/lib/auth/schemas";
 
 const PatchSchema = z.object({
@@ -89,9 +89,8 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role);
+  if (denied) return denied;
 
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");

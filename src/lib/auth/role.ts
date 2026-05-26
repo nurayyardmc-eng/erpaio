@@ -22,3 +22,34 @@ export function isOwnerOrAdmin(role: Role | null | undefined): boolean {
 export function isOwner(role: Role | null | undefined): boolean {
   return role === "owner";
 }
+
+import { localizedError } from "@/lib/i18n/server";
+
+/**
+ * Role gate for write/admin actions — returns null when allowed, a
+ * localized 403 Response when denied.
+ *
+ * Track SSSSSSS — extracted from 9 API routes that all had the identical
+ * `if (!isOwnerOrAdmin(...)) return localizedError(req, 403, { tr:
+ * "Yalnızca admin.", en: "Admin only." })` block. Routes with custom
+ * wording (e.g. "Yalnızca yönetici düzenleyebilir.") still inline the
+ * check + their own message — pass them via the optional `texts` arg if
+ * needed.
+ *
+ * Usage:
+ *   const denied = requireOwnerOrAdmin(req, session.user.role);
+ *   if (denied) return denied;
+ *
+ * The early-return shape mirrors checkBodySize / parseJsonBody, which
+ * keeps the route handlers' control flow uniform.
+ */
+const DEFAULT_DENY = { tr: "Yalnızca admin.", en: "Admin only." } as const;
+
+export function requireOwnerOrAdmin(
+  req: Request,
+  role: Role | null | undefined,
+  texts: { tr: string; en: string } = DEFAULT_DENY,
+): Response | null {
+  if (isOwnerOrAdmin(role)) return null;
+  return localizedError(req, 403, texts);
+}

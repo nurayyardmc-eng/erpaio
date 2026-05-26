@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { validateSQL } from "@/lib/validators/sql";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
 const PostSchema = z.object({
   key: z.string().regex(/^[a-z0-9_]{3,40}$/, "Sadece küçük harf, rakam, _"),
@@ -35,9 +35,8 @@ export async function POST(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role);
+  if (denied) return denied;
 
   const body = PostSchema.safeParse(await req.json());
   if (!body.success) return localizedError(req, 400, { tr: body.error.issues[0]?.message ?? "Geçersiz veri", en: body.error.issues[0]?.message ?? "Invalid data" });

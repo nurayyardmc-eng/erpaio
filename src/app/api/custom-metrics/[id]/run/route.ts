@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { extractMetricValue, PREVIEW_METRIC_ALIASES } from "@/lib/anomaly/extractMetricValue";
-import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -25,9 +25,8 @@ export async function POST(
 ) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (!isOwnerOrAdmin(session.user.role)) {
-    return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
-  }
+  const denied = requireOwnerOrAdmin(req, session.user.role);
+  if (denied) return denied;
 
   const { id } = await context.params;
 
