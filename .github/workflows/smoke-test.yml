@@ -1,0 +1,39 @@
+name: Production Smoke Test
+
+on:
+  # 1. After every push to main → wait for Vercel deploy → smoke check
+  push:
+    branches: [main]
+  # 2. Manual trigger from Actions tab
+  workflow_dispatch:
+  # 3. Every hour to catch deployment drift / cron silently failing
+  schedule:
+    - cron: "13 * * * *"
+
+# Only one smoke run at a time; cancel old when newer commit lands.
+concurrency:
+  group: smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Wait for Vercel deploy (60s) — only on push
+        if: github.event_name == 'push'
+        run: sleep 60
+      - name: Run smoke tests against production
+        env:
+          SMOKE_BASE_URL: https://erpaio.vercel.app
+        run: npm run test:smoke
+      - name: Notify on failure (Slack/email future)
+        if: failure()
+        run: |
+          echo "::error::Production smoke test failed — check https://erpaio.vercel.app/api/health"
