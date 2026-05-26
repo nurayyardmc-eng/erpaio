@@ -1,8 +1,11 @@
 "use client";
 import type { ChartHint } from "@/lib/charts/detect";
 import { formatN } from "@/lib/charts/format";
+import { colors } from "@/lib/theme";
 
-const COLORS = ["#0A0A0A", "#10B981", "#F59E0B", "#F59E0B", "#9C8AFF", "#EF4444"];
+// Chart series palette — brand-led, then semantic colors. Track AAAAAAAAA:
+// reference theme tokens so a palette/contrast change propagates here too.
+const COLORS = [colors.brand, colors.success, colors.warning, colors.warning, colors.accent, colors.error];
 
 interface Props {
   hint: ChartHint;
@@ -152,8 +155,8 @@ const chartBox: React.CSSProperties = {
 function ChartHeader({ title, reason }: { title: string; reason: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-      <span style={{ fontSize: 11, color: "#0A0A0A" }}>{title}</span>
-      <span style={{ fontSize: 9, color: "#94A3B8" }}>auto · {reason}</span>
+      <span style={{ fontSize: 11, color: colors.text }}>{title}</span>
+      <span style={{ fontSize: 9, color: colors.textSubtle }}>auto · {reason}</span>
     </div>
   );
 }

@@ -135,7 +135,7 @@ export default function CommandPalette() {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#FFFFFF",
+          background: colors.card,
           borderRadius: 16,
           width: "100%",
           maxWidth: 560,
