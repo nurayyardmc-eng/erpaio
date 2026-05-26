@@ -4,6 +4,7 @@ import { FileText } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
 import { useI18n } from "@/lib/i18n/context";
+import { formatTimestamp } from "@/lib/format/time";
 
 interface Annotation {
   id: string;
@@ -182,7 +183,7 @@ export default function AnnotationsPage() {
                 <div style={{ fontSize: 12, color: "#475569" }}>{a.description}</div>
               )}
               <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 4 }}>
-                {new Date(a.updatedAt).toLocaleString("tr-TR")}
+                {formatTimestamp(a.updatedAt)}
               </div>
             </div>
             <button

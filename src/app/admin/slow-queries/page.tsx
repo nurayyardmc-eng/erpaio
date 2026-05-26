@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatTimestamp } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { formatDurationMs } from "@/lib/format/duration";
 
@@ -272,7 +273,7 @@ export default function SlowQueriesAdminPage() {
                     }}>{r.ok ? "OK" : "FAIL"}</span>
                   </td>
                   <td style={{ ...td, fontSize: 11, color: "#737373" }}>
-                    {new Date(r.createdAt).toLocaleString("tr-TR")}
+                    {formatTimestamp(r.createdAt)}
                   </td>
                 </tr>
               ))}

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { formatTimestamp } from "@/lib/format/time";
 
 /**
  * Sysadmin NPS dashboard — Track VVVV. /api/nps GET cross-tenant aggregate
@@ -166,7 +167,7 @@ export default function AdminNpsPage() {
                   }}
                 >
                   <div style={{ fontSize: 11, color: "#475569" }}>
-                    <strong>{r.score}/10</strong> · {r.tenant.name} · {new Date(r.respondedAt).toLocaleString("tr-TR")}
+                    <strong>{r.score}/10</strong> · {r.tenant.name} · {formatTimestamp(r.respondedAt)}
                   </div>
                   <div style={{ fontSize: 13, color: "#0F172A", marginTop: 4 }}>{r.comment}</div>
                 </div>

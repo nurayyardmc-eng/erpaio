@@ -3,6 +3,7 @@ import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
+import { formatTimestamp } from "@/lib/format/time";
 
 interface SetupResp { secret: string; qr: string; uri: string }
 interface Session {
@@ -338,7 +339,7 @@ export default function SecurityPage() {
                 </div>
                 {recovery.generatedAt && (
                   <div style={{ fontSize: 12, color: "#737373", marginBottom: 16 }}>
-                    {t.security.recoveryGeneratedPrefix}{new Date(recovery.generatedAt).toLocaleString("tr-TR")}
+                    {t.security.recoveryGeneratedPrefix}{formatTimestamp(recovery.generatedAt)}
                   </div>
                 )}
                 {recovery.remaining <= 3 && recovery.remaining > 0 && (
@@ -526,7 +527,7 @@ export default function SecurityPage() {
                   </div>
                   <div style={{ fontSize: 12, color: "#737373" }}>
                     {s.lastUsedAt
-                      ? `${t.security.sessionsLastUsed}${new Date(s.lastUsedAt).toLocaleString("tr-TR")}`
+                      ? `${t.security.sessionsLastUsed}${formatTimestamp(s.lastUsedAt)}`
                       : t.security.sessionsNeverUsed}
                   </div>
                   <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>

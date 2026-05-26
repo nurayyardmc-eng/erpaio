@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Send } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/lib/i18n/context";
+import { formatTimestamp } from "@/lib/format/time";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { showToast } from "@/components/Toaster";
 
@@ -199,7 +200,7 @@ export default function ScheduledReportsPage() {
               <div style={{ color: "#475569", fontSize: 11, marginTop: 4 }}>{r.question}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
                 {scheduleLabel(t, r.schedule)} · {r.emailTo}
-                {r.lastRunAt && <> · {t.scheduledReports.lastRunPrefix}{new Date(r.lastRunAt).toLocaleString("tr-TR")}</>}
+                {r.lastRunAt && <> · {t.scheduledReports.lastRunPrefix}{formatTimestamp(r.lastRunAt)}</>}
               </div>
               {r.lastError && <div style={{ color: "#EF4444", fontSize: 10, marginTop: 4 }}>⚠ {r.lastError}</div>}
             </div>

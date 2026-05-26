@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { formatTimestamp } from "@/lib/format/time";
 
 interface CronJobHealth {
   runs: number;
@@ -119,7 +120,7 @@ export default function StatusPage() {
           <div style={{ fontSize: 18, color: "#0F172A" }}>{summaryFor(overall)}</div>
           {health && (
             <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 8 }}>
-              v{health.version} · son güncelleme {new Date(health.timestamp).toLocaleString("tr-TR")}
+              v{health.version} · son güncelleme {formatTimestamp(health.timestamp)}
             </div>
           )}
         </div>

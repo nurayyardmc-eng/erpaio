@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatTimestamp } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 
 interface Activity {
@@ -176,7 +177,7 @@ export default function AdminActivityPage() {
             <tbody>
               {activities.map((a) => (
                 <tr key={a.id} style={{ borderBottom: "1px solid #E5E7EB" }}>
-                  <td style={td}>{new Date(a.createdAt).toLocaleString("tr-TR")}</td>
+                  <td style={td}>{formatTimestamp(a.createdAt)}</td>
                   <td style={td}><code style={{ fontSize: 10 }}>{a.action}</code></td>
                   <td style={td}>{a.email ?? <span style={{ color: "#94A3B8" }}>—</span>}</td>
                   <td style={td}>{a.tenant?.name ?? (a.tenantId ? <code style={{ fontSize: 10 }}>{a.tenantId.slice(0, 8)}</code> : "—")}</td>

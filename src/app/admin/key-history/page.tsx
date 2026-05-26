@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { formatTimestamp } from "@/lib/format/time";
 
 interface KeyEntry {
   version: number;
@@ -89,8 +90,8 @@ export default function KeyHistoryPage() {
                       letterSpacing: 1,
                     }}>{k.active ? "AKTİF" : "ROTATED"}</span>
                   </td>
-                  <td style={td}>{new Date(k.createdAt).toLocaleString("tr-TR")}</td>
-                  <td style={td}>{k.rotatedAt ? new Date(k.rotatedAt).toLocaleString("tr-TR") : "—"}</td>
+                  <td style={td}>{formatTimestamp(k.createdAt)}</td>
+                  <td style={td}>{k.rotatedAt ? formatTimestamp(k.rotatedAt) : "—"}</td>
                 </tr>
               ))}
             </tbody>

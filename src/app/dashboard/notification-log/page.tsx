@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { colors } from "@/lib/theme";
+import { formatTimestamp } from "@/lib/format/time";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { formatPercentInt } from "@/lib/format/percent";
@@ -231,7 +232,7 @@ export default function NotificationLogPage() {
                       {r.error ?? ""}
                     </td>
                     <td style={{ ...td, fontSize: 11, color: colors.textMuted }}>
-                      {new Date(r.createdAt).toLocaleString("tr-TR")}
+                      {formatTimestamp(r.createdAt)}
                     </td>
                   </tr>
                 );

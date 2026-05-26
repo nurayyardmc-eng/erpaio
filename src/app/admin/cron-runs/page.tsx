@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { showToast } from "@/components/Toaster";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatTimestamp } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { formatDurationMs } from "@/lib/format/duration";
 
@@ -267,7 +268,7 @@ export default function CronRunsPage() {
                       letterSpacing: 1,
                     }}>{r.status}</span>
                   </td>
-                  <td style={td}>{new Date(r.startedAt).toLocaleString("tr-TR")}</td>
+                  <td style={td}>{formatTimestamp(r.startedAt)}</td>
                   <td style={td}>{formatDurationMs(r.durationMs)}</td>
                   <td style={td}>{r.tenantsOk}/{r.tenantsTotal}{r.tenantsFail > 0 ? <span style={{ color: "#EF4444" }}> ({r.tenantsFail} fail)</span> : null}</td>
                   <td style={td}>{r.alertsCreated || "—"}</td>

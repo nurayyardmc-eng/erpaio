@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Eye } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/lib/i18n/context";
+import { formatTimestamp } from "@/lib/format/time";
 import { showToast } from "@/components/Toaster";
 import { computeSparkline } from "@/lib/watchlist/sparkline";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
@@ -408,7 +409,7 @@ export default function WatchlistsPage() {
                 <div style={{ marginTop: 6, fontSize: 10, color: "#94A3B8" }}>
                   {t.watchlists.triggerLabel}: <code style={{ color: "#0A0A0A" }}>{w.thresholdOp} {w.thresholdVal}</code>
                   {w.lastValue !== null && (<> · {t.watchlists.lastValueLabel}: <code style={{ color: w.triggeredAt ? "#F59E0B" : "#475569" }}>{w.lastValue}</code></>)}
-                  {w.lastRunAt && <> · {new Date(w.lastRunAt).toLocaleString("tr-TR")}</>}
+                  {w.lastRunAt && <> · {formatTimestamp(w.lastRunAt)}</>}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>

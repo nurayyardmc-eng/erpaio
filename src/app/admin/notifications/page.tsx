@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatTimestamp } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { formatPercent } from "@/lib/format/percent";
 
@@ -216,7 +217,7 @@ export default function AdminNotificationsPage() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} style={{ borderBottom: "1px solid #E5E7EB" }}>
-                  <td style={td}>{new Date(r.createdAt).toLocaleString("tr-TR")}</td>
+                  <td style={td}>{formatTimestamp(r.createdAt)}</td>
                   <td style={td}><code style={{ fontSize: 10 }}>{r.channel}</code></td>
                   <td style={td}>
                     <span style={{

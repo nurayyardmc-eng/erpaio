@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatNullableN } from "@/lib/charts/format";
+import { formatTimestamp } from "@/lib/format/time";
 import { changeDelta } from "@/lib/format/changeDelta";
 import { sparklinePoints } from "@/lib/charts/sparkline";
 import SetupChecklist from "@/components/SetupChecklist";
@@ -43,7 +44,7 @@ export default function OverviewPage() {
       <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Anlık Metrikler</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24 }}>
         Pre-computed — saatlik/günlük cron snapshotlarından, sıfır bekleme.
-        {data && ` Son güncelleme: ${new Date(data.generatedAt).toLocaleString("tr-TR")}`}
+        {data && ` Son güncelleme: ${formatTimestamp(data.generatedAt)}`}
       </p>
 
       <SetupChecklist />
@@ -108,7 +109,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 
           {metric.latestAt && (
             <div style={{ fontSize: 9, color: "#94A3B8" }}>
-              {new Date(metric.latestAt).toLocaleString("tr-TR")}
+              {formatTimestamp(metric.latestAt)}
             </div>
           )}
         </>

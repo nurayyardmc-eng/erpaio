@@ -5,6 +5,7 @@ import Pagination from "@/components/Pagination";
 import EmptyState from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { useI18n } from "@/lib/i18n/context";
+import { formatTimestamp } from "@/lib/format/time";
 
 interface AuditMessage {
   id: string;
@@ -174,7 +175,7 @@ export default function AuditPage() {
           fontSize: 11,
         }}>
           <div style={{ display: "flex", gap: 8, color: "#94A3B8", fontSize: 9, marginBottom: 6 }}>
-            <span>{new Date(m.createdAt).toLocaleString("tr-TR")}</span>
+            <span>{formatTimestamp(m.createdAt)}</span>
             <span>·</span>
             <span style={{ color: "#475569" }}>{m.userEmail}</span>
             <span>·</span>
