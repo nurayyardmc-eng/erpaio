@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatDate } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 
 interface AdminTenant {
@@ -149,7 +150,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td style={{ padding: "8px 10px", color: "#94A3B8", fontSize: 9 }}>
-                      {new Date(t.createdAt).toLocaleDateString("tr-TR")}
+                      {formatDate(t.createdAt)}
                     </td>
                   </tr>
                 );

@@ -59,6 +59,27 @@ export function formatTimestamp(
 }
 
 /**
+ * Date-only formatter ("DD.MM.YYYY" TR / "M/D/YYYY" EN) — no time.
+ *
+ * Track PPPPPPPP — 8 admin/dashboard page'inde inline
+ * `new Date(x).toLocaleDateString("tr-TR")` patterni. formatTimestamp'in
+ * date-only kuzeni; chat history kartlari, team member rolleri, billing
+ * reset gunleri vb saatlik bilgi gerekmediginde kullaniliyor.
+ *
+ * Null/undefined/invalid → "—".
+ */
+export function formatDate(
+  iso: string | Date | null | undefined,
+  locale: string = "tr",
+): string {
+  if (!iso) return "—";
+  const date = iso instanceof Date ? iso : new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  const tag = locale === "en" ? "en-US" : "tr-TR";
+  return date.toLocaleDateString(tag);
+}
+
+/**
  * Compact token counter for usage badges:
  *   ≥ 1M → "X.YM"
  *   ≥ 1k → "Xk" (no decimal — settings UI is narrow)

@@ -5,6 +5,7 @@ import { Bookmark, Pin, PinOff, Trash2 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatDate } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
@@ -189,7 +190,7 @@ export default function SavedQueriesPage() {
                 <span>·</span>
                 <span>{q.successCount} başarılı / {q.failCount} hata</span>
                 <span>·</span>
-                <span>Son: {new Date(q.lastUsedAt).toLocaleDateString("tr-TR")}</span>
+                <span>Son: {formatDate(q.lastUsedAt)}</span>
               </div>
             </Link>
             <button

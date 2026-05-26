@@ -9,7 +9,7 @@ import { confirmDialog } from "@/components/Confirm";
 import { useI18n } from "@/lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Dictionary, type Locale } from "@/lib/i18n/dictionary";
 import { colors } from "@/lib/theme";
-import { formatRelativeTime, formatTokens } from "@/lib/format/time";
+import { formatDate, formatRelativeTime, formatTokens } from "@/lib/format/time";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 interface TenantSettings {
@@ -323,7 +323,7 @@ export default function SettingsPage() {
               </div>
               <div style={{ fontSize: 12, color: colors.textMuted }}>
                 {t.settings.usageResetPrefix}
-                {new Date(usage.resetsOn).toLocaleDateString("tr-TR")}
+                {formatDate(usage.resetsOn)}
               </div>
               {usage.percentUsed >= 90 && (
                 <div style={{

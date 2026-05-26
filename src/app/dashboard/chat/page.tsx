@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
+import { formatDate } from "@/lib/format/time";
 import { downloadXlsx } from "@/lib/export/xlsx";
 import { type ChartHint } from "@/lib/charts/detect";
 import MiniChart from "@/components/MiniChart";
@@ -664,7 +665,7 @@ export default function ChatPage() {
                       </div>
                     )}
                     <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 4 }}>
-                      {h.messageCount} {t.chat.messagesSuffix} · {new Date(h.createdAt).toLocaleDateString("tr-TR")}
+                      {h.messageCount} {t.chat.messagesSuffix} · {formatDate(h.createdAt)}
                     </div>
                   </button>
                 );
@@ -719,7 +720,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                   <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>
-                    {s.messageCount} {t.chat.messagesSuffix} · {new Date(s.createdAt).toLocaleDateString("tr-TR")}
+                    {s.messageCount} {t.chat.messagesSuffix} · {formatDate(s.createdAt)}
                   </div>
                 </button>
 

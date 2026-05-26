@@ -3,7 +3,7 @@ import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
-import { formatTimestamp } from "@/lib/format/time";
+import { formatDate, formatTimestamp } from "@/lib/format/time";
 
 interface SetupResp { secret: string; qr: string; uri: string }
 interface Session {
@@ -531,7 +531,7 @@ export default function SecurityPage() {
                       : t.security.sessionsNeverUsed}
                   </div>
                   <div style={{ fontSize: 11, color: "#737373", marginTop: 2 }}>
-                    {t.security.sessionsExpires}{new Date(s.expiresAt).toLocaleDateString("tr-TR")}
+                    {t.security.sessionsExpires}{formatDate(s.expiresAt)}
                   </div>
                 </div>
                 {!s.isCurrent && (

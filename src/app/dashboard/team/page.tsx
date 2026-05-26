@@ -3,6 +3,7 @@ import { confirmDialog } from "@/components/Confirm";
 import ErrorState from "@/components/ErrorState";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
+import { formatDate } from "@/lib/format/time";
 
 interface TeamUser {
   id: string;
@@ -149,7 +150,7 @@ export default function TeamPage() {
               <div style={{ flex: 1 }}>
                 <div style={{ color: "#0F172A", fontSize: 12 }}>{inv.email}</div>
                 <div style={{ color: "#475569", fontSize: 10 }}>
-                  {inv.role} · {new Date(inv.expiresAt).toLocaleDateString("tr-TR")}{t.team.expiresOnSuffix}
+                  {inv.role} · {formatDate(inv.expiresAt)}{t.team.expiresOnSuffix}
                 </div>
               </div>
               <button onClick={() => cancelInvite(inv.id)} style={btnDanger}>{t.team.cancelInvite}</button>
@@ -169,7 +170,7 @@ export default function TeamPage() {
                 {u.email} {u.totpEnabled && <span style={{ color: "#10B981", fontSize: 10, marginLeft: 8, fontWeight: 600, letterSpacing: 0.5 }}>{t.team.mfaBadge}</span>}
               </div>
               <div style={{ color: "#475569", fontSize: 10 }}>
-                {u.name ?? "—"} · {new Date(u.createdAt).toLocaleDateString("tr-TR")}
+                {u.name ?? "—"} · {formatDate(u.createdAt)}
               </div>
             </div>
             <select value={u.role} onChange={(e) => updateRole(u.id, e.target.value)} style={{ ...input, width: "auto", marginRight: 8 }}>

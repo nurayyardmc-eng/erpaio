@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatRelativeTime, formatTokens, formatTimestamp } from "./time";
+import { formatRelativeTime, formatTokens, formatTimestamp, formatDate } from "./time";
 
 const NOW = new Date("2026-05-26T12:00:00Z").getTime();
 const MIN = 60_000;
@@ -194,5 +194,43 @@ describe("format/time/formatTimestamp", () => {
 
   it("default locale is TR (omitting arg)", () => {
     expect(formatTimestamp(FIXED_ISO)).toBe(formatTimestamp(FIXED_ISO, "tr"));
+  });
+});
+
+describe("format/time/formatDate", () => {
+  const FIXED_ISO = "2026-05-26T12:34:56Z";
+
+  it("null/undefined/invalid → '—'", () => {
+    expect(formatDate(null)).toBe("—");
+    expect(formatDate(undefined)).toBe("—");
+    expect(formatDate("not a date")).toBe("—");
+  });
+
+  it("renders TR locale by default (no time component)", () => {
+    const r = formatDate(FIXED_ISO);
+    expect(r).toContain("2026");
+    expect(r).not.toContain(":"); // no time
+  });
+
+  it("EN locale differs from TR", () => {
+    const tr = formatDate(FIXED_ISO, "tr");
+    const en = formatDate(FIXED_ISO, "en");
+    expect(en).not.toBe(tr);
+    expect(en).toContain("2026");
+  });
+
+  it("accepts Date instance directly", () => {
+    const d = new Date(FIXED_ISO);
+    expect(formatDate(d)).toBe(formatDate(FIXED_ISO));
+  });
+
+  it("default locale is TR", () => {
+    expect(formatDate(FIXED_ISO)).toBe(formatDate(FIXED_ISO, "tr"));
+  });
+
+  it("date-only output omits time (different from formatTimestamp)", () => {
+    const dateOnly = formatDate(FIXED_ISO);
+    const fullTs = formatTimestamp(FIXED_ISO);
+    expect(dateOnly.length).toBeLessThan(fullTs.length);
   });
 });
