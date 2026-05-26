@@ -10,6 +10,7 @@ import {
   noFieldsToUpdateError,
   userNotFoundError,
   tenantNotFoundError,
+  getRequiredIdParam,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -299,5 +300,63 @@ describe("tenantNotFoundError", () => {
     const res = tenantNotFoundError(reqWithLang("en"));
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("Tenant not found.");
+  });
+});
+
+describe("getRequiredIdParam", () => {
+  it("returns { id } when query param present", () => {
+    const req = new Request("https://example.com/api/test?id=abc123");
+    const r = getRequiredIdParam(req);
+    expect(r).not.toBeInstanceOf(Response);
+    if (r instanceof Response) return;
+    expect(r.id).toBe("abc123");
+  });
+
+  it("returns 400 Response when id missing", () => {
+    const req = new Request("https://example.com/api/test");
+    const r = getRequiredIdParam(req);
+    expect(r).toBeInstanceOf(Response);
+    if (!(r instanceof Response)) return;
+    expect(r.status).toBe(400);
+  });
+
+  it("returns 400 Response when id is empty string", () => {
+    const req = new Request("https://example.com/api/test?id=");
+    const r = getRequiredIdParam(req);
+    expect(r).toBeInstanceOf(Response);
+  });
+
+  it("TR locale 400 body — 'id gerekli.'", async () => {
+    const req = new Request("https://example.com/api/test", {
+      headers: { "accept-language": "tr" },
+    });
+    const r = getRequiredIdParam(req);
+    if (!(r instanceof Response)) throw new Error("expected Response");
+    const body = (await r.json()) as { error: string };
+    expect(body.error).toBe("id gerekli.");
+  });
+
+  it("EN locale 400 body — 'id required.'", async () => {
+    const req = new Request("https://example.com/api/test", {
+      headers: { "accept-language": "en" },
+    });
+    const r = getRequiredIdParam(req);
+    if (!(r instanceof Response)) throw new Error("expected Response");
+    const body = (await r.json()) as { error: string };
+    expect(body.error).toBe("id required.");
+  });
+
+  it("ignores other query params, only checks id", () => {
+    const req = new Request("https://example.com/api/test?other=foo&id=xyz");
+    const r = getRequiredIdParam(req);
+    if (r instanceof Response) throw new Error("expected success");
+    expect(r.id).toBe("xyz");
+  });
+
+  it("preserves id casing and special chars", () => {
+    const req = new Request("https://example.com/api/test?id=Abc-123_XYZ");
+    const r = getRequiredIdParam(req);
+    if (r instanceof Response) throw new Error("expected success");
+    expect(r.id).toBe("Abc-123_XYZ");
   });
 });

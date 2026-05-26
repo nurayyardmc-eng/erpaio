@@ -2,10 +2,10 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateAllowlist } from "@/lib/security/ipAllowlist";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, getRequiredIdParam } from "@/lib/http/searchParams";
 
 const CidrSchema = z.string().regex(
   /^\d{1,3}(\.\d{1,3}){3}(\/(?:[0-9]|[12][0-9]|3[0-2]))?$/,
@@ -61,9 +61,9 @@ export async function DELETE(req: Request) {
   const denied = requireOwnerOrAdmin(req, session.user.role);
   if (denied) return denied;
 
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
-  if (!id) return localizedError(req, 400, { tr: "id gerekli.", en: "id required." });
+  const idParam = getRequiredIdParam(req);
+  if (idParam instanceof Response) return idParam;
+  const { id } = idParam;
 
   await prisma.tenantIpAllowlist.deleteMany({
     where: { id, tenantId: session.user.tenantId },

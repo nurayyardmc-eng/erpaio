@@ -122,6 +122,28 @@ export function noFieldsToUpdateError(req: Request): Response {
 }
 
 /**
+ * Pull the required `id` query param. Returns `{ id }` or a 400 Response.
+ *
+ * Track LLLLLLLLLL — 4 DELETE route (watchlists, scheduled-reports,
+ * custom-metrics, security/allowlist) AYNI 3 satırı tekrar ediyordu:
+ *
+ *   const { searchParams } = new URL(req.url);
+ *   const id = searchParams.get("id");
+ *   if (!id) return localizedError(req, 400, { tr: "id gerekli.", en: "id required." });
+ *
+ * Caller pattern: `const r = getRequiredIdParam(req); if (r instanceof
+ * Response) return r; const { id } = r;` — parseJsonBody ile aynı kontrat.
+ */
+export function getRequiredIdParam(req: Request): { id: string } | Response {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return localizedError(req, 400, { tr: "id gerekli.", en: "id required." });
+  }
+  return { id };
+}
+
+/**
  * Common "Kullanıcı bulunamadı." 404. Track VVVVVVVVV.
  * Used by: me/password, me/notification-prefs, tenant/delete, team/route.
  */

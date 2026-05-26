@@ -3,8 +3,8 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { assertOwnedConnection } from "@/lib/db/erpConnection";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { parseJsonBody } from "@/lib/http/searchParams";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { parseJsonBody, getRequiredIdParam } from "@/lib/http/searchParams";
+import { jsonError } from "@/lib/i18n/server";
 import { THRESHOLD_OPS } from "@/lib/threshold/compare";
 
 const PostSchema = z.object({
@@ -55,9 +55,9 @@ export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
-  if (!id) return localizedError(req, 400, { tr: "id gerekli.", en: "id required." });
+  const idParam = getRequiredIdParam(req);
+  if (idParam instanceof Response) return idParam;
+  const { id } = idParam;
 
   await prisma.watchlist.deleteMany({
     where: { id, tenantId: session.user.tenantId },
