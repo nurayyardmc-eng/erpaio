@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { trialBannerStatus, type TrialUrgency } from "@/lib/trial/banner";
 import { useI18n } from "@/lib/i18n/context";
+import { colors } from "@/lib/theme";
 
 /**
  * Trial countdown banner — Track AAAA. Tenant'ın trial sona ermesine
@@ -13,11 +14,14 @@ import { useI18n } from "@/lib/i18n/context";
  * Server'da cron trial-warnings ayrıca email gönderir; bu in-app reminder.
  */
 
+// Track AAAAAAAAA: bg + border from theme.colors.*Soft / .*. Foreground stays
+// dark-shade hex (theme has no dedicated dark-amber/dark-red text shades, and
+// readability inside soft bg requires the specific WCAG-AA pair).
 const STYLES: Record<TrialUrgency, { bg: string; fg: string; border: string }> = {
   info: { bg: "#F1F5F9", fg: "#0F172A", border: "#CBD5E1" },
-  warning: { bg: "#FEF3C7", fg: "#92400E", border: "#F59E0B" },
-  danger: { bg: "#FEE2E2", fg: "#991B1B", border: "#EF4444" },
-  expired: { bg: "#FEE2E2", fg: "#991B1B", border: "#EF4444" },
+  warning: { bg: colors.warningSoft, fg: "#92400E", border: colors.warning },
+  danger: { bg: colors.errorSoft, fg: "#991B1B", border: colors.error },
+  expired: { bg: colors.errorSoft, fg: "#991B1B", border: colors.error },
 };
 
 interface TenantApi {
