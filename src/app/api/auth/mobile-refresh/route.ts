@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth/dual";
 import { generateApiToken, hashApiToken } from "@/lib/auth/apiToken";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { daysFromNow } from "@/lib/time/units";
 
 const log = childLogger({ component: "mobile-refresh" });
@@ -32,8 +32,8 @@ export async function POST(req: Request) {
     return jsonError(req, "api.forbidden", 403);
   }
 
-  const limit = await rateLimit(user.id, RATE_LIMITS.PASSWORD_CHANGE);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceUserRateLimit(req, user.id, RATE_LIMITS.PASSWORD_CHANGE);
+  if (limited) return limited;
 
   const oldToken = await prisma.apiToken.findUnique({
     where: { id: user.tokenId },
