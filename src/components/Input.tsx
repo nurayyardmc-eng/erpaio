@@ -36,7 +36,7 @@ const Input = forwardRef<HTMLInputElement, Props>(function Input(
             transform: "translateY(-50%)",
             display: "flex",
             alignItems: "center",
-            color: error ? "#EF4444" : colors.textMuted,
+            color: error ? colors.error : colors.textMuted,
             pointerEvents: "none",
           }}>
             {icon}
@@ -48,7 +48,7 @@ const Input = forwardRef<HTMLInputElement, Props>(function Input(
           style={{
             width: "100%",
             background: colors.bg,
-            border: `1px solid ${error ? "#EF4444" : colors.border}`,
+            border: `1px solid ${error ? colors.error : colors.border}`,
             borderRadius: 10,
             padding: icon ? "10px 14px 10px 42px" : "10px 14px",
             color: colors.text,
@@ -60,7 +60,7 @@ const Input = forwardRef<HTMLInputElement, Props>(function Input(
         />
       </div>
       {error && (
-        <div style={{ fontSize: 12, color: "#EF4444", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+        <div style={{ fontSize: 12, color: colors.error, marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
           {error}
         </div>
       )}
