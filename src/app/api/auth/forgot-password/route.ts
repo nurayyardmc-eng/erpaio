@@ -1,12 +1,10 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { rateLimit } from "@/lib/rateLimit";
+import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
-import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { extractClientIp } from "@/lib/http/clientIp";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { generateSecureToken } from "@/lib/crypto/token";
 import { passwordResetEmail } from "@/lib/auth/passwordResetEmail";
@@ -19,9 +17,8 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const ip = extractClientIp(req);
-  const limit = await rateLimit(ip, LIMIT);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceIpRateLimit(req, LIMIT);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;

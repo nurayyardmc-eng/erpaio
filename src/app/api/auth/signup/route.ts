@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { rateLimit } from "@/lib/rateLimit";
+import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
@@ -13,7 +13,6 @@ import { parseJsonBody } from "@/lib/http/searchParams";
 import { slugify } from "@/lib/auth/slugify";
 import { welcomeEmailHtml } from "@/lib/auth/welcomeEmail";
 
-import { extractClientIp } from "@/lib/http/clientIp";
 import { zPassword, zEmail } from "@/lib/auth/schemas";
 import { baseUrl } from "@/lib/url";
 import { daysFromNow, ONE_HOUR_MS } from "@/lib/time/units";
@@ -35,9 +34,8 @@ export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
 
-  const ip = extractClientIp(req);
-  const limit = await rateLimit(ip, SIGNUP_LIMIT);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceIpRateLimit(req, SIGNUP_LIMIT);
+  if (limited) return limited;
 
   const parsedBody = await parseJsonBody(req, BodySchema);
   if (parsedBody instanceof Response) return parsedBody;

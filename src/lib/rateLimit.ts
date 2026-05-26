@@ -2,6 +2,8 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { childLogger } from "@/lib/observability/logger";
 import { ONE_HOUR_MS } from "@/lib/time/units";
+import { extractClientIp } from "@/lib/http/clientIp";
+import { jsonError } from "@/lib/i18n/server";
 
 const log = childLogger({ component: "rate-limit" });
 
@@ -110,3 +112,26 @@ export const RATE_LIMITS = {
   ADMIN_READ: { prefix: "admin-r", max: 60, windowMs: 60_000 }, // 60/dk / sysadmin
   ADMIN_WRITE: { prefix: "admin-w", max: 20, windowMs: 60_000 }, // 20/dk / sysadmin
 } as const;
+
+/**
+ * IP-based rate limit gate — extractClientIp + rateLimit + 429 wrap'i
+ * tek satira indirir.
+ *
+ * Track BBBBBBBB — 5 auth route'da IDENTIK 3-satirlik pattern vardi:
+ *   const ip = extractClientIp(req);
+ *   const limit = await rateLimit(ip, CONFIG);
+ *   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+ *
+ * Helper signature checkBodySize / parseJsonBody ile uyumlu: pass →
+ * null, deny → Response. Mobile-login gibi custom Retry-After header
+ * isteyen siteler manuel cağırmaya devam edebilir.
+ */
+export async function enforceIpRateLimit(
+  req: Request,
+  config: { prefix: string; max: number; windowMs: number },
+): Promise<Response | null> {
+  const ip = extractClientIp(req);
+  const limit = await rateLimit(ip, config);
+  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  return null;
+}

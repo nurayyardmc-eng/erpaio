@@ -3,9 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceIpRateLimit } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { extractClientIp } from "@/lib/http/clientIp";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { zPassword } from "@/lib/auth/schemas";
 const BodySchema = z.object({
@@ -18,9 +17,8 @@ export async function POST(req: Request) {
   if (tooBig) return tooBig;
 
   // Brute force koruması: IP başına saatte 5 deneme
-  const ip = extractClientIp(req);
-  const limit = await rateLimit(ip, RATE_LIMITS.RESET_PASSWORD);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceIpRateLimit(req, RATE_LIMITS.RESET_PASSWORD);
+  if (limited) return limited;
 
   const body = BodySchema.safeParse(await req.json());
   if (!body.success) {

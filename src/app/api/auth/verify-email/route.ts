@@ -1,17 +1,15 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, enforceIpRateLimit } from "@/lib/rateLimit";
 import { jsonError } from "@/lib/i18n/server";
-import { extractClientIp } from "@/lib/http/clientIp";
 import { sha256Hex } from "@/lib/crypto/hash";
 const BodySchema = z.object({ token: z.string().min(8) });
 
 export async function POST(req: Request) {
   // Brute force koruması: IP başına saatte 10 deneme
-  const ip = extractClientIp(req);
-  const limit = await rateLimit(ip, RATE_LIMITS.VERIFY_EMAIL);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  const limited = await enforceIpRateLimit(req, RATE_LIMITS.VERIFY_EMAIL);
+  if (limited) return limited;
 
   const body = BodySchema.safeParse(await req.json());
   if (!body.success) return jsonError(req, "auth.invalidToken", 400);
