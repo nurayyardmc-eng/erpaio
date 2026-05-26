@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { sha256Hex } from "@/lib/crypto/hash";
 
 const MIN_SUCCESS_FOR_HIT = 3;
 const MAX_FAIL_RATE = 0.2;
@@ -21,7 +21,7 @@ export function normalizeQuestion(question: string): string {
 
 export function hashQuestion(question: string, tenantId: string): string {
   const normalized = normalizeQuestion(question);
-  return createHash("sha256").update(`${tenantId}::${normalized}`).digest("hex");
+  return sha256Hex(`${tenantId}::${normalized}`);
 }
 
 export async function lookupCache(
