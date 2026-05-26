@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
+import { watchlistNotFoundError } from "@/lib/http/searchParams";
 
 /**
  * Watchlist trigger history — Track NNNN. Son N tetiklenmeyi listeler
@@ -25,10 +26,7 @@ export async function GET(
     select: { id: true },
   });
   if (!watchlist) {
-    return localizedError(req, 404, {
-      tr: "Watchlist bulunamadı.",
-      en: "Watchlist not found.",
-    });
+    return watchlistNotFoundError(req);
   }
 
   const triggers = await prisma.watchlistTrigger.findMany({

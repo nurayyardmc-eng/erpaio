@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { watchlistNotFoundError } from "@/lib/http/searchParams";
 import { compareThreshold, extractFirstNumeric } from "@/lib/threshold/compare";
 
 export const runtime = "nodejs";
@@ -34,10 +35,7 @@ export async function POST(
     where: { id, tenantId: session.user.tenantId },
   });
   if (!w) {
-    return localizedError(req, 404, {
-      tr: "Watchlist bulunamadı.",
-      en: "Watchlist not found.",
-    });
+    return watchlistNotFoundError(req);
   }
 
   // Cron'daki gibi sohbet geçmişinden SQL bul. Soru ile assistant mesajı

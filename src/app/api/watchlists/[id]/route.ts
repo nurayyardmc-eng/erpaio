@@ -2,8 +2,12 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { jsonError, localizedError } from "@/lib/i18n/server";
-import { parseJsonBody, noFieldsToUpdateError } from "@/lib/http/searchParams";
+import { jsonError } from "@/lib/i18n/server";
+import {
+  parseJsonBody,
+  noFieldsToUpdateError,
+  watchlistNotFoundError,
+} from "@/lib/http/searchParams";
 import { THRESHOLD_OPS } from "@/lib/threshold/compare";
 
 /**
@@ -62,10 +66,7 @@ export async function PATCH(
   });
 
   if (result.count === 0) {
-    return localizedError(req, 404, {
-      tr: "Watchlist bulunamadı.",
-      en: "Watchlist not found.",
-    });
+    return watchlistNotFoundError(req);
   }
 
   const fresh = await prisma.watchlist.findUnique({ where: { id } });

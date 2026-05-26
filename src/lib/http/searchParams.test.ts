@@ -11,6 +11,7 @@ import {
   userNotFoundError,
   tenantNotFoundError,
   getRequiredIdParam,
+  watchlistNotFoundError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -358,5 +359,24 @@ describe("getRequiredIdParam", () => {
     const r = getRequiredIdParam(req);
     if (r instanceof Response) throw new Error("expected success");
     expect(r.id).toBe("Abc-123_XYZ");
+  });
+});
+
+describe("watchlistNotFoundError", () => {
+  it("returns 404", () => {
+    const res = watchlistNotFoundError(reqWithLang("tr"));
+    expect(res.status).toBe(404);
+  });
+
+  it("TR body — 'Watchlist bulunamadı.'", async () => {
+    const res = watchlistNotFoundError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Watchlist bulunamadı.");
+  });
+
+  it("EN body — 'Watchlist not found.'", async () => {
+    const res = watchlistNotFoundError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Watchlist not found.");
   });
 });

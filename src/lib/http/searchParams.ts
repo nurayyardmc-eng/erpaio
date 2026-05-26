@@ -165,6 +165,19 @@ export function tenantNotFoundError(req: Request): Response {
   });
 }
 
+/**
+ * Common "Watchlist bulunamadı." 404. Track MMMMMMMMMM.
+ * Used by: watchlists/[id] (PATCH), watchlists/[id]/triggers,
+ * watchlists/[id]/run. Tenant-scope ownership check sonrası
+ * count==0 / row==null path'lerinde aynı i18n string'i veriyorlardı.
+ */
+export function watchlistNotFoundError(req: Request): Response {
+  return localizedError(req, 404, {
+    tr: "Watchlist bulunamadı.",
+    en: "Watchlist not found.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");
