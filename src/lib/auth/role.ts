@@ -45,6 +45,22 @@ import { localizedError } from "@/lib/i18n/server";
  */
 const DEFAULT_DENY_ADMIN = { tr: "Yalnızca admin.", en: "Admin only." } as const;
 
+/**
+ * Common deny messages for requireOwnerOrAdmin texts arg. Centralized to
+ * prevent drift when multiple sites share the same wording.
+ *
+ * Track MMMMMMMMM.
+ */
+export const DENY_OWNER_ADMIN_VIEW = {
+  tr: "Bu sayfa yalnızca owner / admin rollerine açıktır.",
+  en: "This page is only available to owner / admin roles.",
+} as const;
+
+export const DENY_ADMIN_EDIT = {
+  tr: "Yalnızca yönetici düzenleyebilir.",
+  en: "Only admins can edit.",
+} as const;
+
 export function requireOwnerOrAdmin(
   req: Request,
   role: Role | null | undefined,

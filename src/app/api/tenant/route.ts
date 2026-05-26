@@ -5,7 +5,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { recordUserActivity } from "@/lib/audit/activity";
-import { requireOwnerOrAdmin } from "@/lib/auth/role";
+import { requireOwnerOrAdmin, DENY_ADMIN_EDIT } from "@/lib/auth/role";
 import { zSeverity } from "@/lib/auth/schemas";
 
 const PatchSchema = z.object({
@@ -51,10 +51,7 @@ export async function PATCH(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  const denied = requireOwnerOrAdmin(req, session.user.role, {
-    tr: "Yalnızca yönetici düzenleyebilir.",
-    en: "Only admins can edit.",
-  });
+  const denied = requireOwnerOrAdmin(req, session.user.role, DENY_ADMIN_EDIT);
   if (denied) return denied;
 
   const body = await parseJsonBody(req, PatchSchema);
