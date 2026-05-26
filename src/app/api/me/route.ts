@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth/dual";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 import { isValidAvatarDataUrl, pickProfileUpdateAction } from "@/lib/auth/avatar";
 
 export async function GET(req: Request) {
@@ -72,16 +72,12 @@ export async function PATCH(req: Request) {
 
   childLogger({ component: "me-update" }).info({ userId: user.id }, "Profile updated");
 
-  // KVKK md. 13 audit trail — değişen alan adlarını yaz (PII içerik değil)
-  const { ipAddress, userAgent } = activityContextFromRequest(req);
-  await recordActivity({
-    userId: user.id,
-    tenantId: user.tenantId,
-    email: updated.email,
+  // KVKK md. 13 audit trail — değişen alan adlarını yaz (PII içerik değil).
+  // updated.email kullanıyoruz çünkü PATCH'in döndüğü değer, eski cache'lı
+  // session.user.email yerine kanonik.
+  await recordUserActivity(req, { user: { id: user.id, tenantId: user.tenantId, email: updated.email } }, {
     action: pickProfileUpdateAction(changedFields),
     metadata: { fields: changedFields },
-    ipAddress,
-    userAgent,
   });
 
   return Response.json({ user: updated });
