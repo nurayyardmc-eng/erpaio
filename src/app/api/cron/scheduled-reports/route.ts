@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { verifyCronAuth } from "@/lib/cron/auth";
+import { assertCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
@@ -14,8 +14,8 @@ export const maxDuration = 300;
 const log = childLogger({ component: "cron-reports" });
 
 export async function GET(req: NextRequest) {
-  const auth = await verifyCronAuth(req);
-  if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: 401 });
+  const denied = await assertCronAuth(req);
+  if (denied) return denied;
 
   const lock = await acquireCronLock("scheduled-reports");
   if (!lock.ok) {

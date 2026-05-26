@@ -1,7 +1,8 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { verifyBearerHeader } from "./timingSafeEqual";
+import { REQUEST_ID_HEADER } from "@/lib/observability/requestId";
 
 /**
  * Cron auth — bearer secret (production: GitHub Actions / Vercel cron) ya da
@@ -30,5 +31,29 @@ export async function verifyCronAuth(req: NextRequest): Promise<{ ok: boolean; r
   }
 
   return { ok: false, reason: "Missing Authorization header" };
+}
+
+/**
+ * Convenience wrapper — 5 cron route IDENTIK pattern paylasiyordu:
+ *   const auth = await verifyCronAuth(req);
+ *   if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: 401 });
+ *
+ * Pass → null, deny → 401 NextResponse (opsiyonel requestId header'i ile
+ * trial-warnings + anomaly-detection gibi tracing-aware route'lar icin).
+ *
+ * Track LLLLLLLL — extracted.
+ */
+export async function assertCronAuth(
+  req: NextRequest,
+  requestId?: string,
+): Promise<NextResponse | null> {
+  const result = await verifyCronAuth(req);
+  if (result.ok) return null;
+  const headers: Record<string, string> = {};
+  if (requestId) headers[REQUEST_ID_HEADER] = requestId;
+  return NextResponse.json(
+    { error: result.reason },
+    { status: 401, headers },
+  );
 }
 

@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { verifyCronAuth } from "@/lib/cron/auth";
+import { assertCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { sendCronHealthDigest } from "@/lib/cron/healthDigest";
 import { childLogger } from "@/lib/observability/logger";
@@ -15,8 +15,8 @@ const log = childLogger({ component: "cron-cleanup" });
 // Retention policy table moved to @/lib/cron/retention (Track IIIII).
 
 export async function GET(req: NextRequest) {
-  const auth = await verifyCronAuth(req);
-  if (!auth.ok) return NextResponse.json({ error: auth.reason }, { status: 401 });
+  const denied = await assertCronAuth(req);
+  if (denied) return denied;
 
   const lock = await acquireCronLock("cleanup");
   if (!lock.ok) {

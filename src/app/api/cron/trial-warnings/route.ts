@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
-import { verifyCronAuth } from "@/lib/cron/auth";
+import { assertCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
@@ -15,13 +15,8 @@ export async function GET(req: NextRequest) {
   const startedAt = Date.now();
   const requestId = getOrCreateRequestId(req);
 
-  const auth = await verifyCronAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json(
-      { error: auth.reason },
-      { status: 401, headers: { [REQUEST_ID_HEADER]: requestId } },
-    );
-  }
+  const denied = await assertCronAuth(req, requestId);
+  if (denied) return denied;
 
   const log = childLogger({ component: "cron-trial-warnings", requestId });
 
