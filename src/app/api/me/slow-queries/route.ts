@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 /**
  * Tenant-scoped slow query görünümü — owner + admin role'leri kendi
@@ -21,7 +22,7 @@ const QuerySchema = z.object({
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "owner" && session.user.role !== "admin") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return localizedError(req, 403, {
       tr: "Bu sayfa yalnızca owner / admin rollerine açıktır.",
       en: "This page is only available to owner / admin roles.",

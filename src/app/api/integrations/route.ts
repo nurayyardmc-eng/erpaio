@@ -5,6 +5,7 @@ import { encrypt } from "@/lib/crypto/encrypt";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 const PostSchema = z.object({
   kind: z.enum(["slack", "teams", "webhook"]),
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "owner" && session.user.role !== "admin") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
   }
 
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "owner" && session.user.role !== "admin") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return localizedError(req, 403, { tr: "Yalnızca admin.", en: "Admin only." });
   }
 

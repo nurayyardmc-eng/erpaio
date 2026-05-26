@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 /**
  * Tenant cron health — Track DD. Crons platform-wide global çalışır
@@ -25,7 +26,7 @@ interface JobHealth {
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "owner" && session.user.role !== "admin") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return jsonError(req, "api.forbidden", 403);
   }
 

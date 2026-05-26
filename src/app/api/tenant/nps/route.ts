@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 /**
  * Tenant-scoped NPS aggregate — Track UUUU. Önceden sysadmin global aggregate
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
 
   // Role gate: tenant owner ve admin görür (sysadmin de — ama bu endpoint
   // tenant-scope, sysadmin için /api/nps cross-tenant zaten var).
-  if (session.user.role !== "owner" && session.user.role !== "admin") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return jsonError(req, "api.forbidden", 403);
   }
 

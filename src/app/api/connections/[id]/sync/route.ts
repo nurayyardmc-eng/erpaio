@@ -6,6 +6,7 @@ import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
+import { isOwnerOrAdmin } from "@/lib/auth/role";
 
 /**
  * Manuel schema cache re-sync. Track RRR'de bağlantı kartında schema age
@@ -27,7 +28,7 @@ export async function POST(
 ) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-  if (session.user.role !== "owner" && session.user.role !== "admin") {
+  if (!isOwnerOrAdmin(session.user.role)) {
     return localizedError(req, 403, {
       tr: "Yalnızca owner / admin schema sync tetikleyebilir.",
       en: "Only owner / admin can trigger schema sync.",
