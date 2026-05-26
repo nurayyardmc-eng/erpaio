@@ -148,7 +148,7 @@ export default function SavedQueriesPage() {
                 lastUsedAt: q.lastUsedAt,
               }));
               const csv = rowsToCsv(rows, ["question", "sqlQuery", "successCount", "failCount", "reliability", "pinned", "lastUsedAt"]);
-                            downloadCsv(exportFilename("saved-queries", "csv"), csv);
+              downloadCsv(exportFilename("saved-queries", "csv"), csv);
             }}
             style={{ padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
           >

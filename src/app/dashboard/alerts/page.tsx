@@ -59,7 +59,7 @@ export default function AlertsPage() {
       falsePositiveAt: a.falsePositiveAt ?? "",
     }));
     const csv = rowsToCsv(rows, ["time", "severity", "title", "description", "module", "status", "falsePositiveAt"]);
-        downloadCsv(exportFilename("alerts", "csv"), csv);
+    downloadCsv(exportFilename("alerts", "csv"), csv);
   };
 
   const toggleExpand = async (alert: Alert) => {

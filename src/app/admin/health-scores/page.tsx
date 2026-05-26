@@ -146,7 +146,7 @@ export default function HealthScoresPage() {
                 createdAt: it.tenant.createdAt,
               }));
               const csv = rowsToCsv(rows, ["tenantId", "name", "plan", "score", "grade", "activity", "qualityRate", "feedbackRate", "cacheHitRate", "errorRate", "daysActive", "createdAt"]);
-                            downloadCsv(exportFilename("health-scores", "csv"), csv);
+              downloadCsv(exportFilename("health-scores", "csv"), csv);
             }}
             style={{
               marginLeft: "auto",

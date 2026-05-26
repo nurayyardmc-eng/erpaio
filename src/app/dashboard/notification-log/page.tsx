@@ -178,7 +178,7 @@ export default function NotificationLogPage() {
                 alertId: r.alertId ?? "",
               }));
               const csv = rowsToCsv(rows, ["time", "channel", "status", "recipient", "error", "alertId"]);
-                            downloadCsv(exportFilename("notification-log", "csv"), csv);
+              downloadCsv(exportFilename("notification-log", "csv"), csv);
             }}
             style={{ padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
           >

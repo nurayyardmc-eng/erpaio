@@ -88,7 +88,7 @@ export default function ConsentsPage() {
       context: c.context ?? "",
     }));
     const csv = rowsToCsv(rows, ["time", "type", "typeLabel", "action", "actionLabel", "documentVer", "context"]);
-        downloadCsv(exportFilename("consents", "csv"), csv);
+    downloadCsv(exportFilename("consents", "csv"), csv);
   };
 
   return (

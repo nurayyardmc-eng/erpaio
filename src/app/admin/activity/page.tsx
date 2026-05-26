@@ -125,7 +125,7 @@ export default function AdminActivityPage() {
               ip: a.ipAddress ?? "",
             }));
             const csv = rowsToCsv(rows, ["time", "tenant", "email", "action", "target", "ip"]);
-                        downloadCsv(exportFilename("admin-activity", "csv"), csv);
+            downloadCsv(exportFilename("admin-activity", "csv"), csv);
           }}
           style={{ padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
         >

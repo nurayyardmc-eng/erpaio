@@ -140,7 +140,7 @@ export default function SlowQueriesPage() {
                 error: r.errorMessage ?? "",
               }));
               const csv = rowsToCsv(csvRows, ["time", "durationMs", "ok", "connection", "sqlSnippet", "error"]);
-                            downloadCsv(exportFilename("slow-queries", "csv"), csv);
+              downloadCsv(exportFilename("slow-queries", "csv"), csv);
             }}
             style={{
               marginLeft: "auto",

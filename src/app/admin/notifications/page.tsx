@@ -186,7 +186,7 @@ export default function AdminNotificationsPage() {
                 alertId: r.alertId ?? "",
               }));
               const csv = rowsToCsv(csvRows, ["time", "tenant", "channel", "status", "recipient", "error", "alertId"]);
-                            downloadCsv(exportFilename("admin-notifications", "csv"), csv);
+              downloadCsv(exportFilename("admin-notifications", "csv"), csv);
             }}
             style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
           >

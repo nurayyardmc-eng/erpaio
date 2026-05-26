@@ -207,7 +207,7 @@ export default function SlowQueriesAdminPage() {
                 error: r.errorMessage ?? "",
               }));
               const csv = rowsToCsv(csvRows, ["time", "tenant", "durationMs", "ok", "connection", "sqlSnippet", "error"]);
-                            downloadCsv(exportFilename("admin-slow-queries", "csv"), csv);
+              downloadCsv(exportFilename("admin-slow-queries", "csv"), csv);
             }}
             style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
           >

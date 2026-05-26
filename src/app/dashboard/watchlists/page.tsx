@@ -216,7 +216,7 @@ export default function WatchlistsPage() {
       triggeredAt: w.triggeredAt ?? "",
     }));
     const csv = rowsToCsv(rows, ["name", "question", "thresholdOp", "thresholdVal", "emailTo", "enabled", "lastRunAt", "lastValue", "triggeredAt"]);
-        downloadCsv(exportFilename("watchlists", "csv"), csv);
+    downloadCsv(exportFilename("watchlists", "csv"), csv);
   };
 
   const toggleEnabled = async (w: Watchlist) => {

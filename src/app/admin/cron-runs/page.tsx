@@ -223,7 +223,7 @@ export default function CronRunsPage() {
                 errorMessage: r.errorMessage ?? "",
               }));
               const csv = rowsToCsv(csvRows, ["jobName", "status", "startedAt", "finishedAt", "durationMs", "tenantsTotal", "tenantsOk", "tenantsFail", "alertsCreated", "errorMessage"]);
-                            downloadCsv(exportFilename("cron-runs", "csv"), csv);
+              downloadCsv(exportFilename("cron-runs", "csv"), csv);
             }}
             style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 100, fontSize: 12, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", cursor: "pointer", fontFamily: "inherit" }}
           >

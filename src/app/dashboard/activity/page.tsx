@@ -123,7 +123,7 @@ export default function ActivityPage() {
       userAgent: a.userAgent ?? "",
     }));
     const csv = rowsToCsv(rows, ["time", "action", "actionLabel", "target", "ip", "userAgent"]);
-        downloadCsv(exportFilename("activity", "csv"), csv);
+    downloadCsv(exportFilename("activity", "csv"), csv);
   };
 
   return (
