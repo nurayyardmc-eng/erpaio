@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
-import { rateLimit } from "@/lib/rateLimit";
+import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
@@ -26,11 +26,7 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const limit = await rateLimit(session.user.tenantId, {
-    prefix: "explain",
-    max: 20,
-    windowMs: 60_000,
-  });
+  const limit = await rateLimit(session.user.tenantId, RATE_LIMITS.CHAT_EXPLAIN);
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
 
   const budget = await checkAndConsume(session.user.tenantId, 2000);
