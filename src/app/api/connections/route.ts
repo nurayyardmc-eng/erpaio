@@ -2,7 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
 import { jsonError } from "@/lib/i18n/server";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";;;
 import { z } from "zod";
 
 const Schema = z.object({
@@ -43,15 +43,10 @@ export async function POST(req: Request) {
 
   // Audit trail — ERP credential ekleme hassas işlem, password değil sadece
   // metadata loglanır
-  const ctx = activityContextFromRequest(req);
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "integration.update",
     target: connection.id,
     metadata: { erpType: data.erpType, host: data.host, dbName: data.dbName },
-    ...ctx,
   });
 
   return Response.json({ id: connection.id });

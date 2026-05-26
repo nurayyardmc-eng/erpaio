@@ -5,7 +5,7 @@ import { encrypt } from "@/lib/crypto/encrypt";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";;;
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
 const PostSchema = z.object({
@@ -66,15 +66,10 @@ export async function POST(req: Request) {
     select: { id: true, kind: true, enabled: true },
   });
 
-  const ctx = activityContextFromRequest(req);
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "integration.update",
     target: integration.id,
     metadata: { kind },
-    ...ctx,
   });
 
   return Response.json({ integration });
@@ -94,14 +89,9 @@ export async function DELETE(req: Request) {
     where: { tenantId: session.user.tenantId, kind },
   });
 
-  const ctx = activityContextFromRequest(req);
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "integration.update",
     metadata: { kind, deleted: true },
-    ...ctx,
   });
 
   return Response.json({ ok: true });

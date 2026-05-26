@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { activityContextFromRequest, recordActivity, recordUserActivity } from "@/lib/audit/activity";;
 import { requireOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zTeamRole } from "@/lib/auth/schemas";
 
@@ -75,15 +75,10 @@ export async function PATCH(req: Request) {
     data: { role: body.role },
   });
 
-  const ctxRole = activityContextFromRequest(req);
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "team.role.change",
     target: body.userId,
     metadata: { newRole: body.role },
-    ...ctxRole,
   });
 
   return Response.json({ ok: true });

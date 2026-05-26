@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";;;
 
 /**
  * Alert false-positive feedback toggle.
@@ -52,14 +52,9 @@ export async function POST(
     });
   }
 
-  const ctx = activityContextFromRequest(req);
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: body.action === "falsePositive" ? "alert.feedback.false_positive" : "alert.feedback.clear",
     target: id,
-    ...ctx,
   });
 
   return Response.json({ ok: true });

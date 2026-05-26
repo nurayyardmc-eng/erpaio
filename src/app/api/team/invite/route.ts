@@ -9,7 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";;;
 import { escapeHtml } from "@/lib/html/escape";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zInviteRole } from "@/lib/auth/schemas";
@@ -100,15 +100,10 @@ export async function POST(req: Request) {
   log.info({ invitationId: invitation.id, role }, "Invitation sent");
 
   // Audit trail — invite metadata (no PII'siz, email zaten log'da var)
-  const ctx = activityContextFromRequest(req);
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "team.invite",
     target: invitation.id,
     metadata: { invitedEmail: email, role },
-    ...ctx,
   });
 
   return Response.json({ ok: true, invitationId: invitation.id });

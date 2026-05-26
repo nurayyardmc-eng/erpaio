@@ -85,3 +85,50 @@ export function activityContextFromRequest(req: Request): {
   const userAgent = req.headers.get("user-agent") ?? "unknown";
   return { ipAddress, userAgent };
 }
+
+/**
+ * Convenience wrapper — auth'lu route'lar için recordActivity'nin tipik
+ * boilerplate'ini tek bir cağrıya inerler.
+ *
+ * Track VVVVVVV — 15+ route'da identik şu blok vardı:
+ *   const ctx = activityContextFromRequest(req);
+ *   await recordActivity({
+ *     userId: session.user.id,
+ *     tenantId: session.user.tenantId,
+ *     email: session.user.email ?? null,
+ *     action, target, metadata,
+ *     ...ctx,
+ *   });
+ *
+ * Helper inline pattern'i 1 cağrıya indirir. Best-effort semantic'i
+ * korunur — başarısızlık ana flow'u bloklamaz.
+ */
+export interface RecordUserActivityInput {
+  action: ActivityAction;
+  target?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface ActivityActor {
+  user: {
+    id: string;
+    tenantId: string;
+    email?: string | null;
+  };
+}
+
+export async function recordUserActivity(
+  req: Request,
+  session: ActivityActor,
+  input: RecordUserActivityInput,
+): Promise<void> {
+  await recordActivity({
+    userId: session.user.id,
+    tenantId: session.user.tenantId,
+    email: session.user.email ?? null,
+    action: input.action,
+    target: input.target ?? null,
+    metadata: input.metadata ?? null,
+    ...activityContextFromRequest(req),
+  });
+}
