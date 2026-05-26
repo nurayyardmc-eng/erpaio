@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import { randomBytes } from "node:crypto";
 import { sha256Hex } from "@/lib/crypto/hash";
+import { generateSecureToken } from "@/lib/crypto/token";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { enforceIpRateLimit } from "@/lib/rateLimit";
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  const verifyToken = randomBytes(32).toString("hex");
+  const verifyToken = generateSecureToken();
   const tokenHash = sha256Hex(verifyToken);
   await prisma.emailVerificationToken.create({
     data: {
