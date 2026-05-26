@@ -1,5 +1,6 @@
-import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
+import { sha256Hex } from "@/lib/crypto/hash";
+import { generateSecureToken } from "@/lib/crypto/token";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
@@ -51,8 +52,8 @@ export async function POST(req: Request) {
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existing) return localizedError(req, 409, { tr: "Bu email kayıtlı.", en: "This email is already registered." });
 
-  const rawToken = randomBytes(32).toString("base64url");
-  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const rawToken = generateSecureToken();
+  const tokenHash = sha256Hex(rawToken);
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60_000);
 
   const invitation = await prisma.invitation.upsert({

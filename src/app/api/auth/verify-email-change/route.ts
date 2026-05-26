@@ -1,12 +1,11 @@
-import { createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
-
 import { extractClientIp } from "@/lib/http/clientIp";
+import { sha256Hex } from "@/lib/crypto/hash";
 /**
  * Email change verification.
  *
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
   const body = BodySchema.safeParse(await req.json());
   if (!body.success) return jsonError(req, "auth.invalidToken", 400);
 
-  const tokenHash = createHash("sha256").update(body.data.token).digest("hex");
+  const tokenHash = sha256Hex(body.data.token);
   const row = await prisma.emailChangeToken.findUnique({
     where: { tokenHash },
     select: {

@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import bcrypt from "bcryptjs";
+import { sha256Hex } from "@/lib/crypto/hash";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   if (body instanceof Response) return body;
 
   const { token, password, name } = body;
-  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const tokenHash = sha256Hex(token);
 
   const inv = await prisma.invitation.findUnique({ where: { tokenHash } });
   if (!inv || inv.acceptedAt || inv.expiresAt < new Date()) {

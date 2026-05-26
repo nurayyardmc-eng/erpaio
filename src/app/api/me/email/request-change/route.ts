@@ -1,5 +1,6 @@
-import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
+import { sha256Hex } from "@/lib/crypto/hash";
+import { generateSecureToken } from "@/lib/crypto/token";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
@@ -82,8 +83,8 @@ export async function POST(req: Request) {
   }
 
   // Token üret + hash sakla. 24h geçerli.
-  const raw = randomBytes(32).toString("base64url");
-  const tokenHash = createHash("sha256").update(raw).digest("hex");
+  const raw = generateSecureToken();
+  const tokenHash = sha256Hex(raw);
   const expiresAt = new Date(Date.now() + 24 * 60 * 60_000);
 
   await prisma.emailChangeToken.create({

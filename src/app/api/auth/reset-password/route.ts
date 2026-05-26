@@ -1,13 +1,12 @@
 import bcrypt from "bcryptjs";
-import { createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-
 import { extractClientIp } from "@/lib/http/clientIp";
+import { sha256Hex } from "@/lib/crypto/hash";
 const BodySchema = z.object({
   token: z.string().min(8),
   password: z.string().min(8).max(200),
@@ -33,7 +32,7 @@ export async function POST(req: Request) {
   const { token, password } = body.data;
   const log = childLogger({ component: "reset-password" });
 
-  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const tokenHash = sha256Hex(token);
   const row = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
 
   if (!row || row.usedAt || row.expiresAt < new Date()) {
