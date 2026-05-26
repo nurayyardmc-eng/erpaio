@@ -2,7 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
 import { jsonError } from "@/lib/i18n/server";
-import { recordUserActivity } from "@/lib/audit/activity";;;
+import { recordUserActivity } from "@/lib/audit/activity";
 import { z } from "zod";
 
 const Schema = z.object({

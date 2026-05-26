@@ -5,7 +5,7 @@ import { encrypt } from "@/lib/crypto/encrypt";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordUserActivity } from "@/lib/audit/activity";;;
+import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
 const PostSchema = z.object({

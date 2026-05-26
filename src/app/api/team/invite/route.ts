@@ -9,7 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordUserActivity } from "@/lib/audit/activity";;;
+import { recordUserActivity } from "@/lib/audit/activity";
 import { escapeHtml } from "@/lib/html/escape";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zInviteRole } from "@/lib/auth/schemas";

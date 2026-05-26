@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { recordUserActivity } from "@/lib/audit/activity";;;
+import { recordUserActivity } from "@/lib/audit/activity";
 
 /**
  * Alert false-positive feedback toggle.

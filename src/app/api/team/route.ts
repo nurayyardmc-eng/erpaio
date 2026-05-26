@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { activityContextFromRequest, recordActivity, recordUserActivity } from "@/lib/audit/activity";;
+import { activityContextFromRequest, recordActivity, recordUserActivity } from "@/lib/audit/activity";
 import { requireOwner, requireOwnerOrAdmin } from "@/lib/auth/role";
 import { zTeamRole } from "@/lib/auth/schemas";
 

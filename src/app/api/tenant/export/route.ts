@@ -2,7 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwner } from "@/lib/auth/role";
 
 export const maxDuration = 300;
@@ -89,10 +89,7 @@ export async function GET(req: Request) {
 
   // KVKK md. 13 + GDPR Art. 20 — export her gerçekleştiğinde audit log.
   // Hassas işlem (tüm tenant verisi dışarı) — kim, ne zaman, hangi IP'den.
-  await recordActivity({
-    userId: session.user.id,
-    tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "tenant.export",
     metadata: {
       sessions: sessions.length,
@@ -100,7 +97,6 @@ export async function GET(req: Request) {
       alerts: alerts.length,
       users: users.length,
     },
-    ...activityContextFromRequest(req),
   });
 
   return new Response(JSON.stringify(exportBundle, null, 2), {

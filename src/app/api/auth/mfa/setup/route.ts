@@ -6,7 +6,7 @@ import { generateSecret, provisioningUri, verifyCode } from "@/lib/auth/totp";
 import { hasFeature } from "@/lib/plans";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
-import { recordUserActivity } from "@/lib/audit/activity";;;
+import { recordUserActivity } from "@/lib/audit/activity";
 
 export async function POST(req: Request) {
   const session = await getAuth(req);

@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 
 /**
  * Cihaz (push token) yönetimi — kullanıcının kayıtlı tüm cihazlarını listeler
@@ -81,13 +81,9 @@ export async function DELETE(req: Request) {
     });
   }
 
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "push_token.revoke",
     target: parsed.data.id,
-    ...activityContextFromRequest(req),
   });
 
   return Response.json({ ok: true });

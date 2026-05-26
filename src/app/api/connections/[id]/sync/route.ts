@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { invalidateSchema, getSchema } from "@/lib/cache/schema";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
 
@@ -76,14 +76,10 @@ export async function POST(
 
   log.info({ durationMs: Date.now() - startedAt, tableCount: fresh?.tableCount ?? 0 }, "Schema re-synced");
 
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "connection.schema.sync",
     target: id,
     metadata: { tableCount: fresh?.tableCount ?? null, durationMs: Date.now() - startedAt },
-    ...activityContextFromRequest(req),
   });
 
   return Response.json({ ok: true, schemaCache: fresh });

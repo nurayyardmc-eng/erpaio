@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateAllowlist } from "@/lib/security/ipAllowlist";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordUserActivity } from "@/lib/audit/activity";;;
+import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 import { parseJsonBody } from "@/lib/http/searchParams";
 

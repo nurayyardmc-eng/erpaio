@@ -6,7 +6,7 @@ import {
 } from "@/lib/auth/recovery";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
-import { recordUserActivity } from "@/lib/audit/activity";;;
+import { recordUserActivity } from "@/lib/audit/activity";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);

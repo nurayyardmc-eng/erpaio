@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { activityContextFromRequest, recordActivity, recordUserActivity } from "@/lib/audit/activity";
 import { parseJsonBody } from "@/lib/http/searchParams";
 
 export async function GET(req: Request) {
@@ -69,14 +69,10 @@ export async function PATCH(req: Request) {
     });
   }
 
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
-    email: session.user.email ?? null,
+  await recordUserActivity(req, session, {
     action: "api_token.rename",
     target: body.tokenId,
     metadata: { name: trimmed },
-    ...activityContextFromRequest(req),
   });
 
   return Response.json({ ok: true, name: trimmed });

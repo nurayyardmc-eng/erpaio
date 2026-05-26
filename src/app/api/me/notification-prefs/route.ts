@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
+import { recordUserActivity } from "@/lib/audit/activity";
 
 /**
  * Per-user push notification opt-in preferences.
@@ -84,13 +84,10 @@ export async function PATCH(req: Request) {
     select: { pushPrefAlerts: true, pushPrefAnomaly: true, pushPrefWatchlists: true },
   });
 
-  await recordActivity({
-    userId: session.user.id,
-    tenantId: session.user.tenantId,
+  await recordUserActivity(req, session, {
     action: "notification.prefs.update",
     target: session.user.id,
     metadata: data,
-    ...activityContextFromRequest(req),
   });
 
   return Response.json({
