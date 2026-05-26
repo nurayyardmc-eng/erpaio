@@ -95,6 +95,7 @@ export async function rateLimit(identifier: string, config: LimitConfig): Promis
 export const RATE_LIMITS = {
   CHAT: { prefix: "chat", max: 30, windowMs: 60_000 },
   CHAT_FEEDBACK: { prefix: "chat-fb", max: 60, windowMs: 60_000 },
+  CHAT_FOLLOW_UPS: { prefix: "follow-ups", max: 30, windowMs: 60_000 },
   ALERT_CREATE: { prefix: "alert", max: 100, windowMs: 60_000 },
   CONNECTION_TEST: { prefix: "conn-test", max: 10, windowMs: 60_000 },
   CONNECTION_SCHEMA_SYNC: { prefix: "conn-sync", max: 10, windowMs: ONE_HOUR_MS }, // 10/saat / user — re-sync ERP query'leri pahalı
