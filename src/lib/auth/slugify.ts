@@ -1,3 +1,5 @@
+import { randomSlugSuffix } from "./randomSlugSuffix";
+
 /**
  * Tenant slug generator. Lowercase, ASCII-only, hyphen-separated, max 40 chars.
  *
@@ -24,5 +26,5 @@ export function slugify(s: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 40) || `t-${Math.random().toString(36).slice(2, 8)}`;
+    .slice(0, 40) || `t-${randomSlugSuffix(6)}`;
 }

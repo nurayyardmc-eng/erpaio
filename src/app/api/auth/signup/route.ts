@@ -11,6 +11,7 @@ import { recordConsent, consentContextFromRequest } from "@/lib/auth/consent";
 import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { slugify } from "@/lib/auth/slugify";
+import { randomSlugSuffix } from "@/lib/auth/randomSlugSuffix";
 import { welcomeEmailHtml } from "@/lib/auth/welcomeEmail";
 
 import { zPassword, zEmail } from "@/lib/auth/schemas";
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
   for (let i = 0; i < 5; i++) {
     const taken = await prisma.tenant.findUnique({ where: { slug } });
     if (!taken) break;
-    slug = `${slugify(tenantName)}-${Math.random().toString(36).slice(2, 6)}`;
+    slug = `${slugify(tenantName)}-${randomSlugSuffix(4)}`;
   }
 
   const trialEndsAt = daysFromNow(14);
