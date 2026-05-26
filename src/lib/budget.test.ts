@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeBudgetStatus, totalAnthropicTokens } from "./budget";
+import { computeBudgetStatus, totalAnthropicTokens, budgetExhaustedError } from "./budget";
 
 describe("totalAnthropicTokens", () => {
   it("sums input + output tokens", () => {
@@ -91,5 +91,32 @@ describe("computeBudgetStatus", () => {
       budgetResetAt: baseDate,
     });
     expect(status.resetAt).toEqual(baseDate);
+  });
+});
+
+describe("budgetExhaustedError", () => {
+  function reqWithLang(lang: "tr" | "en"): Request {
+    return new Request("https://example.test/api/x", {
+      headers: { "accept-language": lang },
+    });
+  }
+
+  it("returns 402 Payment Required", () => {
+    const res = budgetExhaustedError(reqWithLang("tr"), { reason: "test reason" });
+    expect(res.status).toBe(402);
+  });
+
+  it("uses budget.reason as both TR and EN message", async () => {
+    const res = budgetExhaustedError(reqWithLang("tr"), {
+      reason: "Aylık token bütçesi doldu.",
+    });
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Aylık token bütçesi doldu.");
+  });
+
+  it("budget.reason wins regardless of locale (TR/EN both same)", async () => {
+    const tr = budgetExhaustedError(reqWithLang("tr"), { reason: "X" });
+    const en = budgetExhaustedError(reqWithLang("en"), { reason: "X" });
+    expect(await tr.json()).toEqual(await en.json());
   });
 });
