@@ -2,10 +2,10 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { generateApiToken, hashApiToken } from "@/lib/auth/dual";
-import { rateLimit } from "@/lib/rateLimit";
+import { rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
-import { jsonError, serverMessages } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";;
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { extractClientIp } from "@/lib/http/clientIp";
 import { daysFromNow } from "@/lib/time/units";
@@ -24,16 +24,8 @@ export async function POST(req: Request) {
 
   const ip = extractClientIp(req);
   const limit = await rateLimit(ip, LOGIN_LIMIT);
-  if (!limit.success) {
-    // Retry-After header'ı korumak için manuel response (jsonError header desteklemiyor)
-    return Response.json(
-      { error: serverMessages(req).api.rateLimited },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)) },
-      },
-    );
-  }
+  // Retry-After header'ı korumak için rateLimited429 helper'i.
+  if (!limit.success) return rateLimited429(req, limit);
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;

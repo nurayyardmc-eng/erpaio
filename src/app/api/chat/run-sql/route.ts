@@ -5,7 +5,7 @@ import { validateSQL } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
@@ -28,12 +28,7 @@ export async function POST(req: Request) {
 
   const tenantId = session.user.tenantId;
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
-  if (!limit.success) {
-    return Response.json(
-      { error: serverMessages(req).api.rateLimited },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)) } },
-    );
-  }
+  if (!limit.success) return rateLimited429(req, limit);
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;

@@ -157,3 +157,39 @@ export async function enforceUserRateLimit(
   if (!limit.success) return jsonError(req, "api.rateLimited", 429);
   return null;
 }
+
+/**
+ * 429 Response with Retry-After + (optionally) X-RateLimit-* headers,
+ * shared body shape across chat/auth routes that need a custom retry
+ * hint (Retry-After in seconds = (limit.reset - now) / 1000).
+ *
+ * Track HHHHHHHH — 4 site IDENTIK Math.ceil((limit.reset - Date.now()) /
+ * 1000) hesabini inline yapiyordu. Single source ile birim degisiklik
+ * (örn: milisaniye, RFC HTTP-date) tek yerde.
+ *
+ * `includeRateLimitInfo: true` ile X-RateLimit-Remaining + -Reset
+ * header'lari ekleniyor (chat/route giderken bunlari da yolluyor).
+ */
+import { serverMessages } from "@/lib/i18n/server";
+
+export function retryAfterSeconds(reset: number, now: number = Date.now()): number {
+  return Math.max(0, Math.ceil((reset - now) / 1000));
+}
+
+export function rateLimited429(
+  req: Request,
+  limit: { reset: number; remaining: number },
+  opts: { includeRateLimitInfo?: boolean } = {},
+): Response {
+  const headers: Record<string, string> = {
+    "Retry-After": String(retryAfterSeconds(limit.reset)),
+  };
+  if (opts.includeRateLimitInfo) {
+    headers["X-RateLimit-Remaining"] = String(limit.remaining);
+    headers["X-RateLimit-Reset"] = String(limit.reset);
+  }
+  return Response.json(
+    { error: serverMessages(req).api.rateLimited },
+    { status: 429, headers },
+  );
+}

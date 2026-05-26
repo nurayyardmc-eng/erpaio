@@ -4,10 +4,10 @@ import { prisma } from "@/lib/db/prisma";
 import { applyFeedback, hashQuestion } from "@/lib/cache/queryCache";
 import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
+import { jsonError, localizedError } from "@/lib/i18n/server";;
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -25,12 +25,7 @@ export async function PATCH(req: Request) {
   setSentryUserFromSession(session);
 
   const limit = await rateLimit(session.user.id, RATE_LIMITS.CHAT_FEEDBACK);
-  if (!limit.success) {
-    return Response.json(
-      { error: serverMessages(req).api.rateLimited },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.reset - Date.now()) / 1000)) } },
-    );
-  }
+  if (!limit.success) return rateLimited429(req, limit);
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;
