@@ -9,6 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 import { buildExplainPrompt } from "@/lib/ai/explainPrompt";
 import { MODEL_HAIKU, anthropicClient } from "@/lib/ai/models";
+import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
 
 
 const BodySchema = z.object({
@@ -48,8 +49,7 @@ export async function POST(req: Request) {
       }],
     });
 
-    const block = msg.content.find((b) => b.type === "text");
-    const explanation = (block && "text" in block ? block.text : "")?.trim() ?? "";
+    const explanation = extractAnthropicText(msg);
 
     void recordUsage(session.user.tenantId, totalAnthropicTokens(msg.usage));
     log.info({ length: explanation.length }, "Result explanation generated");

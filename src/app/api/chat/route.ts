@@ -27,6 +27,7 @@ import { pickDialect, dialectRules } from "@/lib/ai/dialect";
 import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
 import { calculateBillableTokens, isPromptCacheHit } from "@/lib/ai/tokenUsage";
 import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
+import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
 import { truncateRows } from "@/lib/chat/rowLimit";
 
 
@@ -172,8 +173,7 @@ ${schema}`;
         ],
       });
 
-      const block = msg.content.find((b) => b.type === "text");
-      const rawText = (block && "text" in block ? block.text : "")?.trim() ?? "";
+      const rawText = extractAnthropicText(msg);
 
       const parsed = parseAiResponse(rawText);
       sql = parsed.sql;

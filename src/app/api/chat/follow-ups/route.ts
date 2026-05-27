@@ -6,6 +6,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, totalAnthropicTokens, budgetExhaustedError } from "@/lib/budget";
 import { MODEL_HAIKU, anthropicClient } from "@/lib/ai/models";
+import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 
@@ -46,8 +47,7 @@ export async function POST(req: Request) {
       }],
     });
 
-    const block = msg.content.find((b) => b.type === "text");
-    const raw = (block && "text" in block ? block.text : "")?.trim() ?? "[]";
+    const raw = extractAnthropicText(msg, "[]");
 
     let suggestions: string[] = [];
     try {
