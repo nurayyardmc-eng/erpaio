@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+import { postJson } from "@/lib/http/clientFetch";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -13,11 +14,7 @@ export default function ForgotPasswordPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    }).catch(() => {});
+    await postJson("/api/auth/forgot-password", { email }).catch(() => {});
     setSent(true);
     setLoading(false);
   };

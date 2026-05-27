@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2, Lock, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+import { postJson } from "@/lib/http/clientFetch";
 
 export default function ResetPasswordPage() {
   return (
@@ -59,11 +60,7 @@ function ResetPasswordInner() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      });
+      const res = await postJson("/api/auth/reset-password", { token, password });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Hata.");

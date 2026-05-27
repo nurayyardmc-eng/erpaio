@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+import { postJson } from "@/lib/http/clientFetch";
 
 /**
  * Email değişikliği doğrulama sayfası — Track YYY.
@@ -48,11 +49,7 @@ function Inner() {
       setMsg("Link geçersiz.");
       return;
     }
-    fetch("/api/auth/verify-email-change", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    })
+    postJson("/api/auth/verify-email-change", { token })
       .then(async (r) => {
         const d = await r.json();
         if (r.ok) {

@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { postJson } from "@/lib/http/clientFetch";
 
 export default function AcceptInvitePage() {
   return (
@@ -43,11 +44,7 @@ function Inner() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/team/accept-invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password, name: name || undefined }),
-      });
+      const res = await postJson("/api/team/accept-invite", { token, password, name: name || undefined });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Hata.");

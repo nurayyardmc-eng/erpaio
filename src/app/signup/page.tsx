@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Mail, Lock, User, Building2, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+import { postJson } from "@/lib/http/clientFetch";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -23,15 +24,11 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          acceptedTerms,
-          acceptedPrivacy,
-          documentVer: "v1",
-        }),
+      const res = await postJson("/api/auth/signup", {
+        ...form,
+        acceptedTerms,
+        acceptedPrivacy,
+        documentVer: "v1",
       });
       const data = await res.json();
       if (!res.ok) {
