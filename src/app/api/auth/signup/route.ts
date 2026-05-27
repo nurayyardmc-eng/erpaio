@@ -1,6 +1,5 @@
 import { hashPassword } from "@/lib/auth/hashPassword";
-import { sha256Hex } from "@/lib/crypto/hash";
-import { generateSecureToken } from "@/lib/crypto/token";
+import { createEmailVerificationToken } from "@/lib/auth/createEmailVerificationToken";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { enforceIpRateLimit } from "@/lib/rateLimit";
@@ -119,16 +118,7 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  const verifyToken = generateSecureToken();
-  const tokenHash = sha256Hex(verifyToken);
-  await prisma.emailVerificationToken.create({
-    data: {
-      userId: tenant.users[0].id,
-      tokenHash,
-      expiresAt: daysFromNow(1),
-    },
-  });
-
+  const { raw: verifyToken } = await createEmailVerificationToken(tenant.users[0].id);
   const verifyUrl = `${baseUrl()}/verify-email?token=${verifyToken}`;
 
   void sendEmail({
