@@ -4,7 +4,12 @@ import { requireSysAdmin } from "@/lib/auth/sysadmin";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { daysAgo } from "@/lib/time/units";
-import { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES } from "@/lib/notifications/types";
+import {
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_STATUSES,
+  type NotificationChannel,
+  type NotificationStatus,
+} from "@/lib/notifications/types";
 
 const QuerySchema = z.object({
   limit: zNumber({ min: 1, max: 200, default: 100, int: true }),
@@ -26,7 +31,7 @@ export async function GET(req: Request) {
   const q = parseQuery(req, QuerySchema);
   if (q instanceof Response) return q;
 
-  const where: { channel?: string; status?: string } = {};
+  const where: { channel?: NotificationChannel; status?: NotificationStatus } = {};
   if (q.channel) where.channel = q.channel;
   if (q.status) where.status = q.status;
 

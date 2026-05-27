@@ -6,7 +6,12 @@ import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { requireOwnerOrAdmin, DENY_OWNER_ADMIN_VIEW } from "@/lib/auth/role";
 import { daysAgo } from "@/lib/time/units";
-import { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES } from "@/lib/notifications/types";
+import {
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_STATUSES,
+  type NotificationChannel,
+  type NotificationStatus,
+} from "@/lib/notifications/types";
 
 /**
  * Tenant-scoped NotificationLog — owner/admin son N gün delivery audit
@@ -40,8 +45,8 @@ export async function GET(req: Request) {
   const since = daysAgo(q.days);
   const where: {
     tenantId: string;
-    channel?: string;
-    status?: string;
+    channel?: NotificationChannel;
+    status?: NotificationStatus;
     createdAt: { gt: Date };
   } = { tenantId: session.user.tenantId, createdAt: { gt: since } };
   if (q.channel) where.channel = q.channel;
