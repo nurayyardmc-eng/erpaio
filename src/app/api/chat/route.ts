@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { lookupCache, writeCache, recordOutcome } from "@/lib/cache/queryCache";
+import { lookupCache, recordOutcome, recordSuccess } from "@/lib/cache/queryCache";
 import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
@@ -221,11 +221,7 @@ ${schema}`;
     const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
     const latencyMs = Date.now() - t0;
 
-    if (cacheHit && cacheId) {
-      await recordOutcome(cacheId, true);
-    } else if (!cacheHit) {
-      cacheId = await writeCache(tenantId, question, sql);
-    }
+    cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql });
 
     let sid = sessionId;
     if (!sid) {

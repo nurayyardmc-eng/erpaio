@@ -91,6 +91,38 @@ export async function writeCache(
   return row.id;
 }
 
+/**
+ * Combined "cache hit success" branch — chat/route + chat/stream'in
+ * IDENTIK 4-satirlik dallanmasi tek satira indi (Track DDDDDDDDDDD).
+ *
+ *   if (cacheHit && cacheId) await recordOutcome(cacheId, true);
+ *   else if (!cacheHit) cacheId = await writeCache(tenantId, question, sql);
+ *
+ * Caller `cacheId = await recordSuccess({...})` ile yeniden atamali —
+ * write yapilirsa yeni id doner, hit yapilirsa mevcut id korunur.
+ *
+ * cacheHit=true ama cacheId=undefined senaryosu invalid (defensive: row
+ * mutate yapilmaz, mevcut id ne ise donulur — undefined). lookupCache
+ * kontratina gore hit=true ise cacheId her zaman set olur, ama runtime
+ * koruma kosulu birakildi.
+ */
+export async function recordSuccess(opts: {
+  cacheId: string | undefined;
+  cacheHit: boolean;
+  tenantId: string;
+  question: string;
+  sqlQuery: string;
+}): Promise<string | undefined> {
+  if (opts.cacheHit && opts.cacheId) {
+    await recordOutcome(opts.cacheId, true);
+    return opts.cacheId;
+  }
+  if (!opts.cacheHit) {
+    return await writeCache(opts.tenantId, opts.question, opts.sqlQuery);
+  }
+  return opts.cacheId;
+}
+
 export async function recordOutcome(
   cacheId: string,
   success: boolean,
