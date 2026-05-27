@@ -4,6 +4,7 @@ import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { sqlNotInHistoryError, sqlExecutionError } from "@/lib/http/searchParams";
 import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
+import { extractColumns } from "@/lib/chat/extractColumns";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -46,7 +47,7 @@ export async function POST(
     return Response.json({
       rowCount: rows.length,
       sample,
-      columns: sample[0] ? Object.keys(sample[0]) : [],
+      columns: extractColumns(sample),
     });
   } catch (err) {
     return sqlExecutionError(req, err);

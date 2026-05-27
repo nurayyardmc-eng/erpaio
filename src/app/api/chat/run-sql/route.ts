@@ -8,6 +8,7 @@ import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody, activeConnectionNotFoundError } from "@/lib/http/searchParams";
+import { extractColumns } from "@/lib/chat/extractColumns";
 import { jsonError, serverMessages } from "@/lib/i18n/server";
 import { z } from "zod";
 
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
   try {
     validateSQL(sql);
     const rows = await queryERP(connectionId, sql);
-    const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+    const columns = extractColumns(rows);
     const latencyMs = Date.now() - t0;
 
     let sid = sessionId;

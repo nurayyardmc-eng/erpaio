@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { lookupCache, recordSuccess } from "@/lib/cache/queryCache";
+import { extractColumns } from "@/lib/chat/extractColumns";
 import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
@@ -126,7 +127,7 @@ ${schema}`;
 
         send("phase", { phase: "executing" });
         const rows = await queryERP(connectionId, sql);
-        const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+        const columns = extractColumns(rows);
         const latencyMs = Date.now() - t0;
 
         cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql });
