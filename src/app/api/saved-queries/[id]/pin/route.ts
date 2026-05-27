@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { jsonError, localizedError } from "@/lib/i18n/server";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { jsonError } from "@/lib/i18n/server";
+import { parseJsonBody, savedQueryNotFoundError } from "@/lib/http/searchParams";
 
 /**
  * Saved query pin/unpin toggle — Track EEEE.
@@ -35,10 +35,7 @@ export async function POST(
   });
 
   if (result.count === 0) {
-    return localizedError(req, 404, {
-      tr: "Kayıtlı sorgu bulunamadı.",
-      en: "Saved query not found.",
-    });
+    return savedQueryNotFoundError(req);
   }
 
   return Response.json({ ok: true, pinned: body.pinned });

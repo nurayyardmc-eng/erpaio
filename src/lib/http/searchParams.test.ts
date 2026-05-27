@@ -18,6 +18,7 @@ import {
   incorrectPasswordError,
   sqlNotInHistoryError,
   sqlExecutionError,
+  savedQueryNotFoundError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -531,5 +532,24 @@ describe("sqlExecutionError", () => {
     const b2 = (await r2.json()) as { error: string };
     expect(b1.error).toBe("SQL hatası");
     expect(b2.error).toBe("SQL error");
+  });
+});
+
+describe("savedQueryNotFoundError", () => {
+  it("returns 404", () => {
+    const res = savedQueryNotFoundError(reqWithLang("tr"));
+    expect(res.status).toBe(404);
+  });
+
+  it("TR body — 'Sorgu bulunamadı.'", async () => {
+    const res = savedQueryNotFoundError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Sorgu bulunamadı.");
+  });
+
+  it("EN body — 'Query not found.'", async () => {
+    const res = savedQueryNotFoundError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Query not found.");
   });
 });

@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
+import { savedQueryNotFoundError } from "@/lib/http/searchParams";
 
 /**
  * Saved query (QueryCache) silme — Track KKK. Eski/stale saved query'leri
@@ -21,10 +22,7 @@ export async function DELETE(
     where: { id, tenantId: session.user.tenantId },
   });
   if (result.count === 0) {
-    return localizedError(req, 404, {
-      tr: "Sorgu bulunamadı.",
-      en: "Query not found.",
-    });
+    return savedQueryNotFoundError(req);
   }
   return Response.json({ ok: true });
 }

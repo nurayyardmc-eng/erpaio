@@ -232,6 +232,22 @@ export function incorrectPasswordError(req: Request): Response {
 }
 
 /**
+ * Common "Sorgu bulunamadı." 404. Track FFFFFFFFFFFF.
+ * Used by: saved-queries/[id] DELETE, saved-queries/[id]/pin POST.
+ * Daha önce iki yerde farklı wording vardı:
+ *   "Sorgu bulunamadı." / "Query not found."
+ *   "Kayıtlı sorgu bulunamadı." / "Saved query not found."
+ * Aynı kavram (QueryCache satırı tenant-scope ile bulunamadı); kısa
+ * formu unify ettik.
+ */
+export function savedQueryNotFoundError(req: Request): Response {
+  return localizedError(req, 404, {
+    tr: "Sorgu bulunamadı.",
+    en: "Query not found.",
+  });
+}
+
+/**
  * Common "Bu soru için chat geçmişinde SQL bulunamadı." 422. Track SSSSSSSSSS.
  * Used by: watchlists/[id]/run, scheduled-reports/[id]/run. Manuel run
  * akışı için: önce chat'te aynı soruyu sorup başarılı bir
