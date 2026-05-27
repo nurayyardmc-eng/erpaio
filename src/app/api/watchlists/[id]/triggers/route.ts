@@ -1,7 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
-import { watchlistNotFoundError } from "@/lib/http/searchParams";
+import { assertOwnedWatchlist } from "@/lib/db/assertOwnedWatchlist";
 
 /**
  * Watchlist trigger history — Track NNNN. Son N tetiklenmeyi listeler
@@ -21,13 +21,8 @@ export async function GET(
 
   // Önce watchlist'in bu tenant'a ait olduğunu doğrula — başka tenant'ın
   // id'si bilinse bile trigger history sızdırılmasın.
-  const watchlist = await prisma.watchlist.findFirst({
-    where: { id, tenantId: session.user.tenantId },
-    select: { id: true },
-  });
-  if (!watchlist) {
-    return watchlistNotFoundError(req);
-  }
+  const denied = await assertOwnedWatchlist(req, id, session.user.tenantId);
+  if (denied) return denied;
 
   const triggers = await prisma.watchlistTrigger.findMany({
     where: { watchlistId: id },
