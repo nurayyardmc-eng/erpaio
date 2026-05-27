@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
+import { ALERT_BULK_UPDATE_STATUSES } from "@/lib/alerts/status";
 
 /**
  * Bulk alert state transition — Track JJJJ. Triage akışı: 20+ alert biriken
@@ -16,7 +17,7 @@ import { parseJsonBody } from "@/lib/http/searchParams";
  */
 const BodySchema = z.object({
   ids: z.array(z.string().min(1).max(48)).min(1).max(100),
-  status: z.enum(["acked", "resolved"]),
+  status: z.enum(ALERT_BULK_UPDATE_STATUSES),
 });
 
 export async function POST(req: Request) {

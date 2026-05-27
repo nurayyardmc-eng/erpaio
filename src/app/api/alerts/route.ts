@@ -10,9 +10,10 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError } from "@/lib/i18n/server";
 import { parseQuery, parseJsonBody } from "@/lib/http/searchParams";
 import { zSeverity } from "@/lib/auth/schemas";
+import { ALERT_STATUSES, ALERT_STATUS_FILTERS } from "@/lib/alerts/status";
 
 const QuerySchema = z.object({
-  status: z.enum(["open", "acked", "resolved", "all"]).default("open"),
+  status: z.enum(ALERT_STATUS_FILTERS).default("open"),
 });
 
 const PostSchema = z.object({
@@ -25,7 +26,7 @@ const PostSchema = z.object({
 
 const PatchSchema = z.object({
   id: z.string().min(1).max(48),
-  status: z.enum(["open", "acked", "resolved"]),
+  status: z.enum(ALERT_STATUSES),
 });
 
 export async function GET(req: Request) {
