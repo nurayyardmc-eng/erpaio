@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
+import { requireSysAdmin } from "@/lib/auth/sysadmin";
 import { prisma } from "@/lib/db/prisma";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
@@ -40,11 +41,8 @@ export async function POST(req: Request) {
  * eklenir).
  */
 export async function GET(req: Request) {
-  const session = await getAuth(req);
-  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { isSysAdmin: true } });
-  if (!user?.isSysAdmin) return jsonError(req, "api.forbidden", 403);
+  const guard = await requireSysAdmin(req);
+  if ("error" in guard) return guard.error;
 
   const responses = await prisma.npsResponse.findMany({
     orderBy: { respondedAt: "desc" },
