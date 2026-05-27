@@ -2,7 +2,10 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { watchlistNotFoundError } from "@/lib/http/searchParams";
+import {
+  watchlistNotFoundError,
+  sqlNotInHistoryError,
+} from "@/lib/http/searchParams";
 import { compareThreshold, extractFirstNumeric } from "@/lib/threshold/compare";
 
 export const runtime = "nodejs";
@@ -54,10 +57,7 @@ export async function POST(
 
   const sqlStr = messages[0]?.sqlQuery;
   if (!sqlStr) {
-    return localizedError(req, 422, {
-      tr: "Bu soru için chat geçmişinde SQL bulunamadı. Önce sohbette soruyu sorun.",
-      en: "No SQL found in chat history for this question. Ask it in chat first.",
-    });
+    return sqlNotInHistoryError(req);
   }
 
   let value: number | null = null;

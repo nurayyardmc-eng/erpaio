@@ -231,6 +231,20 @@ export function incorrectPasswordError(req: Request): Response {
   });
 }
 
+/**
+ * Common "Bu soru için chat geçmişinde SQL bulunamadı." 422. Track SSSSSSSSSS.
+ * Used by: watchlists/[id]/run, scheduled-reports/[id]/run. Manuel run
+ * akışı için: önce chat'te aynı soruyu sorup başarılı bir
+ * assistant mesajı oluşturmak gerekir. 422 (Unprocessable Entity):
+ * request iyi formatta ama prerequisite yok.
+ */
+export function sqlNotInHistoryError(req: Request): Response {
+  return localizedError(req, 422, {
+    tr: "Bu soru için chat geçmişinde SQL bulunamadı. Önce sohbette soruyu sorun.",
+    en: "No SQL found in chat history for this question. Ask it in chat first.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

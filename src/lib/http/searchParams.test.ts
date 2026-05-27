@@ -16,6 +16,7 @@ import {
   activeConnectionNotFoundError,
   invalidQuestionError,
   incorrectPasswordError,
+  sqlNotInHistoryError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -466,5 +467,28 @@ describe("incorrectPasswordError", () => {
     const res = incorrectPasswordError(reqWithLang("en"));
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("Current password is incorrect.");
+  });
+});
+
+describe("sqlNotInHistoryError", () => {
+  it("returns 422 (unprocessable entity)", () => {
+    const res = sqlNotInHistoryError(reqWithLang("tr"));
+    expect(res.status).toBe(422);
+  });
+
+  it("TR body — mentions chat history prerequisite", async () => {
+    const res = sqlNotInHistoryError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe(
+      "Bu soru için chat geçmişinde SQL bulunamadı. Önce sohbette soruyu sorun.",
+    );
+  });
+
+  it("EN body — mentions ask-in-chat-first prerequisite", async () => {
+    const res = sqlNotInHistoryError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe(
+      "No SQL found in chat history for this question. Ask it in chat first.",
+    );
   });
 });
