@@ -11,6 +11,7 @@ import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/wha
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
+import { errorMessage } from "@/lib/errors/errorMessage";
 import { ONE_DAY_MS } from "@/lib/time/units";
 import {
   FP_SUPPRESS_WINDOW_DAYS,
@@ -175,7 +176,7 @@ export async function runAnomalyDetectionForTenant(
         }
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = errorMessage(err);
       result.errors.push({ metric: query.key, error: errorMsg });
       log.error({ err, metricKey: query.key }, "Metric execution failed");
       Sentry.captureException(err, {

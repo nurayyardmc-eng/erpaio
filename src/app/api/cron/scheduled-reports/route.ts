@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { shouldFireSchedule, renderReportHtml } from "@/lib/reports/render";
 import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
+import { errorMessage } from "@/lib/errors/errorMessage";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
       log.info({ reportId: r.id, rows: rows.length }, "Scheduled report sent");
     } catch (err) {
       failed++;
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = errorMessage(err);
       await prisma.scheduledReport.update({
         where: { id: r.id },
         data: { lastError: msg.slice(0, 500) },

@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
 import { prisma } from "@/lib/db/prisma";
 import { recordNotification, maskRecipient } from "./log";
+import { errorMessage } from "@/lib/errors/errorMessage";
 import { pickEmailSender, fromDomainOf } from "./sender";
 import { escapeHtml } from "@/lib/html/escape";
 
@@ -94,7 +95,7 @@ export async function sendEmail(options: EmailOptions): Promise<{ ok: boolean; i
         channel: "email",
         status: "failed",
         recipient: maskRecipient("email", recipientStr),
-        error: err instanceof Error ? err.message : String(err),
+        error: errorMessage(err),
       });
     }
     return { ok: false };

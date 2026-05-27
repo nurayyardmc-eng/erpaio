@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { aggregateCronHealth, type CronHealth } from "@/lib/cron/aggregateHealth";
 import { daysAgo } from "@/lib/time/units";
+import { errorMessage } from "@/lib/errors/errorMessage";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
     dbLatency = Date.now() - t;
     dbOk = true;
   } catch (err) {
-    dbError = err instanceof Error ? err.message : String(err);
+    dbError = errorMessage(err);
   }
 
   let cronHealth: CronHealth | undefined;

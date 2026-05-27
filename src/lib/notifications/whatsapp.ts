@@ -2,6 +2,7 @@ import twilio from "twilio";
 import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
 import { recordNotification, maskRecipient } from "./log";
+import { errorMessage } from "@/lib/errors/errorMessage";
 
 const log = childLogger({ component: "whatsapp" });
 
@@ -75,7 +76,7 @@ export async function sendWhatsApp(message: string, options: SendOptions = {}): 
         channel: "whatsapp",
         status: "failed",
         recipient: maskRecipient("whatsapp", toNumber),
-        error: err instanceof Error ? err.message : String(err),
+        error: errorMessage(err),
       });
     }
     return { ok: false };

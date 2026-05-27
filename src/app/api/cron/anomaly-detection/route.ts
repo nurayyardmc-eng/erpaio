@@ -8,6 +8,7 @@ import { runAnomalyDetectionForTenant } from "@/lib/anomaly/engine";
 import { childLogger } from "@/lib/observability/logger";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/observability/requestId";
 import { runWithConcurrency } from "@/lib/http/concurrency";
+import { errorMessage } from "@/lib/errors/errorMessage";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -153,7 +154,7 @@ export async function GET(req: NextRequest) {
       { headers: { [REQUEST_ID_HEADER]: requestId } },
     );
   } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = errorMessage(err);
     log.error({ err, event: "cron_fatal" }, "Cron fatal error");
     Sentry.captureException(err, {
       tags: { component: "cron", jobName },
