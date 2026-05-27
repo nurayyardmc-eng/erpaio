@@ -5,6 +5,7 @@ import { jsonError, localizedError } from "@/lib/i18n/server";
 import {
   watchlistNotFoundError,
   sqlNotInHistoryError,
+  sqlExecutionError,
 } from "@/lib/http/searchParams";
 import { compareThreshold, extractFirstNumeric } from "@/lib/threshold/compare";
 import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
@@ -54,10 +55,7 @@ export async function POST(
     const rows = await queryERP(w.connectionId, sqlStr);
     value = extractFirstNumeric(rows[0]);
   } catch (err) {
-    return localizedError(req, 500, {
-      tr: err instanceof Error ? `SQL hatası: ${err.message}` : "SQL hatası",
-      en: err instanceof Error ? `SQL error: ${err.message}` : "SQL error",
-    });
+    return sqlExecutionError(req, err);
   }
 
   if (value === null) {

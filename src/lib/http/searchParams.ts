@@ -245,6 +245,22 @@ export function sqlNotInHistoryError(req: Request): Response {
   });
 }
 
+/**
+ * Common "SQL hatası: ..." 500. Track UUUUUUUUUU.
+ * Used by: watchlists/[id]/run, scheduled-reports/[id]/run,
+ * custom-metrics/[id]/run. ERP query (queryERP) try/catch'inde 3
+ * yer aynı mesajı veriyordu. err.message kullanıcıya gösterilmesi
+ * ERP-side hatalarda diagnostic (örn. "table doesn't exist") — bu
+ * preview/run akışında acceptable çünkü kullanıcı kendi connection'una
+ * sorgu yolluyor; chat route'unda gizleniyor (farklı endpoint).
+ */
+export function sqlExecutionError(req: Request, err: unknown): Response {
+  return localizedError(req, 500, {
+    tr: err instanceof Error ? `SQL hatası: ${err.message}` : "SQL hatası",
+    en: err instanceof Error ? `SQL error: ${err.message}` : "SQL error",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

@@ -17,6 +17,7 @@ import {
   invalidQuestionError,
   incorrectPasswordError,
   sqlNotInHistoryError,
+  sqlExecutionError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -490,5 +491,45 @@ describe("sqlNotInHistoryError", () => {
     expect(body.error).toBe(
       "No SQL found in chat history for this question. Ask it in chat first.",
     );
+  });
+});
+
+describe("sqlExecutionError", () => {
+  it("returns 500", () => {
+    const res = sqlExecutionError(reqWithLang("tr"), new Error("boom"));
+    expect(res.status).toBe(500);
+  });
+
+  it("TR body — embeds Error.message", async () => {
+    const res = sqlExecutionError(reqWithLang("tr"), new Error("table X yok"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("SQL hatası: table X yok");
+  });
+
+  it("EN body — embeds Error.message", async () => {
+    const res = sqlExecutionError(reqWithLang("en"), new Error("table X missing"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("SQL error: table X missing");
+  });
+
+  it("TR body — non-Error fallback to plain 'SQL hatası'", async () => {
+    const res = sqlExecutionError(reqWithLang("tr"), "string error");
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("SQL hatası");
+  });
+
+  it("EN body — non-Error fallback to plain 'SQL error'", async () => {
+    const res = sqlExecutionError(reqWithLang("en"), { obj: "weird" });
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("SQL error");
+  });
+
+  it("null/undefined errors fall back to plain message", async () => {
+    const r1 = sqlExecutionError(reqWithLang("tr"), null);
+    const r2 = sqlExecutionError(reqWithLang("en"), undefined);
+    const b1 = (await r1.json()) as { error: string };
+    const b2 = (await r2.json()) as { error: string };
+    expect(b1.error).toBe("SQL hatası");
+    expect(b2.error).toBe("SQL error");
   });
 });

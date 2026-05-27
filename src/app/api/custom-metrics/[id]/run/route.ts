@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { sqlExecutionError } from "@/lib/http/searchParams";
 import { extractMetricValue, PREVIEW_METRIC_ALIASES } from "@/lib/anomaly/extractMetricValue";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
@@ -60,9 +61,6 @@ export async function POST(
     }
     return Response.json({ value: r.value, key: m.key, label: m.label });
   } catch (err) {
-    return localizedError(req, 500, {
-      tr: err instanceof Error ? `SQL hatası: ${err.message}` : "SQL hatası",
-      en: err instanceof Error ? `SQL error: ${err.message}` : "SQL error",
-    });
+    return sqlExecutionError(req, err);
   }
 }

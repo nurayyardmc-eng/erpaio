@@ -2,7 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { sqlNotInHistoryError } from "@/lib/http/searchParams";
+import { sqlNotInHistoryError, sqlExecutionError } from "@/lib/http/searchParams";
 import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
 
 export const runtime = "nodejs";
@@ -49,9 +49,6 @@ export async function POST(
       columns: sample[0] ? Object.keys(sample[0]) : [],
     });
   } catch (err) {
-    return localizedError(req, 500, {
-      tr: err instanceof Error ? `SQL hatası: ${err.message}` : "SQL hatası",
-      en: err instanceof Error ? `SQL error: ${err.message}` : "SQL error",
-    });
+    return sqlExecutionError(req, err);
   }
 }
