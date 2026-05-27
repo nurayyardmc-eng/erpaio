@@ -5,7 +5,7 @@ import { assertCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
 import { sendCronHealthDigest } from "@/lib/cron/healthDigest";
 import { childLogger } from "@/lib/observability/logger";
-import { RETENTION, ONE_DAY_MS } from "@/lib/cron/retention";
+import { RETENTION, retentionCutoff } from "@/lib/cron/retention";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   try {
     // ProcessedWebhook — Stripe idempotency window passed
     {
-      const before = new Date(now - RETENTION.processedWebhookDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.processedWebhookDays, now);
       const r = await prisma.processedWebhook.deleteMany({
         where: { processedAt: { lt: before } },
       });
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     // CronRun — keep last 90 days for health dashboard
     {
-      const before = new Date(now - RETENTION.cronRunDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.cronRunDays, now);
       // Don't delete RUNNING ones (stale) — they'd be cleaned by cron-lock guard
       const r = await prisma.cronRun.deleteMany({
         where: { startedAt: { lt: before }, status: { not: "RUNNING" } },
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     // PasswordResetToken — expired
     {
-      const before = new Date(now - RETENTION.passwordResetTokenExpiredDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.passwordResetTokenExpiredDays, now);
       const r = await prisma.passwordResetToken.deleteMany({
         where: { expiresAt: { lt: before } },
       });
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     // EmailVerificationToken — expired
     {
-      const before = new Date(now - RETENTION.emailVerificationTokenExpiredDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.emailVerificationTokenExpiredDays, now);
       const r = await prisma.emailVerificationToken.deleteMany({
         where: { expiresAt: { lt: before } },
       });
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
 
     // Alert — sadece resolved/acked olanlar, open alert'ler kalıcı.
     {
-      const before = new Date(now - RETENTION.resolvedAlertDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.resolvedAlertDays, now);
       const r = await prisma.alert.deleteMany({
         where: {
           createdAt: { lt: before },
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
     // NotificationLog — delivery audit, 180 gün yeterli (alert resolved
     // retention'la senkron).
     {
-      const before = new Date(now - RETENTION.notificationLogDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.notificationLogDays, now);
       const r = await prisma.notificationLog.deleteMany({
         where: { createdAt: { lt: before } },
       });
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
     // SlowQueryLog — eşik üstü ERP query trace, 30 gün retention.
     // Tenant silinince cascade ile zaten siliniyor; bu eski log retention'ı.
     {
-      const before = new Date(now - RETENTION.slowQueryLogDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.slowQueryLogDays, now);
       const r = await prisma.slowQueryLog.deleteMany({
         where: { createdAt: { lt: before } },
       });
@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
     // unbounded grow eğilimli. Engine son 30 entry'i okuyor; 90 gün safe
     // margin (daily metrics 30 history * 1 day = 30 gün, 3x emniyet payı).
     {
-      const before = new Date(now - RETENTION.anomalyBaselineDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.anomalyBaselineDays, now);
       const r = await prisma.anomalyBaseline.deleteMany({
         where: { capturedAt: { lt: before } },
       });
@@ -127,7 +127,7 @@ export async function GET(req: NextRequest) {
     // tetiklenenler tablo şişirir. Detay UI son 50'yi gösteriyor,
     // 90 gün rolling history bu cap'in üstünde + tablo bounded.
     {
-      const before = new Date(now - RETENTION.watchlistTriggerDays * ONE_DAY_MS);
+      const before = retentionCutoff(RETENTION.watchlistTriggerDays, now);
       const r = await prisma.watchlistTrigger.deleteMany({
         where: { triggeredAt: { lt: before } },
       });
