@@ -3,21 +3,21 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { linearForecast } from "@/lib/analytics/forecast";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { parseQuery, zNumber } from "@/lib/http/searchParams";
 
 const QuerySchema = z.object({
   metricKey: z.string().min(1),
-  steps: z.coerce.number().int().min(1).max(60).default(7),
+  steps: zNumber({ min: 1, max: 60, default: 7, int: true }),
 });
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
-  const { searchParams } = new URL(req.url);
-  const parsed = QuerySchema.safeParse(Object.fromEntries(searchParams));
-  if (!parsed.success) return localizedError(req, 400, { tr: parsed.error.issues[0].message, en: parsed.error.issues[0].message });
+  const parsed = parseQuery(req, QuerySchema);
+  if (parsed instanceof Response) return parsed;
 
-  const { metricKey, steps } = parsed.data;
+  const { metricKey, steps } = parsed;
 
   const baselines = await prisma.anomalyBaseline.findMany({
     where: { tenantId: session.user.tenantId, metricKey },
