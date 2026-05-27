@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateSchema, getSchema } from "@/lib/cache/schema";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { connectionNotFoundError } from "@/lib/http/searchParams";
+import { assertOwnedConnection } from "@/lib/db/erpConnection";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
@@ -41,13 +41,8 @@ export async function POST(
   const { id } = await context.params;
 
   // Tenant scope kontrolü — başka tenant'ın id'si bilinse bile 404.
-  const conn = await prisma.erpConnection.findFirst({
-    where: { id, tenantId: session.user.tenantId },
-    select: { id: true, status: true },
-  });
-  if (!conn) {
-    return connectionNotFoundError(req);
-  }
+  const ownDenied = await assertOwnedConnection(req, id, session.user.tenantId);
+  if (ownDenied) return ownDenied;
 
   const log = childLogger({ component: "schema-sync", connectionId: id, tenantId: session.user.tenantId });
   const startedAt = Date.now();
