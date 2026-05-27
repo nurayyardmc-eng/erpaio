@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
+import { postJson } from "@/lib/http/clientFetch";
 import { formatPercentInt } from "@/lib/format/percent";
 
 interface SavedQuery {
@@ -66,11 +67,10 @@ export default function SavedQueriesPage() {
       });
     });
     try {
-      const res = await fetch(`/api/saved-queries/${encodeURIComponent(q.id)}/pin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pinned: nextPinned }),
-      });
+      const res = await postJson(
+        `/api/saved-queries/${encodeURIComponent(q.id)}/pin`,
+        { pinned: nextPinned },
+      );
       if (!res.ok) throw new Error("Pin failed");
     } catch {
       // Revert on failure

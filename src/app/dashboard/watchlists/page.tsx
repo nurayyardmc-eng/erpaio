@@ -9,6 +9,7 @@ import { showToast } from "@/components/Toaster";
 import { computeSparkline } from "@/lib/watchlist/sparkline";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { exportFilename } from "@/lib/format/exportFilename";
+import { postJson } from "@/lib/http/clientFetch";
 
 interface Watchlist {
   id: string;
@@ -91,14 +92,10 @@ export default function WatchlistsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/watchlists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          thresholdVal: Number(form.thresholdVal),
-          emailTo: form.emailTo || undefined,
-        }),
+      const res = await postJson("/api/watchlists", {
+        ...form,
+        thresholdVal: Number(form.thresholdVal),
+        emailTo: form.emailTo || undefined,
       });
       const data = await res.json();
       if (!res.ok) {

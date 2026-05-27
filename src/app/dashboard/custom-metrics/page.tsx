@@ -7,6 +7,7 @@ import { showToast } from "@/components/Toaster";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { postJson } from "@/lib/http/clientFetch";
 
 /**
  * Custom metrics yönetimi — Track ZZZZ. YYYY engine wiring sundu;
@@ -86,13 +87,9 @@ export default function CustomMetricsPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/custom-metrics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          description: form.description || undefined,
-        }),
+      const res = await postJson("/api/custom-metrics", {
+        ...form,
+        description: form.description || undefined,
       });
       const data = await res.json();
       if (!res.ok) {
