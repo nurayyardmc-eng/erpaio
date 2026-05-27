@@ -4,11 +4,12 @@ import { requireSysAdmin } from "@/lib/auth/sysadmin";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { daysAgo } from "@/lib/time/units";
+import { CRON_STATUSES, type CronStatus } from "@/lib/cron/finalStatus";
 
 const QuerySchema = z.object({
   limit: zNumber({ min: 1, max: 200, default: 50, int: true }),
   jobName: z.string().min(1).max(80).optional(),
-  status: z.enum(["RUNNING", "SUCCESS", "PARTIAL_FAILURE", "FAILED"]).optional(),
+  status: z.enum(CRON_STATUSES).optional(),
 });
 
 /**
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
   const q = parseQuery(req, QuerySchema);
   if (q instanceof Response) return q;
 
-  const where: { jobName?: string; status?: "RUNNING" | "SUCCESS" | "PARTIAL_FAILURE" | "FAILED" } = {};
+  const where: { jobName?: string; status?: CronStatus } = {};
   if (q.jobName) where.jobName = q.jobName;
   if (q.status) where.status = q.status;
 

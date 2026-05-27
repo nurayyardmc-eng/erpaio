@@ -1,4 +1,17 @@
 /**
+ * CronRun status enum — Prisma DB schema ile birebir.
+ *
+ * Track SSSSSSSSSSS — admin/cron-runs route inline z.enum + tip
+ * annotation'i tekrar ediyordu. Centralized constant + as const +
+ * type export ile DB schema'siyla drift onlenir.
+ *
+ * RUNNING (acquire+finalize arasi) + 3 final status. CronRun.status
+ * yalnizca bu 4 degerden birini alir.
+ */
+export const CRON_STATUSES = ["RUNNING", "SUCCESS", "PARTIAL_FAILURE", "FAILED"] as const;
+export type CronStatus = (typeof CRON_STATUSES)[number];
+
+/**
  * Derive cron run final status from failure / success counts.
  *
  * Track QQQQQQQQQQQ — 3 cron route AYNI ternary chain'i kullaniyordu:

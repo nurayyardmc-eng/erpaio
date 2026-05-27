@@ -1,5 +1,31 @@
 import { describe, it, expect } from "vitest";
-import { deriveCronFinalStatus } from "./finalStatus";
+import { deriveCronFinalStatus, CRON_STATUSES } from "./finalStatus";
+
+describe("cron/CRON_STATUSES", () => {
+  it("has exactly 4 status values (RUNNING + 3 finals)", () => {
+    expect(CRON_STATUSES).toEqual([
+      "RUNNING",
+      "SUCCESS",
+      "PARTIAL_FAILURE",
+      "FAILED",
+    ]);
+  });
+
+  it("includes RUNNING (in-progress, between acquire+finalize)", () => {
+    expect(CRON_STATUSES).toContain("RUNNING");
+  });
+
+  it("includes 3 final states", () => {
+    expect(CRON_STATUSES).toContain("SUCCESS");
+    expect(CRON_STATUSES).toContain("PARTIAL_FAILURE");
+    expect(CRON_STATUSES).toContain("FAILED");
+  });
+
+  it("no duplicates", () => {
+    const unique = new Set(CRON_STATUSES);
+    expect(unique.size).toBe(CRON_STATUSES.length);
+  });
+});
 
 describe("cron/deriveCronFinalStatus", () => {
   it("failed=0 → SUCCESS regardless of successCount", () => {
