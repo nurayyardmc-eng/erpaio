@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
 import { assertCronAuth } from "@/lib/cron/auth";
-import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
+import { acquireCronLock, cronSkipResponse, finalizeCronRun } from "@/lib/cron/lock";
 import { deriveCronFinalStatus } from "@/lib/cron/finalStatus";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
@@ -24,10 +24,7 @@ export async function GET(req: NextRequest) {
   const lock = await acquireCronLock("trial-warnings");
   if (!lock.ok) {
     log.warn({ existingRunId: lock.existingRunId }, "Skipping — another run is in progress");
-    return NextResponse.json(
-      { ok: true, skipped: true, reason: "duplicate", existingRunId: lock.existingRunId },
-      { status: 409, headers: { [REQUEST_ID_HEADER]: requestId } },
-    );
+    return cronSkipResponse(lock.existingRunId, { headers: { [REQUEST_ID_HEADER]: requestId } });
   }
   const cronRunId = lock.cronRunId;
 

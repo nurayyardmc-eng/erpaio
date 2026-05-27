@@ -12,6 +12,7 @@
 // Workflow yaml'larında human-readable yorum şart (örn: trial-warnings-daily.yml).
 
 import { Prisma } from "@prisma/client";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 
 /** Stale threshold — bu süreyi geçen RUNNING kayıtlar yok sayılır. */
@@ -63,6 +64,30 @@ export async function acquireCronLock(
     data: { jobName, status: "RUNNING" },
   });
   return { ok: true, cronRunId: run.id };
+}
+
+/**
+ * Standard 409 skip response for duplicate cron runs.
+ *
+ * Track RRRRRRRRRRR — 4 cron route AYNI NextResponse.json yapisi
+ * kullaniyordu: { ok: true, skipped: true, reason: "duplicate",
+ * existingRunId }, status 409.
+ *
+ * Caller routes log mesajini kendi kontrol eder (component tag + event
+ * formati farkli olabilir); bu helper sadece response shape'i tek
+ * noktada tutar.
+ *
+ * Optional headers paramı request-id propagation icin (anomaly-detection
+ * gibi observability-heavy route'lar request-id header'ini geri yansitir).
+ */
+export function cronSkipResponse(
+  existingRunId: string,
+  opts?: { headers?: Record<string, string> },
+): NextResponse {
+  return NextResponse.json(
+    { ok: true, skipped: true, reason: "duplicate", existingRunId },
+    { status: 409, headers: opts?.headers },
+  );
 }
 
 export type FinalStatus = "SUCCESS" | "PARTIAL_FAILURE" | "FAILED";
