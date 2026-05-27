@@ -4,7 +4,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { rateLimit, rateLimited429, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { checkAndConsume, recordUsage, totalAnthropicTokens, budgetExhaustedError } from "@/lib/budget";
+import { checkAndConsume, recordAnthropicUsage, budgetExhaustedError } from "@/lib/budget";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 import { buildExplainPrompt } from "@/lib/ai/explainPrompt";
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     const explanation = extractAnthropicText(msg);
 
-    void recordUsage(session.user.tenantId, totalAnthropicTokens(msg.usage));
+    recordAnthropicUsage(session.user.tenantId, msg);
     log.info({ length: explanation.length }, "Result explanation generated");
     return Response.json({ explanation });
   } catch (err) {

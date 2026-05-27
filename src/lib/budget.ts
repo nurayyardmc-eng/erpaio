@@ -68,6 +68,27 @@ export function totalAnthropicTokens(usage: {
 }
 
 /**
+ * Combined "extract tokens from Anthropic Message + record to budget".
+ *
+ * Track KKKKKKKKKKK — chat/explain + chat/follow-ups IDENTIK pattern:
+ *   void recordUsage(session.user.tenantId, totalAnthropicTokens(msg.usage));
+ *
+ * void prefix (intentional fire-and-forget): recordUsage best-effort,
+ * counter update'i ana flow'u bloklamamali. catch handler'i recordUsage
+ * icinde mevcut (log.error fallback).
+ *
+ * NOT: chat/route + chat/stream cache-aware token hesabi yapiyor
+ * (calculateBillableTokens — cache_creation/cache_read field'lari ile);
+ * onlar bu helper'i kullanmiyor, intentional.
+ */
+export function recordAnthropicUsage(
+  tenantId: string,
+  msg: { usage: { input_tokens: number; output_tokens: number } },
+): void {
+  void recordUsage(tenantId, totalAnthropicTokens(msg.usage));
+}
+
+/**
  * 402 Payment Required response for token budget exhaustion.
  *
  * Track XXXXXXXXX — 3 chat sub-route (explain, follow-ups, stream)

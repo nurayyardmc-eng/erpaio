@@ -147,3 +147,42 @@ describe("budgetExhaustedError", () => {
     expect(body.remainingTokens).toBe(0);
   });
 });
+
+describe("recordAnthropicUsage", () => {
+  // recordAnthropicUsage delegates to recordUsage which hits Prisma.
+  // We don't mock Prisma here (fire-and-forget); just verify the helper
+  // returns void synchronously and accepts the expected Anthropic shape.
+
+  it("returns synchronously (void, fire-and-forget)", async () => {
+    const { recordAnthropicUsage } = await import("./budget");
+    const result = recordAnthropicUsage("nonexistent-tenant", {
+      usage: { input_tokens: 0, output_tokens: 0 },
+    });
+    expect(result).toBeUndefined();
+  });
+
+  it("accepts standard Anthropic Message usage shape", async () => {
+    const { recordAnthropicUsage } = await import("./budget");
+    // Should not throw — promise rejection is swallowed by recordUsage's
+    // internal catch handler.
+    expect(() =>
+      recordAnthropicUsage("nonexistent-tenant", {
+        usage: { input_tokens: 100, output_tokens: 50 },
+      }),
+    ).not.toThrow();
+  });
+
+  it("ignores extra fields on usage (cache_creation_input_tokens etc.)", async () => {
+    const { recordAnthropicUsage } = await import("./budget");
+    expect(() =>
+      recordAnthropicUsage("nonexistent-tenant", {
+        usage: {
+          input_tokens: 100,
+          output_tokens: 50,
+          cache_creation_input_tokens: 200,
+          cache_read_input_tokens: 300,
+        } as { input_tokens: number; output_tokens: number },
+      }),
+    ).not.toThrow();
+  });
+});

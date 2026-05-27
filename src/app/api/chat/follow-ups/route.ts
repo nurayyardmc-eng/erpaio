@@ -4,7 +4,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { rateLimit, rateLimited429, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { checkAndConsume, recordUsage, totalAnthropicTokens, budgetExhaustedError } from "@/lib/budget";
+import { checkAndConsume, recordAnthropicUsage, budgetExhaustedError } from "@/lib/budget";
 import { MODEL_HAIKU, anthropicClient } from "@/lib/ai/models";
 import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
 import { stripCodeFences } from "@/lib/ai/stripCodeFences";
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       suggestions = [];
     }
 
-    void recordUsage(session.user.tenantId, totalAnthropicTokens(msg.usage));
+    recordAnthropicUsage(session.user.tenantId, msg);
     log.info({ count: suggestions.length }, "Follow-up suggestions generated");
     return Response.json({ suggestions });
   } catch (err) {
