@@ -5,8 +5,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { sha256Hex } from "@/lib/crypto/hash";
-import { generateSecureToken } from "@/lib/crypto/token";
+import { createPasswordResetToken } from "@/lib/auth/createPasswordResetToken";
 import { passwordResetEmail } from "@/lib/auth/passwordResetEmail";
 import { baseUrl } from "@/lib/url";
 import { ONE_HOUR_MS } from "@/lib/time/units";
@@ -32,14 +31,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: true });
   }
 
-  const rawToken = generateSecureToken();
-  const tokenHash = sha256Hex(rawToken);
-  const expiresAt = new Date(Date.now() + ONE_HOUR_MS);
-
-  await prisma.passwordResetToken.create({
-    data: { userId: user.id, tokenHash, expiresAt },
-  });
-
+  const { raw: rawToken } = await createPasswordResetToken(user.id);
   const resetUrl = `${baseUrl()}/reset-password?token=${rawToken}`;
   const { subject, html } = passwordResetEmail(resetUrl);
   void sendEmail({ to: email, subject, html });
