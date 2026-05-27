@@ -1,6 +1,6 @@
 import { getAuth } from "@/lib/auth/dual";
-import { prisma } from "@/lib/db/prisma";
 import { jsonError, resolveLocale } from "@/lib/i18n/server";
+import { findOwnedChatSessionWithMessages } from "@/lib/chat/findOwnedChatSession";
 import {
   chatSessionFilename,
   chatSessionToMarkdown,
@@ -27,10 +27,11 @@ export async function GET(
 
   const { id } = await context.params;
 
-  const chatSession = await prisma.chatSession.findFirst({
-    where: { id, tenantId: session.user.tenantId, userId: session.user.id },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
-  });
+  const chatSession = await findOwnedChatSessionWithMessages(
+    id,
+    session.user.tenantId,
+    session.user.id,
+  );
   if (!chatSession) return jsonError(req, "api.notFound", 404);
 
   const locale = resolveLocale(req);

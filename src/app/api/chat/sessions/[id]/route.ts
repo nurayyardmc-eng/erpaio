@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { assertOwnedChatSession } from "@/lib/chat/assertOwnedChatSession";
+import { findOwnedChatSessionWithMessages } from "@/lib/chat/findOwnedChatSession";
 import { z } from "zod";
 
 export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
@@ -11,13 +12,11 @@ export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[i
 
   const { id } = await ctx.params;
 
-  const chatSession = await prisma.chatSession.findFirst({
-    where: { id, tenantId: session.user.tenantId, userId: session.user.id },
-    include: {
-      messages: { orderBy: { createdAt: "asc" } },
-    },
-  });
-
+  const chatSession = await findOwnedChatSessionWithMessages(
+    id,
+    session.user.tenantId,
+    session.user.id,
+  );
   if (!chatSession) return jsonError(req, "api.notFound", 404);
 
   return Response.json({
