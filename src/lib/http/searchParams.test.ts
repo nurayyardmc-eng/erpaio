@@ -19,6 +19,7 @@ import {
   sqlNotInHistoryError,
   sqlExecutionError,
   savedQueryNotFoundError,
+  internalServerError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -551,5 +552,42 @@ describe("savedQueryNotFoundError", () => {
     const res = savedQueryNotFoundError(reqWithLang("en"));
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("Query not found.");
+  });
+});
+
+describe("internalServerError", () => {
+  it("returns 500 status", () => {
+    const res = internalServerError(reqWithLang("tr"), new Error("boom"));
+    expect(res.status).toBe(500);
+  });
+
+  it("body has both error + detail fields", async () => {
+    const res = internalServerError(reqWithLang("tr"), new Error("db timeout"));
+    const body = (await res.json()) as { error: string; detail: string };
+    expect(typeof body.error).toBe("string");
+    expect(body.detail).toBe("db timeout");
+  });
+
+  it("non-Error fallback via String()", async () => {
+    const res = internalServerError(reqWithLang("en"), "weird thing");
+    const body = (await res.json()) as { detail: string };
+    expect(body.detail).toBe("weird thing");
+  });
+
+  it("null/undefined detail handled", async () => {
+    const r1 = internalServerError(reqWithLang("en"), null);
+    const r2 = internalServerError(reqWithLang("en"), undefined);
+    const b1 = (await r1.json()) as { detail: string };
+    const b2 = (await r2.json()) as { detail: string };
+    expect(b1.detail).toBe("null");
+    expect(b2.detail).toBe("undefined");
+  });
+
+  it("error message i18n via locale (TR/EN catalog)", async () => {
+    const tr = internalServerError(reqWithLang("tr"), new Error("x"));
+    const en = internalServerError(reqWithLang("en"), new Error("x"));
+    const trBody = (await tr.json()) as { error: string };
+    const enBody = (await en.json()) as { error: string };
+    expect(trBody.error).not.toBe(enBody.error);
   });
 });

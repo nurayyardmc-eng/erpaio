@@ -15,7 +15,7 @@
 //   // parsed is fully typed
 
 import { z, type ZodError, type ZodTypeAny } from "zod";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 
 // Validation messages stay in English (locale-neutral) — they're rare path:
 // frontends validate first, and zodErrorResponse passes the message verbatim
@@ -245,6 +245,27 @@ export function savedQueryNotFoundError(req: Request): Response {
     tr: "Sorgu bulunamadı.",
     en: "Query not found.",
   });
+}
+
+/**
+ * Common 500 internal server error response with error message detail.
+ *
+ * Track KKKKKKKKKKKK — chat/route + chat/run-sql IDENTIK pattern:
+ *   return Response.json(
+ *     { error: serverMessages(req).api.serverError, detail: err.message },
+ *     { status: 500 },
+ *   );
+ *
+ * Locale-aware "api.serverError" mesaji (i18n catalog) + raw err.message
+ * detail. localizedError disinda kalmasinin sebebi: ekstra `detail`
+ * field var (sadece error degil) — localizedError tek field destekliyor.
+ */
+export function internalServerError(req: Request, err: unknown): Response {
+  const detail = err instanceof Error ? err.message : String(err);
+  return Response.json(
+    { error: serverMessages(req).api.serverError, detail },
+    { status: 500 },
+  );
 }
 
 /**

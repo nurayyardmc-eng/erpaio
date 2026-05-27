@@ -21,7 +21,8 @@ import {
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
-import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
+import { jsonError, localizedError } from "@/lib/i18n/server";
+import { internalServerError } from "@/lib/http/searchParams";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
 import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect, dialectRules } from "@/lib/ai/dialect";
@@ -272,6 +273,6 @@ ${schema}`;
       return localizedError(req, 502, { tr: "Soru SQL'e çevrilemedi.", en: "Could not translate question into SQL." });
     }
     Sentry.captureException(e, { tags: { component: "chat", cacheHit: String(cacheHit) } });
-    return Response.json({ error: serverMessages(req).api.serverError, detail: err.message }, { status: 500 });
+    return internalServerError(req, e);
   }
 }

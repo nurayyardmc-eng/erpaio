@@ -7,10 +7,14 @@ import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
-import { parseJsonBody, activeConnectionNotFoundError } from "@/lib/http/searchParams";
+import {
+  parseJsonBody,
+  activeConnectionNotFoundError,
+  internalServerError,
+} from "@/lib/http/searchParams";
 import { extractColumns } from "@/lib/chat/extractColumns";
 import { ensureChatSession } from "@/lib/chat/ensureChatSession";
-import { jsonError, serverMessages } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
 import { z } from "zod";
 
 const BodySchema = z.object({
@@ -84,6 +88,6 @@ export async function POST(req: Request) {
       return Response.json({ error: err.message }, { status: 400 });
     }
     Sentry.captureException(e, { tags: { component: "chat-run-sql" } });
-    return Response.json({ error: serverMessages(req).api.serverError, detail: err.message }, { status: 500 });
+    return internalServerError(req, e);
   }
 }
