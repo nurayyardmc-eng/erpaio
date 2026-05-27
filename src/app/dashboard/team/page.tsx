@@ -4,6 +4,7 @@ import ErrorState from "@/components/ErrorState";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { formatDate } from "@/lib/format/time";
+import { postJson, patchJson } from "@/lib/http/clientFetch";
 
 interface TeamUser {
   id: string;
@@ -65,11 +66,7 @@ export default function TeamPage() {
     e.preventDefault();
     setInviting(true);
     try {
-      const res = await fetch("/api/team/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
-      });
+      const res = await postJson("/api/team/invite", { email: inviteEmail, role: inviteRole });
       const data = await res.json();
       if (!res.ok) {
         setStatus({ kind: "err", msg: data.error || t.common.error });
@@ -84,11 +81,7 @@ export default function TeamPage() {
   };
 
   const updateRole = async (userId: string, role: string) => {
-    await fetch("/api/team", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, role }),
-    });
+    await patchJson("/api/team", { userId, role });
     refresh();
   };
 

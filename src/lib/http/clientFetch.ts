@@ -38,6 +38,14 @@ export function patchJson(url: string, body: unknown): Promise<Response> {
   });
 }
 
+export function putJson(url: string, body: unknown): Promise<Response> {
+  return fetch(url, {
+    method: "PUT",
+    headers: JSON_HEADERS,
+    body: JSON.stringify(body),
+  });
+}
+
 export function deleteJson(url: string, body: unknown): Promise<Response> {
   return fetch(url, {
     method: "DELETE",

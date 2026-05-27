@@ -7,6 +7,7 @@ import ErrorState from "@/components/ErrorState";
 import { useI18n } from "@/lib/i18n/context";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { exportFilename } from "@/lib/format/exportFilename";
+import { postJson, patchJson } from "@/lib/http/clientFetch";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -106,11 +107,7 @@ export default function AlertsPage() {
   const acknowledge = async (id: string) => {
     // Server `acked`/`resolved` kabul ediyor — daha önce `acknowledged`
     // gönderiyorduk, PATCH 400 dönüyordu. Fixed Track LLL.
-    await fetch("/api/alerts", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "acked" }),
-    });
+    await patchJson("/api/alerts", { id, status: "acked" });
     setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: "acked" } : a));
   };
 
@@ -120,11 +117,7 @@ export default function AlertsPage() {
     if (ids.length === 0) return;
     setBulkBusy(true);
     try {
-      const res = await fetch("/api/alerts/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids, status }),
-      });
+      const res = await postJson("/api/alerts/bulk", { ids, status });
       if (!res.ok) {
         setBulkBusy(false);
         return;
@@ -169,11 +162,10 @@ export default function AlertsPage() {
   /** Yanlış alarm toggle — Track MMM. Engine learning loop sinyali. */
   const toggleFalsePositive = async (id: string, currentlyMarked: boolean) => {
     const action = currentlyMarked ? "clear" : "falsePositive";
-    const res = await fetch(`/api/alerts/${encodeURIComponent(id)}/feedback`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
+    const res = await postJson(
+      `/api/alerts/${encodeURIComponent(id)}/feedback`,
+      { action },
+    );
     if (!res.ok) return;
     setAlerts((prev) =>
       prev.map((a) =>
@@ -385,16 +377,12 @@ export default function AlertsPage() {
         <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 12 }}>{t.alerts.testSectionLabel}</div>
         <button
           onClick={async () => {
-            await fetch("/api/alerts", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: "anomaly",
-                severity: "high",
-                title: t.alerts.testTitle,
-                description: t.alerts.testDescription,
-                module: "inventory",
-              }),
+            await postJson("/api/alerts", {
+              type: "anomaly",
+              severity: "high",
+              title: t.alerts.testTitle,
+              description: t.alerts.testDescription,
+              module: "inventory",
             });
             const updated = await fetch("/api/alerts").then((r) => r.json());
             setAlerts(updated);

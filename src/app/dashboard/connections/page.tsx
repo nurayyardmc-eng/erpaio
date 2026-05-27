@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
 import { schemaAgeRelative, schemaAgeStatus, type SchemaAgeStatus } from "@/lib/schema/age";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { postJson } from "@/lib/http/clientFetch";
 
 interface Connection {
   id: string;
@@ -98,11 +99,7 @@ export default function ConnectionsPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/connections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await postJson("/api/connections", form);
       const data = await res.json();
       if (!res.ok || !data.id) {
         showToast(data.error || "Bağlantı eklenemedi", "error");

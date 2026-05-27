@@ -5,6 +5,7 @@ import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
 import { useI18n } from "@/lib/i18n/context";
 import { formatTimestamp } from "@/lib/format/time";
+import { putJson } from "@/lib/http/clientFetch";
 
 interface Annotation {
   id: string;
@@ -60,15 +61,11 @@ export default function AnnotationsPage() {
     setSaving(true);
     setStatus(null);
     try {
-      const res = await fetch("/api/annotations", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tableName: form.tableName.trim(),
-          columnName: form.columnName.trim() || null,
-          description: form.description.trim() || null,
-          hidden: form.hidden,
-        }),
+      const res = await putJson("/api/annotations", {
+        tableName: form.tableName.trim(),
+        columnName: form.columnName.trim() || null,
+        description: form.description.trim() || null,
+        hidden: form.hidden,
       });
       const d = await res.json();
       if (!res.ok) {

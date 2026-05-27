@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { postJson, patchJson, deleteJson } from "./clientFetch";
+import { postJson, patchJson, putJson, deleteJson } from "./clientFetch";
 
 describe("http/clientFetch", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -55,6 +55,15 @@ describe("http/clientFetch", () => {
     });
   });
 
+  describe("putJson", () => {
+    it("calls fetch with PUT method + JSON body", async () => {
+      await putJson("/api/test/1", { a: 1 });
+      const init = fetchMock.mock.calls[0][1];
+      expect(init.method).toBe("PUT");
+      expect(init.body).toBe(JSON.stringify({ a: 1 }));
+    });
+  });
+
   describe("deleteJson", () => {
     it("calls fetch with DELETE method + body", async () => {
       await deleteJson("/api/test", { id: "abc" });
@@ -67,8 +76,9 @@ describe("http/clientFetch", () => {
   it("all helpers handle empty object body", async () => {
     await postJson("/api/a", {});
     await patchJson("/api/b", {});
+    await putJson("/api/d", {});
     await deleteJson("/api/c", {});
-    expect(fetchMock.mock.calls).toHaveLength(3);
+    expect(fetchMock.mock.calls).toHaveLength(4);
     for (const call of fetchMock.mock.calls) {
       expect(call[1].body).toBe("{}");
     }

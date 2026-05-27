@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { formatTimestamp } from "@/lib/format/time";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { showToast } from "@/components/Toaster";
+import { postJson, patchJson } from "@/lib/http/clientFetch";
 
 interface Report {
   id: string;
@@ -76,11 +77,7 @@ export default function ScheduledReportsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/scheduled-reports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await postJson("/api/scheduled-reports", form);
       const data = await res.json();
       if (!res.ok) setStatus({ kind: "err", msg: data.error || t.common.error });
       else {
@@ -125,11 +122,10 @@ export default function ScheduledReportsPage() {
     // Optimistic update
     setReports((prev) => prev.map((x) => (x.id === r.id ? { ...x, enabled: next } : x)));
     try {
-      const res = await fetch(`/api/scheduled-reports/${encodeURIComponent(r.id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled: next }),
-      });
+      const res = await patchJson(
+        `/api/scheduled-reports/${encodeURIComponent(r.id)}`,
+        { enabled: next },
+      );
       if (!res.ok) {
         // Revert on failure
         setReports((prev) => prev.map((x) => (x.id === r.id ? { ...x, enabled: r.enabled } : x)));
