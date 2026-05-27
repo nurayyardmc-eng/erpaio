@@ -218,6 +218,19 @@ export function invalidQuestionError(req: Request): Response {
   });
 }
 
+/**
+ * Common "Mevcut şifre hatalı." 400. Track RRRRRRRRRR.
+ * Used by: me/password (change), me/email/request-change. Hassas
+ * security-boundary mesaji — wording'in iki yerde drift etmemesi
+ * kullaniciyi confuse etmemek + audit log korelasyonu icin onemli.
+ */
+export function incorrectPasswordError(req: Request): Response {
+  return localizedError(req, 400, {
+    tr: "Mevcut şifre hatalı.",
+    en: "Current password is incorrect.",
+  });
+}
+
 function zodErrorResponse(req: Request, err: ZodError): Response {
   const issue = err.issues[0];
   const field = issue?.path?.join(".");

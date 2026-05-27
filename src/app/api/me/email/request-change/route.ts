@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { jsonError, localizedError, resolveLocale } from "@/lib/i18n/server";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, incorrectPasswordError } from "@/lib/http/searchParams";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { childLogger } from "@/lib/observability/logger";
 import { maskEmail } from "@/lib/auth/maskEmail";
@@ -66,10 +66,7 @@ export async function POST(req: Request) {
 
   const passwordOk = await bcrypt.compare(body.currentPassword, user.passwordHash);
   if (!passwordOk) {
-    return localizedError(req, 400, {
-      tr: "Mevcut şifre hatalı.",
-      en: "Current password is incorrect.",
-    });
+    return incorrectPasswordError(req);
   }
 
   // newEmail başka bir kullanıcıda kayıtlıysa SESSIZCE 200 dön (info leak

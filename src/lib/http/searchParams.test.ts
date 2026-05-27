@@ -15,6 +15,7 @@ import {
   connectionNotFoundError,
   activeConnectionNotFoundError,
   invalidQuestionError,
+  incorrectPasswordError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -446,5 +447,24 @@ describe("invalidQuestionError", () => {
     const res = invalidQuestionError(reqWithLang("en"));
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe("Invalid question.");
+  });
+});
+
+describe("incorrectPasswordError", () => {
+  it("returns 400", () => {
+    const res = incorrectPasswordError(reqWithLang("tr"));
+    expect(res.status).toBe(400);
+  });
+
+  it("TR body — 'Mevcut şifre hatalı.'", async () => {
+    const res = incorrectPasswordError(reqWithLang("tr"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Mevcut şifre hatalı.");
+  });
+
+  it("EN body — 'Current password is incorrect.'", async () => {
+    const res = incorrectPasswordError(reqWithLang("en"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("Current password is incorrect.");
   });
 });

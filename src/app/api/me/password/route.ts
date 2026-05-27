@@ -7,7 +7,11 @@ import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { zPassword } from "@/lib/auth/schemas";
-import { parseJsonBody, userNotFoundError } from "@/lib/http/searchParams";
+import {
+  parseJsonBody,
+  userNotFoundError,
+  incorrectPasswordError,
+} from "@/lib/http/searchParams";
 
 const BodySchema = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -31,7 +35,7 @@ export async function POST(req: Request) {
   if (!user) return userNotFoundError(req);
 
   const valid = await bcrypt.compare(body.currentPassword, user.passwordHash);
-  if (!valid) return localizedError(req, 400, { tr: "Mevcut şifre hatalı.", en: "Current password is incorrect." });
+  if (!valid) return incorrectPasswordError(req);
 
   if (body.currentPassword === body.newPassword) {
     return localizedError(req, 400, { tr: "Yeni şifre mevcut şifre ile aynı olamaz.", en: "New password cannot be the same as the current one." });
