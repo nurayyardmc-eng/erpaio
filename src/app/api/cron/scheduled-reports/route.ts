@@ -7,6 +7,7 @@ import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { shouldFireSchedule, renderReportHtml } from "@/lib/reports/render";
+import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -36,19 +37,7 @@ export async function GET(req: NextRequest) {
     if (!shouldFireSchedule(r.schedule)) continue;
 
     try {
-      const messages = await prisma.chatMessage.findMany({
-        where: {
-          session: { tenantId: r.tenantId, userId: r.userId },
-          role: "assistant",
-          success: true,
-          content: { contains: r.question.slice(0, 50) },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { sqlQuery: true },
-      });
-
-      const sql = messages[0]?.sqlQuery;
+      const sql = await findLastSqlForQuestion(r.tenantId, r.userId, r.question);
       if (!sql) {
         log.info({ reportId: r.id }, "No cached SQL — manual run needed");
         continue;

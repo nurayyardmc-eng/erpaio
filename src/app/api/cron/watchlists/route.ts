@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/notifications/email";
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { childLogger } from "@/lib/observability/logger";
 import { compareThreshold, extractFirstNumeric } from "@/lib/threshold/compare";
+import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -35,19 +36,7 @@ export async function GET(req: NextRequest) {
 
   for (const w of watchlists) {
     try {
-      const messages = await prisma.chatMessage.findMany({
-        where: {
-          session: { tenantId: w.tenantId, userId: w.userId },
-          role: "assistant",
-          success: true,
-          content: { contains: w.question.slice(0, 50) },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { sqlQuery: true },
-      });
-
-      const sql = messages[0]?.sqlQuery;
+      const sql = await findLastSqlForQuestion(w.tenantId, w.userId, w.question);
       if (!sql) continue;
 
       const rows = await queryERP(w.connectionId, sql);

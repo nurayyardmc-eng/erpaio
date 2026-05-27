@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { sqlNotInHistoryError } from "@/lib/http/searchParams";
+import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -34,18 +35,7 @@ export async function POST(
   }
 
   // Cron mantığı ile aynı SQL lookup.
-  const messages = await prisma.chatMessage.findMany({
-    where: {
-      session: { tenantId: report.tenantId, userId: report.userId },
-      role: "assistant",
-      success: true,
-      content: { contains: report.question.slice(0, 50) },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 1,
-    select: { sqlQuery: true },
-  });
-  const sqlStr = messages[0]?.sqlQuery;
+  const sqlStr = await findLastSqlForQuestion(report.tenantId, report.userId, report.question);
   if (!sqlStr) {
     return sqlNotInHistoryError(req);
   }
