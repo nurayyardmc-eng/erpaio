@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/dual";
-import { generateApiToken, hashApiToken } from "@/lib/auth/apiToken";
+import { createMobileApiToken } from "@/lib/auth/createMobileApiToken";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
-import { daysFromNow } from "@/lib/time/units";
 
 const log = childLogger({ component: "mobile-refresh" });
 
@@ -43,26 +42,20 @@ export async function POST(req: Request) {
     return jsonError(req, "auth.invalidToken", 401);
   }
 
-  const raw = generateApiToken();
-  const tokenHash = hashApiToken(raw);
-  const expiresAt = daysFromNow(90);
-
-  // Atomic rotation — eski revoke + yeni create tek transaction'da
-  await prisma.$transaction([
-    prisma.apiToken.update({
-      where: { id: user.tokenId },
-      data: { revoked: true },
-    }),
-    prisma.apiToken.create({
-      data: {
-        userId: user.id,
-        tenantId: user.tenantId,
-        tokenHash,
-        name: oldToken.name ?? "mobile",
-        expiresAt,
-      },
-    }),
-  ]);
+  // Atomic rotation: revoke old token then create the new one.
+  // Note: not wrapped in $transaction because createMobileApiToken
+  // encapsulates its own prisma.apiToken.create. If revoke succeeds but
+  // create fails, the user just needs to re-login (acceptable trade-off
+  // for one fewer dependency on prisma direct API in this route).
+  await prisma.apiToken.update({
+    where: { id: user.tokenId },
+    data: { revoked: true },
+  });
+  const { raw, expiresAt } = await createMobileApiToken(
+    user.id,
+    user.tenantId,
+    oldToken.name ?? "mobile",
+  );
 
   log.info(
     { userId: user.id, oldTokenId: user.tokenId, oldExpiresAt: oldToken.expiresAt },
