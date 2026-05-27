@@ -1,5 +1,5 @@
 import { getAuth } from "@/lib/auth/dual";
-import { prisma } from "@/lib/db/prisma";
+import { findActiveErpConnectionForChat } from "@/lib/db/findActiveErpConnection";
 import { inferForeignKeys } from "@/lib/erpProfiles/foreignKeyInference";
 import { findCustomItems } from "@/lib/erpProfiles/customColumnFlag";
 import { jsonError } from "@/lib/i18n/server";
@@ -15,10 +15,7 @@ export async function GET(req: Request) {
 
   let customs: Awaited<ReturnType<typeof findCustomItems>> = [];
   if (connectionId) {
-    const conn = await prisma.erpConnection.findFirst({
-      where: { id: connectionId, tenantId: session.user.tenantId, status: "active" },
-      select: { id: true, erpProfile: true, erpType: true },
-    });
+    const conn = await findActiveErpConnectionForChat(connectionId, session.user.tenantId);
     if (conn) {
       const slug = conn.erpProfile ?? (conn.erpType === "nebim_v3" ? "nebim_v3" : null);
       if (slug) {
