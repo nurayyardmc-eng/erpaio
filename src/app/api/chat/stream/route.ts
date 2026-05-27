@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { getSchema } from "@/lib/cache/schema";
 import { lookupCache, writeCache, recordOutcome } from "@/lib/cache/queryCache";
+import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
@@ -15,9 +15,7 @@ import {
   invalidQuestionError,
 } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
-import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
-import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
-import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
+import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
@@ -92,13 +90,8 @@ export async function POST(req: Request) {
           send("phase", { phase: "ai" });
           const profileSlug = resolveProfileSlug(conn.erpType, conn.erpProfile);
           const erpProfile = profileSlug ? loadProfile(profileSlug) : null;
-          const schema = await getSchema(connectionId);
-          const profileContext = erpProfile ? profileToPromptContext(erpProfile) : "";
-          const sampleContext = erpProfile
-            ? sampleRowsToPromptContext(await getSampleRows(connectionId, erpProfile))
-            : "";
-          const annotationsContext = annotationsToPromptContext(await getAnnotations(tenantId));
-          const erpName = erpProfile?.name ?? "ERP";
+          const { schema, profileContext, sampleContext, annotationsContext, erpName } =
+            await buildChatPromptContext(connectionId, erpProfile, tenantId);
 
           const systemText = `Sen bir SQL Server uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL'e çevir.
 Sadece SELECT/WITH, başka komut yasak. NVARCHAR + N'...' Türkçe için.

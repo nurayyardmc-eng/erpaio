@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { getSchema } from "@/lib/cache/schema";
 import { lookupCache, writeCache, recordOutcome } from "@/lib/cache/queryCache";
+import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
@@ -15,9 +15,7 @@ import {
   invalidQuestionError,
 } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage } from "@/lib/budget";
-import { loadProfile, profileToPromptContext, resolveProfileSlug } from "@/lib/erpProfiles";
-import { getSampleRows, sampleRowsToPromptContext } from "@/lib/cache/sampleRows";
-import { getAnnotations, annotationsToPromptContext } from "@/lib/cache/annotations";
+import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
@@ -112,14 +110,8 @@ export async function POST(req: Request) {
     } else {
       Sentry.setTag("chat.cache_hit", false);
       Sentry.setTag("chat.erp_profile", profileSlug ?? "none");
-      const schema = await getSchema(connectionId);
-
-      const profileContext = erpProfile ? profileToPromptContext(erpProfile) : "";
-      const sampleContext = erpProfile
-        ? sampleRowsToPromptContext(await getSampleRows(connectionId, erpProfile))
-        : "";
-      const annotationsContext = annotationsToPromptContext(await getAnnotations(tenantId));
-      const erpName = erpProfile?.name ?? "ERP";
+      const { schema, profileContext, sampleContext, annotationsContext, erpName } =
+        await buildChatPromptContext(connectionId, erpProfile, tenantId);
 
       // Dialect-aware: Postgres / MS SQL / MySQL syntax differences (DDDDD)
       const { name: dialectName, isPostgres } = pickDialect(conn.erpType, conn.erpProfile);
