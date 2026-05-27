@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { createManyMock } = vi.hoisted(() => ({ createManyMock: vi.fn() }));
+const { createManyMock, findFirstMock } = vi.hoisted(() => ({
+  createManyMock: vi.fn(),
+  findFirstMock: vi.fn(),
+}));
 
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { chatMessage: { createMany: createManyMock } },
+  prisma: { chatMessage: { createMany: createManyMock, findFirst: findFirstMock } },
 }));
 
 import { persistChatExchange } from "./persistChatExchange";
@@ -11,7 +14,47 @@ import { persistChatExchange } from "./persistChatExchange";
 describe("chat/persistChatExchange", () => {
   beforeEach(() => {
     createManyMock.mockReset();
+    findFirstMock.mockReset();
     createManyMock.mockResolvedValue({ count: 2 });
+    findFirstMock.mockResolvedValue({ id: "asst-msg-id" });
+  });
+
+  it("returns assistantMessageId from post-create lookup", async () => {
+    findFirstMock.mockResolvedValueOnce({ id: "abc-123" });
+    const r = await persistChatExchange({
+      sessionId: "s1",
+      question: "q",
+      sql: "SELECT 1",
+      rowCount: 1,
+      latencyMs: 50,
+    });
+    expect(r.assistantMessageId).toBe("abc-123");
+  });
+
+  it("returns null when no assistant message found (edge case)", async () => {
+    findFirstMock.mockResolvedValueOnce(null);
+    const r = await persistChatExchange({
+      sessionId: "s1",
+      question: "q",
+      sql: "SELECT 1",
+      rowCount: 0,
+      latencyMs: 1,
+    });
+    expect(r.assistantMessageId).toBeNull();
+  });
+
+  it("findFirst lookup scoped by sessionId + role assistant + desc order", async () => {
+    await persistChatExchange({
+      sessionId: "s1",
+      question: "q",
+      sql: "SELECT 1",
+      rowCount: 0,
+      latencyMs: 1,
+    });
+    const findCall = findFirstMock.mock.calls[0][0];
+    expect(findCall.where).toEqual({ sessionId: "s1", role: "assistant" });
+    expect(findCall.orderBy).toEqual({ createdAt: "desc" });
+    expect(findCall.select).toEqual({ id: true });
   });
 
   it("createMany called once with 2 rows (single round-trip)", async () => {

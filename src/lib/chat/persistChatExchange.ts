@@ -23,7 +23,16 @@ export interface ChatExchangeInput {
   latencyMs: number;
 }
 
-export async function persistChatExchange(input: ChatExchangeInput): Promise<void> {
+/**
+ * Track DDDDDDDDDDDD — chat/route createMany sonrasi assistant mesajin
+ * id'sini bulmak icin ekstra findFirst yapiyordu. createMany Prisma'da
+ * created row id'lerini DONMUYOR (PostgreSQL connector kisitlamasi).
+ * Helper bu lookup'i kapsuller; caller assistant message id'sini
+ * isterse persist sonucundan alir.
+ */
+export async function persistChatExchange(
+  input: ChatExchangeInput,
+): Promise<{ assistantMessageId: string | null }> {
   await prisma.chatMessage.createMany({
     data: [
       { sessionId: input.sessionId, role: "user", content: input.question },
@@ -38,4 +47,12 @@ export async function persistChatExchange(input: ChatExchangeInput): Promise<voi
       },
     ],
   });
+
+  const assistantMsg = await prisma.chatMessage.findFirst({
+    where: { sessionId: input.sessionId, role: "assistant" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+
+  return { assistantMessageId: assistantMsg?.id ?? null };
 }

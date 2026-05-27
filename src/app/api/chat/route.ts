@@ -225,16 +225,16 @@ ${schema}`;
     cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql });
 
     const sid = await ensureChatSession(sessionId, tenantId, session.user.id);
-    await persistChatExchange({ sessionId: sid, question, sql, rowCount: rows.length, latencyMs });
-
-    const assistantMsg = await prisma.chatMessage.findFirst({
-      where: { sessionId: sid, role: "assistant" },
-      orderBy: { createdAt: "desc" },
-      select: { id: true },
+    const { assistantMessageId } = await persistChatExchange({
+      sessionId: sid,
+      question,
+      sql,
+      rowCount: rows.length,
+      latencyMs,
     });
 
     log.info(
-      { event: "chat_ok", cacheHit, latencyMs, rows: rows.length, messageId: assistantMsg?.id },
+      { event: "chat_ok", cacheHit, latencyMs, rows: rows.length, messageId: assistantMessageId },
       "Chat query succeeded",
     );
 
@@ -249,7 +249,7 @@ ${schema}`;
       rowLimit: t.rowLimit,
       latencyMs,
       sessionId: sid,
-      messageId: assistantMsg?.id,
+      messageId: assistantMessageId,
       cacheHit,
       cacheId,
     });
