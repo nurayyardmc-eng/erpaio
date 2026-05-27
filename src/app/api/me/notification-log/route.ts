@@ -6,6 +6,7 @@ import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { requireOwnerOrAdmin, DENY_OWNER_ADMIN_VIEW } from "@/lib/auth/role";
 import { daysAgo } from "@/lib/time/units";
+import { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES } from "@/lib/notifications/types";
 
 /**
  * Tenant-scoped NotificationLog — owner/admin son N gün delivery audit
@@ -17,8 +18,8 @@ import { daysAgo } from "@/lib/time/units";
  */
 const QuerySchema = z.object({
   limit: zNumber({ min: 1, max: 200, default: 100, int: true }),
-  channel: z.enum(["whatsapp", "email", "push", "slack", "teams", "webhook"]).optional(),
-  status: z.enum(["sent", "failed", "skipped"]).optional(),
+  channel: z.enum(NOTIFICATION_CHANNELS).optional(),
+  status: z.enum(NOTIFICATION_STATUSES).optional(),
   /** Kaç gün öncesine bakılsın (default 7, max 90 — retention 180 gün ama UI
    *  pratiği 30 yeterli). */
   days: zNumber({ min: 1, max: 90, default: 7, int: true }),

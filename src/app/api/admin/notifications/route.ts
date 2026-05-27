@@ -4,11 +4,12 @@ import { requireSysAdmin } from "@/lib/auth/sysadmin";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { parseQuery, zNumber } from "@/lib/http/searchParams";
 import { daysAgo } from "@/lib/time/units";
+import { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES } from "@/lib/notifications/types";
 
 const QuerySchema = z.object({
   limit: zNumber({ min: 1, max: 200, default: 100, int: true }),
-  channel: z.enum(["whatsapp", "email", "push", "slack", "teams", "webhook"]).optional(),
-  status: z.enum(["sent", "failed", "skipped"]).optional(),
+  channel: z.enum(NOTIFICATION_CHANNELS).optional(),
+  status: z.enum(NOTIFICATION_STATUSES).optional(),
 });
 
 /**
