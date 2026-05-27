@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/auth/hashPassword";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     });
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await hashPassword(password);
 
   const user = await prisma.$transaction(async (tx) => {
     const u = await tx.user.create({

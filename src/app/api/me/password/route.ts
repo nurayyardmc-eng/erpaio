@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/auth/hashPassword";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     return localizedError(req, 400, { tr: "Yeni şifre mevcut şifre ile aynı olamaz.", en: "New password cannot be the same as the current one." });
   }
 
-  const newHash = await bcrypt.hash(body.newPassword, 12);
+  const newHash = await hashPassword(body.newPassword);
   await prisma.user.update({
     where: { id: session.user.id },
     data: { passwordHash: newHash, failedLoginCount: 0, lockedUntil: null },

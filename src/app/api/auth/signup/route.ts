@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/auth/hashPassword";
 import { sha256Hex } from "@/lib/crypto/hash";
 import { generateSecureToken } from "@/lib/crypto/token";
 import { z } from "zod";
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   }
 
   const trialEndsAt = daysFromNow(14);
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await hashPassword(password);
 
   const tenant = await prisma.tenant.create({
     data: {
