@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
+import { assertOwnedChatSession } from "@/lib/chat/assertOwnedChatSession";
 import { z } from "zod";
 
 export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[id]">) {
@@ -53,11 +54,8 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/chat/sessions/
   const body = await parseJsonBody(req, PatchSchema);
   if (body instanceof Response) return body;
 
-  const owned = await prisma.chatSession.findFirst({
-    where: { id, tenantId: session.user.tenantId, userId: session.user.id },
-    select: { id: true },
-  });
-  if (!owned) return jsonError(req, "api.notFound", 404);
+  const denied = await assertOwnedChatSession(req, id, session.user.tenantId, session.user.id);
+  if (denied) return denied;
 
   const data: { title?: string; pinned?: boolean; archivedAt?: Date | null } = {};
   if (typeof body.title === "string") data.title = body.title;
@@ -81,11 +79,8 @@ export async function DELETE(req: Request, ctx: RouteContext<"/api/chat/sessions
 
   const { id } = await ctx.params;
 
-  const owned = await prisma.chatSession.findFirst({
-    where: { id, tenantId: session.user.tenantId, userId: session.user.id },
-    select: { id: true },
-  });
-  if (!owned) return jsonError(req, "api.notFound", 404);
+  const denied = await assertOwnedChatSession(req, id, session.user.tenantId, session.user.id);
+  if (denied) return denied;
 
   await prisma.chatSession.delete({ where: { id } });
   return Response.json({ ok: true });
