@@ -269,6 +269,33 @@ export function internalServerError(req: Request, err: unknown): Response {
 }
 
 /**
+ * Common 400 response for SQLValidationError catches.
+ *
+ * Track LLLLLLLLLLLL — chat/route + chat/run-sql catch blocklarinda
+ * IDENTIK if-block:
+ *   if (err.name === "SQLValidationError") {
+ *     return Response.json({ error: err.message }, { status: 400 });
+ *   }
+ * chat/route ekstra `sql` field ekliyor (kullanici neyi yolladigini
+ * gormesi icin); opts.sql ile optional gecti.
+ *
+ * err.message buradan kullaniciya gosteriliyor — SQLValidator'in
+ * mesajlari kasitli olarak human-readable + user-input-driven
+ * (whitelist ihlali, blocked pattern vs).
+ */
+export function sqlValidationError(
+  req: Request,
+  err: unknown,
+  opts?: { sql?: string },
+): Response {
+  const message = err instanceof Error ? err.message : String(err);
+  return Response.json(
+    opts?.sql !== undefined ? { error: message, sql: opts.sql } : { error: message },
+    { status: 400 },
+  );
+}
+
+/**
  * Common "Bu soru için chat geçmişinde SQL bulunamadı." 422. Track SSSSSSSSSS.
  * Used by: watchlists/[id]/run, scheduled-reports/[id]/run. Manuel run
  * akışı için: önce chat'te aynı soruyu sorup başarılı bir

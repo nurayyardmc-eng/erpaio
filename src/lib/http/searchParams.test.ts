@@ -20,6 +20,7 @@ import {
   sqlExecutionError,
   savedQueryNotFoundError,
   internalServerError,
+  sqlValidationError,
 } from "./searchParams";
 
 function reqWithLang(lang: "tr" | "en"): Request {
@@ -589,5 +590,51 @@ describe("internalServerError", () => {
     const trBody = (await tr.json()) as { error: string };
     const enBody = (await en.json()) as { error: string };
     expect(trBody.error).not.toBe(enBody.error);
+  });
+});
+
+describe("sqlValidationError", () => {
+  it("returns 400 status", () => {
+    const res = sqlValidationError(reqWithLang("tr"), new Error("blocked"));
+    expect(res.status).toBe(400);
+  });
+
+  it("body has Error.message verbatim (no i18n - validator messages are direct)", async () => {
+    const res = sqlValidationError(reqWithLang("tr"), new Error("DROP forbidden"));
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("DROP forbidden");
+  });
+
+  it("opts.sql included when provided (chat/route variant)", async () => {
+    const res = sqlValidationError(
+      reqWithLang("tr"),
+      new Error("invalid"),
+      { sql: "SELECT * FROM users; DROP" },
+    );
+    const body = (await res.json()) as { error: string; sql: string };
+    expect(body.sql).toBe("SELECT * FROM users; DROP");
+  });
+
+  it("opts.sql omitted when not provided (chat/run-sql variant)", async () => {
+    const res = sqlValidationError(reqWithLang("tr"), new Error("invalid"));
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("sql");
+    expect(body.error).toBe("invalid");
+  });
+
+  it("empty-string sql still included (boundary)", async () => {
+    const res = sqlValidationError(
+      reqWithLang("tr"),
+      new Error("e"),
+      { sql: "" },
+    );
+    const body = (await res.json()) as { sql: string };
+    expect(body.sql).toBe("");
+  });
+
+  it("non-Error err coerces via String()", async () => {
+    const res = sqlValidationError(reqWithLang("tr"), "plain string");
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe("plain string");
   });
 });

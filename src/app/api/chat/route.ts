@@ -22,7 +22,7 @@ import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { internalServerError } from "@/lib/http/searchParams";
+import { internalServerError, sqlValidationError } from "@/lib/http/searchParams";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
 import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect, dialectRules } from "@/lib/ai/dialect";
@@ -266,7 +266,7 @@ ${schema}`;
     }
 
     if (err.name === "SQLValidationError") {
-      return Response.json({ error: err.message, sql }, { status: 400 });
+      return sqlValidationError(req, e, { sql });
     }
     if (err.name === "AIError") {
       Sentry.captureException(e, { tags: { component: "chat", subsystem: "claude" } });

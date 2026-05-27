@@ -11,6 +11,7 @@ import {
   parseJsonBody,
   activeConnectionNotFoundError,
   internalServerError,
+  sqlValidationError,
 } from "@/lib/http/searchParams";
 import { extractColumns } from "@/lib/chat/extractColumns";
 import { ensureChatSession } from "@/lib/chat/ensureChatSession";
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
     log.warn({ err, event: "run_sql_error" }, "Manual SQL failed");
 
     if (err.name === "SQLValidationError") {
-      return Response.json({ error: err.message }, { status: 400 });
+      return sqlValidationError(req, e);
     }
     Sentry.captureException(e, { tags: { component: "chat-run-sql" } });
     return internalServerError(req, e);
