@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { assertCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
@@ -9,6 +8,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/observability/requestId";
 import { runWithConcurrency } from "@/lib/http/concurrency";
 import { errorMessage } from "@/lib/errors/errorMessage";
+import { toPrismaJson } from "@/lib/db/prismaJson";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -117,9 +117,7 @@ export async function GET(req: NextRequest) {
       tenantsFail,
       alertsCreated,
       metadata:
-        failedTenants.length > 0
-          ? (JSON.parse(JSON.stringify({ failedTenants })) as Prisma.InputJsonValue)
-          : null,
+        failedTenants.length > 0 ? toPrismaJson({ failedTenants }) : null,
     });
 
     log.info(

@@ -5,6 +5,7 @@ import { assertOwnedConnection } from "@/lib/db/erpConnection";
 import { validateSQL } from "@/lib/validators/sql";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody, getRequiredIdParam } from "@/lib/http/searchParams";
+import { toPrismaJson } from "@/lib/db/prismaJson";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
 
@@ -74,9 +75,7 @@ export async function POST(req: Request) {
       schedule: body.schedule,
       algorithm: body.algorithm,
       direction: body.direction,
-      configJson: body.configJson
-        ? (JSON.parse(JSON.stringify(body.configJson)) as object)
-        : undefined,
+      configJson: body.configJson ? toPrismaJson(body.configJson) : undefined,
       sql,
     },
     update: {
@@ -86,9 +85,7 @@ export async function POST(req: Request) {
       schedule: body.schedule,
       algorithm: body.algorithm,
       direction: body.direction,
-      configJson: body.configJson
-        ? (JSON.parse(JSON.stringify(body.configJson)) as object)
-        : undefined,
+      configJson: body.configJson ? toPrismaJson(body.configJson) : undefined,
       sql,
       enabled: true,
     },
