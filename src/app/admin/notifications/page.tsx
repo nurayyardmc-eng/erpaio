@@ -5,9 +5,15 @@ import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { formatTimestamp } from "@/lib/format/time";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { formatPercent } from "@/lib/format/percent";
+import {
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_STATUSES,
+  type NotificationChannel,
+  type NotificationStatus,
+} from "@/lib/notifications/types";
 
-type Channel = "whatsapp" | "email" | "push" | "slack" | "teams" | "webhook";
-type Status = "sent" | "failed" | "skipped";
+type Channel = NotificationChannel;
+type Status = NotificationStatus;
 
 interface NotificationRow {
   id: string;
@@ -88,8 +94,8 @@ export default function AdminNotificationsPage() {
     );
   }
 
-  const channels: Channel[] = ["whatsapp", "email", "push", "slack", "teams", "webhook"];
-  const statuses: Status[] = ["sent", "failed", "skipped"];
+  const channels: readonly Channel[] = NOTIFICATION_CHANNELS;
+  const statuses: readonly Status[] = NOTIFICATION_STATUSES;
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>

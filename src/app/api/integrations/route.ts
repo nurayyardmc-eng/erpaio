@@ -7,9 +7,10 @@ import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
+import { INTEGRATION_KINDS } from "@/lib/notifications/types";
 
 const PostSchema = z.object({
-  kind: z.enum(["slack", "teams", "webhook"]),
+  kind: z.enum(INTEGRATION_KINDS),
   endpoint: z.string().url(),
   secret: z.string().min(8).max(128).optional(),
 });

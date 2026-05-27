@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { NOTIFICATION_CHANNELS, NOTIFICATION_STATUSES } from "./types";
+import {
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_STATUSES,
+  INTEGRATION_KINDS,
+} from "./types";
 
 describe("notifications/types constants", () => {
   describe("NOTIFICATION_CHANNELS", () => {
@@ -29,6 +33,25 @@ describe("notifications/types constants", () => {
     it("no duplicates", () => {
       const unique = new Set(NOTIFICATION_CHANNELS);
       expect(unique.size).toBe(NOTIFICATION_CHANNELS.length);
+    });
+  });
+
+  describe("INTEGRATION_KINDS", () => {
+    it("contains exactly 3 third-party integration types", () => {
+      expect(INTEGRATION_KINDS).toEqual(["slack", "teams", "webhook"]);
+    });
+
+    it("is a subset of NOTIFICATION_CHANNELS", () => {
+      for (const k of INTEGRATION_KINDS) {
+        expect(NOTIFICATION_CHANNELS).toContain(k);
+      }
+    });
+
+    it("excludes provider-internal channels (whatsapp/email/push)", () => {
+      const arr: readonly string[] = INTEGRATION_KINDS;
+      expect(arr).not.toContain("whatsapp");
+      expect(arr).not.toContain("email");
+      expect(arr).not.toContain("push");
     });
   });
 

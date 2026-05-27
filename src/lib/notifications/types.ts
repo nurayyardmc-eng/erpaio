@@ -27,3 +27,12 @@ export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
 export const NOTIFICATION_STATUSES = ["sent", "failed", "skipped"] as const;
 export type NotificationStatus = (typeof NOTIFICATION_STATUSES)[number];
+
+/**
+ * Subset: tenant tarafindan configure edilebilen 3rd-party integration
+ * kanallari (whatsapp/email/push provider-internal, slack/teams/webhook
+ * tenant'in kendi endpoint'i). TenantIntegration.kind DB enum'iyla
+ * birebir.
+ */
+export const INTEGRATION_KINDS = ["slack", "teams", "webhook"] as const;
+export type IntegrationKind = (typeof INTEGRATION_KINDS)[number];
