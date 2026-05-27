@@ -20,7 +20,7 @@ import { z } from "zod";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
 import { confidenceBucket } from "@/lib/ai/confidence";
-import { pickDialect } from "@/lib/ai/dialect";
+import { pickDialect, dialectRules } from "@/lib/ai/dialect";
 import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
 import { calculateBillableTokens, isPromptCacheHit } from "@/lib/ai/tokenUsage";
 import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
@@ -111,28 +111,7 @@ export async function POST(req: Request) {
       // Dialect-aware: Postgres / MS SQL / MySQL syntax differences (DDDDD)
       const { name: dialectName, isPostgres } = pickDialect(conn.erpType, conn.erpProfile);
 
-      const dialectRules = isPostgres
-        ? `- String literal: '...' (NVARCHAR yok). Türkçe karakterler doğrudan UTF-8.
-- Tarih: NOW(), CURRENT_DATE, INTERVAL '1 day', date_trunc('month', col).
-- LIMIT n (TOP n yok).
-- Identifier quoting: "tabloAdi" (köşeli parantez yok).
-- TÜRKÇE TEXT KARŞILAŞTIRMA — KRİTİK:
-  * Şehir/ad/ürün adı/kategori gibi text alanlarda ASLA "=" kullanma.
-  * Her zaman ILIKE ile wildcard pattern: WHERE m.sehir ILIKE '%istanbul%'
-  * Türkçe i/İ/I/ı karakterleri arasında karışıklık olabilir, ILIKE bunu önler (case-insensitive).
-  * Yazım hatası toleransı için kullanıcı sorgusundaki kelimenin EN AYIRT EDİCİ KÖKÜNÜ % ile çevrele.
-    Örn: "istanbul" → '%stanbul%' (i/İ farkı önemsiz), "Ankara" → '%nkara%', "İzmir" → '%zmir%'.
-  * Noktasız ASCII transliterasyonu kullan (İstanbul/Istanbul/istambul hepsi '%stanbul%' ile yakalanır).
-  * Sadece kesin eşleşme istenmediyse her text WHERE'de bu desen.`
-        : `- Türkçe karakterler için NVARCHAR + N'...' prefix.
-- Tarih: GETDATE(), DATEADD(), CAST(... AS DATE).
-- TOP n (LIMIT yok).
-- Identifier: [tabloAdi] (köşeli parantez).
-- TÜRKÇE TEXT KARŞILAŞTIRMA — KRİTİK:
-  * ASLA "=" kullanma text alanlarda.
-  * LOWER(col) LIKE LOWER(N'%kök%') kullan.
-  * Yazım hatası + i/İ toleransı için kelimenin ayırt edici kökünü % ile çevrele.
-    Örn: "istanbul" → LIKE LOWER(N'%stanbul%'), "Ankara" → LIKE LOWER(N'%nkara%').`;
+      const dialectRulesText = dialectRules(isPostgres);
 
       const profileSpecificRules = erpProfile?.slug === "nebim_v3"
         ? "- IptalDurumu = 0 her zaman filtrele (varsa)."
@@ -157,7 +136,7 @@ CONFIDENCE REHBERİ:
 KESİN KURALLAR:
 - Sadece SELECT veya WITH — DROP/DELETE/UPDATE/INSERT/ALTER/EXEC/MERGE YASAK.
 - SADECE aşağıdaki şemada listelenen tablo ve kolonları kullan. Şemada olmayan kolon/tablo asla varsayma.
-${dialectRules}
+${dialectRulesText}
 ${profileSpecificRules}
 - ERP profiline ÖNCELİK VER — şema listesi referans, profile semantic.
 

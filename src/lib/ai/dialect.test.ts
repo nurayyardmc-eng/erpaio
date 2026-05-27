@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pickDialect } from "./dialect";
+import { pickDialect, dialectRules } from "./dialect";
 
 describe("ai/dialect/pickDialect", () => {
   describe("PostgreSQL branch", () => {
@@ -88,5 +88,51 @@ describe("ai/dialect/pickDialect", () => {
       expect(pickDialect(null, null).name).toBe("SQL Server");
       expect(pickDialect(undefined, undefined).name).toBe("SQL Server");
     });
+  });
+});
+
+describe("ai/dialect/dialectRules", () => {
+  it("isPostgres=true returns Postgres-specific rules", () => {
+    const r = dialectRules(true);
+    expect(r).toMatch(/ILIKE/);
+    expect(r).toMatch(/NOW\(\)/);
+    expect(r).toMatch(/INTERVAL/);
+    expect(r).toMatch(/date_trunc/);
+    expect(r).not.toMatch(/GETDATE/);
+    expect(r).not.toMatch(/N'%/);
+  });
+
+  it("isPostgres=false returns MS SQL Server-specific rules", () => {
+    const r = dialectRules(false);
+    expect(r).toMatch(/GETDATE/);
+    expect(r).toMatch(/TOP n/);
+    expect(r).toMatch(/LOWER\(col\)/);
+    expect(r).toMatch(/N'%/);
+    expect(r).not.toMatch(/ILIKE/);
+    expect(r).not.toMatch(/date_trunc/);
+  });
+
+  it("both branches include Türkçe text comparison guidance (Turkish i/İ)", () => {
+    expect(dialectRules(true)).toMatch(/TÜRKÇE TEXT KARŞILAŞTIRMA/);
+    expect(dialectRules(false)).toMatch(/TÜRKÇE TEXT KARŞILAŞTIRMA/);
+  });
+
+  it("Postgres branch uses double-quoted identifier", () => {
+    expect(dialectRules(true)).toMatch(/"tabloAdi"/);
+  });
+
+  it("MS SQL branch uses bracketed identifier", () => {
+    expect(dialectRules(false)).toMatch(/\[tabloAdi\]/);
+  });
+
+  it("returns non-empty stable string (idempotent)", () => {
+    expect(dialectRules(true)).toBe(dialectRules(true));
+    expect(dialectRules(false)).toBe(dialectRules(false));
+    expect(dialectRules(true).length).toBeGreaterThan(100);
+    expect(dialectRules(false).length).toBeGreaterThan(100);
+  });
+
+  it("two branches return different strings", () => {
+    expect(dialectRules(true)).not.toBe(dialectRules(false));
   });
 });
