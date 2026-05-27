@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { lookupCache, recordOutcome, recordSuccess } from "@/lib/cache/queryCache";
 import { extractColumns } from "@/lib/chat/extractColumns";
 import { ensureChatSession } from "@/lib/chat/ensureChatSession";
+import { persistChatExchange } from "@/lib/chat/persistChatExchange";
 import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
@@ -226,13 +227,7 @@ ${schema}`;
     cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql });
 
     const sid = await ensureChatSession(sessionId, tenantId, session.user.id);
-    const created = await prisma.chatMessage.createMany({
-      data: [
-        { sessionId: sid, role: "user", content: question },
-        { sessionId: sid, role: "assistant", content: sql, sqlQuery: sql, rowCount: rows.length, latencyMs, success: true },
-      ],
-    });
-    void created;
+    await persistChatExchange({ sessionId: sid, question, sql, rowCount: rows.length, latencyMs });
 
     const assistantMsg = await prisma.chatMessage.findFirst({
       where: { sessionId: sid, role: "assistant" },
