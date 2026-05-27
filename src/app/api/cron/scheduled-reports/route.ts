@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { assertCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
+import { deriveCronFinalStatus } from "@/lib/cron/finalStatus";
 import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const finalStatus = failed === 0 ? "SUCCESS" : executed > 0 ? "PARTIAL_FAILURE" : "FAILED";
+  const finalStatus = deriveCronFinalStatus(failed, executed);
   await finalizeCronRun(cronRunId, finalStatus, {
     tenantsTotal: reports.length,
     tenantsOk: executed,

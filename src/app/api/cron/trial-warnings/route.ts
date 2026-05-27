@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
 import { assertCronAuth } from "@/lib/cron/auth";
 import { acquireCronLock, finalizeCronRun } from "@/lib/cron/lock";
+import { deriveCronFinalStatus } from "@/lib/cron/finalStatus";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/observability/requestId";
@@ -101,7 +102,7 @@ export async function GET(req: NextRequest) {
     "Trial warnings cron complete",
   );
 
-  const finalStatus = errors === 0 ? "SUCCESS" : sent > 0 ? "PARTIAL_FAILURE" : "FAILED";
+  const finalStatus = deriveCronFinalStatus(errors, sent);
   await finalizeCronRun(cronRunId, finalStatus, {
     tenantsTotal: tenants.length,
     tenantsOk: sent + skipped,
