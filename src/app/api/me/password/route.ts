@@ -12,6 +12,7 @@ import {
   userNotFoundError,
   incorrectPasswordError,
 } from "@/lib/http/searchParams";
+import { verifyUserPassword } from "@/lib/auth/verifyUserPassword";
 
 const BodySchema = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -28,14 +29,9 @@ export async function POST(req: Request) {
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { passwordHash: true },
-  });
-  if (!user) return userNotFoundError(req);
-
-  const valid = await bcrypt.compare(body.currentPassword, user.passwordHash);
-  if (!valid) return incorrectPasswordError(req);
+  const verify = await verifyUserPassword(session.user.id, body.currentPassword);
+  if (verify === "not_found") return userNotFoundError(req);
+  if (verify === "wrong") return incorrectPasswordError(req);
 
   if (body.currentPassword === body.newPassword) {
     return localizedError(req, 400, { tr: "Yeni şifre mevcut şifre ile aynı olamaz.", en: "New password cannot be the same as the current one." });

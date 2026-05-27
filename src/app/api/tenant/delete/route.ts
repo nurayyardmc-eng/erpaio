@@ -1,6 +1,6 @@
 import { z } from "zod";
-import bcrypt from "bcryptjs";
 import { getAuth } from "@/lib/auth/dual";
+import { verifyUserPassword } from "@/lib/auth/verifyUserPassword";
 import { userNotFoundError } from "@/lib/http/searchParams";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
@@ -27,14 +27,9 @@ export async function POST(req: Request) {
     return localizedError(req, 400, { tr: "Onay metni 'HESABIMI SİL' olmalı.", en: "Confirmation must be 'HESABIMI SİL'." });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { passwordHash: true },
-  });
-  if (!user) return userNotFoundError(req);
-
-  const valid = await bcrypt.compare(body.data.password, user.passwordHash);
-  if (!valid) return localizedError(req, 401, { tr: "Şifre yanlış.", en: "Incorrect password." });
+  const verify = await verifyUserPassword(session.user.id, body.data.password);
+  if (verify === "not_found") return userNotFoundError(req);
+  if (verify === "wrong") return localizedError(req, 401, { tr: "Şifre yanlış.", en: "Incorrect password." });
 
   const log = childLogger({ component: "tenant-delete", tenantId: session.user.tenantId });
   log.warn({ userId: session.user.id }, "Tenant deletion initiated (KVKK md. 7)");
