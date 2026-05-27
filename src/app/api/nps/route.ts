@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { requireSysAdmin } from "@/lib/auth/sysadmin";
 import { prisma } from "@/lib/db/prisma";
+import { aggregateNps, calcNps, npsBucket } from "@/lib/nps/calcNps";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError } from "@/lib/i18n/server";
@@ -56,11 +57,9 @@ export async function GET(req: Request) {
     },
   });
 
-  const promoters = responses.filter((r) => r.score >= 9).length;
-  const passives = responses.filter((r) => r.score >= 7 && r.score <= 8).length;
-  const detractors = responses.filter((r) => r.score <= 6).length;
-  const total = responses.length;
-  const nps = total > 0 ? Math.round(((promoters - detractors) / total) * 100) : 0;
+  const { promoters, passives, detractors, total, nps } = aggregateNps(
+    responses.map((r) => r.score),
+  );
 
   // Tenant breakdown — Track VVVV. /admin/nps sayfası hangi tenant'lar
   // unhappy görmek istiyor. tenantId + name + per-tenant aggregate.
@@ -70,8 +69,9 @@ export async function GET(req: Request) {
     if (!byTenant[key]) {
       byTenant[key] = { name: r.tenant.name, promoters: 0, passives: 0, detractors: 0, total: 0 };
     }
-    if (r.score >= 9) byTenant[key].promoters++;
-    else if (r.score >= 7) byTenant[key].passives++;
+    const bucket = npsBucket(r.score);
+    if (bucket === "promoter") byTenant[key].promoters++;
+    else if (bucket === "passive") byTenant[key].passives++;
     else byTenant[key].detractors++;
     byTenant[key].total++;
   }
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
       tenantId,
       name: agg.name,
       total: agg.total,
-      nps: agg.total > 0 ? Math.round(((agg.promoters - agg.detractors) / agg.total) * 100) : 0,
+      nps: calcNps(agg.promoters, agg.detractors, agg.total),
       promoters: agg.promoters,
       passives: agg.passives,
       detractors: agg.detractors,

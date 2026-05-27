@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { aggregateNps } from "@/lib/nps/calcNps";
 
 /**
  * Tenant-scoped NPS aggregate — Track UUUU. Önceden sysadmin global aggregate
@@ -38,11 +39,9 @@ export async function GET(req: Request) {
     },
   });
 
-  const promoters = responses.filter((r) => r.score >= 9).length;
-  const passives = responses.filter((r) => r.score >= 7 && r.score <= 8).length;
-  const detractors = responses.filter((r) => r.score <= 6).length;
-  const total = responses.length;
-  const nps = total > 0 ? Math.round(((promoters - detractors) / total) * 100) : 0;
+  const { promoters, passives, detractors, total, nps } = aggregateNps(
+    responses.map((r) => r.score),
+  );
 
   return Response.json({
     nps,
