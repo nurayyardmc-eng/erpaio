@@ -4,6 +4,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { generateSecret, provisioningUri, verifyCode } from "@/lib/auth/totp";
 import { hasFeature } from "@/lib/plans";
+import { getTenantPlan } from "@/lib/db/getTenantPlan";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { RATE_LIMITS, enforceUserRateLimit } from "@/lib/rateLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
@@ -16,11 +17,8 @@ export async function POST(req: Request) {
   const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.MFA_SETUP);
   if (limited) return limited;
 
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: session.user.tenantId },
-    select: { plan: true },
-  });
-  if (!tenant || !hasFeature(tenant.plan, "mfa")) {
+  const plan = await getTenantPlan(session.user.tenantId);
+  if (!plan || !hasFeature(plan, "mfa")) {
     return localizedError(req, 403, {
       tr: "MFA yalnızca Pro+ planlarda mevcut.",
       en: "MFA is only available on Pro+ plans.",

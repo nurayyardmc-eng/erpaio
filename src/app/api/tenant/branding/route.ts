@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { hasFeature } from "@/lib/plans";
+import { getTenantPlan } from "@/lib/db/getTenantPlan";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
@@ -42,11 +43,8 @@ export async function PATCH(req: Request) {
   const denied = requireOwnerOrAdmin(req, session.user.role);
   if (denied) return denied;
 
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: session.user.tenantId },
-    select: { plan: true },
-  });
-  if (!tenant || !hasFeature(tenant.plan, "white_label")) {
+  const plan = await getTenantPlan(session.user.tenantId);
+  if (!plan || !hasFeature(plan, "white_label")) {
     return localizedError(req, 403, { tr: "White-label yalnızca Enterprise planda.", en: "White-label is only available on the Enterprise plan." });
   }
 
