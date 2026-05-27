@@ -1,11 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
 import { getAuth } from "@/lib/auth/dual";
-import { prisma } from "@/lib/db/prisma";
 import { lookupCache, recordSuccess } from "@/lib/cache/queryCache";
 import { extractColumns } from "@/lib/chat/extractColumns";
 import { ensureChatSession } from "@/lib/chat/ensureChatSession";
 import { persistChatExchange } from "@/lib/chat/persistChatExchange";
 import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
+import { findActiveErpConnectionForChat } from "@/lib/db/findActiveErpConnection";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
@@ -60,10 +60,7 @@ export async function POST(req: Request) {
     return invalidQuestionError(req);
   }
 
-  const conn = await prisma.erpConnection.findFirst({
-    where: { id: connectionId, tenantId, status: "active" },
-    select: { id: true, erpType: true, erpProfile: true },
-  });
+  const conn = await findActiveErpConnectionForChat(connectionId, tenantId);
   if (!conn) return activeConnectionNotFoundError(req);
 
   const log = childLogger({ component: "chat-stream", tenantId, userId: session.user.id });
