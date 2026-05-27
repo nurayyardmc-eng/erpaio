@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { rateLimit, rateLimited429, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, totalAnthropicTokens, budgetExhaustedError } from "@/lib/budget";
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
   const limit = await rateLimit(session.user.tenantId, RATE_LIMITS.CHAT_FOLLOW_UPS);
-  if (!limit.success) return jsonError(req, "api.rateLimited", 429);
+  if (!limit.success) return rateLimited429(req, limit);
 
   const budget = await checkAndConsume(session.user.tenantId, 1500);
   if (!budget.ok) return budgetExhaustedError(req, budget);

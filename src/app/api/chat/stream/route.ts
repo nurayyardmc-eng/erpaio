@@ -7,7 +7,7 @@ import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
 import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
-import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { rateLimit, rateLimited429, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import {
   parseJsonBody,
@@ -46,9 +46,7 @@ export async function POST(req: Request) {
   const tenantId = session.user.tenantId;
 
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
-  if (!limit.success) {
-    return jsonError(req, "api.rateLimited", 429);
-  }
+  if (!limit.success) return rateLimited429(req, limit);
 
   const budget = await checkAndConsume(tenantId, 5000);
   if (!budget.ok) {
