@@ -9,6 +9,7 @@ import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody, activeConnectionNotFoundError } from "@/lib/http/searchParams";
 import { extractColumns } from "@/lib/chat/extractColumns";
+import { ensureChatSession } from "@/lib/chat/ensureChatSession";
 import { jsonError, serverMessages } from "@/lib/i18n/server";
 import { z } from "zod";
 
@@ -50,13 +51,7 @@ export async function POST(req: Request) {
     const columns = extractColumns(rows);
     const latencyMs = Date.now() - t0;
 
-    let sid = sessionId;
-    if (!sid) {
-      const s = await prisma.chatSession.create({
-        data: { tenantId, userId: session.user.id, title: "Manuel SQL" },
-      });
-      sid = s.id;
-    }
+    const sid = await ensureChatSession(sessionId, tenantId, session.user.id, "Manuel SQL");
     const created = await prisma.chatMessage.create({
       data: {
         sessionId: sid,

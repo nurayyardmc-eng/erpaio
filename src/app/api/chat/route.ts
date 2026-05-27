@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { lookupCache, recordOutcome, recordSuccess } from "@/lib/cache/queryCache";
 import { extractColumns } from "@/lib/chat/extractColumns";
+import { ensureChatSession } from "@/lib/chat/ensureChatSession";
 import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
 import { validateSQL, detectInjection } from "@/lib/validators/sql";
 import { queryERP } from "@/lib/db/connector";
@@ -224,13 +225,7 @@ ${schema}`;
 
     cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql });
 
-    let sid = sessionId;
-    if (!sid) {
-      const s = await prisma.chatSession.create({
-        data: { tenantId, userId: session.user.id },
-      });
-      sid = s.id;
-    }
+    const sid = await ensureChatSession(sessionId, tenantId, session.user.id);
     const created = await prisma.chatMessage.createMany({
       data: [
         { sessionId: sid, role: "user", content: question },
