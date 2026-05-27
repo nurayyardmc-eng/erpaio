@@ -2,6 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
+import { type CronStatus } from "@/lib/cron/finalStatus";
 
 /**
  * Tenant cron health — Track DD. Crons platform-wide global çalışır
@@ -18,7 +19,7 @@ type JobName = (typeof TENANT_FACING_JOBS)[number];
 
 interface JobHealth {
   jobName: JobName;
-  status: "SUCCESS" | "PARTIAL_FAILURE" | "FAILED" | "RUNNING" | "NEVER";
+  status: CronStatus | "NEVER";
   finishedAt: string | null;
   alertsCreated: number;
 }
