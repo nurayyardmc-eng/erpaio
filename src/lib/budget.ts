@@ -76,12 +76,28 @@ export function totalAnthropicTokens(usage: {
  *     tr: budget.reason, en: budget.reason
  *   });
  *
- * chat/route.ts (main chat) ekstra remainingTokens field istiyor —
- * bu helper'i kullanmiyor, intentional.
+ * Track WWWWWWWWWW — chat/route.ts (main chat) UI'a remainingTokens
+ * gosteriyordu, helper'i kullanmiyordu. budget.remaining tanimliysa
+ * response body'sine `remainingTokens` field'i eklenir; tanimsizsa
+ * sadece error doner (eski 3 chat sub-route davranisi).
+ *
+ * NOT: reason TR-string verilir; localizedError ile sarmaliyoruz fakat
+ * her iki locale icin de ayni metin — TR fallback (i18n debt, ileri
+ * sprint'te ele alinacak).
  */
 import { localizedError } from "@/lib/i18n/server";
-export function budgetExhaustedError(req: Request, budget: { reason: string }): Response {
-  return localizedError(req, 402, { tr: budget.reason, en: budget.reason });
+export function budgetExhaustedError(
+  req: Request,
+  budget: { reason: string; remaining?: number },
+): Response {
+  if (budget.remaining === undefined) {
+    return localizedError(req, 402, { tr: budget.reason, en: budget.reason });
+  }
+  // localizedError ile ayni shape ama remainingTokens eklenmis hali.
+  return Response.json(
+    { error: budget.reason, remainingTokens: budget.remaining },
+    { status: 402 },
+  );
 }
 
 export async function recordUsage(tenantId: string, tokens: number): Promise<void> {

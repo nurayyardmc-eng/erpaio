@@ -14,7 +14,7 @@ import {
   activeConnectionNotFoundError,
   invalidQuestionError,
 } from "@/lib/http/searchParams";
-import { checkAndConsume, recordUsage } from "@/lib/budget";
+import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError, localizedError, serverMessages } from "@/lib/i18n/server";
@@ -68,12 +68,7 @@ export async function POST(req: Request) {
   if (!limit.success) return rateLimited429(req, limit, { includeRateLimitInfo: true });
 
   const budget = await checkAndConsume(tenantId, 5000);
-  if (!budget.ok) {
-    return Response.json(
-      { error: budget.reason, remainingTokens: budget.remaining },
-      { status: 402 },
-    );
-  }
+  if (!budget.ok) return budgetExhaustedError(req, budget);
 
   if (detectInjection(question)) return invalidQuestionError(req);
 

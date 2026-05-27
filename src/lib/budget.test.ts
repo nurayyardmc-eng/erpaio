@@ -119,4 +119,31 @@ describe("budgetExhaustedError", () => {
     const en = budgetExhaustedError(reqWithLang("en"), { reason: "X" });
     expect(await tr.json()).toEqual(await en.json());
   });
+
+  it("includes remainingTokens in body when budget.remaining provided", async () => {
+    const res = budgetExhaustedError(reqWithLang("tr"), {
+      reason: "Bütçe doldu",
+      remaining: 1234,
+    });
+    expect(res.status).toBe(402);
+    const body = (await res.json()) as { error: string; remainingTokens?: number };
+    expect(body.error).toBe("Bütçe doldu");
+    expect(body.remainingTokens).toBe(1234);
+  });
+
+  it("omits remainingTokens when budget.remaining is undefined", async () => {
+    const res = budgetExhaustedError(reqWithLang("tr"), { reason: "X" });
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("remainingTokens");
+    expect(body.error).toBe("X");
+  });
+
+  it("remaining: 0 still included (boundary, not undefined)", async () => {
+    const res = budgetExhaustedError(reqWithLang("tr"), {
+      reason: "X",
+      remaining: 0,
+    });
+    const body = (await res.json()) as { remainingTokens: number };
+    expect(body.remainingTokens).toBe(0);
+  });
 });
