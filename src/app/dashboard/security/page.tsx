@@ -4,6 +4,7 @@ import { showToast } from "@/components/Toaster";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import { formatDate, formatTimestamp } from "@/lib/format/time";
+import { patchJson } from "@/lib/http/clientFetch";
 
 interface SetupResp { secret: string; qr: string; uri: string }
 interface Session {
@@ -163,11 +164,7 @@ export default function SecurityPage() {
     setSessions((prev) => prev.map((p) => (p.id === s.id ? { ...p, name: trimmed } : p)));
     setRenamingId(null);
     try {
-      const res = await fetch("/api/me/sessions", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tokenId: s.id, name: trimmed }),
-      });
+      const res = await patchJson("/api/me/sessions", { tokenId: s.id, name: trimmed });
       if (!res.ok) {
         // Revert
         setSessions((prev) => prev.map((p) => (p.id === s.id ? { ...p, name: s.name } : p)));
@@ -198,11 +195,7 @@ export default function SecurityPage() {
   const verify = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("/api/auth/mfa/setup", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    });
+    const res = await patchJson("/api/auth/mfa/setup", { code });
     const data = await res.json();
     if (!res.ok) {
       setStatus({ kind: "err", msg: data.error || t.security.setupCodeInvalid });

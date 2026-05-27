@@ -7,6 +7,7 @@ import { showToast } from "@/components/Toaster";
 import { showNpsPrompt } from "@/components/NpsPrompt";
 import { confirmDialog } from "@/components/Confirm";
 import { useI18n } from "@/lib/i18n/context";
+import { postJson, patchJson } from "@/lib/http/clientFetch";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Dictionary, type Locale } from "@/lib/i18n/dictionary";
 import { colors } from "@/lib/theme";
 import { formatDate, formatRelativeTime, formatTokens } from "@/lib/format/time";
@@ -67,13 +68,9 @@ export default function SettingsPage() {
   const saveProfile = async () => {
     setProfileSaving(true);
     try {
-      const res = await fetch("/api/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: profile.name || null,
-          avatarBase64: profile.avatarBase64,
-        }),
+      const res = await patchJson("/api/me", {
+        name: profile.name || null,
+        avatarBase64: profile.avatarBase64,
       });
       if (res.ok) {
         showToast(t.settings.profileSaved, "success");
@@ -108,17 +105,13 @@ export default function SettingsPage() {
     setSaving(true);
     setStatus(null);
     try {
-      const res = await fetch("/api/tenant", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: tenant.name,
-          whatsappTo: tenant.whatsappTo || null,
-          whatsappEnabled: tenant.whatsappEnabled,
-          emailTo: tenant.emailTo || null,
-          emailEnabled: tenant.emailEnabled,
-          alertMinSeverity: tenant.alertMinSeverity,
-        }),
+      const res = await patchJson("/api/tenant", {
+        name: tenant.name,
+        whatsappTo: tenant.whatsappTo || null,
+        whatsappEnabled: tenant.whatsappEnabled,
+        emailTo: tenant.emailTo || null,
+        emailEnabled: tenant.emailEnabled,
+        alertMinSeverity: tenant.alertMinSeverity,
       });
       const data = await res.json();
       if (res.ok) {
@@ -145,10 +138,9 @@ export default function SettingsPage() {
     setPwdSaving(true);
     setPwdStatus(null);
     try {
-      const res = await fetch("/api/me/password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: pwd.current, newPassword: pwd.next }),
+      const res = await postJson("/api/me/password", {
+        currentPassword: pwd.current,
+        newPassword: pwd.next,
       });
       const data = await res.json();
       if (res.ok) {
@@ -824,11 +816,7 @@ function DangerZone({ t }: { t: Dictionary }) {
 
     setDeleting(true);
     try {
-      const res = await fetch("/api/tenant/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, confirmation }),
-      });
+      const res = await postJson("/api/tenant/delete", { password, confirmation });
       const data = await res.json();
       if (res.ok) {
         showToast(t.settings.deleteAccountSuccess, "success");
@@ -992,10 +980,9 @@ function EmailChangeRow({ currentEmail }: { currentEmail: string }) {
     }
     setSubmitting(true);
     try {
-      const res = await fetch("/api/me/email/request-change", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newEmail: newEmail.trim(), currentPassword: password }),
+      const res = await postJson("/api/me/email/request-change", {
+        newEmail: newEmail.trim(),
+        currentPassword: password,
       });
       const data = await res.json();
       if (res.ok) {
@@ -1140,11 +1127,7 @@ function NotificationPrefsSection({ t }: { t: Dictionary }) {
     setPrefs(optimistic);
     setSaving(key);
     try {
-      const res = await fetch("/api/me/notification-prefs", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [key]: next }),
-      });
+      const res = await patchJson("/api/me/notification-prefs", { [key]: next });
       if (!res.ok) {
         setPrefs(prefs); // revert
         showToast(t.settings.notifPrefsSaveError, "error");

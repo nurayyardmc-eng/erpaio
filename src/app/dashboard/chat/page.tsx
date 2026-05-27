@@ -28,6 +28,7 @@ import MiniChart from "@/components/MiniChart";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { useI18n } from "@/lib/i18n/context";
+import { postJson, patchJson } from "@/lib/http/clientFetch";
 import { sliceHighlight } from "@/lib/chat/highlight";
 
 interface Connection {
@@ -196,11 +197,7 @@ export default function ChatPage() {
 
   const togglePin = async (id: string, pinned: boolean) => {
     setOpenMenu(null);
-    const r = await fetch(`/api/chat/sessions/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pinned: !pinned }),
-    });
+    const r = await patchJson(`/api/chat/sessions/${id}`, { pinned: !pinned });
     if (r.ok) {
       showToast(pinned ? t.chat.pinToastOff : t.chat.pinToastOn);
       refreshHistory();
@@ -211,11 +208,7 @@ export default function ChatPage() {
 
   const toggleArchive = async (id: string, isArchived: boolean) => {
     setOpenMenu(null);
-    const r = await fetch(`/api/chat/sessions/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ archived: !isArchived }),
-    });
+    const r = await patchJson(`/api/chat/sessions/${id}`, { archived: !isArchived });
     if (r.ok) {
       showToast(isArchived ? t.chat.archiveToastOff : t.chat.archiveToastOn);
       if (sessionId === id) {
@@ -302,11 +295,7 @@ export default function ChatPage() {
       ),
     );
     try {
-      await fetch("/api/chat/feedback", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messageId, feedback: value }),
-      });
+      await patchJson("/api/chat/feedback", { messageId, feedback: value });
     } catch {
       setMessages((prev) =>
         prev.map((m, i) =>
@@ -342,15 +331,11 @@ export default function ChatPage() {
       ),
     );
     try {
-      const res = await fetch("/api/chat/explain", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: msg.question,
-          sql: msg.sql,
-          topRows: msg.results.slice(0, 10),
-          totalRows: msg.total,
-        }),
+      const res = await postJson("/api/chat/explain", {
+        question: msg.question,
+        sql: msg.sql,
+        topRows: msg.results.slice(0, 10),
+        totalRows: msg.total,
       });
       const data = await res.json();
       setMessages((prev) =>
@@ -406,11 +391,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, { role: "assistant", status: "loading" }]);
 
     try {
-      const res = await fetch("/api/chat/run-sql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sql, connectionId: selectedConn, sessionId }),
-      });
+      const res = await postJson("/api/chat/run-sql", { sql, connectionId: selectedConn, sessionId });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       if (data.sessionId) setSessionId(data.sessionId);
@@ -446,10 +427,11 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, { role: "assistant", status: "loading" }]);
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, connectionId: selectedConn, sessionId: sessionId ?? undefined, forceRun }),
+      const res = await postJson("/api/chat", {
+        question,
+        connectionId: selectedConn,
+        sessionId: sessionId ?? undefined,
+        forceRun,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

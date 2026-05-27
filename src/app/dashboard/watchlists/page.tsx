@@ -9,7 +9,7 @@ import { showToast } from "@/components/Toaster";
 import { computeSparkline } from "@/lib/watchlist/sparkline";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { exportFilename } from "@/lib/format/exportFilename";
-import { postJson } from "@/lib/http/clientFetch";
+import { postJson, patchJson } from "@/lib/http/clientFetch";
 
 interface Watchlist {
   id: string;
@@ -171,17 +171,13 @@ export default function WatchlistsPage() {
   const saveEdit = async (id: string) => {
     setEditSaving(true);
     try {
-      const res = await fetch(`/api/watchlists/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editForm.name,
-          question: editForm.question,
-          thresholdOp: editForm.thresholdOp,
-          thresholdVal: Number(editForm.thresholdVal),
-          // Boş string → null (email kaldır), dolu → email (PATCH şeması validate eder).
-          emailTo: editForm.emailTo ? editForm.emailTo : null,
-        }),
+      const res = await patchJson(`/api/watchlists/${encodeURIComponent(id)}`, {
+        name: editForm.name,
+        question: editForm.question,
+        thresholdOp: editForm.thresholdOp,
+        thresholdVal: Number(editForm.thresholdVal),
+        // Boş string → null (email kaldır), dolu → email (PATCH şeması validate eder).
+        emailTo: editForm.emailTo ? editForm.emailTo : null,
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -222,11 +218,7 @@ export default function WatchlistsPage() {
     // Optimistic update
     setWatchlists((prev) => prev.map((x) => (x.id === w.id ? { ...x, enabled: next } : x)));
     try {
-      const res = await fetch(`/api/watchlists/${encodeURIComponent(w.id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled: next }),
-      });
+      const res = await patchJson(`/api/watchlists/${encodeURIComponent(w.id)}`, { enabled: next });
       if (!res.ok) {
         // Revert on failure
         setWatchlists((prev) => prev.map((x) => (x.id === w.id ? { ...x, enabled: w.enabled } : x)));
