@@ -6,9 +6,10 @@ import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { z } from "zod";
+import { ERP_TYPES } from "@/lib/db/erpTypes";
 
 const Schema = z.object({
-  erpType: z.enum(["nebim_v3", "sap", "dynamics365", "postgres"]),
+  erpType: z.enum(ERP_TYPES),
   host: z.string().min(1),
   port: z.number().default(1433),
   dbName: z.string().min(1),
