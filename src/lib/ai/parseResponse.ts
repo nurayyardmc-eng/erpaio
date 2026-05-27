@@ -12,6 +12,8 @@
  *  - Confidence clamped to [0, 1]; out-of-range values default to 0.5
  *    so a misbehaving model can't bypass the confidence gate.
  */
+import { stripCodeFences } from "./stripCodeFences";
+
 export interface AiResponse {
   sql: string;
   confidence: number;
@@ -20,10 +22,7 @@ export interface AiResponse {
 }
 
 export function parseAiResponse(raw: string): AiResponse {
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim();
+  const cleaned = stripCodeFences(raw);
 
   try {
     const parsed = JSON.parse(cleaned) as Partial<AiResponse>;

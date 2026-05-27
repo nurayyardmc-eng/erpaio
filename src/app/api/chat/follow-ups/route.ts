@@ -7,6 +7,7 @@ import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, totalAnthropicTokens, budgetExhaustedError } from "@/lib/budget";
 import { MODEL_HAIKU, anthropicClient } from "@/lib/ai/models";
 import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
+import { stripCodeFences } from "@/lib/ai/stripCodeFences";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
 
     let suggestions: string[] = [];
     try {
-      const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+      const cleaned = stripCodeFences(raw);
       const parsed = JSON.parse(cleaned);
       if (Array.isArray(parsed)) suggestions = parsed.filter((x): x is string => typeof x === "string").slice(0, 3);
     } catch {
