@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { filterCommands, groupByCategory } from "@/lib/command-palette/filter";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Cmd {
   id: string;
@@ -31,28 +32,31 @@ interface Cmd {
 }
 
 export default function CommandPalette() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  const goGroup = t.commandPalette.groupGo;
+  const actionGroup = t.commandPalette.groupAction;
   const commands: Cmd[] = [
-    { id: "chat", label: "Sohbet", Icon: MessageSquare, group: "Git", action: () => router.push("/dashboard/chat") },
-    { id: "overview", label: "Anlık Metrikler", Icon: BarChart3, group: "Git", action: () => router.push("/dashboard/overview") },
-    { id: "saved", label: "Kayıtlı Sorgular", Icon: Bookmark, group: "Git", action: () => router.push("/dashboard/saved") },
-    { id: "alerts", label: "Bildirimler", Icon: Bell, group: "Git", action: () => router.push("/dashboard/alerts") },
-    { id: "connections", label: "ERP Bağlantıları", Icon: Database, group: "Git", action: () => router.push("/dashboard/connections") },
-    { id: "annotations", label: "Şema Açıklamaları", Icon: FileText, group: "Git", action: () => router.push("/dashboard/annotations") },
-    { id: "watchlists", label: "Watchlists", Icon: Eye, group: "Git", action: () => router.push("/dashboard/watchlists") },
-    { id: "insights", label: "Şema Analizi", Icon: TrendingUp, group: "Git", action: () => router.push("/dashboard/insights") },
-    { id: "reports", label: "Planlı Raporlar", Icon: Send, group: "Git", action: () => router.push("/dashboard/scheduled-reports") },
-    { id: "audit", label: "Aktivite Logu", Icon: ScrollText, group: "Git", action: () => router.push("/dashboard/audit") },
-    { id: "team", label: "Takım", Icon: Users, group: "Git", action: () => router.push("/dashboard/team") },
-    { id: "security", label: "Güvenlik", Icon: Shield, group: "Git", action: () => router.push("/dashboard/security") },
-    { id: "settings", label: "Ayarlar", Icon: SettingsIcon, group: "Git", action: () => router.push("/dashboard/settings") },
-    { id: "new-chat", label: "Yeni Sohbet Başlat", Icon: Plus, group: "Aksiyon", action: () => { router.push("/dashboard/chat"); window.location.reload(); } },
-    { id: "logout", label: "Çıkış Yap", Icon: LogOut, group: "Aksiyon", action: async () => {
+    { id: "chat", label: t.commandPalette.cmdChat, Icon: MessageSquare, group: goGroup, action: () => router.push("/dashboard/chat") },
+    { id: "overview", label: t.commandPalette.cmdOverview, Icon: BarChart3, group: goGroup, action: () => router.push("/dashboard/overview") },
+    { id: "saved", label: t.commandPalette.cmdSaved, Icon: Bookmark, group: goGroup, action: () => router.push("/dashboard/saved") },
+    { id: "alerts", label: t.commandPalette.cmdAlerts, Icon: Bell, group: goGroup, action: () => router.push("/dashboard/alerts") },
+    { id: "connections", label: t.commandPalette.cmdConnections, Icon: Database, group: goGroup, action: () => router.push("/dashboard/connections") },
+    { id: "annotations", label: t.commandPalette.cmdAnnotations, Icon: FileText, group: goGroup, action: () => router.push("/dashboard/annotations") },
+    { id: "watchlists", label: t.commandPalette.cmdWatchlists, Icon: Eye, group: goGroup, action: () => router.push("/dashboard/watchlists") },
+    { id: "insights", label: t.commandPalette.cmdInsights, Icon: TrendingUp, group: goGroup, action: () => router.push("/dashboard/insights") },
+    { id: "reports", label: t.commandPalette.cmdReports, Icon: Send, group: goGroup, action: () => router.push("/dashboard/scheduled-reports") },
+    { id: "audit", label: t.commandPalette.cmdAudit, Icon: ScrollText, group: goGroup, action: () => router.push("/dashboard/audit") },
+    { id: "team", label: t.commandPalette.cmdTeam, Icon: Users, group: goGroup, action: () => router.push("/dashboard/team") },
+    { id: "security", label: t.commandPalette.cmdSecurity, Icon: Shield, group: goGroup, action: () => router.push("/dashboard/security") },
+    { id: "settings", label: t.commandPalette.cmdSettings, Icon: SettingsIcon, group: goGroup, action: () => router.push("/dashboard/settings") },
+    { id: "new-chat", label: t.commandPalette.cmdNewChat, Icon: Plus, group: actionGroup, action: () => { router.push("/dashboard/chat"); window.location.reload(); } },
+    { id: "logout", label: t.commandPalette.cmdLogout, Icon: LogOut, group: actionGroup, action: async () => {
       try {
         const csrfRes = await fetch("/api/auth/csrf");
         const { csrfToken } = await csrfRes.json();
@@ -159,7 +163,7 @@ export default function CommandPalette() {
             ref={inputRef}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActive(0); }}
-            placeholder="Komut veya sayfa ara…"
+            placeholder={t.commandPalette.placeholder}
             style={{
               flex: 1,
               border: "none",
@@ -177,14 +181,14 @@ export default function CommandPalette() {
             borderRadius: 4,
             fontFamily: "ui-monospace, Menlo, Monaco, monospace",
           }}>
-            esc
+            {t.commandPalette.escLabel}
           </span>
         </div>
 
         <div style={{ overflowY: "auto", padding: 8 }}>
           {filtered.length === 0 && (
             <div style={{ padding: "24px 20px", textAlign: "center", color: colors.textMuted, fontSize: 14 }}>
-              Sonuç bulunamadı.
+              {t.commandPalette.noResults}
             </div>
           )}
           {Object.entries(groups).map(([group, items]) => (
@@ -240,9 +244,9 @@ export default function CommandPalette() {
           gap: 16,
           background: colors.bgSubtle,
         }}>
-          <span>↑↓ gez</span>
-          <span>↵ seç</span>
-          <span>esc çık</span>
+          <span>{t.commandPalette.hintNavigate}</span>
+          <span>{t.commandPalette.hintSelect}</span>
+          <span>{t.commandPalette.hintEsc}</span>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/context";
 
 interface ConfirmOpts {
   id: number;
@@ -26,6 +27,7 @@ export function confirmDialog(opts: Omit<ConfirmOpts, "id" | "resolve">): Promis
 }
 
 export default function ConfirmHost() {
+  const { t } = useI18n();
   const [stack, setStack] = useState<ConfirmOpts[]>([]);
 
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function ConfirmHost() {
               cursor: "pointer",
             }}
           >
-            {top.cancelLabel ?? "İptal"}
+            {top.cancelLabel ?? t.common.cancel}
           </button>
           <button
             onClick={() => close(top.id, true)}
@@ -132,7 +134,7 @@ export default function ConfirmHost() {
               cursor: "pointer",
             }}
           >
-            {top.confirmLabel ?? "Onayla"}
+            {top.confirmLabel ?? t.common.confirm}
           </button>
         </div>
       </div>

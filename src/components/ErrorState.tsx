@@ -1,5 +1,7 @@
+"use client";
 import { AlertCircle } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Props {
   message?: string;
@@ -7,6 +9,7 @@ interface Props {
 }
 
 export default function ErrorState({ message, onRetry }: Props) {
+  const { t } = useI18n();
   return (
     <div style={{
       display: "flex",
@@ -39,7 +42,7 @@ export default function ErrorState({ message, onRetry }: Props) {
         letterSpacing: -0.3,
         color: colors.text,
       }}>
-        Veri yüklenemedi
+        {t.errorState.title}
       </div>
       <p style={{
         color: colors.textMuted,
@@ -48,7 +51,7 @@ export default function ErrorState({ message, onRetry }: Props) {
         maxWidth: 360,
         margin: 0,
       }}>
-        {message ?? "Bağlantı sorunu olabilir. Lütfen tekrar deneyin."}
+        {message ?? t.errorState.fallbackMessage}
       </p>
       {onRetry && (
         <button
@@ -66,7 +69,7 @@ export default function ErrorState({ message, onRetry }: Props) {
             fontFamily: "inherit",
           }}
         >
-          Tekrar dene
+          {t.errorState.retryAria}
         </button>
       )}
     </div>

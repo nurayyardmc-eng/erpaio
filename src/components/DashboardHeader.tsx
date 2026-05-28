@@ -85,7 +85,7 @@ export default function DashboardHeader({ email, name }: Props) {
           onClick={() => {
             window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
           }}
-          aria-label="Komut paleti aç"
+          aria-label={t.dashboardHeader.openPaletteAria}
           className="hide-mobile"
           style={{
             display: "inline-flex",

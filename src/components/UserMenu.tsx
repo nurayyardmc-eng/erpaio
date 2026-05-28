@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronDown, LogOut, Settings, Shield, HelpCircle } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { userInitials } from "@/lib/auth/initials";
+import { useI18n } from "@/lib/i18n/context";
 
 async function manualSignOut() {
   try {
@@ -26,6 +27,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ email, name }: UserMenuProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [liveName, setLiveName] = useState<string | null>(null);
@@ -128,7 +130,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
             style={menuItemStyle}
           >
             <Settings size={15} color={colors.textMuted} />
-            Ayarlar
+            {t.sidebar.navSettings}
           </Link>
           <Link
             href="/dashboard/security"
@@ -136,7 +138,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
             style={menuItemStyle}
           >
             <Shield size={15} color={colors.textMuted} />
-            Güvenlik
+            {t.userMenu.security}
           </Link>
           <Link
             href="/help"
@@ -144,7 +146,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
             style={menuItemStyle}
           >
             <HelpCircle size={15} color={colors.textMuted} />
-            Yardım
+            {t.userMenu.help}
           </Link>
 
           <button
@@ -160,7 +162,7 @@ export default function UserMenu({ email, name }: UserMenuProps) {
             }}
           >
             <LogOut size={15} color={colors.error} />
-            Çıkış Yap
+            {t.userMenu.logout}
           </button>
         </div>
       )}

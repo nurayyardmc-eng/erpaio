@@ -2,6 +2,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { computePagination } from "@/lib/pagination";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Props {
   page: number;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function Pagination({ page, pageSize, total, onChange }: Props) {
+  const { t } = useI18n();
   const { totalPages, start, end } = computePagination(page, pageSize, total);
   if (totalPages <= 1) return null;
 
@@ -32,7 +34,7 @@ export default function Pagination({ page, pageSize, total, onChange }: Props) {
         <button
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          aria-label="Önceki sayfa"
+          aria-label={t.pagination.prevAria}
           style={btn}
         >
           <ChevronLeft size={16} />
@@ -49,7 +51,7 @@ export default function Pagination({ page, pageSize, total, onChange }: Props) {
         <button
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
-          aria-label="Sonraki sayfa"
+          aria-label={t.pagination.nextAria}
           style={btn}
         >
           <ChevronRight size={16} />

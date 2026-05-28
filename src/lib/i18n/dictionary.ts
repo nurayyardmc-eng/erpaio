@@ -299,6 +299,64 @@ export interface Dictionary {
     badgeStale: string;
     badgeVeryStale: string;
   };
+  commandPalette: {
+    placeholder: string;
+    escLabel: string;
+    noResults: string;
+    hintNavigate: string;
+    hintSelect: string;
+    hintEsc: string;
+    groupGo: string;
+    groupAction: string;
+    cmdChat: string;
+    cmdOverview: string;
+    cmdSaved: string;
+    cmdAlerts: string;
+    cmdConnections: string;
+    cmdAnnotations: string;
+    cmdWatchlists: string;
+    cmdInsights: string;
+    cmdReports: string;
+    cmdAudit: string;
+    cmdTeam: string;
+    cmdSecurity: string;
+    cmdSettings: string;
+    cmdNewChat: string;
+    cmdLogout: string;
+  };
+  userMenu: {
+    security: string;
+    help: string;
+    logout: string;
+  };
+  errorState: {
+    title: string;
+    fallbackMessage: string;
+    retryAria: string;
+  };
+  pagination: {
+    prevAria: string;
+    nextAria: string;
+  };
+  dashboardHeader: {
+    openPaletteAria: string;
+  };
+  helpFab: {
+    title: string;
+    subtitle: string;
+    centerLabel: string;
+    centerDesc: string;
+    paletteLabel: string;
+    paletteDesc: string;
+    emailLabel: string;
+    emailDesc: string;
+    statusLabel: string;
+    statusDesc: string;
+    demoLabel: string;
+    demoDesc: string;
+    closeAria: string;
+    openAria: string;
+  };
   setupChecklist: {
     closeAria: string;
     sectionLabel: (done: number, total: number) => string;

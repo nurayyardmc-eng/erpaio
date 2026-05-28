@@ -3,8 +3,10 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { HelpCircle, X, BookOpen, MessageCircle, Activity, Mail, Sparkles } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function HelpFab() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,28 +46,28 @@ export default function HelpFab() {
             marginBottom: 8,
           }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: colors.text, marginBottom: 2 }}>
-              Yardım
+              {t.helpFab.title}
             </div>
             <div style={{ fontSize: 12, color: colors.textMuted }}>
-              Hızlı destek kanalları
+              {t.helpFab.subtitle}
             </div>
           </div>
-          <FabLink Icon={BookOpen} label="Yardım Merkezi" desc="Sık sorulanlar" href="/help" onClick={() => setOpen(false)} />
-          <FabLink Icon={Sparkles} label="Komut Paleti" desc="⌘K ile arama" onClick={() => {
+          <FabLink Icon={BookOpen} label={t.helpFab.centerLabel} desc={t.helpFab.centerDesc} href="/help" onClick={() => setOpen(false)} />
+          <FabLink Icon={Sparkles} label={t.helpFab.paletteLabel} desc={t.helpFab.paletteDesc} onClick={() => {
             setOpen(false);
             setTimeout(() => {
               window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
             }, 100);
           }} />
-          <FabLink Icon={MessageCircle} label="Email Destek" desc="support@erpaio.com" href="mailto:support@erpaio.com" onClick={() => setOpen(false)} />
-          <FabLink Icon={Activity} label="Sistem Durumu" desc="Servis sağlığı" href="/status" onClick={() => setOpen(false)} />
-          <FabLink Icon={Mail} label="Demo İste" desc="Pilot süreç" href="mailto:demo@erpaio.com" onClick={() => setOpen(false)} />
+          <FabLink Icon={MessageCircle} label={t.helpFab.emailLabel} desc={t.helpFab.emailDesc} href="mailto:support@erpaio.com" onClick={() => setOpen(false)} />
+          <FabLink Icon={Activity} label={t.helpFab.statusLabel} desc={t.helpFab.statusDesc} href="/status" onClick={() => setOpen(false)} />
+          <FabLink Icon={Mail} label={t.helpFab.demoLabel} desc={t.helpFab.demoDesc} href="mailto:demo@erpaio.com" onClick={() => setOpen(false)} />
         </div>
       )}
 
       <button
         onClick={() => setOpen(!open)}
-        aria-label={open ? "Yardımı kapat" : "Yardım menüsünü aç"}
+        aria-label={open ? t.helpFab.closeAria : t.helpFab.openAria}
         style={{
           width: 48,
           height: 48,
