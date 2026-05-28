@@ -1,26 +1,34 @@
 /**
  * iyzico billing provider — Türkiye için Stripe alternatifi.
  *
- * Track JJJJJJJ — iyzico merchant API entegrasyonu için scaffold.
- * Şu anda env eksik → tüm methodlar null/false döner; isIyzicoConfigured()
- * gate her call-site'da.
+ * Feature 7 — full integration:
+ *   - HMAC-SHA256 auth signing (IYZWSv2 scheme per iyzico API docs)
+ *   - Subscription lifecycle (init checkout, retrieve, cancel)
+ *   - Customer create + retrieve
+ *   - Webhook signature verification
  *
- * Env variables (production'da Vercel'e eklenecek):
+ * Architecture mirrors src/lib/billing/stripe.ts: thin HTTP wrapper +
+ * narrow typed methods. Real iyzico merchant credentials (sandbox or
+ * live) drive `iyzicoFetch()`; tests mock the underlying fetch.
+ *
+ * Env variables:
  *   IYZICO_API_KEY        — merchant panel → API Yönetimi → API Anahtarı
  *   IYZICO_SECRET_KEY     — merchant panel → API Yönetimi → API Secret
  *   IYZICO_BASE_URL       — sandbox: https://sandbox-api.iyzipay.com
  *                          production: https://api.iyzipay.com
+ *   IYZICO_WEBHOOK_SECRET — webhook verification (panel'den set)
+ *   IYZICO_PRICE_PRO      — abonelik pricing plan reference code
+ *   IYZICO_PRICE_ENTERPRISE
  *
- * Setup checklist:
- *   1. https://merchant.iyzipay.com kayıt + KYC
- *   2. Sandbox keys ile test (.env.local)
- *   3. Live keys ile production
- *   4. Webhook endpoint: /api/webhooks/iyzico (kayıt panel'den)
- *   5. CRON_SECRET gibi IYZICO_WEBHOOK_SECRET set et
+ * Auth scheme (IYZWSv2):
+ *   Authorization: IYZWSv2 <apiKey>:<base64(hmacSha256(payload, secretKey))>
+ *   payload = randomKey + uri + JSON.stringify(body)
  *
- * Şu an no-op: stripe.ts gibi davranıyor. Real entegrasyon iyzipay npm
- * paketi ile (https://www.npmjs.com/package/iyzipay) tamamlanacak.
+ * Webhook verification:
+ *   Headers contain X-Iyz-Signature (base64 HMAC-SHA256 over raw body).
  */
+
+import * as crypto from "crypto";
 
 export const IYZICO_PRICE_IDS: Record<"pro" | "enterprise", string | undefined> = {
   pro: process.env.IYZICO_PRICE_PRO,
@@ -73,4 +81,268 @@ export function pickPaymentProvider(): PaymentProvider {
   if (isIyzicoConfigured()) return "iyzico";
   if (process.env.STRIPE_SECRET_KEY) return "stripe";
   return "manual";
+}
+
+/**
+ * Generate iyzico IYZWSv2 Authorization header.
+ *
+ * payload = randomKey + uri + JSON.stringify(body)
+ * sig     = base64(HMAC-SHA256(payload, secretKey))
+ * header  = `IYZWSv2 <apiKey>:<sig>`
+ *
+ * Exported for unit testing.
+ */
+export function buildIyzicoAuthHeader(params: {
+  apiKey: string;
+  secretKey: string;
+  randomKey: string;
+  uri: string;
+  body: object;
+}): string {
+  const { apiKey, secretKey, randomKey, uri, body } = params;
+  const payload = randomKey + uri + JSON.stringify(body);
+  const sig = crypto.createHmac("sha256", secretKey).update(payload).digest("base64");
+  return `IYZWSv2 ${apiKey}:${sig}`;
+}
+
+/**
+ * Generate a non-guessable randomKey for IYZWSv2 nonce.
+ * Production overrides allowed for deterministic tests.
+ */
+let randomKeyGen: () => string = () =>
+  Date.now().toString() + crypto.randomBytes(8).toString("hex");
+
+/** Test-only: override randomKey generator. */
+export function __setRandomKeyGenForTest(fn: () => string): void {
+  randomKeyGen = fn;
+}
+
+/** Default: returns iyzico-format randomKey (ms timestamp + 16-hex chars). */
+export function generateRandomKey(): string {
+  return randomKeyGen();
+}
+
+/**
+ * Verify webhook signature. iyzico sends X-Iyz-Signature header containing
+ * base64 HMAC-SHA256 of the raw body using the webhook secret.
+ * Constant-time comparison via crypto.timingSafeEqual.
+ */
+export function verifyIyzicoWebhookSignature(
+  rawBody: string,
+  signatureHeader: string | null,
+  webhookSecret: string,
+): boolean {
+  if (!signatureHeader) return false;
+  const expected = crypto
+    .createHmac("sha256", webhookSecret)
+    .update(rawBody)
+    .digest("base64");
+  // Both must be same byte length for timingSafeEqual.
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signatureHeader);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * Thin HTTP wrapper around iyzico REST API. Pure: no Sentry, no DB —
+ * leave that to callers. Returns parsed JSON on 2xx, throws on non-2xx
+ * with body string in error message.
+ */
+async function iyzicoFetch<T>(
+  uri: string,
+  body: object,
+  method: "POST" | "GET" = "POST",
+): Promise<T> {
+  const cfg = getIyzicoConfig();
+  if (!cfg) throw new Error("iyzico not configured");
+
+  const randomKey = generateRandomKey();
+  const auth = buildIyzicoAuthHeader({
+    apiKey: cfg.apiKey,
+    secretKey: cfg.secretKey,
+    randomKey,
+    uri,
+    body,
+  });
+
+  const res = await fetch(`${cfg.baseUrl}${uri}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+      "x-iyzi-rnd": randomKey,
+    },
+    body: method === "POST" ? JSON.stringify(body) : undefined,
+  });
+
+  const text = await res.text();
+  let json: unknown;
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`iyzico non-JSON response (status ${res.status}): ${text.slice(0, 200)}`);
+  }
+
+  if (!res.ok) {
+    const errMsg =
+      typeof json === "object" && json !== null && "errorMessage" in json
+        ? String((json as { errorMessage: unknown }).errorMessage)
+        : `iyzico HTTP ${res.status}`;
+    throw new Error(errMsg);
+  }
+  return json as T;
+}
+
+/** Test hook — override fetch impl. */
+let fetchImpl: typeof iyzicoFetch = iyzicoFetch;
+export function __setIyzicoFetchForTest(fn: typeof iyzicoFetch): void {
+  fetchImpl = fn;
+}
+export function __resetIyzicoFetchForTest(): void {
+  fetchImpl = iyzicoFetch;
+}
+
+/**
+ * iyzico subscription init checkout (one-shot card collect + first charge).
+ *
+ * Returns an iyzico-hosted checkout URL (`checkoutFormContent`) that the
+ * client opens in an iframe or full redirect. After payment, iyzico
+ * POSTs the subscription event to our webhook.
+ *
+ * URI: /v2/subscription/checkoutform/initialize
+ */
+export interface IyzicoCheckoutInitInput {
+  locale: "tr" | "en";
+  conversationId: string;
+  pricingPlanReferenceCode: string;
+  subscriptionInitialStatus: "ACTIVE" | "PENDING";
+  callbackUrl: string;
+  customer: {
+    email: string;
+    name: string;
+    surname: string;
+    identityNumber?: string;
+    gsmNumber?: string;
+    billingAddress: {
+      contactName: string;
+      city: string;
+      country: string;
+      address: string;
+      zipCode?: string;
+    };
+  };
+}
+
+export interface IyzicoCheckoutInitResult {
+  status: "success" | "failure";
+  systemTime: number;
+  conversationId: string;
+  /** iyzico hosted checkout URL — pass to client for redirect. */
+  checkoutFormContent?: string;
+  token?: string;
+  tokenExpireTime?: number;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+export async function initSubscriptionCheckout(
+  input: IyzicoCheckoutInitInput,
+): Promise<IyzicoCheckoutInitResult> {
+  return fetchImpl<IyzicoCheckoutInitResult>(
+    "/v2/subscription/checkoutform/initialize",
+    input,
+  );
+}
+
+/**
+ * Retrieve subscription by reference code.
+ * URI: /v2/subscription/subscriptions/{referenceCode}
+ */
+export interface IyzicoSubscription {
+  status: "success" | "failure";
+  systemTime: number;
+  referenceCode: string;
+  parentReferenceCode?: string;
+  pricingPlanReferenceCode: string;
+  customerReferenceCode: string;
+  subscriptionStatus:
+    | "ACTIVE"
+    | "PENDING"
+    | "UNPAID"
+    | "UPGRADED"
+    | "CANCELED"
+    | "EXPIRED";
+  trialDays?: number;
+  trialStartDate?: number;
+  trialEndDate?: number;
+  createdDate?: number;
+  startDate?: number;
+  endDate?: number;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+export async function getSubscription(
+  subscriptionReferenceCode: string,
+): Promise<IyzicoSubscription> {
+  return fetchImpl<IyzicoSubscription>(
+    `/v2/subscription/subscriptions/${encodeURIComponent(subscriptionReferenceCode)}`,
+    {},
+    "GET",
+  );
+}
+
+/**
+ * Cancel an active subscription.
+ * URI: /v2/subscription/subscriptions/{referenceCode}/cancel
+ */
+export async function cancelSubscription(
+  subscriptionReferenceCode: string,
+): Promise<{ status: "success" | "failure"; errorMessage?: string }> {
+  return fetchImpl<{ status: "success" | "failure"; errorMessage?: string }>(
+    `/v2/subscription/subscriptions/${encodeURIComponent(subscriptionReferenceCode)}/cancel`,
+    {},
+  );
+}
+
+/**
+ * iyzico webhook event shape (post-verified). Field names from iyzico
+ * webhook docs.
+ */
+export interface IyzicoWebhookEvent {
+  iyziEventType:
+    | "subscription.activation"
+    | "subscription.renewal"
+    | "subscription.unpaid"
+    | "subscription.cancellation"
+    | "subscription.trial.expire"
+    | "subscription.expire"
+    | string;
+  iyziEventTime: number;
+  iyziReferenceCode: string;
+  iyziSubscriptionReferenceCode?: string;
+  iyziCustomerReferenceCode?: string;
+  iyziPaymentId?: string;
+  status?: string;
+}
+
+/** Map iyzico subscription status → our internal Tenant.subscriptionStatus. */
+export function mapIyzicoStatusToInternal(
+  status: IyzicoSubscription["subscriptionStatus"] | string,
+): "active" | "trialing" | "past_due" | "canceled" | "expired" | "incomplete" {
+  switch (status) {
+    case "ACTIVE":
+      return "active";
+    case "PENDING":
+      return "trialing";
+    case "UNPAID":
+      return "past_due";
+    case "CANCELED":
+      return "canceled";
+    case "EXPIRED":
+      return "expired";
+    default:
+      return "incomplete";
+  }
 }

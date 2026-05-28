@@ -24,6 +24,12 @@ model Tenant {
   trialEndsAt          DateTime?
   stripeCustomerId     String?           @unique
   stripeSubscriptionId String?           @unique
+  // Feature 7 — iyzico (TR market) provider IDs. Tenant uses Stripe OR iyzico,
+  // never both. Subscription lifecycle stored in subscriptionStatus regardless
+  // of provider.
+  iyzicoCustomerId     String?           @unique
+  iyzicoSubscriptionId String?           @unique
+  paymentProvider      String?           // "stripe" | "iyzico" | null
   subscriptionStatus   String?
   brandingLogoUrl      String?
   brandingPrimary      String?

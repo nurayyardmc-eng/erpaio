@@ -2,7 +2,13 @@ import { z } from "zod";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { stripe, PRICE_IDS, isStripeConfigured } from "@/lib/billing/stripe";
-import { isPaymentProviderConfigured, pickPaymentProvider } from "@/lib/billing/iyzico";
+import {
+  IYZICO_PRICE_IDS,
+  initSubscriptionCheckout,
+  isIyzicoConfigured,
+  isPaymentProviderConfigured,
+  pickPaymentProvider,
+} from "@/lib/billing/iyzico";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody, tenantNotFoundError } from "@/lib/http/searchParams";
 import { requireOwner } from "@/lib/auth/role";
@@ -10,28 +16,31 @@ import { baseUrl } from "@/lib/url";
 
 const BodySchema = z.object({
   plan: z.enum(["pro", "enterprise"]),
+  /**
+   * For iyzico checkout the caller must provide identity + billing address
+   * (TR market compliance — fatura kesimi için zorunlu). Stripe ignores
+   * these fields. UI may collect them in a separate iyzico-specific form
+   * step before POSTing here.
+   */
+  iyzico: z
+    .object({
+      name: z.string().min(1).max(80),
+      surname: z.string().min(1).max(80),
+      identityNumber: z.string().regex(/^\d{11}$/).optional(),
+      gsmNumber: z.string().regex(/^\+?\d{10,15}$/).optional(),
+      city: z.string().min(1).max(60),
+      country: z.string().min(2).max(3).default("Turkey"),
+      address: z.string().min(5).max(200),
+      zipCode: z.string().max(10).optional(),
+    })
+    .optional(),
 });
 
 export async function POST(req: Request) {
-  // Track JJJJJJJ: provider gate Stripe → fallback iyzico (TR) → manual.
   if (!isPaymentProviderConfigured()) {
     return localizedError(req, 503, {
       tr: "Ödeme sağlayıcı yapılandırılmamış. Yükseltme için support@erpaio.com ile iletişime geçin.",
       en: "No payment provider configured. Contact support@erpaio.com to upgrade.",
-    });
-  }
-  // iyzico TR-priority. Currently iyzico stubbed → fall through to Stripe.
-  // Future: separate /api/billing/iyzico/checkout route.
-  if (pickPaymentProvider() === "iyzico" && !isStripeConfigured()) {
-    return localizedError(req, 501, {
-      tr: "iyzico checkout henüz hazır değil. support@erpaio.com ile iletişime geçin.",
-      en: "iyzico checkout not yet implemented. Contact support@erpaio.com.",
-    });
-  }
-  if (!isStripeConfigured()) {
-    return localizedError(req, 503, {
-      tr: "Stripe yapılandırılmamış. Yükseltme için support@erpaio.com ile iletişime geçin.",
-      en: "Stripe not configured. Contact support@erpaio.com to upgrade.",
     });
   }
 
@@ -47,6 +56,88 @@ export async function POST(req: Request) {
   if (body instanceof Response) return body;
 
   const { plan } = body;
+
+  // Provider-aware dispatch. iyzico priority when env present (TR market).
+  const provider = pickPaymentProvider();
+
+  // -----------------------------------------------------------------
+  // iyzico path
+  // -----------------------------------------------------------------
+  if (provider === "iyzico" && isIyzicoConfigured()) {
+    if (!body.iyzico) {
+      return localizedError(req, 400, {
+        tr: "iyzico ödemesi için isim, soyisim, şehir, adres bilgileri zorunludur (fatura kesimi için).",
+        en: "iyzico requires name, surname, city, address details (required for invoice).",
+      });
+    }
+    const planRef = IYZICO_PRICE_IDS[plan];
+    if (!planRef) {
+      return localizedError(req, 503, {
+        tr: `${plan} için iyzico pricing plan reference code yapılandırılmamış.`,
+        en: `iyzico pricing plan reference code not configured for ${plan}.`,
+      });
+    }
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: session.user.tenantId },
+      select: { id: true, name: true, defaultLocale: true },
+    });
+    if (!tenant) return tenantNotFoundError(req);
+
+    try {
+      const result = await initSubscriptionCheckout({
+        locale: tenant.defaultLocale === "en" ? "en" : "tr",
+        conversationId: tenant.id, // tenantId stable across retries
+        pricingPlanReferenceCode: planRef,
+        subscriptionInitialStatus: "ACTIVE",
+        callbackUrl: `${baseUrl()}/dashboard/settings?upgrade=success&provider=iyzico`,
+        customer: {
+          email: session.user.email ?? "",
+          name: body.iyzico.name,
+          surname: body.iyzico.surname,
+          identityNumber: body.iyzico.identityNumber,
+          gsmNumber: body.iyzico.gsmNumber,
+          billingAddress: {
+            contactName: `${body.iyzico.name} ${body.iyzico.surname}`,
+            city: body.iyzico.city,
+            country: body.iyzico.country,
+            address: body.iyzico.address,
+            zipCode: body.iyzico.zipCode,
+          },
+        },
+      });
+
+      if (result.status !== "success" || !result.checkoutFormContent) {
+        return localizedError(req, 502, {
+          tr: result.errorMessage ?? "iyzico checkout başlatılamadı.",
+          en: result.errorMessage ?? "iyzico checkout could not be initialized.",
+        });
+      }
+      // Mark provider on tenant so webhook can disambiguate.
+      await prisma.tenant.update({
+        where: { id: tenant.id },
+        data: { paymentProvider: "iyzico" },
+      });
+      return Response.json({ url: result.checkoutFormContent, token: result.token });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "unknown";
+      return localizedError(req, 502, {
+        tr: `iyzico checkout hatası: ${msg}`,
+        en: `iyzico checkout error: ${msg}`,
+      });
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Stripe path (default fallback when iyzico not configured)
+  // -----------------------------------------------------------------
+  if (!isStripeConfigured()) {
+    return localizedError(req, 503, {
+      tr: "Stripe yapılandırılmamış. Yükseltme için support@erpaio.com ile iletişime geçin.",
+      en: "Stripe not configured. Contact support@erpaio.com to upgrade.",
+    });
+  }
+
   const priceId = PRICE_IDS[plan];
   if (!priceId) {
     return localizedError(req, 503, { tr: `${plan} fiyat ID'si yapılandırılmamış.`, en: `${plan} price ID not configured.` });
@@ -68,7 +159,7 @@ export async function POST(req: Request) {
     customerId = customer.id;
     await prisma.tenant.update({
       where: { id: tenant.id },
-      data: { stripeCustomerId: customerId },
+      data: { stripeCustomerId: customerId, paymentProvider: "stripe" },
     });
   }
 
