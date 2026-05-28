@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, ArrowRight, X } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { safeLocalGet, safeLocalSet } from "@/lib/storage/safeLocalStorage";
+import { useI18n } from "@/lib/i18n/context";
 
 interface SetupStep {
   key: string;
@@ -31,9 +32,23 @@ const DISMISS_KEY = "erpaio_setup_checklist_dismissed";
  * Track MMMMMMM.
  */
 export default function SetupChecklist() {
+  const { t } = useI18n();
   const [score, setScore] = useState<SetupScore | null>(null);
   const [dismissed, setDismissed] = useState<boolean>(() => safeLocalGet(DISMISS_KEY) === "1");
   const [expanded, setExpanded] = useState(false);
+
+  // key→i18n label (server returns TR-only label for back-compat; we override).
+  const stepLabel = (key: string, fallback: string): string => {
+    switch (key) {
+      case "connection": return t.setupChecklist.stepConnection;
+      case "first_query": return t.setupChecklist.stepFirstQuery;
+      case "notification": return t.setupChecklist.stepNotification;
+      case "saved_or_watchlist": return t.setupChecklist.stepSavedOrWatchlist;
+      case "mfa": return t.setupChecklist.stepMfa;
+      case "team": return t.setupChecklist.stepTeam;
+      default: return fallback;
+    }
+  };
 
   useEffect(() => {
     if (dismissed) return;
@@ -61,7 +76,7 @@ export default function SetupChecklist() {
     }}>
       <button
         onClick={dismiss}
-        aria-label="Kapat"
+        aria-label={t.setupChecklist.closeAria}
         style={{
           position: "absolute",
           top: 12,
@@ -80,10 +95,10 @@ export default function SetupChecklist() {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, letterSpacing: 2, color: colors.textMuted, marginBottom: 4, fontWeight: 600 }}>
-            KURULUM · {score.doneCount}/{score.totalCount} adım
+            {t.setupChecklist.sectionLabel(score.doneCount, score.totalCount)}
           </div>
           <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-            ERPAIO&apos;yu tam kurmak için kaldı: {score.totalCount - score.doneCount} adım
+            {t.setupChecklist.remainingTitle(score.totalCount - score.doneCount)}
           </div>
         </div>
         <div style={{
@@ -93,7 +108,7 @@ export default function SetupChecklist() {
           minWidth: 60,
           textAlign: "right",
         }}>
-          %{score.percent}
+          {t.setupChecklist.percentLabel(score.percent)}
         </div>
       </div>
 
@@ -130,7 +145,7 @@ export default function SetupChecklist() {
             textDecoration: "none",
           }}
         >
-          Sıradaki: {score.nextStep.label} <ArrowRight size={14} />
+          {t.setupChecklist.nextLabel} {stepLabel(score.nextStep.key, score.nextStep.label)} <ArrowRight size={14} />
         </Link>
       )}
 
@@ -147,7 +162,7 @@ export default function SetupChecklist() {
           cursor: "pointer",
         }}
       >
-        {expanded ? "Gizle" : "Tüm adımlar"}
+        {expanded ? t.setupChecklist.hideBtn : t.setupChecklist.showAllBtn}
       </button>
 
       {expanded && (
@@ -178,7 +193,7 @@ export default function SetupChecklist() {
               >
                 {s.done ? <CheckCircle2 size={16} /> : <Circle size={16} color={colors.textSubtle} />}
                 <span style={{ flex: 1, textDecoration: s.done ? "line-through" : "none" }}>
-                  {s.label}
+                  {stepLabel(s.key, s.label)}
                 </span>
                 {!s.done && <ArrowRight size={12} color={colors.textSubtle} />}
               </Link>

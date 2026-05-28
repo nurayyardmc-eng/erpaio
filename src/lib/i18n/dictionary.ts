@@ -299,6 +299,21 @@ export interface Dictionary {
     badgeStale: string;
     badgeVeryStale: string;
   };
+  setupChecklist: {
+    closeAria: string;
+    sectionLabel: (done: number, total: number) => string;
+    remainingTitle: (left: number) => string;
+    percentLabel: (pct: number) => string;
+    nextLabel: string;
+    showAllBtn: string;
+    hideBtn: string;
+    stepConnection: string;
+    stepFirstQuery: string;
+    stepNotification: string;
+    stepSavedOrWatchlist: string;
+    stepMfa: string;
+    stepTeam: string;
+  };
   notificationLog: {
     backToSettings: string;
     breadcrumb: string;
