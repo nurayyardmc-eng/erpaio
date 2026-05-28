@@ -24,15 +24,34 @@ export interface TeamsPayload {
 // Exported for test (Track KKKK). Pure MessageCard builder, no I/O.
 export function buildTeamsBody(payload: Omit<TeamsPayload, "webhookUrl">) {
   const color = SEVERITY_COLORS[payload.severity] ?? "9AA5B4";
-  const body = localizedAlertDescription(payload.evidence ?? null, payload.description ?? null, payload.locale ?? "tr");
+  const locale = payload.locale ?? "tr";
+  const body = localizedAlertDescription(payload.evidence ?? null, payload.description ?? null, locale);
   return {
     "@type": "MessageCard",
     "@context": "http://schema.org/extensions",
     themeColor: color,
-    summary: `[ERPAIO ${payload.severity.toUpperCase()}] ${payload.title}`,
-    title: `${payload.severity.toUpperCase()} · ${payload.title}`,
+    summary: `[ERPAIO ${localizedSeverity(payload.severity, locale)}] ${payload.title}`,
+    title: `${localizedSeverity(payload.severity, locale)} · ${payload.title}`,
     text: body,
   };
+}
+
+/**
+ * Localized severity label for the title/summary prefix. EN keeps the
+ * universal uppercase code (HIGH/MEDIUM/…) for IT-channel consistency;
+ * TR uses Türkçe equivalents (YÜKSEK/ORTA/…) so on-call engineers reading
+ * Türkçe Teams channels get a native message.
+ */
+function localizedSeverity(severity: string, locale: string): string {
+  const upper = severity.toUpperCase();
+  if (locale === "en") return upper;
+  const tr: Record<string, string> = {
+    CRITICAL: "KRİTİK",
+    HIGH: "YÜKSEK",
+    MEDIUM: "ORTA",
+    LOW: "DÜŞÜK",
+  };
+  return tr[upper] ?? upper;
 }
 
 export async function sendTeams(payload: TeamsPayload): Promise<{ ok: boolean }> {

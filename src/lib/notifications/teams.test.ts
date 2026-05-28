@@ -19,14 +19,32 @@ describe("notifications/teams/buildTeamsBody", () => {
     expect(buildTeamsBody({ severity: "wat", title: "x" }).themeColor).toBe("9AA5B4");
   });
 
-  it("summary line: [ERPAIO SEV] title", () => {
+  it("TR default — summary line: [ERPAIO TR_SEV] title", () => {
     const body = buildTeamsBody({ severity: "critical", title: "DB unreachable" });
-    expect(body.summary).toBe("[ERPAIO CRITICAL] DB unreachable");
+    expect(body.summary).toBe("[ERPAIO KRİTİK] DB unreachable");
   });
 
-  it("title line: SEV · title (with middle dot)", () => {
+  it("TR default — title line: TR_SEV · title (with middle dot)", () => {
     const body = buildTeamsBody({ severity: "medium", title: "Stock low" });
-    expect(body.title).toBe("MEDIUM · Stock low");
+    expect(body.title).toBe("ORTA · Stock low");
+  });
+
+  it("EN locale — keeps universal uppercase severity codes", () => {
+    const body = buildTeamsBody({ severity: "high", title: "DB error", locale: "en" });
+    expect(body.summary).toBe("[ERPAIO HIGH] DB error");
+    expect(body.title).toBe("HIGH · DB error");
+  });
+
+  it("TR locale explicit — maps all 4 severities", () => {
+    expect(buildTeamsBody({ severity: "critical", title: "x", locale: "tr" }).title).toBe("KRİTİK · x");
+    expect(buildTeamsBody({ severity: "high", title: "x", locale: "tr" }).title).toBe("YÜKSEK · x");
+    expect(buildTeamsBody({ severity: "medium", title: "x", locale: "tr" }).title).toBe("ORTA · x");
+    expect(buildTeamsBody({ severity: "low", title: "x", locale: "tr" }).title).toBe("DÜŞÜK · x");
+  });
+
+  it("TR — unknown severity falls back to uppercase value", () => {
+    const body = buildTeamsBody({ severity: "wat", title: "x" });
+    expect(body.title).toBe("WAT · x");
   });
 
   it("description → text field", () => {
@@ -39,8 +57,8 @@ describe("notifications/teams/buildTeamsBody", () => {
     expect(buildTeamsBody({ severity: "low", title: "x", description: null }).text).toBe("");
   });
 
-  it("severity uppercased in both summary and title regardless of input case", () => {
-    const body = buildTeamsBody({ severity: "high", title: "x" });
+  it("EN — severity uppercased in both summary and title regardless of input case", () => {
+    const body = buildTeamsBody({ severity: "high", title: "x", locale: "en" });
     expect(body.summary).toContain("HIGH");
     expect(body.title.startsWith("HIGH")).toBe(true);
   });
