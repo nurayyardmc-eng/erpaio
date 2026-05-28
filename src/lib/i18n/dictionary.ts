@@ -365,6 +365,32 @@ export interface Dictionary {
     badgeStale: string;
     badgeVeryStale: string;
   };
+  pricing: {
+    metaTitle: string;
+    metaDescription: string;
+    login: string;
+    headline: string;
+    tagline: string;
+    popularBadge: string;
+    starterName: string;
+    starterDescription: string;
+    starterCta: string;
+    starterFeatures: string[];
+    starterNotIncluded: string[];
+    proName: string;
+    proDescription: string;
+    proCta: string;
+    proFeatures: string[];
+    enterpriseName: string;
+    enterprisePrice: string;
+    enterpriseDescription: string;
+    enterpriseCta: string;
+    enterpriseFeatures: string[];
+    perMonth: string;
+    footer: string;
+    linkPrivacy: string;
+    linkTerms: string;
+  };
   welcomeWizard: {
     brand: string;
     title: string;

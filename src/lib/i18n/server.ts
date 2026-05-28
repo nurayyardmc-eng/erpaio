@@ -162,6 +162,18 @@ export function resolveLocale(req: Request): Locale {
   );
 }
 
+/**
+ * Resolve a Locale from a Headers-like object (e.g. next/headers `headers()`).
+ * Use this inside generateMetadata() server functions which can't access Request directly.
+ */
+export function resolveLocaleFromHeaders(h: { get: (name: string) => string | null }): Locale {
+  return (
+    localeFromCookieHeader(h.get("cookie")) ??
+    localeFromAcceptLanguage(h.get("accept-language")) ??
+    DEFAULT_LOCALE
+  );
+}
+
 /** Look up the server message catalog for a request. */
 export function serverMessages(req: Request): ServerMessages {
   return SERVER[resolveLocale(req)];

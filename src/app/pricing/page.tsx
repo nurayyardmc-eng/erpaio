@@ -1,70 +1,53 @@
+"use client";
 import Link from "next/link";
 import { Check, X as XIcon } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/context";
 
-export const metadata = {
-  title: "Fiyatlandırma · ERPAIO",
-  description: "ERPAIO planları ve fiyatlandırma",
-};
-
-const plans = [
-  {
-    name: "Starter",
-    price: "₺499",
-    period: "/ay",
-    description: "Bireysel ve küçük takımlar için",
-    features: [
-      "1 ERP bağlantısı",
-      "3 kullanıcıya kadar",
-      "2M token / ay (~600 sorgu)",
-      "WhatsApp + push bildirim",
-      "Anomaly tespiti (saatlik + günlük)",
-      "Şifreli credential storage",
-    ],
-    notIncluded: ["MFA", "CSV export", "On-prem agent"],
-    cta: "14 gün ücretsiz dene",
-  },
-  {
-    name: "Pro",
-    price: "₺2.499",
-    period: "/ay",
-    popular: true,
-    description: "Büyüyen şirketler için",
-    features: [
-      "10 ERP bağlantısı",
-      "25 kullanıcıya kadar",
-      "20M token / ay (~6.000 sorgu)",
-      "Email + WhatsApp + push",
-      "Şema annotation (admin override)",
-      "Audit log + CSV export",
-      "Pre-computed dashboard",
-      "İki faktörlü doğrulama (MFA)",
-      "7/24 email destek",
-    ],
-    cta: "Pro'ya başla",
-  },
-  {
-    name: "Enterprise",
-    price: "Özel",
-    period: "",
-    description: "Bankalar, telekom, kamu",
-    features: [
-      "Sınırsız ERP bağlantısı",
-      "500+ kullanıcı",
-      "200M+ token / ay özel",
-      "On-prem agent (kendi sunucunuz)",
-      "SAML SSO",
-      "Custom ERP profile (SAP, Oracle…)",
-      "SLA: 99.9% uptime",
-      "Adanmış destek mühendisi",
-      "Penetrasyon testi raporu",
-    ],
-    cta: "Bizimle görüşün",
-  },
-];
+interface Plan {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  features: readonly string[];
+  notIncluded?: readonly string[];
+  cta: string;
+  popular?: boolean;
+}
 
 export default function PricingPage() {
+  const { t } = useI18n();
+
+  const plans: Plan[] = [
+    {
+      name: t.pricing.starterName,
+      price: "₺499",
+      period: t.pricing.perMonth,
+      description: t.pricing.starterDescription,
+      features: t.pricing.starterFeatures,
+      notIncluded: t.pricing.starterNotIncluded,
+      cta: t.pricing.starterCta,
+    },
+    {
+      name: t.pricing.proName,
+      price: "₺2.499",
+      period: t.pricing.perMonth,
+      popular: true,
+      description: t.pricing.proDescription,
+      features: t.pricing.proFeatures,
+      cta: t.pricing.proCta,
+    },
+    {
+      name: t.pricing.enterpriseName,
+      price: t.pricing.enterprisePrice,
+      period: "",
+      description: t.pricing.enterpriseDescription,
+      features: t.pricing.enterpriseFeatures,
+      cta: t.pricing.enterpriseCta,
+    },
+  ];
+
   return (
     <div style={{ minHeight: "100vh", background: colors.bg, color: colors.text }}>
       <header style={{
@@ -75,7 +58,7 @@ export default function PricingPage() {
         borderBottom: `1px solid ${colors.border}`,
       }}>
         <Link href="/"><Logo size={28} variant="mark" /></Link>
-        <Link href="/login" style={{ color: colors.textMuted, fontSize: 14, fontWeight: 500 }}>Giriş</Link>
+        <Link href="/login" style={{ color: colors.textMuted, fontSize: 14, fontWeight: 500 }}>{t.pricing.login}</Link>
       </header>
 
       <main style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 32px" }}>
@@ -87,10 +70,10 @@ export default function PricingPage() {
             color: colors.text,
             letterSpacing: -1,
           }}>
-            Şirketinizin boyutuna göre
+            {t.pricing.headline}
           </h1>
           <p style={{ color: colors.textMuted, fontSize: 16 }}>
-            14 gün ücretsiz Pro deneme — kart bilgisi gerekmez
+            {t.pricing.tagline}
           </p>
         </div>
 
@@ -120,7 +103,7 @@ export default function PricingPage() {
                   fontWeight: 700,
                   letterSpacing: 1,
                 }}>
-                  POPÜLER
+                  {t.pricing.popularBadge}
                 </div>
               )}
               <div style={{
@@ -183,7 +166,7 @@ export default function PricingPage() {
               </ul>
 
               <Link
-                href={p.name === "Enterprise" ? "mailto:sales@erpaio.com" : "/signup"}
+                href={p.name === t.pricing.enterpriseName ? "mailto:sales@erpaio.com" : "/signup"}
                 style={{
                   display: "block",
                   background: p.popular ? colors.brand : colors.bg,
@@ -208,7 +191,7 @@ export default function PricingPage() {
           color: colors.textSubtle,
           fontSize: 13,
         }}>
-          KDV dahil değildir. Yıllık ödemede %20 indirim. Plan değişiklikleri pro-rata.
+          {t.pricing.footer}
         </div>
       </main>
 
@@ -219,8 +202,8 @@ export default function PricingPage() {
         fontSize: 13,
         color: colors.textSubtle,
       }}>
-        <Link href="/privacy" style={{ color: colors.textSubtle, marginRight: 20 }}>Gizlilik</Link>
-        <Link href="/terms" style={{ color: colors.textSubtle }}>Koşullar</Link>
+        <Link href="/privacy" style={{ color: colors.textSubtle, marginRight: 20 }}>{t.pricing.linkPrivacy}</Link>
+        <Link href="/terms" style={{ color: colors.textSubtle }}>{t.pricing.linkTerms}</Link>
       </footer>
     </div>
   );
