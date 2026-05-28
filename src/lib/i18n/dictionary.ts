@@ -328,6 +328,8 @@ export interface Dictionary {
     iyzicoSubmitBtn: string;
     iyzicoCancelBtn: string;
     upgradeFailed: string;
+    upgradeSuccess: string;
+    upgradeCancelled: string;
     cancelConfirmTitle: string;
     cancelConfirmMessage: string;
     cancelConfirmYes: string;

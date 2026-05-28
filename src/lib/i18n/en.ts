@@ -315,6 +315,8 @@ export const en: Dictionary = {
     iyzicoSubmitBtn: "Continue to Payment",
     iyzicoCancelBtn: "Cancel",
     upgradeFailed: "Upgrade failed",
+    upgradeSuccess: "Your subscription has been upgraded. Welcome!",
+    upgradeCancelled: "Payment cancelled. Your current plan is unchanged.",
     cancelConfirmTitle: "Cancel Subscription",
     cancelConfirmMessage: "Your subscription will be cancelled and your account will downgrade to Starter at the end of the period. Continue?",
     cancelConfirmYes: "Yes, cancel",

@@ -167,8 +167,8 @@ export async function POST(req: Request) {
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${baseUrl()}/dashboard/settings?upgrade=success`,
-    cancel_url: `${baseUrl()}/pricing?upgrade=cancelled`,
+    success_url: `${baseUrl()}/dashboard/settings?upgrade=success&provider=stripe`,
+    cancel_url: `${baseUrl()}/dashboard/settings?upgrade=cancel&provider=stripe`,
     metadata: { tenantId: tenant.id, plan },
     subscription_data: { metadata: { tenantId: tenant.id, plan } },
   });

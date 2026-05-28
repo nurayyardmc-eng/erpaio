@@ -47,6 +47,29 @@ export default function SettingsPage() {
     resetsOn: string;
   } | null>(null);
 
+  // Feature 7.6 — handle iyzico/stripe checkout callback redirect.
+  // Provider hosts checkout on its own domain; on success it sends the user
+  // back to /dashboard/settings?upgrade=success&provider=<iyzico|stripe>.
+  // We show a localized toast and strip the query so a reload won't re-fire.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const upgrade = params.get("upgrade");
+    if (!upgrade) return;
+    if (upgrade === "success") {
+      showToast(t.billing.upgradeSuccess, "success");
+    } else if (upgrade === "cancel") {
+      showToast(t.billing.upgradeCancelled, "info");
+    } else if (upgrade === "failed") {
+      showToast(t.billing.upgradeFailed, "error");
+    }
+    // Clean the query string so reload won't re-fire the toast.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("upgrade");
+    url.searchParams.delete("provider");
+    window.history.replaceState({}, "", url.pathname + (url.search || ""));
+  }, [t.billing.upgradeSuccess, t.billing.upgradeCancelled, t.billing.upgradeFailed]);
+
   useEffect(() => {
     fetch("/api/tenant").then(async (r) => {
       if (r.ok) setTenant(await r.json());

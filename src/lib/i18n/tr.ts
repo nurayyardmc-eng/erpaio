@@ -315,6 +315,8 @@ export const tr: Dictionary = {
     iyzicoSubmitBtn: "Ödemeye Geç",
     iyzicoCancelBtn: "Vazgeç",
     upgradeFailed: "Yükseltme başarısız oldu",
+    upgradeSuccess: "Aboneliğiniz başarıyla yükseltildi. Hoş geldiniz!",
+    upgradeCancelled: "Ödeme iptal edildi. Mevcut planınız değişmedi.",
     cancelConfirmTitle: "Aboneliği İptal Et",
     cancelConfirmMessage: "Aboneliğiniz iptal edilecek ve dönem sonunda Starter plana düşeceksiniz. Devam edilsin mi?",
     cancelConfirmYes: "Evet, iptal et",
