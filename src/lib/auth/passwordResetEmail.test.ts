@@ -66,4 +66,35 @@ describe("auth/passwordResetEmail", () => {
       expect(passwordResetEmail("").html).toContain('href=""');
     });
   });
+
+  describe("locale: en", () => {
+    it("EN subject", () => {
+      expect(passwordResetEmail(RESET_URL, "en").subject).toBe("ERPAIO — Password reset link");
+    });
+
+    it("EN heading 'Password Reset'", () => {
+      expect(passwordResetEmail(RESET_URL, "en").html).toContain(">Password Reset<");
+    });
+
+    it("EN CTA 'Reset password'", () => {
+      expect(passwordResetEmail(RESET_URL, "en").html).toContain(">Reset password<");
+    });
+
+    it("EN 1-hour copy", () => {
+      expect(passwordResetEmail(RESET_URL, "en").html).toContain("1 hour");
+    });
+
+    it("EN safety footer", () => {
+      expect(passwordResetEmail(RESET_URL, "en").html).toContain("didn't request this");
+    });
+
+    it("EN embeds reset URL", () => {
+      expect(passwordResetEmail(RESET_URL, "en").html).toContain(`href="${RESET_URL}"`);
+    });
+
+    it("unknown locale defaults to TR (back-compat)", () => {
+      const { subject } = passwordResetEmail(RESET_URL, "fr");
+      expect(subject).toBe("ERPAIO — Şifre sıfırlama linki");
+    });
+  });
 });

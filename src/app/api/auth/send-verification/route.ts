@@ -2,7 +2,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/notifications/email";
 import { rateLimit, RATE_LIMITS } from "@/lib/rateLimit";
-import { jsonError, localizedError } from "@/lib/i18n/server";
+import { jsonError, localizedError, resolveLocale } from "@/lib/i18n/server";
 import { createEmailVerificationToken } from "@/lib/auth/createEmailVerificationToken";
 import { emailVerificationEmail } from "@/lib/auth/emailVerifyEmail";
 import { baseUrl } from "@/lib/url";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   const { raw } = await createEmailVerificationToken(session.user.id);
   const verifyUrl = `${baseUrl()}/verify-email?token=${raw}`;
-  const { subject, html } = emailVerificationEmail(verifyUrl);
+  const { subject, html } = emailVerificationEmail(verifyUrl, resolveLocale(req));
   void sendEmail({ to: user.email, subject, html, tenantId: session.user.tenantId });
 
   return Response.json({ ok: true });

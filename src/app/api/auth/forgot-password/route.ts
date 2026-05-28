@@ -8,6 +8,7 @@ import { parseJsonBody } from "@/lib/http/searchParams";
 import { createPasswordResetToken } from "@/lib/auth/createPasswordResetToken";
 import { passwordResetEmail } from "@/lib/auth/passwordResetEmail";
 import { baseUrl } from "@/lib/url";
+import { resolveLocale } from "@/lib/i18n/server";
 import { ONE_HOUR_MS } from "@/lib/time/units";
 const BodySchema = z.object({ email: z.string().email() });
 const LIMIT = { prefix: "forgot-pw", max: 3, windowMs: ONE_HOUR_MS };
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
 
   const { raw: rawToken } = await createPasswordResetToken(user.id);
   const resetUrl = `${baseUrl()}/reset-password?token=${rawToken}`;
-  const { subject, html } = passwordResetEmail(resetUrl);
+  const { subject, html } = passwordResetEmail(resetUrl, resolveLocale(req));
   void sendEmail({ to: email, subject, html });
 
   log.info({ userId: user.id }, "Password reset link sent");

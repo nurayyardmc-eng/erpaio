@@ -66,4 +66,37 @@ describe("auth/emailVerifyEmail/emailVerificationEmail", () => {
       expect(emailVerificationEmail("").html).toContain('href=""');
     });
   });
+
+  describe("locale: en", () => {
+    it("EN subject", () => {
+      expect(emailVerificationEmail(VERIFY_URL, "en").subject).toBe(
+        "Verify your ERPAIO email address",
+      );
+    });
+
+    it("EN heading 'Email Verification'", () => {
+      expect(emailVerificationEmail(VERIFY_URL, "en").html).toContain(">Email Verification<");
+    });
+
+    it("EN CTA 'Verify Email'", () => {
+      expect(emailVerificationEmail(VERIFY_URL, "en").html).toContain(">Verify Email<");
+    });
+
+    it("EN 24-hour copy", () => {
+      expect(emailVerificationEmail(VERIFY_URL, "en").html).toContain("24 hours");
+    });
+
+    it("EN safety footer", () => {
+      expect(emailVerificationEmail(VERIFY_URL, "en").html).toContain("didn't request this");
+    });
+
+    it("EN embeds verify URL", () => {
+      expect(emailVerificationEmail(VERIFY_URL, "en").html).toContain(`href="${VERIFY_URL}"`);
+    });
+
+    it("unknown locale defaults to TR (back-compat)", () => {
+      const { subject } = emailVerificationEmail(VERIFY_URL, "fr");
+      expect(subject).toBe("ERPAIO email adresinizi doğrulayın");
+    });
+  });
 });
