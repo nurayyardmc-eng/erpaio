@@ -58,7 +58,7 @@ src/
 
 ## Önemli komutlar
 ```bash
-npm test                 # 63 test (vitest)
+npm test                 # 2143 test (vitest)
 npx tsc --noEmit         # type check
 npm run build            # production build (turbopack)
 npx prisma migrate deploy # Production DB migrations
@@ -71,11 +71,26 @@ vercel --prod --yes      # Manual deploy (sadece /Users/nurayyardimci/erpaio'dan
 - Dashboard sadece TR (multi-lang refactor pending)
 
 ## API conventions
-- Auth: `getAuth(req)` veya `requireAuth(req)` (dual.ts)
-- Validation: Zod schemas — `body.error.issues[0]?.message ?? "Geçersiz veri"` (safe access)
-- Rate limit: `rateLimit(key, { prefix, max, windowMs })` — Upstash + in-memory fallback
+- Auth: `getAuth(req)` veya `requireAuth(req)` (dual.ts), sysadmin için `requireSysAdmin(req)`
+- Validation: `parseJsonBody(req, Schema)` ve `parseQuery(req, Schema)` — Response yoksa parsed döner, varsa 400
+- Rate limit: `rateLimit(key, { prefix, max, windowMs })` — Upstash + in-memory fallback. 429 için `rateLimited429(req, limit)` (Retry-After header)
 - Body size: `checkBodySize(req)` — 1MB default
 - Tenant scoping: TÜM Prisma where clause'larında `tenantId`
+
+## Shared helpers
+- **HTTP responses** (`lib/http/searchParams.ts`):
+  - Error: `userNotFoundError`/`tenantNotFoundError`/`watchlistNotFoundError`/`connectionNotFoundError`/`activeConnectionNotFoundError`/`savedQueryNotFoundError` (404)
+  - `invalidQuestionError`/`incorrectPasswordError`/`noFieldsToUpdateError` (400)
+  - `sqlNotInHistoryError` (422), `sqlExecutionError`/`internalServerError` (500), `sqlValidationError` (400 with details)
+  - `getRequiredIdParam(req)` — query `?id=` zorunluluğu için
+- **Client fetch** (`lib/http/clientFetch.ts`): `postJson(url, body)` / `patchJson` / `putJson` / `deleteJson` — dashboard pages için. Response döner, caller `.json()` + error UX kendi yapar.
+- **DB ownership** (`lib/db/`): `assertOwnedConnection`/`findOwnedConnection`/`assertOwnedWatchlist`/`findActiveErpConnectionForChat` ve `lib/chat/assertOwnedChatSession`/`findOwnedChatSessionWithMessages`
+- **Auth tokens** (`lib/auth/`): `createMobileApiToken`/`createEmailVerificationToken`/`createPasswordResetToken`/`hashPassword`/`verifyUserPassword`
+- **Chat helpers** (`lib/chat/`): `findLastSqlForQuestion`/`buildPromptContext`/`extractColumns`/`ensureChatSession`/`persistChatExchange`
+- **AI helpers** (`lib/ai/`): `extractAnthropicText(msg, fallback?)`/`stripCodeFences(raw)`/`dialectRules(isPostgres)`
+- **Cron** (`lib/cron/`): `assertCronAuth`/`acquireCronLock`/`finalizeCronRun`/`cronSkipResponse`/`deriveCronFinalStatus`
+- **Constants**: `ALERT_STATUSES`/`NOTIFICATION_CHANNELS`/`NOTIFICATION_STATUSES`/`INTEGRATION_KINDS`/`ERP_TYPES`/`CRON_STATUSES`/`THRESHOLD_OPS`/`SEVERITY_VALUES`
+- **Utility**: `errorMessage(err)` (lib/errors), `toPrismaJson(obj)` (lib/db), `daysAgo(n)`/`daysFromNow(n)` (lib/time/units), `retentionCutoff(days)` (lib/cron/retention)
 
 ## Production
 - URL: https://erpaio.vercel.app
