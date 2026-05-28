@@ -28,6 +28,8 @@ import {
   isIyzicoConfigured,
   getSubscription,
   mapIyzicoStatusToInternal,
+  inferPlanFromIyzicoReference,
+  classifyIyzicoEvent,
   type IyzicoWebhookEvent,
 } from "@/lib/billing/iyzico";
 import {
@@ -147,13 +149,14 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
   const ownerEmail = tenant.users[0]?.email ?? null;
   const locale = tenant.defaultLocale;
 
-  switch (event.iyziEventType) {
-    case "subscription.activation": {
+  const action = classifyIyzicoEvent(event.iyziEventType);
+  switch (action) {
+    case "activation": {
       // Fetch full subscription to discover plan + status.
       const sub = subRef ? await getSubscription(subRef).catch(() => null) : null;
       const internalStatus = sub ? mapIyzicoStatusToInternal(sub.subscriptionStatus) : "active";
       // Map iyzico plan reference back to our internal plan name.
-      const plan = inferPlanFromReference(sub?.pricingPlanReferenceCode);
+      const plan = inferPlanFromIyzicoReference(sub?.pricingPlanReferenceCode);
       await prisma.tenant.update({
         where: { id: tenant.id },
         data: {
@@ -181,9 +184,9 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
       log.info({ tenantId: tenant.id, plan }, "iyzico subscription activated");
       break;
     }
-    case "subscription.renewal": {
+    case "renewal": {
       const sub = subRef ? await getSubscription(subRef).catch(() => null) : null;
-      const plan = inferPlanFromReference(sub?.pricingPlanReferenceCode);
+      const plan = inferPlanFromIyzicoReference(sub?.pricingPlanReferenceCode);
       if (ownerEmail) {
         const content = iyzicoSubscriptionRenewalEmail({
           plan,
@@ -200,7 +203,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
       log.info({ tenantId: tenant.id }, "iyzico subscription renewed");
       break;
     }
-    case "subscription.unpaid": {
+    case "unpaid": {
       await prisma.tenant.update({
         where: { id: tenant.id },
         data: { subscriptionStatus: "past_due" },
@@ -220,7 +223,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
       log.warn({ tenantId: tenant.id }, "iyzico subscription unpaid");
       break;
     }
-    case "subscription.cancellation": {
+    case "cancellation": {
       await prisma.tenant.update({
         where: { id: tenant.id },
         data: {
@@ -244,7 +247,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
       log.info({ tenantId: tenant.id }, "iyzico subscription cancelled");
       break;
     }
-    case "subscription.trial.expire": {
+    case "trial.expire": {
       if (ownerEmail) {
         const content = iyzicoTrialExpiringEmail({
           tenantName: tenant.name,
@@ -260,7 +263,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
       log.info({ tenantId: tenant.id }, "iyzico trial expiring");
       break;
     }
-    case "subscription.expire": {
+    case "expire": {
       await prisma.tenant.update({
         where: { id: tenant.id },
         data: { plan: "starter", subscriptionStatus: "expired" },
@@ -268,18 +271,8 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
       log.info({ tenantId: tenant.id }, "iyzico subscription expired");
       break;
     }
-    default:
+    case "unhandled":
       log.info({ eventType: event.iyziEventType }, "iyzico event unhandled");
+      break;
   }
-}
-
-/**
- * Map iyzico pricing plan reference back to our internal plan name.
- * Env stores reference codes; here we reverse-lookup. Falls back to "pro".
- */
-function inferPlanFromReference(ref: string | undefined): string {
-  if (!ref) return "pro";
-  if (ref === process.env.IYZICO_PRICE_ENTERPRISE) return "enterprise";
-  if (ref === process.env.IYZICO_PRICE_PRO) return "pro";
-  return "pro";
 }

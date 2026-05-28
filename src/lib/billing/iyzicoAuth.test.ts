@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as crypto from "crypto";
 import {
   buildIyzicoAuthHeader,
   verifyIyzicoWebhookSignature,
   mapIyzicoStatusToInternal,
+  inferPlanFromIyzicoReference,
+  classifyIyzicoEvent,
 } from "./iyzico";
 
 describe("billing/iyzico/buildIyzicoAuthHeader", () => {
@@ -105,5 +107,79 @@ describe("billing/iyzico/mapIyzicoStatusToInternal", () => {
   });
   it("unknown → incomplete (defensive)", () => {
     expect(mapIyzicoStatusToInternal("WEIRD_STATE")).toBe("incomplete");
+  });
+});
+
+describe("billing/iyzico/inferPlanFromIyzicoReference", () => {
+  const origPro = process.env.IYZICO_PRICE_PRO;
+  const origEnt = process.env.IYZICO_PRICE_ENTERPRISE;
+
+  beforeEach(() => {
+    process.env.IYZICO_PRICE_PRO = "pricing-plan-pro-ref-123";
+    process.env.IYZICO_PRICE_ENTERPRISE = "pricing-plan-ent-ref-456";
+  });
+
+  afterEach(() => {
+    process.env.IYZICO_PRICE_PRO = origPro;
+    process.env.IYZICO_PRICE_ENTERPRISE = origEnt;
+  });
+
+  it("matching enterprise ref → enterprise", () => {
+    expect(inferPlanFromIyzicoReference("pricing-plan-ent-ref-456")).toBe("enterprise");
+  });
+
+  it("matching pro ref → pro", () => {
+    expect(inferPlanFromIyzicoReference("pricing-plan-pro-ref-123")).toBe("pro");
+  });
+
+  it("undefined ref → pro (defensive default)", () => {
+    expect(inferPlanFromIyzicoReference(undefined)).toBe("pro");
+  });
+
+  it("empty string ref → pro (falsy default)", () => {
+    expect(inferPlanFromIyzicoReference("")).toBe("pro");
+  });
+
+  it("unknown ref → pro (defensive, never downgrade a paid customer)", () => {
+    expect(inferPlanFromIyzicoReference("nope-not-our-ref")).toBe("pro");
+  });
+
+  it("env vars unset → still returns pro for known-looking ref", () => {
+    delete process.env.IYZICO_PRICE_PRO;
+    delete process.env.IYZICO_PRICE_ENTERPRISE;
+    expect(inferPlanFromIyzicoReference("anything")).toBe("pro");
+  });
+});
+
+describe("billing/iyzico/classifyIyzicoEvent", () => {
+  it("subscription.activation → activation", () => {
+    expect(classifyIyzicoEvent("subscription.activation")).toBe("activation");
+  });
+  it("subscription.renewal → renewal", () => {
+    expect(classifyIyzicoEvent("subscription.renewal")).toBe("renewal");
+  });
+  it("subscription.unpaid → unpaid", () => {
+    expect(classifyIyzicoEvent("subscription.unpaid")).toBe("unpaid");
+  });
+  it("subscription.cancellation → cancellation", () => {
+    expect(classifyIyzicoEvent("subscription.cancellation")).toBe("cancellation");
+  });
+  it("subscription.trial.expire → trial.expire", () => {
+    expect(classifyIyzicoEvent("subscription.trial.expire")).toBe("trial.expire");
+  });
+  it("subscription.expire → expire", () => {
+    expect(classifyIyzicoEvent("subscription.expire")).toBe("expire");
+  });
+  it("unknown event type → unhandled (defensive)", () => {
+    expect(classifyIyzicoEvent("subscription.weird")).toBe("unhandled");
+  });
+  it("undefined event type → unhandled", () => {
+    expect(classifyIyzicoEvent(undefined)).toBe("unhandled");
+  });
+  it("empty string → unhandled", () => {
+    expect(classifyIyzicoEvent("")).toBe("unhandled");
+  });
+  it("case-sensitive (uppercase variant) → unhandled", () => {
+    expect(classifyIyzicoEvent("SUBSCRIPTION.ACTIVATION")).toBe("unhandled");
   });
 });

@@ -327,6 +327,53 @@ export interface IyzicoWebhookEvent {
   status?: string;
 }
 
+/**
+ * Map iyzico pricing plan reference code back to our internal plan name.
+ * Env stores reference codes; here we reverse-lookup against IYZICO_PRICE_*.
+ *
+ * Defensive default: any unknown ref falls back to "pro" (safer than
+ * starter — a paid customer should always retain at least pro).
+ */
+export function inferPlanFromIyzicoReference(ref: string | undefined): "pro" | "enterprise" {
+  if (!ref) return "pro";
+  if (ref === process.env.IYZICO_PRICE_ENTERPRISE) return "enterprise";
+  if (ref === process.env.IYZICO_PRICE_PRO) return "pro";
+  return "pro";
+}
+
+/**
+ * Classify an iyzico webhook event type into a normalized action kind
+ * the dispatcher will route on. Centralizing this lets us unit-test the
+ * branch logic without touching DB/Sentry/emails.
+ */
+export type IyzicoEventAction =
+  | "activation"
+  | "renewal"
+  | "unpaid"
+  | "cancellation"
+  | "trial.expire"
+  | "expire"
+  | "unhandled";
+
+export function classifyIyzicoEvent(eventType: string | undefined): IyzicoEventAction {
+  switch (eventType) {
+    case "subscription.activation":
+      return "activation";
+    case "subscription.renewal":
+      return "renewal";
+    case "subscription.unpaid":
+      return "unpaid";
+    case "subscription.cancellation":
+      return "cancellation";
+    case "subscription.trial.expire":
+      return "trial.expire";
+    case "subscription.expire":
+      return "expire";
+    default:
+      return "unhandled";
+  }
+}
+
 /** Map iyzico subscription status → our internal Tenant.subscriptionStatus. */
 export function mapIyzicoStatusToInternal(
   status: IyzicoSubscription["subscriptionStatus"] | string,
