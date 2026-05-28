@@ -8,7 +8,7 @@ import {
   noFieldsToUpdateError,
   watchlistNotFoundError,
 } from "@/lib/http/searchParams";
-import { THRESHOLD_OPS } from "@/lib/threshold/compare";
+import { THRESHOLD_OPS, type ThresholdOp } from "@/lib/threshold/compare";
 
 /**
  * Watchlist partial update — Track GGGG. Önceden sadece create+delete vardı;
@@ -46,7 +46,7 @@ export async function PATCH(
   const data: {
     name?: string;
     question?: string;
-    thresholdOp?: "lt" | "lte" | "gt" | "gte" | "eq";
+    thresholdOp?: ThresholdOp;
     thresholdVal?: number;
     emailTo?: string | null;
     enabled?: boolean;
