@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertOctagon, RefreshCw, Home } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function ErrorPage({
   error,
@@ -13,6 +14,7 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useI18n();
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
@@ -51,10 +53,10 @@ export default function ErrorPage({
         margin: 0,
         color: colors.text,
       }}>
-        Bir şeyler ters gitti
+        {t.errorPages.errorTitle}
       </h1>
       <p style={{ color: colors.textMuted, fontSize: 15, maxWidth: 480, lineHeight: 1.6, margin: 0 }}>
-        Beklenmedik bir hata oluştu. Geliştirme ekibimiz bilgilendirildi.
+        {t.errorPages.errorDescription}
       </p>
       {error.digest && (
         <code style={{
@@ -65,7 +67,7 @@ export default function ErrorPage({
           borderRadius: 6,
           fontFamily: "ui-monospace, Menlo, Monaco, monospace",
         }}>
-          Hata ID: {error.digest}
+          {t.errorPages.errorIdLabel}: {error.digest}
         </code>
       )}
       <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
@@ -85,7 +87,7 @@ export default function ErrorPage({
             gap: 8,
           }}
         >
-          <RefreshCw size={16} /> Tekrar dene
+          <RefreshCw size={16} /> {t.errorPages.retryBtn}
         </button>
         <Link href="/" style={{
           background: colors.bg,
@@ -99,7 +101,7 @@ export default function ErrorPage({
           alignItems: "center",
           gap: 8,
         }}>
-          <Home size={16} /> Ana sayfa
+          <Home size={16} /> {t.errorPages.homeBtn}
         </Link>
       </div>
     </div>

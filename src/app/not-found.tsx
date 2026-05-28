@@ -1,9 +1,15 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { ArrowLeft, Home } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
+import { resolveLocaleFromHeaders } from "@/lib/i18n/server";
+import { messagesFor } from "@/lib/i18n/messagesFor";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const h = await headers();
+  const t = messagesFor(resolveLocaleFromHeaders(h));
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -37,10 +43,10 @@ export default function NotFound() {
         margin: 0,
         color: colors.text,
       }}>
-        Sayfa bulunamadı
+        {t.errorPages.notFoundTitle}
       </h1>
       <p style={{ color: colors.textMuted, fontSize: 15, maxWidth: 420, lineHeight: 1.6, margin: 0 }}>
-        Aradığınız sayfa taşınmış veya silinmiş olabilir.
+        {t.errorPages.notFoundDescription}
       </p>
       <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
         <Link href="/" style={{
@@ -54,7 +60,7 @@ export default function NotFound() {
           alignItems: "center",
           gap: 8,
         }}>
-          <Home size={16} /> Ana sayfa
+          <Home size={16} /> {t.errorPages.homeBtn}
         </Link>
         <Link href="/dashboard" style={{
           background: colors.bg,
@@ -68,7 +74,7 @@ export default function NotFound() {
           alignItems: "center",
           gap: 8,
         }}>
-          <ArrowLeft size={16} /> Dashboard
+          <ArrowLeft size={16} /> {t.errorPages.dashboardBtn}
         </Link>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { postJson } from "@/lib/http/clientFetch";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function AcceptInvitePage() {
   return (
@@ -14,12 +15,13 @@ export default function AcceptInvitePage() {
 function Loader() {
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#94A3B8", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      Yükleniyor...
+      ...
     </div>
   );
 }
 
 function Inner() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -33,13 +35,13 @@ function Inner() {
   useEffect(() => {
     // One-shot validation when token changes; intended to sync error state with URL param.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!token) setError("Davet linki geçersiz.");
-  }, [token]);
+    if (!token) setError(t.acceptInvite.errInvalidLink);
+  }, [token, t.acceptInvite.errInvalidLink]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      setError("Şifreler eşleşmiyor.");
+      setError(t.acceptInvite.errMismatch);
       return;
     }
     setLoading(true);
@@ -47,13 +49,13 @@ function Inner() {
       const res = await postJson("/api/team/accept-invite", { token, password, name: name || undefined });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Hata.");
+        setError(data.error || t.acceptInvite.errGeneric);
         setLoading(false);
         return;
       }
       router.push(`/login?email=${encodeURIComponent(data.email)}&accepted=ok`);
     } catch {
-      setError("Ağ hatası.");
+      setError(t.acceptInvite.errNetwork);
       setLoading(false);
     }
   };
@@ -61,20 +63,20 @@ function Inner() {
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", padding: 16 }}>
       <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 40, width: 420 }}>
-        <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO</div>
-        <h1 style={{ color: "#0F172A", fontSize: 20, margin: "0 0 12px" }}>Davet kabulü</h1>
+        <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.acceptInvite.brand}</div>
+        <h1 style={{ color: "#0F172A", fontSize: 20, margin: "0 0 12px" }}>{t.acceptInvite.title}</h1>
         <p style={{ color: "#475569", fontSize: 12, marginBottom: 20 }}>
-          Hesabını oluşturmak için bir şifre belirle.
+          {t.acceptInvite.description}
         </p>
 
         <form onSubmit={submit}>
-          <Field label="ADIN">
+          <Field label={t.acceptInvite.fieldName}>
             <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
           </Field>
-          <Field label="ŞİFRE (8+ karakter)">
+          <Field label={t.acceptInvite.fieldPassword}>
             <input required type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
           </Field>
-          <Field label="TEKRAR">
+          <Field label={t.acceptInvite.fieldConfirm}>
             <input required type="password" minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} style={inputStyle} />
           </Field>
           {error && <div style={{ color: "#EF4444", fontSize: 12, marginBottom: 12 }}>{error}</div>}
@@ -83,7 +85,7 @@ function Inner() {
             disabled={loading || !token}
             style={{ width: "100%", background: "#0A0A0A18", border: "1px solid #0A0A0A40", borderRadius: 6, padding: 12, color: "#0A0A0A", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
           >
-            {loading ? "Kayıt..." : "Kabul et ve giriş yap"}
+            {loading ? t.acceptInvite.submitting : t.acceptInvite.submit}
           </button>
         </form>
       </div>

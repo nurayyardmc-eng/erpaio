@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 import { postJson } from "@/lib/http/clientFetch";
+import { useI18n } from "@/lib/i18n/context";
 
 /**
  * Email değişikliği doğrulama sayfası — Track YYY.
@@ -30,12 +31,13 @@ function Loader() {
       alignItems: "center",
       justifyContent: "center",
     }}>
-      Yükleniyor...
+      ...
     </div>
   );
 }
 
 function Inner() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -46,7 +48,7 @@ function Inner() {
     if (!token) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setState("err");
-      setMsg("Link geçersiz.");
+      setMsg(t.emailChanged.errInvalidLink);
       return;
     }
     postJson("/api/auth/verify-email-change", { token })
@@ -54,18 +56,18 @@ function Inner() {
         const d = await r.json();
         if (r.ok) {
           setState("ok");
-          setMsg("Email değişikliği tamamlandı. Yeni emailinizi yakında ayrı bir doğrulama akışında onaylamanız istenebilir.");
+          setMsg(t.emailChanged.successMessage);
           setTimeout(() => router.push("/dashboard/settings"), 3000);
         } else {
           setState("err");
-          setMsg(d.error || "Doğrulama başarısız.");
+          setMsg(d.error || t.emailChanged.errGeneric);
         }
       })
       .catch(() => {
         setState("err");
-        setMsg("Ağ hatası.");
+        setMsg(t.emailChanged.errNetwork);
       });
-  }, [token, router]);
+  }, [token, router, t.emailChanged.errInvalidLink, t.emailChanged.successMessage, t.emailChanged.errGeneric, t.emailChanged.errNetwork]);
 
   const stateColor = state === "ok" ? colors.success : state === "err" ? colors.error : colors.textMuted;
 
@@ -91,7 +93,7 @@ function Inner() {
           <Logo size={96} variant="full" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
-          Email Değişikliği
+          {t.emailChanged.title}
         </h1>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
           {state === "verifying" ? (
@@ -103,11 +105,11 @@ function Inner() {
           )}
         </div>
         <p style={{ color: stateColor, fontSize: 15, fontWeight: 500, lineHeight: 1.5 }}>
-          {msg || "Kontrol ediliyor..."}
+          {msg || "..."}
         </p>
         {state === "ok" && (
           <p style={{ color: colors.textSubtle, fontSize: 13, marginTop: 16 }}>
-            Ayarlar sayfasına yönlendiriliyorsun...
+            {t.emailChanged.redirectingToSettings}
           </p>
         )}
       </div>

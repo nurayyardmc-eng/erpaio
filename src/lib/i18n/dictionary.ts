@@ -391,6 +391,41 @@ export interface Dictionary {
     linkPrivacy: string;
     linkTerms: string;
   };
+  acceptInvite: {
+    brand: string;
+    title: string;
+    description: string;
+    fieldName: string;
+    fieldPassword: string;
+    fieldConfirm: string;
+    submit: string;
+    submitting: string;
+    errInvalidLink: string;
+    errMismatch: string;
+    errGeneric: string;
+    errNetwork: string;
+  };
+  emailChanged: {
+    title: string;
+    successMessage: string;
+    errInvalidLink: string;
+    errGeneric: string;
+    errNetwork: string;
+    redirectingToSettings: string;
+  };
+  errorPages: {
+    notFoundTitle: string;
+    notFoundDescription: string;
+    homeBtn: string;
+    dashboardBtn: string;
+    errorTitle: string;
+    errorDescription: string;
+    errorIdLabel: string;
+    retryBtn: string;
+    criticalBadge: string;
+    criticalTitle: string;
+    criticalDescription: string;
+  };
   welcomeWizard: {
     brand: string;
     title: string;
