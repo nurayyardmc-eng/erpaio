@@ -45,6 +45,8 @@ export default function ConnectionsPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [showSetupSql, setShowSetupSql] = useState(false);
+  // Feature 1.3 — Connection test fail edince user-friendly hint gosterir.
+  const [lastError, setLastError] = useState<{ title: string; hint: string; category: string } | null>(null);
   const [form, setForm] = useState({
     erpType: "nebim_v3",
     host: "",
@@ -123,6 +125,7 @@ export default function ConnectionsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setLastError(null);
     try {
       const res = await postJson("/api/connections", form);
       const data = await res.json();
@@ -138,7 +141,12 @@ export default function ConnectionsPage() {
         setForm({ erpType: "nebim_v3", host: "", port: 1433, dbName: "", username: "", password: "" });
         setShowForm(false);
       } else {
-        showToast("Bağlantı başarısız. Bilgileri kontrol edin.", "error");
+        // Feature 1.3 — backend connectionErrorHint dondurur; UI'da rich panel goster.
+        if (testData.hint && testData.error) {
+          setLastError({ title: testData.error, hint: testData.hint, category: testData.category ?? "unknown" });
+        } else {
+          showToast("Bağlantı başarısız. Bilgileri kontrol edin.", "error");
+        }
       }
       refresh();
     } catch (err) {
@@ -381,6 +389,46 @@ export default function ConnectionsPage() {
                     }}
                   >
                     <Mail size={12} /> IT&apos;ye E-posta Hazırla
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Feature 1.3 — Connection test fail edince rich error panel
+                (firewall hint, auth hint, vb). Toast yerine kalıcı görünür. */}
+            {lastError && (
+              <div style={{
+                background: "#FEE2E2",
+                border: "1px solid #FCA5A5",
+                borderRadius: 10,
+                padding: 16,
+                marginBottom: 16,
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <XCircle size={18} color="#B91C1C" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#7F1D1D", marginBottom: 4 }}>
+                      {lastError.title}
+                    </div>
+                    <p style={{ fontSize: 13, color: "#991B1B", margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                      {lastError.hint}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLastError(null)}
+                    aria-label="Kapat"
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#7F1D1D",
+                      cursor: "pointer",
+                      padding: 0,
+                      fontSize: 16,
+                      lineHeight: 1,
+                    }}
+                  >
+                    ×
                   </button>
                 </div>
               </div>

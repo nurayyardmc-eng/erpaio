@@ -4,7 +4,9 @@ import { findOwnedConnection } from "@/lib/db/erpConnection";
 import { connectionNotFoundError } from "@/lib/http/searchParams";
 import { queryERP } from "@/lib/db/connector";
 import { dialectFromErpType } from "@/lib/db/dialect";
-import { jsonError, resolveLocale } from "@/lib/i18n/server";
+import { jsonError } from "@/lib/i18n/server";
+import { connectionErrorHint } from "@/lib/db/connectionErrorHint";
+import { errorMessage } from "@/lib/errors/errorMessage";
 
 export async function GET(
   req: Request,
@@ -34,12 +36,22 @@ export async function GET(
     });
 
     return Response.json({ ok: true, tableCount: tables.length });
-  } catch {
+  } catch (err) {
     await prisma.erpConnection.update({
       where: { id },
       data: { status: "error" },
     });
-    const locale = resolveLocale(req);
-    return Response.json({ ok: false, error: locale === "en" ? "Connection failed." : "Bağlantı başarısız." }, { status: 503 });
+    // Feature 1.3 — error mesajini analiz edip user-friendly hint don.
+    // Kullanici "Baglanti basarisiz" yerine sebep + cozum onerisi gorur.
+    const hint = connectionErrorHint(errorMessage(err));
+    return Response.json(
+      {
+        ok: false,
+        error: hint.title,
+        hint: hint.hint,
+        category: hint.category,
+      },
+      { status: 503 },
+    );
   }
 }
