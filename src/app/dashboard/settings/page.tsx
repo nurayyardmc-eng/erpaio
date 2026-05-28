@@ -289,6 +289,8 @@ export default function SettingsPage() {
             </Field>
           </Section>
 
+          <BillingSection t={t} />
+
           {usage && (
             <Section title={t.settings.usage}>
               <p style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>
@@ -548,6 +550,407 @@ export default function SettingsPage() {
           <DangerZone t={t} />
         </div>
       </main>
+    </div>
+  );
+}
+
+/**
+ * BillingSection — Feature 7. Stripe + iyzico üzerinden abonelik yönetimi.
+ *
+ *   - Provider state fetched from /api/billing/provider (auth + tenant scoped).
+ *   - starter → "Pro'ya Yükselt" CTA → iyzico aktifse modal (TR fatura
+ *     alanları), aksi halde Stripe checkout redirect.
+ *   - pro/enterprise → "Aboneliği Yönet" (Stripe portal) veya "İptal Et"
+ *     (iyzico subscription cancel).
+ */
+interface BillingProviderInfo {
+  plan: string;
+  subscriptionStatus: string | null;
+  paymentProvider: "stripe" | "iyzico" | null;
+  upgradeProvider: "stripe" | "iyzico" | "manual";
+  hasActiveSubscription: boolean;
+  trialEndsAt: string | null;
+  providerConfigured: { stripe: boolean; iyzico: boolean };
+}
+
+interface IyzicoForm {
+  name: string;
+  surname: string;
+  identityNumber: string;
+  gsmNumber: string;
+  city: string;
+  country: string;
+  address: string;
+  zipCode: string;
+}
+
+function BillingSection({ t }: { t: Dictionary }) {
+  const [info, setInfo] = useState<BillingProviderInfo | null>(null);
+  const [upgrading, setUpgrading] = useState(false);
+  const [managing, setManaging] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<"pro" | "enterprise" | null>(null);
+  const [iyzicoForm, setIyzicoForm] = useState<IyzicoForm>({
+    name: "",
+    surname: "",
+    identityNumber: "",
+    gsmNumber: "",
+    city: "",
+    country: "Turkey",
+    address: "",
+    zipCode: "",
+  });
+
+  useEffect(() => {
+    fetch("/api/billing/provider").then(async (r) => {
+      if (r.ok) setInfo(await r.json());
+    });
+  }, []);
+
+  if (!info) return null;
+
+  const isStarter = info.plan === "starter";
+  const showIyzicoModal = selectedPlan !== null && info.upgradeProvider === "iyzico";
+
+  async function startUpgrade(plan: "pro" | "enterprise") {
+    if (!info) return;
+    if (info.upgradeProvider === "iyzico") {
+      setSelectedPlan(plan);
+      return;
+    }
+    if (info.upgradeProvider === "stripe") {
+      setUpgrading(true);
+      try {
+        const r = await fetch("/api/billing/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan }),
+        });
+        const d = await r.json();
+        if (r.ok && d.url) window.location.href = d.url;
+        else showToast(d.error ?? t.billing.upgradeFailed, "error");
+      } catch {
+        showToast(t.billing.upgradeFailed, "error");
+      } finally {
+        setUpgrading(false);
+      }
+      return;
+    }
+    showToast(t.billing.noProvider, "error");
+  }
+
+  async function submitIyzicoUpgrade() {
+    if (!selectedPlan) return;
+    setUpgrading(true);
+    try {
+      const r = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          iyzico: {
+            name: iyzicoForm.name,
+            surname: iyzicoForm.surname,
+            identityNumber: iyzicoForm.identityNumber || undefined,
+            gsmNumber: iyzicoForm.gsmNumber || undefined,
+            city: iyzicoForm.city,
+            country: iyzicoForm.country,
+            address: iyzicoForm.address,
+            zipCode: iyzicoForm.zipCode || undefined,
+          },
+        }),
+      });
+      const d = await r.json();
+      if (r.ok && d.url) {
+        window.location.href = d.url;
+        return;
+      }
+      showToast(d.error ?? t.billing.upgradeFailed, "error");
+    } catch {
+      showToast(t.billing.upgradeFailed, "error");
+    } finally {
+      setUpgrading(false);
+    }
+  }
+
+  async function manageSubscription() {
+    setManaging(true);
+    try {
+      const r = await fetch("/api/billing/portal", { method: "POST" });
+      const d = await r.json();
+      if (r.ok && d.url) window.location.href = d.url;
+      else showToast(d.error ?? t.billing.cancelFailed, "error");
+    } catch {
+      showToast(t.billing.cancelFailed, "error");
+    } finally {
+      setManaging(false);
+    }
+  }
+
+  async function cancelIyzicoSubscription() {
+    const ok = await confirmDialog({
+      title: t.billing.cancelConfirmTitle,
+      message: t.billing.cancelConfirmMessage,
+      confirmLabel: t.billing.cancelConfirmYes,
+      cancelLabel: t.billing.cancelConfirmNo,
+      destructive: true,
+    });
+    if (!ok) return;
+    setCancelling(true);
+    try {
+      const r = await fetch("/api/billing/portal", { method: "POST" });
+      const d = await r.json();
+      if (r.ok) {
+        showToast(t.billing.cancelSuccessIyzico, "success");
+        setInfo((prev) => (prev ? { ...prev, hasActiveSubscription: false } : prev));
+      } else {
+        showToast(d.error ?? t.billing.cancelFailed, "error");
+      }
+    } catch {
+      showToast(t.billing.cancelFailed, "error");
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  const statusLabel = info.subscriptionStatus
+    ? {
+        active: t.billing.statusActive,
+        trialing: t.billing.statusTrialing,
+        past_due: t.billing.statusPastDue,
+        canceled: t.billing.statusCanceled,
+        expired: t.billing.statusExpired,
+        incomplete: t.billing.statusIncomplete,
+      }[info.subscriptionStatus] ?? info.subscriptionStatus
+    : null;
+
+  return (
+    <Section title={t.billing.sectionTitle}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 4 }}>
+            {t.billing.currentPlan}
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: colors.text, textTransform: "uppercase", letterSpacing: 1 }}>
+            {info.plan}
+            {statusLabel && (
+              <span style={{
+                marginLeft: 12,
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "2px 10px",
+                borderRadius: 100,
+                background: colors.brandSoft,
+                color: colors.brand,
+                textTransform: "none",
+                letterSpacing: 0,
+              }}>
+                {statusLabel}
+              </span>
+            )}
+          </div>
+          {info.trialEndsAt && (
+            <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 6 }}>
+              {t.billing.trialEndsPrefix}: {new Date(info.trialEndsAt).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isStarter ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button
+            onClick={() => startUpgrade("pro")}
+            disabled={upgrading}
+            style={primaryBtn}
+          >
+            {upgrading ? t.billing.upgradingBtn : t.billing.selectPlanPro}
+          </button>
+          <button
+            onClick={() => startUpgrade("enterprise")}
+            disabled={upgrading}
+            style={secondaryBtn}
+          >
+            {t.billing.selectPlanEnterprise}
+          </button>
+          {info.upgradeProvider === "iyzico" && (
+            <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
+              {t.billing.invoiceNoteIyzico}
+            </div>
+          )}
+          {info.upgradeProvider === "manual" && (
+            <div style={{ fontSize: 12, color: colors.error, marginTop: 4 }}>
+              {t.billing.noProvider}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {info.paymentProvider === "stripe" && (
+            <button onClick={manageSubscription} disabled={managing} style={primaryBtn}>
+              {managing ? t.billing.managingBtn : t.billing.manageBtn}
+            </button>
+          )}
+          {info.paymentProvider === "iyzico" && info.hasActiveSubscription && (
+            <button onClick={cancelIyzicoSubscription} disabled={cancelling} style={secondaryBtn}>
+              {cancelling ? t.billing.cancellingBtn : t.billing.cancelBtn}
+            </button>
+          )}
+        </div>
+      )}
+
+      {showIyzicoModal && (
+        <IyzicoUpgradeModal
+          t={t}
+          form={iyzicoForm}
+          setForm={setIyzicoForm}
+          upgrading={upgrading}
+          onSubmit={submitIyzicoUpgrade}
+          onCancel={() => setSelectedPlan(null)}
+        />
+      )}
+    </Section>
+  );
+}
+
+function IyzicoUpgradeModal({
+  t,
+  form,
+  setForm,
+  upgrading,
+  onSubmit,
+  onCancel,
+}: {
+  t: Dictionary;
+  form: IyzicoForm;
+  setForm: (f: IyzicoForm) => void;
+  upgrading: boolean;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  const canSubmit =
+    form.name.length > 0 &&
+    form.surname.length > 0 &&
+    form.city.length > 0 &&
+    form.address.length >= 5;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(10,10,10,0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+        padding: 20,
+      }}
+      onClick={onCancel}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: colors.card,
+          borderRadius: 16,
+          padding: 28,
+          maxWidth: 560,
+          width: "100%",
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}
+      >
+        <h3 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: colors.text }}>
+          {t.billing.iyzicoFormTitle}
+        </h3>
+        <p style={{ margin: "0 0 20px", fontSize: 13, color: colors.textMuted, lineHeight: 1.5 }}>
+          {t.billing.iyzicoFormDescription}
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <Field label={t.billing.iyzicoName}>
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              style={inputStyle}
+              autoFocus
+            />
+          </Field>
+          <Field label={t.billing.iyzicoSurname}>
+            <input
+              value={form.surname}
+              onChange={(e) => setForm({ ...form, surname: e.target.value })}
+              style={inputStyle}
+            />
+          </Field>
+        </div>
+
+        <Field label={t.billing.iyzicoIdentityNumber}>
+          <input
+            value={form.identityNumber}
+            onChange={(e) => setForm({ ...form, identityNumber: e.target.value.replace(/\D/g, "").slice(0, 11) })}
+            style={inputStyle}
+            placeholder="11 digit"
+          />
+          <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>
+            {t.billing.iyzicoIdentityHint}
+          </div>
+        </Field>
+
+        <Field label={t.billing.iyzicoGsm}>
+          <input
+            value={form.gsmNumber}
+            onChange={(e) => setForm({ ...form, gsmNumber: e.target.value })}
+            style={inputStyle}
+            placeholder="+90555..."
+          />
+          <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>
+            {t.billing.iyzicoGsmHint}
+          </div>
+        </Field>
+
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+          <Field label={t.billing.iyzicoCity}>
+            <input
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              style={inputStyle}
+            />
+          </Field>
+          <Field label={t.billing.iyzicoZip}>
+            <input
+              value={form.zipCode}
+              onChange={(e) => setForm({ ...form, zipCode: e.target.value })}
+              style={inputStyle}
+            />
+          </Field>
+        </div>
+
+        <Field label={t.billing.iyzicoAddress}>
+          <textarea
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+            style={{ ...inputStyle, minHeight: 60, resize: "vertical" }}
+          />
+        </Field>
+
+        <Field label={t.billing.iyzicoCountry}>
+          <input
+            value={form.country}
+            onChange={(e) => setForm({ ...form, country: e.target.value })}
+            style={inputStyle}
+          />
+        </Field>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+          <button onClick={onCancel} disabled={upgrading} style={secondaryBtn}>
+            {t.billing.iyzicoCancelBtn}
+          </button>
+          <button onClick={onSubmit} disabled={upgrading || !canSubmit} style={primaryBtn}>
+            {upgrading ? t.billing.upgradingBtn : t.billing.iyzicoSubmitBtn}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
