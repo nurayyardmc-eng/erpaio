@@ -17,12 +17,13 @@ import {
   parseJsonBody,
   activeConnectionNotFoundError,
   invalidQuestionError,
+  internalServerError,
+  sqlValidationError,
 } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
-import { internalServerError, sqlValidationError } from "@/lib/http/searchParams";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
 import { confidenceBucket } from "@/lib/ai/confidence";
 import { pickDialect, dialectRules } from "@/lib/ai/dialect";
