@@ -10,7 +10,7 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-import { assertOwnedConnection } from "./erpConnection";
+import { assertOwnedConnection, findOwnedConnection } from "./erpConnection";
 import { prisma } from "@/lib/db/prisma";
 
 function mkReq(lang: "tr" | "en" = "tr"): Request {
@@ -57,5 +57,44 @@ describe("db/erpConnection/assertOwnedConnection", () => {
       where: { id: "c_1", tenantId: "tenant_X" },
       select: { id: true },
     });
+  });
+});
+
+describe("db/erpConnection/findOwnedConnection", () => {
+  beforeEach(() => {
+    vi.mocked(prisma.erpConnection.findFirst).mockReset();
+  });
+
+  it("returns full row when connection exists for tenant", async () => {
+    vi.mocked(prisma.erpConnection.findFirst).mockResolvedValueOnce({
+      id: "c_1",
+      erpType: "nebim_v3",
+      host: "db.example.com",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+    const r = await findOwnedConnection("c_1", "tenant_1");
+    expect(r).not.toBeNull();
+    expect(r?.id).toBe("c_1");
+    expect(r?.erpType).toBe("nebim_v3");
+  });
+
+  it("returns null when connection not found", async () => {
+    vi.mocked(prisma.erpConnection.findFirst).mockResolvedValueOnce(null);
+    const r = await findOwnedConnection("missing", "tenant_1");
+    expect(r).toBeNull();
+  });
+
+  it("SECURITY: where clause includes id + tenantId (no select restriction)", async () => {
+    vi.mocked(prisma.erpConnection.findFirst).mockResolvedValueOnce(null);
+    await findOwnedConnection("conn-X", "tenant-Y");
+    expect(prisma.erpConnection.findFirst).toHaveBeenCalledWith({
+      where: { id: "conn-X", tenantId: "tenant-Y" },
+    });
+  });
+
+  it("cross-tenant attack returns null", async () => {
+    vi.mocked(prisma.erpConnection.findFirst).mockResolvedValueOnce(null);
+    const r = await findOwnedConnection("victim-conn", "attacker-tenant");
+    expect(r).toBeNull();
   });
 });

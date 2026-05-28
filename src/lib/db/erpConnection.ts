@@ -32,3 +32,23 @@ export async function assertOwnedConnection(
   if (!conn) return connectionNotFoundError(req);
   return null;
 }
+
+/**
+ * Tenant-scoped full-row ErpConnection lookup. Returns the row or null.
+ *
+ * Track QQQQQQQQQQQQ — connections/[id]/test inline prisma.findFirst
+ * yapıyordu çünkü `conn.erpType` field'i ileride dialect picking için
+ * gerekli; assertOwnedConnection sadece id select yapıyor — full row
+ * cekmek için ayrı helper.
+ *
+ * SECURITY: tenantId scope same as assertOwnedConnection. Caller
+ * null check + connectionNotFoundError(req) ile 404 dönmeli.
+ */
+export async function findOwnedConnection(
+  connectionId: string,
+  tenantId: string,
+) {
+  return await prisma.erpConnection.findFirst({
+    where: { id: connectionId, tenantId },
+  });
+}

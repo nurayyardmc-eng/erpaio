@@ -1,5 +1,7 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
+import { findOwnedConnection } from "@/lib/db/erpConnection";
+import { connectionNotFoundError } from "@/lib/http/searchParams";
 import { queryERP } from "@/lib/db/connector";
 import { dialectFromErpType } from "@/lib/db/dialect";
 import { jsonError, resolveLocale } from "@/lib/i18n/server";
@@ -15,12 +17,8 @@ export async function GET(
 
   const { id } = await params;
 
-  const conn = await prisma.erpConnection.findFirst({
-    where: { id, tenantId: session.user.tenantId },
-  });
-  if (!conn) {
-    return jsonError(req, "api.notFound", 404);
-  }
+  const conn = await findOwnedConnection(id, session.user.tenantId);
+  if (!conn) return connectionNotFoundError(req);
 
   const dialect = dialectFromErpType(conn.erpType);
   const tablesQuery = dialect === "postgres"
