@@ -299,6 +299,28 @@ export interface Dictionary {
     badgeStale: string;
     badgeVeryStale: string;
   };
+  notificationLog: {
+    backToSettings: string;
+    breadcrumb: string;
+    title: string;
+    description: string;
+    daysFilterLabel: (n: number) => string;
+    successRateLabel: (pct: number, total: number) => string;
+    csvBtn: string;
+    loading: string;
+    emptyMessage: string;
+    thChannel: string;
+    thStatus: string;
+    thRecipient: string;
+    thError: string;
+    thTime: string;
+    onlyForOwnerAdmin: string;
+    statusSent: string;
+    statusFailed: string;
+    statusSkipped: string;
+    fallbackUnauthorized: string;
+    fallbackError: string;
+  };
   overview: {
     breadcrumb: string;
     title: string;
