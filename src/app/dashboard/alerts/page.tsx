@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { exportFilename } from "@/lib/format/exportFilename";
 import { postJson, patchJson } from "@/lib/http/clientFetch";
+import { localizedAlertDescription, type AnomalyMessageParams } from "@/lib/anomaly/messages";
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: "#FF3B30",
@@ -306,7 +307,13 @@ export default function AlertsPage() {
               )}
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{alert.title}</div>
-            {alert.description && <div style={{ fontSize: 11, color: "#475569" }}>{alert.description}</div>}
+            {(() => {
+              // Feature 3.1 — prefer evidence.messageKey + params (locale-aware);
+              // fall back to legacy stored TR description for old alerts.
+              const ev = alert.evidence as { messageKey?: string; messageParams?: AnomalyMessageParams } | null | undefined;
+              const text = localizedAlertDescription(ev, alert.description, locale);
+              return text ? <div style={{ fontSize: 11, color: "#475569" }}>{text}</div> : null;
+            })()}
             <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 6 }}>{new Date(alert.createdAt).toLocaleString(locale === "en" ? "en-US" : "tr-TR")}</div>
           </div>
 

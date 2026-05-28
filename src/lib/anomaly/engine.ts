@@ -136,6 +136,9 @@ export async function runAnomalyDetectionForTenant(
               algorithm: anomaly.algorithm,
               score: anomaly.score,
               context: anomaly.context,
+              // Feature 3.1 — structured form for locale-aware rendering at view time.
+              messageKey: anomaly.messageKey,
+              messageParams: anomaly.messageParams,
             } as object,
           },
         });

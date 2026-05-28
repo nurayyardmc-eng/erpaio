@@ -1,16 +1,39 @@
+import {
+  renderAnomalyMessage,
+  type AnomalyMessageKey,
+  type AnomalyMessageParams,
+} from "./messages";
+// Track XXXX: deduped — implementation lives in @/lib/threshold/compare.
+import { compareThreshold, thresholdOpSymbol } from "@/lib/threshold/compare";
+
 export type AnomalySeverity = "low" | "medium" | "high" | "critical";
 
 export interface AnomalyResult {
   isAnomaly: boolean;
   severity: AnomalySeverity;
   score: number;
+  /** Rendered TR message — back-compat for storage + tests. */
   message: string;
+  /** Feature 3.1 — structured key for locale-aware rendering. */
+  messageKey: AnomalyMessageKey;
+  /** Feature 3.1 — params for renderAnomalyMessage(). */
+  messageParams: AnomalyMessageParams;
   algorithm: "zscore" | "moving_avg" | "threshold";
   context: {
     currentValue: number;
     expectedValue?: number;
     deviation?: number;
     sampleSize?: number;
+  };
+}
+
+/** Helper: build result with both rendered TR message + structured key. */
+function buildResult(
+  base: Omit<AnomalyResult, "message"> & { messageKey: AnomalyMessageKey },
+): AnomalyResult {
+  return {
+    ...base,
+    message: renderAnomalyMessage(base.messageKey, base.messageParams, "tr"),
   };
 }
 
@@ -32,12 +55,13 @@ export function detectZScore(params: ZScoreParams): AnomalyResult {
   const sampleSize = history.length;
 
   if (sampleSize < 5) {
-    return {
+    return buildResult({
       isAnomaly: false, severity: "low", score: 0,
-      message: `${metricLabel} için yeterli geçmiş veri yok (${sampleSize} nokta).`,
+      messageKey: "zscore.insufficientData",
+      messageParams: { label: metricLabel, sampleSize },
       algorithm: "zscore",
       context: { currentValue: current, sampleSize },
-    };
+    });
   }
 
   const mean = history.reduce((a, b) => a + b, 0) / sampleSize;
@@ -46,16 +70,15 @@ export function detectZScore(params: ZScoreParams): AnomalyResult {
 
   if (stdDev === 0) {
     const isAnomaly = current !== mean;
-    return {
+    return buildResult({
       isAnomaly,
       severity: isAnomaly ? "medium" : "low",
       score: 0,
-      message: isAnomaly
-        ? `${metricLabel} sabit ${mean} idi, şimdi ${current}.`
-        : `${metricLabel} normal seyrinde.`,
+      messageKey: isAnomaly ? "zscore.constantAnomaly" : "zscore.normal",
+      messageParams: { label: metricLabel, mean, current },
       algorithm: "zscore",
       context: { currentValue: current, expectedValue: mean, sampleSize },
-    };
+    });
   }
 
   const zScore = (current - mean) / stdDev;
@@ -76,15 +99,13 @@ export function detectZScore(params: ZScoreParams): AnomalyResult {
   else if (absZ >= thresholds.medium) { severity = "medium"; isAnomaly = true; }
   else if (absZ >= thresholds.low) { severity = "low"; isAnomaly = true; }
 
-  const directionTr = zScore > 0 ? "yükseliş" : "düşüş";
   const pctDeviation = mean !== 0 ? ((current - mean) / mean) * 100 : 0;
 
-  return {
+  return buildResult({
     isAnomaly, severity,
     score: Number(zScore.toFixed(2)),
-    message: isAnomaly
-      ? `${metricLabel} olağandışı ${directionTr}: ${formatNumber(current)} (ort: ${formatNumber(mean)}, %${pctDeviation.toFixed(1)} sapma, z=${zScore.toFixed(2)})`
-      : `${metricLabel} normal aralıkta: ${formatNumber(current)}`,
+    messageKey: isAnomaly ? "zscore.anomaly" : "zscore.withinRange",
+    messageParams: { label: metricLabel, current, mean, zScore, pctDeviation },
     algorithm: "zscore",
     context: {
       currentValue: current,
@@ -92,7 +113,7 @@ export function detectZScore(params: ZScoreParams): AnomalyResult {
       deviation: Number(pctDeviation.toFixed(2)),
       sampleSize,
     },
-  };
+  });
 }
 
 export interface MovingAvgParams {
@@ -111,28 +132,28 @@ export function detectMovingAverage(params: MovingAvgParams): AnomalyResult {
   } = params;
 
   if (history.length < 3) {
-    return {
+    return buildResult({
       isAnomaly: false, severity: "low", score: 0,
-      message: `${metricLabel} için yeterli geçmiş veri yok.`,
+      messageKey: "movingAvg.insufficientData",
+      messageParams: { label: metricLabel },
       algorithm: "moving_avg",
       context: { currentValue: current, sampleSize: history.length },
-    };
+    });
   }
 
   const avg = history.reduce((a, b) => a + b, 0) / history.length;
 
   if (avg === 0) {
     const isAnomaly = current !== 0;
-    return {
+    return buildResult({
       isAnomaly,
       severity: isAnomaly ? "medium" : "low",
       score: 0,
-      message: isAnomaly
-        ? `${metricLabel} sıfırdan ${formatNumber(current)} değerine çıktı.`
-        : `${metricLabel} normal.`,
+      messageKey: isAnomaly ? "movingAvg.zeroToPositive" : "movingAvg.normalZero",
+      messageParams: { label: metricLabel, current },
       algorithm: "moving_avg",
       context: { currentValue: current, expectedValue: 0 },
-    };
+    });
   }
 
   const pctDeviation = ((current - avg) / avg) * 100;
@@ -153,14 +174,11 @@ export function detectMovingAverage(params: MovingAvgParams): AnomalyResult {
   else if (absDev >= thresholds.medium) { severity = "medium"; isAnomaly = true; }
   else if (absDev >= thresholds.low) { severity = "low"; isAnomaly = true; }
 
-  const directionTr = pctDeviation > 0 ? "artış" : "düşüş";
-
-  return {
+  return buildResult({
     isAnomaly, severity,
     score: Number(pctDeviation.toFixed(2)),
-    message: isAnomaly
-      ? `${metricLabel}: %${absDev.toFixed(1)} ${directionTr} (şu an: ${formatNumber(current)}, ort: ${formatNumber(avg)})`
-      : `${metricLabel} ortalama civarında: ${formatNumber(current)}`,
+    messageKey: isAnomaly ? "movingAvg.anomaly" : "movingAvg.withinRange",
+    messageParams: { label: metricLabel, current, avg, pctDeviation },
     algorithm: "moving_avg",
     context: {
       currentValue: current,
@@ -168,7 +186,7 @@ export function detectMovingAverage(params: MovingAvgParams): AnomalyResult {
       deviation: Number(pctDeviation.toFixed(2)),
       sampleSize: history.length,
     },
-  };
+  });
 }
 
 export interface ThresholdParams {
@@ -195,28 +213,34 @@ export function detectThreshold(params: ThresholdParams): AnomalyResult {
 
   for (const rule of sortedRules) {
     if (matchCondition(current, rule.condition, rule.value)) {
-      const conditionTr = conditionToTr(rule.condition);
-      const autoMessage =
-        rule.message ??
-        `${metricLabel} eşik aşımı: ${formatNumber(current)}${unit ? " " + unit : ""} (${conditionTr} ${formatNumber(rule.value)})`;
+      const conditionSymbol = thresholdOpSymbol(rule.condition);
+      const messageParams: AnomalyMessageParams = {
+        label: metricLabel, current, unit,
+        conditionSymbol, ruleValue: rule.value,
+      };
+      // Custom override message (rule.message) bypasses i18n — caller's
+      // explicit choice. Stored as-is in TR message + key falls back to
+      // `threshold.exceeded` so view layer can localize if no override.
+      const rendered = rule.message ?? renderAnomalyMessage("threshold.exceeded", messageParams, "tr");
       return {
         isAnomaly: true, severity: rule.severity, score: current,
-        message: autoMessage, algorithm: "threshold",
+        message: rendered,
+        messageKey: "threshold.exceeded",
+        messageParams,
+        algorithm: "threshold",
         context: { currentValue: current, expectedValue: rule.value },
       };
     }
   }
 
-  return {
+  return buildResult({
     isAnomaly: false, severity: "low", score: current,
-    message: `${metricLabel} eşik içinde: ${formatNumber(current)}${unit ? " " + unit : ""}`,
+    messageKey: "threshold.within",
+    messageParams: { label: metricLabel, current, unit },
     algorithm: "threshold",
     context: { currentValue: current },
-  };
+  });
 }
-
-// Track XXXX: deduped — implementation lives in @/lib/threshold/compare.
-import { compareThreshold, thresholdOpSymbol } from "@/lib/threshold/compare";
 
 function matchCondition(
   value: number,
@@ -226,28 +250,19 @@ function matchCondition(
   return compareThreshold(condition, value, threshold);
 }
 
-function conditionToTr(c: ThresholdParams["rules"][0]["condition"]): string {
-  return thresholdOpSymbol(c);
-}
-
 function normalResult(
   label: string, current: number, expected: number,
   alg: AnomalyResult["algorithm"], sampleSize?: number,
 ): AnomalyResult {
-  return {
+  return buildResult({
     isAnomaly: false, severity: "low", score: 0,
-    message: `${label} normal aralıkta: ${formatNumber(current)} (beklenen ~${formatNumber(expected)})`,
+    messageKey: "normal.withinRange",
+    messageParams: { label, current, expected },
     algorithm: alg,
     context: {
       currentValue: current,
       expectedValue: Number(expected.toFixed(2)),
       sampleSize,
     },
-  };
-}
-
-function formatNumber(n: number): string {
-  return new Intl.NumberFormat("tr-TR", {
-    maximumFractionDigits: Math.abs(n) >= 1000 ? 0 : 2,
-  }).format(n);
+  });
 }
