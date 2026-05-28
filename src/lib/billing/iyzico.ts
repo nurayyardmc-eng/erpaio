@@ -342,6 +342,28 @@ export function inferPlanFromIyzicoReference(ref: string | undefined): "pro" | "
 }
 
 /**
+ * Decision result when reconciling a first-time activation webhook
+ * against tenants in "pending iyzico checkout" state. Pure: caller
+ * supplies the DB-fetched candidate list, this function decides.
+ *
+ * - "claim"     : exactly one candidate → safe to link
+ * - "ambiguous" : multiple candidates → race; refuse to guess
+ * - "no_match"  : no candidates → not a recoverable activation
+ */
+export type IyzicoReconcileResult =
+  | { decision: "claim"; tenantId: string }
+  | { decision: "ambiguous"; candidateCount: number }
+  | { decision: "no_match" };
+
+export function reconcileActivationCandidate<T extends { id: string }>(
+  candidates: T[],
+): IyzicoReconcileResult {
+  if (candidates.length === 0) return { decision: "no_match" };
+  if (candidates.length === 1) return { decision: "claim", tenantId: candidates[0].id };
+  return { decision: "ambiguous", candidateCount: candidates.length };
+}
+
+/**
  * Classify an iyzico webhook event type into a normalized action kind
  * the dispatcher will route on. Centralizing this lets us unit-test the
  * branch logic without touching DB/Sentry/emails.

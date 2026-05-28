@@ -30,6 +30,7 @@ import {
   mapIyzicoStatusToInternal,
   inferPlanFromIyzicoReference,
   classifyIyzicoEvent,
+  reconcileActivationCandidate,
   type IyzicoWebhookEvent,
 } from "@/lib/billing/iyzico";
 import {
@@ -154,13 +155,14 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
       },
       take: 2,
     });
-    if (candidates.length === 1) {
+    const decision = reconcileActivationCandidate(candidates);
+    if (decision.decision === "claim") {
       tenant = candidates[0];
       log.info(
-        { tenantId: tenant.id, subRef },
+        { tenantId: decision.tenantId, subRef },
         "iyzico activation reconciled with pending-checkout tenant",
       );
-    } else if (candidates.length > 1) {
+    } else if (decision.decision === "ambiguous") {
       // Race condition — multiple tenants checked out concurrently.
       // Refuse to guess; sysadmin will trigger manual sync.
       const detail = await getSubscription(subRef).catch(() => null);
@@ -168,7 +170,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
         {
           subRef,
           customerRef: detail?.customerReferenceCode,
-          candidateCount: candidates.length,
+          candidateCount: decision.candidateCount,
         },
         "iyzico activation: multiple pending-checkout tenants — manual sync required",
       );

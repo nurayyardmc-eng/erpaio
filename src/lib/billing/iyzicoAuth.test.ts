@@ -6,6 +6,7 @@ import {
   mapIyzicoStatusToInternal,
   inferPlanFromIyzicoReference,
   classifyIyzicoEvent,
+  reconcileActivationCandidate,
 } from "./iyzico";
 
 describe("billing/iyzico/buildIyzicoAuthHeader", () => {
@@ -181,5 +182,59 @@ describe("billing/iyzico/classifyIyzicoEvent", () => {
   });
   it("case-sensitive (uppercase variant) → unhandled", () => {
     expect(classifyIyzicoEvent("SUBSCRIPTION.ACTIVATION")).toBe("unhandled");
+  });
+});
+
+describe("billing/iyzico/reconcileActivationCandidate", () => {
+  it("empty array → no_match", () => {
+    expect(reconcileActivationCandidate([])).toEqual({ decision: "no_match" });
+  });
+
+  it("single candidate → claim with that id", () => {
+    const r = reconcileActivationCandidate([{ id: "tenant-1" }]);
+    expect(r).toEqual({ decision: "claim", tenantId: "tenant-1" });
+  });
+
+  it("two candidates → ambiguous with count", () => {
+    const r = reconcileActivationCandidate([{ id: "t1" }, { id: "t2" }]);
+    expect(r).toEqual({ decision: "ambiguous", candidateCount: 2 });
+  });
+
+  it("many candidates → ambiguous reports full count", () => {
+    const r = reconcileActivationCandidate([
+      { id: "t1" },
+      { id: "t2" },
+      { id: "t3" },
+      { id: "t4" },
+    ]);
+    expect(r).toEqual({ decision: "ambiguous", candidateCount: 4 });
+  });
+
+  it("claim takes id from first element only", () => {
+    const r = reconcileActivationCandidate([{ id: "first-tenant" }]);
+    expect(r).toEqual({ decision: "claim", tenantId: "first-tenant" });
+  });
+
+  it("works with extra fields on candidate (generic T)", () => {
+    const r = reconcileActivationCandidate([
+      { id: "t1", name: "Acme", defaultLocale: "tr", users: [] },
+    ]);
+    expect(r).toEqual({ decision: "claim", tenantId: "t1" });
+  });
+
+  it("decision is one of three exact literal strings (no other branches)", () => {
+    const decisions = [
+      reconcileActivationCandidate([]).decision,
+      reconcileActivationCandidate([{ id: "x" }]).decision,
+      reconcileActivationCandidate([{ id: "a" }, { id: "b" }]).decision,
+    ];
+    expect(decisions).toEqual(["no_match", "claim", "ambiguous"]);
+  });
+
+  it("does not mutate input array", () => {
+    const input = [{ id: "t1" }];
+    const before = [...input];
+    reconcileActivationCandidate(input);
+    expect(input).toEqual(before);
   });
 });
