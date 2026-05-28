@@ -30,11 +30,15 @@ import { showToast } from "@/components/Toaster";
 import { useI18n } from "@/lib/i18n/context";
 import { postJson, patchJson } from "@/lib/http/clientFetch";
 import { sliceHighlight } from "@/lib/chat/highlight";
+import { erpSuggestedQuestions } from "@/lib/chat/erpSuggestedQuestions";
+import type { ErpType } from "@/lib/db/erpTypes";
 
 interface Connection {
   id: string;
   dbName: string;
   status: string;
+  /** Feature 1.2: ERP-spesifik suggested question chips için. */
+  erpType?: string;
 }
 
 interface ChatSessionListItem {
@@ -899,18 +903,17 @@ export default function ChatPage() {
               )}
               {/* Track HH — onboarding suggested questions. Connection var ama
                   ilk soru sorulmamış: kullanıcı boş ekrana bakıp ne yazacağını
-                  bilmiyor. Suggested prompt chips bir tık deneme akışı. */}
+                  bilmiyor. Suggested prompt chips bir tık deneme akışı.
+                  Feature 1.2 — chip listesi seçili ERP'ye göre değişir
+                  (Nebim/D365/SAP/Postgres farklı sektör soruları). */}
               {selectedConn && (
                 <div style={{ marginTop: 32, display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 640 }}>
                   <span style={{ fontSize: 11, color: "#94A3B8", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, width: "100%", marginBottom: 4 }}>
                     {t.chat.suggestedLabel}
                   </span>
-                  {[
-                    t.chat.suggestedQ1,
-                    t.chat.suggestedQ2,
-                    t.chat.suggestedQ3,
-                    t.chat.suggestedQ4,
-                  ].map((q) => (
+                  {erpSuggestedQuestions(
+                    connections.find((c) => c.id === selectedConn)?.erpType as ErpType | undefined,
+                  ).map((q) => (
                     <button
                       key={q}
                       onClick={() => setInput(q)}
