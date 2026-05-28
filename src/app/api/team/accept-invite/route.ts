@@ -7,6 +7,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { zPassword } from "@/lib/auth/schemas";
+import { enforceIpRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const BodySchema = z.object({
   token: z.string().min(8),
@@ -17,6 +18,10 @@ const BodySchema = z.object({
 export async function POST(req: Request) {
   const tooBig = checkBodySize(req);
   if (tooBig) return tooBig;
+
+  // Feature 5.5 — token brute-force protection (IP-based, 10/hour).
+  const limited = await enforceIpRateLimit(req, RATE_LIMITS.TEAM_ACCEPT_INVITE);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;

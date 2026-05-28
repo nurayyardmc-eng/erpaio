@@ -9,6 +9,7 @@ import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody, tenantNotFoundError } from "@/lib/http/searchParams";
 import { jsonError, localizedError } from "@/lib/i18n/server";
+import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { escapeHtml } from "@/lib/html/escape";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
@@ -29,6 +30,10 @@ export async function POST(req: Request) {
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   const denied = requireOwnerOrAdmin(req, session.user.role);
   if (denied) return denied;
+
+  // Feature 5.5 — invite spam protection (20/hour per tenant).
+  const limit = await rateLimit(session.user.tenantId, RATE_LIMITS.TEAM_INVITE);
+  if (!limit.success) return rateLimited429(req, limit);
 
   const body = await parseJsonBody(req, PostSchema);
   if (body instanceof Response) return body;

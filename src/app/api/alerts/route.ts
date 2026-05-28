@@ -11,6 +11,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { parseQuery, parseJsonBody } from "@/lib/http/searchParams";
 import { zSeverity } from "@/lib/auth/schemas";
 import { ALERT_STATUSES, ALERT_STATUS_FILTERS } from "@/lib/alerts/status";
+import { enforceUserRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const QuerySchema = z.object({
   status: z.enum(ALERT_STATUS_FILTERS).default("open"),
@@ -54,6 +55,10 @@ export async function POST(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  // Feature 5.5 — alert write rate limit (60/min per user).
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.ALERT_MUTATE);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, PostSchema);
   if (body instanceof Response) return body;
@@ -135,6 +140,10 @@ export async function PATCH(req: Request) {
 
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  // Feature 5.5 — bulk ack/resolve rate limit (60/min per user).
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.ALERT_MUTATE);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, PatchSchema);
   if (body instanceof Response) return body;

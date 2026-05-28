@@ -111,6 +111,13 @@ export const RATE_LIMITS = {
   PUSH_TOKEN_REGISTER: { prefix: "push-reg", max: 10, windowMs: 60_000 }, // 10/dk / user (mobile launch'larda yeniden register'ı kapsar)
   NOTIFICATION_PREFS: { prefix: "notif-pref", max: 30, windowMs: 60_000 }, // 30/dk / user (GET ve PATCH ortak; UI toggle spam'i için bolca pay var)
   ADMIN_READ: { prefix: "admin-r", max: 60, windowMs: 60_000 }, // 60/dk / sysadmin
+  // --- Mutating endpoints (Feature 5.5 — audit follow-up) ---
+  TEAM_INVITE: { prefix: "team-inv", max: 20, windowMs: ONE_HOUR_MS }, // 20/saat / tenant owner — invite spam koruması
+  TEAM_ACCEPT_INVITE: { prefix: "team-acc", max: 10, windowMs: ONE_HOUR_MS }, // 10/saat / IP — token brute force koruması
+  WATCHLIST_MUTATE: { prefix: "wl-mut", max: 30, windowMs: 60_000 }, // 30/dk / user — create/delete watchlist
+  ALERT_MUTATE: { prefix: "alert-mut", max: 60, windowMs: 60_000 }, // 60/dk / user — create + bulk PATCH
+  CUSTOM_METRIC_MUTATE: { prefix: "cm-mut", max: 20, windowMs: 60_000 }, // 20/dk / user — create/delete custom metric
+  CONNECTION_MUTATE: { prefix: "conn-mut", max: 10, windowMs: 60_000 }, // 10/dk / user — create connection (rare; signup-time spike OK)
 } as const;
 
 /**

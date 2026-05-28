@@ -7,6 +7,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { z } from "zod";
 import { ERP_TYPES } from "@/lib/db/erpTypes";
+import { enforceUserRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const Schema = z.object({
   erpType: z.enum(ERP_TYPES),
@@ -25,6 +26,12 @@ export async function POST(req: Request) {
   if (!session?.user) {
     return jsonError(req, "api.unauthorized", 401);
   }
+
+  // Feature 5.5 — connection create rate limit (10/min per user).
+  // ERP credentials are encrypted-at-rest; rate limit prevents key probe
+  // abuse + accidental bulk dupe inserts during onboarding bugs.
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.CONNECTION_MUTATE);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, Schema);
   if (body instanceof Response) return body;

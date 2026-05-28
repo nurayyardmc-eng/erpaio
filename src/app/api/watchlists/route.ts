@@ -6,6 +6,7 @@ import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody, getRequiredIdParam } from "@/lib/http/searchParams";
 import { jsonError } from "@/lib/i18n/server";
 import { THRESHOLD_OPS } from "@/lib/threshold/compare";
+import { enforceUserRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const PostSchema = z.object({
   name: z.string().min(1).max(120),
@@ -34,6 +35,10 @@ export async function POST(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
 
+  // Feature 5.5 — watchlist create rate limit (30/min per user).
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.WATCHLIST_MUTATE);
+  if (limited) return limited;
+
   const body = await parseJsonBody(req, PostSchema);
   if (body instanceof Response) return body;
 
@@ -54,6 +59,10 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  // Feature 5.5 — bulk delete spam protection (30/min per user).
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.WATCHLIST_MUTATE);
+  if (limited) return limited;
 
   const idParam = getRequiredIdParam(req);
   if (idParam instanceof Response) return idParam;

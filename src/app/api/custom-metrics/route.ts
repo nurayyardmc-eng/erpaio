@@ -8,6 +8,7 @@ import { parseJsonBody, getRequiredIdParam } from "@/lib/http/searchParams";
 import { toPrismaJson } from "@/lib/db/prismaJson";
 import { jsonError, localizedError } from "@/lib/i18n/server";
 import { requireOwnerOrAdmin } from "@/lib/auth/role";
+import { enforceUserRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const PostSchema = z.object({
   key: z.string().regex(/^[a-z0-9_]{3,40}$/, "Sadece küçük harf, rakam, _"),
@@ -40,6 +41,10 @@ export async function POST(req: Request) {
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
   const denied = requireOwnerOrAdmin(req, session.user.role);
   if (denied) return denied;
+
+  // Feature 5.5 — custom metric create rate limit (20/min per user).
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.CUSTOM_METRIC_MUTATE);
+  if (limited) return limited;
 
   const body = await parseJsonBody(req, PostSchema);
   if (body instanceof Response) return body;
@@ -97,6 +102,10 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  // Feature 5.5 — bulk delete spam protection (20/min per user).
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.CUSTOM_METRIC_MUTATE);
+  if (limited) return limited;
 
   const idParam = getRequiredIdParam(req);
   if (idParam instanceof Response) return idParam;
