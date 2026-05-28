@@ -80,12 +80,17 @@ export async function POST(req: Request) {
       whatsappTo: true, whatsappEnabled: true,
       emailTo: true, emailEnabled: true,
       alertMinSeverity: true,
+      defaultLocale: true,
     },
   });
 
   if (tenant && shouldNotify(alert.severity, tenant.alertMinSeverity)) {
+    const locale = tenant.defaultLocale;
+    // Coerce JsonValue evidence to the structured shape formatAlert expects.
+    const ev = alert.evidence as { messageKey?: string; messageParams?: Record<string, string | number> } | null;
+    const alertForNotify = { ...alert, evidence: ev };
     if (tenant.whatsappEnabled) {
-      sendWhatsApp(formatAlert(alert), {
+      sendWhatsApp(formatAlert(alertForNotify, locale), {
         to: tenant.whatsappTo ?? undefined,
         tenantId: session.user.tenantId,
         alertId: alert.id,
@@ -117,7 +122,7 @@ export async function POST(req: Request) {
       sendEmail({
         to: tenant.emailTo,
         subject: `[ERPAIO ${alert.severity.toUpperCase()}] ${alert.title}`,
-        html: alertEmailHtml({ severity: alert.severity, title: alert.title, description: alert.description }),
+        html: alertEmailHtml({ severity: alert.severity, title: alert.title, description: alert.description }, locale),
         tenantId: session.user.tenantId,
         alertId: alert.id,
       }).catch((err) => {

@@ -3,8 +3,13 @@ import { alertEmailHtml, sendEmail } from "./email";
 
 describe("notifications/email", () => {
   describe("alertEmailHtml", () => {
-    it("includes severity badge in uppercase", () => {
+    it("TR default → CRITICAL ALARM badge", () => {
       const html = alertEmailHtml({ severity: "critical", title: "DB down" });
+      expect(html).toContain("CRITICAL ALARM");
+    });
+
+    it("EN locale → CRITICAL ALERT badge", () => {
+      const html = alertEmailHtml({ severity: "critical", title: "DB down" }, "en");
       expect(html).toContain("CRITICAL ALERT");
     });
 

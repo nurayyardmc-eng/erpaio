@@ -205,6 +205,8 @@ export const tr: Dictionary = {
     severityMedium: "medium",
     severityHigh: "high (önerilen)",
     severityCritical: "critical (sadece kritik)",
+    defaultLocaleLabel: "Bildirim Dili",
+    defaultLocaleHint: "Stripe makbuzları, planlı raporlar ve WhatsApp/Slack/Teams alarmları bu dilde gönderilir. Dashboard arayüz dili tek tek kullanıcı ayarındadır.",
     saveFailed: "Kayıt başarısız.",
     password: "Şifre Değiştir",
     passwordCurrent: "Mevcut Şifre",

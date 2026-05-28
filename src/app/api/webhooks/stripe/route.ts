@@ -21,17 +21,18 @@ const baseUrl = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app";
 async function findTenantByMetadataOrCustomer(
   metadata: { tenantId?: string } | undefined | null,
   customerId: string | null,
-): Promise<{ id: string; name: string; ownerEmail: string | null } | null> {
+): Promise<{ id: string; name: string; ownerEmail: string | null; defaultLocale: string } | null> {
   if (metadata?.tenantId) {
     const t = await prisma.tenant.findUnique({
       where: { id: metadata.tenantId },
       select: {
         id: true,
         name: true,
+        defaultLocale: true,
         users: { where: { role: "owner" }, select: { email: true }, take: 1 },
       },
     });
-    if (t) return { id: t.id, name: t.name, ownerEmail: t.users[0]?.email ?? null };
+    if (t) return { id: t.id, name: t.name, ownerEmail: t.users[0]?.email ?? null, defaultLocale: t.defaultLocale };
   }
   if (customerId) {
     const t = await prisma.tenant.findFirst({
@@ -39,10 +40,11 @@ async function findTenantByMetadataOrCustomer(
       select: {
         id: true,
         name: true,
+        defaultLocale: true,
         users: { where: { role: "owner" }, select: { email: true }, take: 1 },
       },
     });
-    if (t) return { id: t.id, name: t.name, ownerEmail: t.users[0]?.email ?? null };
+    if (t) return { id: t.id, name: t.name, ownerEmail: t.users[0]?.email ?? null, defaultLocale: t.defaultLocale };
   }
   return null;
 }
@@ -105,14 +107,12 @@ export async function POST(req: Request) {
           log.info({ tenantId: tenant.id, plan }, "Subscription activated");
 
           if (tenant.ownerEmail) {
-            // Feature 5.2 — locale TODO: tenant.locale schema field not yet
-            // added; default "tr" preserves current behavior. EN variants
-            // ready in stripeEmails.ts for when persistence lands.
+            // Feature 6.1 — tenant.defaultLocale flows from schema → email locale.
             const content = subscriptionActivatedEmail({
               plan,
               tenantName: tenant.name,
               dashboardUrl: `${baseUrl}/dashboard`,
-            }, "tr");
+            }, tenant.defaultLocale);
             await sendEmail({
               to: tenant.ownerEmail,
               subject: content.subject,
@@ -153,7 +153,7 @@ export async function POST(req: Request) {
           const content = trialWillEndEmail({
             tenantName: tenant.name,
             pricingUrl: `${baseUrl}/pricing`,
-          }, "tr");
+          }, tenant.defaultLocale);
           await sendEmail({
             to: tenant.ownerEmail,
             subject: content.subject,
@@ -182,7 +182,7 @@ export async function POST(req: Request) {
             const content = subscriptionCancelledEmail({
               tenantName: tenant.name,
               pricingUrl: `${baseUrl}/pricing`,
-            }, "tr");
+            }, tenant.defaultLocale);
             await sendEmail({
               to: tenant.ownerEmail,
               subject: content.subject,
@@ -215,7 +215,7 @@ export async function POST(req: Request) {
           const content = paymentFailedEmail({
             tenantName: tenant.name,
             invoiceUrl: invoice.hosted_invoice_url ?? `${baseUrl}/dashboard/settings`,
-          }, "tr");
+          }, tenant.defaultLocale);
           await sendEmail({
             to: tenant.ownerEmail,
             subject: content.subject,

@@ -6,6 +6,9 @@ vi.mock("@/lib/db/prisma", () => ({
       findMany: vi.fn(),
       update: vi.fn(),
     },
+    tenant: {
+      findUnique: vi.fn().mockResolvedValue({ defaultLocale: "tr" }),
+    },
   },
 }));
 vi.mock("@/lib/crypto/encrypt", () => ({
@@ -67,6 +70,8 @@ describe("notifications/integrations/dispatchAlert", () => {
       severity: "high",
       title: "Sample alert",
       description: "desc",
+      evidence: undefined,
+      locale: "tr",
     });
   });
 

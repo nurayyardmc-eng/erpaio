@@ -205,6 +205,8 @@ export const en: Dictionary = {
     severityMedium: "medium",
     severityHigh: "high (recommended)",
     severityCritical: "critical (critical only)",
+    defaultLocaleLabel: "Notification Language",
+    defaultLocaleHint: "Stripe receipts, scheduled reports, and WhatsApp/Slack/Teams alerts are sent in this language. Dashboard UI language is per-user.",
     saveFailed: "Save failed.",
     password: "Change Password",
     passwordCurrent: "Current password",

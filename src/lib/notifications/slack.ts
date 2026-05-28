@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
+import { localizedAlertDescription, type AnomalyMessageParams } from "@/lib/anomaly/messages";
 
 const log = childLogger({ component: "slack" });
 
@@ -16,11 +17,15 @@ export interface SlackPayload {
   title: string;
   description?: string | null;
   metadata?: Record<string, unknown>;
+  /** Feature 6.2 — locale-aware re-render via renderAnomalyMessage. */
+  evidence?: { messageKey?: string; messageParams?: AnomalyMessageParams } | null;
+  locale?: "tr" | "en" | string;
 }
 
 // Exported for test (Track JJJJ). Pure block-kit builder, no I/O.
 export function buildSlackBody(payload: Omit<SlackPayload, "webhookUrl">) {
   const color = SEVERITY_COLORS[payload.severity] ?? "#9AA5B4";
+  const body = localizedAlertDescription(payload.evidence ?? null, payload.description ?? null, payload.locale ?? "tr");
   return {
     attachments: [
       {
@@ -31,8 +36,8 @@ export function buildSlackBody(payload: Omit<SlackPayload, "webhookUrl">) {
             type: "header",
             text: { type: "plain_text", text: `${emoji(payload.severity)} ${payload.title}` },
           },
-          ...(payload.description
-            ? [{ type: "section", text: { type: "mrkdwn", text: payload.description } }]
+          ...(body
+            ? [{ type: "section", text: { type: "mrkdwn", text: body } }]
             : []),
           {
             type: "context",

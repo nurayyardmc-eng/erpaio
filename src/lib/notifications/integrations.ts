@@ -19,12 +19,20 @@ interface AlertData {
 }
 
 export async function dispatchAlert(tenantId: string, alert: AlertData): Promise<void> {
-  const integrations = await prisma.tenantIntegration.findMany({
-    where: { tenantId, enabled: true },
-    select: { id: true, kind: true, endpointEnc: true, secretEnc: true },
-  });
+  const [integrations, tenant] = await Promise.all([
+    prisma.tenantIntegration.findMany({
+      where: { tenantId, enabled: true },
+      select: { id: true, kind: true, endpointEnc: true, secretEnc: true },
+    }),
+    prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { defaultLocale: true },
+    }),
+  ]);
 
   if (integrations.length === 0) return;
+
+  const locale = tenant?.defaultLocale ?? "tr";
 
   await Promise.allSettled(
     integrations.map(async (it) => {
@@ -39,6 +47,8 @@ export async function dispatchAlert(tenantId: string, alert: AlertData): Promise
             severity: alert.severity,
             title: alert.title,
             description: alert.description,
+            evidence: alert.evidence as { messageKey?: string; messageParams?: Record<string, string | number> } | null,
+            locale,
           });
         } else if (it.kind === "teams") {
           result = await sendTeams({
@@ -46,6 +56,8 @@ export async function dispatchAlert(tenantId: string, alert: AlertData): Promise
             severity: alert.severity,
             title: alert.title,
             description: alert.description,
+            evidence: alert.evidence as { messageKey?: string; messageParams?: Record<string, string | number> } | null,
+            locale,
           });
         } else if (it.kind === "webhook") {
           result = await sendWebhook({

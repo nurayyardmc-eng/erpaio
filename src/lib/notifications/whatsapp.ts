@@ -3,6 +3,10 @@ import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
 import { recordNotification, maskRecipient } from "./log";
 import { errorMessage } from "@/lib/errors/errorMessage";
+import {
+  localizedAlertDescription,
+  type AnomalyMessageParams,
+} from "@/lib/anomaly/messages";
 
 const log = childLogger({ component: "whatsapp" });
 
@@ -83,18 +87,28 @@ export async function sendWhatsApp(message: string, options: SendOptions = {}): 
   }
 }
 
-export function formatAlert(alert: {
-  severity: string;
-  title: string;
-  description?: string | null;
-}): string {
+export function formatAlert(
+  alert: {
+    severity: string;
+    title: string;
+    description?: string | null;
+    /**
+     * Feature 6.2 — if present and contains messageKey, the description is
+     * re-rendered in `locale` via renderAnomalyMessage. Old alerts without
+     * structured evidence fall back to stored TR `description`.
+     */
+    evidence?: { messageKey?: string; messageParams?: AnomalyMessageParams } | null;
+  },
+  locale: "tr" | "en" | string = "tr",
+): string {
   const emoji: Record<string, string> = {
     critical: "🔴",
     high: "🟠",
     medium: "🟡",
     low: "🔵",
   };
-  return `${emoji[alert.severity] ?? "⚪"} *ERPAIO Alert*\n\n*${alert.title}*\n${alert.description ?? ""}`;
+  const body = localizedAlertDescription(alert.evidence, alert.description ?? null, locale);
+  return `${emoji[alert.severity] ?? "⚪"} *ERPAIO Alert*\n\n*${alert.title}*\n${body}`;
 }
 
 const SEVERITY_RANK: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };

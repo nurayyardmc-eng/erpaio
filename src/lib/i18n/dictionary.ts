@@ -225,6 +225,8 @@ export interface Dictionary {
     severityMedium: string;
     severityHigh: string;
     severityCritical: string;
+    defaultLocaleLabel: string;
+    defaultLocaleHint: string;
     saveFailed: string;
     password: string;
     passwordCurrent: string;

@@ -6,6 +6,7 @@ import { recordNotification, maskRecipient } from "./log";
 import { errorMessage } from "@/lib/errors/errorMessage";
 import { pickEmailSender, fromDomainOf } from "./sender";
 import { escapeHtml } from "@/lib/html/escape";
+import { localizedAlertDescription, type AnomalyMessageParams } from "@/lib/anomaly/messages";
 
 const log = childLogger({ component: "email" });
 
@@ -102,7 +103,16 @@ export async function sendEmail(options: EmailOptions): Promise<{ ok: boolean; i
   }
 }
 
-export function alertEmailHtml(opts: { severity: string; title: string; description?: string | null }): string {
+export function alertEmailHtml(
+  opts: {
+    severity: string;
+    title: string;
+    description?: string | null;
+    /** Feature 6.2 — locale-aware re-render via renderAnomalyMessage. */
+    evidence?: { messageKey?: string; messageParams?: AnomalyMessageParams } | null;
+  },
+  locale: "tr" | "en" | string = "tr",
+): string {
   const sevColors: Record<string, { fg: string; bg: string }> = {
     critical: { fg: "#DC2626", bg: "#FEE2E2" },
     high: { fg: "#F59E0B", bg: "#FEF3C7" },
@@ -110,12 +120,14 @@ export function alertEmailHtml(opts: { severity: string; title: string; descript
     low: { fg: "#475569", bg: "#F3F4F6" },
   };
   const sev = sevColors[opts.severity] ?? sevColors.low;
+  const badgeWord = locale === "en" ? "ALERT" : "ALARM";
+  const body = localizedAlertDescription(opts.evidence ?? null, opts.description ?? null, locale);
   return `<!doctype html>
 <html><body style="margin:0;padding:32px 16px;background:#F9FAFB;color:#0F172A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
   <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;padding:32px;border-left:4px solid ${sev.fg}">
-    <div style="display:inline-block;background:${sev.bg};color:${sev.fg};font-size:11px;letter-spacing:1.5px;padding:4px 10px;border-radius:999px;margin-bottom:16px;font-weight:700">${opts.severity.toUpperCase()} ALERT</div>
+    <div style="display:inline-block;background:${sev.bg};color:${sev.fg};font-size:11px;letter-spacing:1.5px;padding:4px 10px;border-radius:999px;margin-bottom:16px;font-weight:700">${opts.severity.toUpperCase()} ${badgeWord}</div>
     <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#0F172A;letter-spacing:-0.3px">${escapeHtml(opts.title)}</h2>
-    ${opts.description ? `<p style="color:#475569;font-size:15px;line-height:1.6;margin:0">${escapeHtml(opts.description)}</p>` : ""}
+    ${body ? `<p style="color:#475569;font-size:15px;line-height:1.6;margin:0">${escapeHtml(body)}</p>` : ""}
     <p style="color:#94A3B8;font-size:12px;margin-top:32px;border-top:1px solid #E5E7EB;padding-top:16px">— ERPAIO</p>
   </div>
 </body></html>`;

@@ -15,6 +15,10 @@ const PatchSchema = z.object({
   emailTo: z.string().email().nullable().optional(),
   emailEnabled: z.boolean().optional(),
   alertMinSeverity: zSeverity().optional(),
+  // Feature 6.1 — outbound communication locale (Stripe receipts, scheduled
+  // reports, WhatsApp/Slack/Teams alerts). Per-user dashboard locale stays
+  // in cookie + Settings page.
+  defaultLocale: z.enum(["tr", "en"]).optional(),
 });
 
 export async function GET(req: Request) {
@@ -33,6 +37,7 @@ export async function GET(req: Request) {
       emailTo: true,
       emailEnabled: true,
       alertMinSeverity: true,
+      defaultLocale: true,
       // Trial countdown banner için (AAAA). subscriptionStatus null veya
       // "active" değilse banner gösterilir; trialEndsAt ile gün hesaplanır.
       trialEndsAt: true,
@@ -68,6 +73,7 @@ export async function PATCH(req: Request) {
       emailTo: true,
       emailEnabled: true,
       alertMinSeverity: true,
+      defaultLocale: true,
     },
   });
 

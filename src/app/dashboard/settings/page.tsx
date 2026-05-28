@@ -22,6 +22,7 @@ interface TenantSettings {
   emailTo: string | null;
   emailEnabled: boolean;
   alertMinSeverity: "low" | "medium" | "high" | "critical";
+  defaultLocale: "tr" | "en";
 }
 
 export default function SettingsPage() {
@@ -112,6 +113,7 @@ export default function SettingsPage() {
         emailTo: tenant.emailTo || null,
         emailEnabled: tenant.emailEnabled,
         alertMinSeverity: tenant.alertMinSeverity,
+        defaultLocale: tenant.defaultLocale,
       });
       const data = await res.json();
       if (res.ok) {
@@ -436,6 +438,19 @@ export default function SettingsPage() {
                 <option value="high">{t.settings.severityHigh}</option>
                 <option value="critical">{t.settings.severityCritical}</option>
               </select>
+            </Field>
+            <Field label={t.settings.defaultLocaleLabel}>
+              <select
+                value={tenant.defaultLocale}
+                onChange={(e) => setTenant({ ...tenant, defaultLocale: e.target.value as "tr" | "en" })}
+                style={inputStyle}
+              >
+                <option value="tr">Türkçe</option>
+                <option value="en">English</option>
+              </select>
+              <p style={{ marginTop: 6, fontSize: 11, color: colors.textMuted, lineHeight: 1.5 }}>
+                {t.settings.defaultLocaleHint}
+              </p>
             </Field>
           </Section>
 

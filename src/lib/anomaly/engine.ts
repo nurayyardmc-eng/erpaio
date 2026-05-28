@@ -57,6 +57,7 @@ export async function runAnomalyDetectionForTenant(
       emailTo: true,
       emailEnabled: true,
       alertMinSeverity: true,
+      defaultLocale: true,
       connections: { where: { status: "active" }, take: 1, select: { id: true } },
     },
   });
@@ -145,13 +146,16 @@ export async function runAnomalyDetectionForTenant(
         result.alertsCreated++;
 
         if (tenant && shouldNotify(anomaly.severity, tenant.alertMinSeverity)) {
+          const locale = tenant.defaultLocale;
+          const evidence = { messageKey: anomaly.messageKey, messageParams: anomaly.messageParams };
           if (tenant.whatsappEnabled) {
             try {
               const text = formatAlert({
                 severity: alert.severity,
                 title: alert.title,
                 description: alert.description,
-              });
+                evidence,
+              }, locale);
               await sendWhatsApp(text, { to: tenant.whatsappTo ?? undefined });
             } catch (waErr) {
               log.error({ err: waErr, severity: anomaly.severity }, "WhatsApp send failed");
@@ -162,10 +166,13 @@ export async function runAnomalyDetectionForTenant(
             }
           }
 
+          // Push body — locale-aware via renderAnomalyMessage when available.
+          const { localizedAlertDescription } = await import("@/lib/anomaly/messages");
+          const pushBody = localizedAlertDescription(evidence, alert.description ?? null, locale) || alert.title;
           sendPushToTenant(tenantId, {
             category: "anomaly",
             title: `${anomaly.severity.toUpperCase()} · ${alert.title}`,
-            body: alert.description ?? alert.title,
+            body: pushBody,
             data: { alertId: alert.id, severity: alert.severity, type: "anomaly" },
           }).catch(() => {});
 
@@ -173,7 +180,12 @@ export async function runAnomalyDetectionForTenant(
             sendEmail({
               to: tenant.emailTo,
               subject: `[ERPAIO ${anomaly.severity.toUpperCase()}] ${alert.title}`,
-              html: alertEmailHtml({ severity: anomaly.severity, title: alert.title, description: alert.description }),
+              html: alertEmailHtml({
+                severity: anomaly.severity,
+                title: alert.title,
+                description: alert.description,
+                evidence,
+              }, locale),
             }).catch(() => {});
           }
         }

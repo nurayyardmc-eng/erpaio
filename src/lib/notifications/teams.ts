@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { childLogger } from "@/lib/observability/logger";
+import { localizedAlertDescription, type AnomalyMessageParams } from "@/lib/anomaly/messages";
 
 const log = childLogger({ component: "teams" });
 
@@ -15,18 +16,22 @@ export interface TeamsPayload {
   severity: string;
   title: string;
   description?: string | null;
+  /** Feature 6.2 — locale-aware re-render via renderAnomalyMessage. */
+  evidence?: { messageKey?: string; messageParams?: AnomalyMessageParams } | null;
+  locale?: "tr" | "en" | string;
 }
 
 // Exported for test (Track KKKK). Pure MessageCard builder, no I/O.
 export function buildTeamsBody(payload: Omit<TeamsPayload, "webhookUrl">) {
   const color = SEVERITY_COLORS[payload.severity] ?? "9AA5B4";
+  const body = localizedAlertDescription(payload.evidence ?? null, payload.description ?? null, payload.locale ?? "tr");
   return {
     "@type": "MessageCard",
     "@context": "http://schema.org/extensions",
     themeColor: color,
     summary: `[ERPAIO ${payload.severity.toUpperCase()}] ${payload.title}`,
     title: `${payload.severity.toUpperCase()} · ${payload.title}`,
-    text: payload.description ?? "",
+    text: body,
   };
 }
 

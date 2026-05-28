@@ -30,6 +30,9 @@ export async function GET(req: NextRequest) {
   const reports = await prisma.scheduledReport.findMany({
     where: { enabled: true },
     take: 200,
+    include: {
+      tenant: { select: { defaultLocale: true } },
+    },
   });
 
   let executed = 0;
@@ -46,10 +49,8 @@ export async function GET(req: NextRequest) {
       }
 
       const rows = await queryERP(r.connectionId, sql);
-      // Feature 5.3 — locale TODO: ScheduledReport has no `locale` column yet;
-      // tenant-derived locale would require either a tenant.defaultLocale field
-      // or per-user locale persistence. For now defaults to TR (back-compat).
-      const locale = "tr";
+      // Feature 6.1 — tenant.defaultLocale drives outbound report locale.
+      const locale = r.tenant.defaultLocale;
       const html = renderReportHtml(r.name, r.question, sql, rows, locale);
 
       await sendEmail({

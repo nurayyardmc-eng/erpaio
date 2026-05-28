@@ -28,6 +28,10 @@ model Tenant {
   brandingLogoUrl      String?
   brandingPrimary      String?
   brandingSenderName   String?
+  // Feature 6.1 — default locale for outbound communication (Stripe receipts,
+  // scheduled reports, WhatsApp/Slack/Teams alert notifications). Per-user
+  // dashboard locale stays in cookie. Owner sets this in tenant settings.
+  defaultLocale        String            @default("tr")
   createdAt            DateTime          @default(now())
   users                User[]
   connections          ErpConnection[]
