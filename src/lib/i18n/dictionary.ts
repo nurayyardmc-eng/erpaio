@@ -299,6 +299,17 @@ export interface Dictionary {
     badgeStale: string;
     badgeVeryStale: string;
   };
+  overview: {
+    breadcrumb: string;
+    title: string;
+    description: string;
+    lastUpdated: (when: string) => string;
+    emptyTitle: string;
+    scheduleHourly: string;
+    scheduleDaily: string;
+    snapshotSuffix: string;
+    noDataYet: string;
+  };
   saved: {
     breadcrumb: string;
     title: string;

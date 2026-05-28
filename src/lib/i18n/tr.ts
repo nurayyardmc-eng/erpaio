@@ -292,6 +292,19 @@ export const tr: Dictionary = {
     badgeStale: "ESKİ",
     badgeVeryStale: "ÇOK ESKİ",
   },
+  overview: {
+    breadcrumb: "ERPAIO · ANLIK METRİKLER",
+    title: "Anlık Metrikler",
+    description:
+      "Pre-computed — saatlik/günlük cron snapshotlarından, sıfır bekleme.",
+    lastUpdated: (when: string) => ` Son güncelleme: ${when}`,
+    emptyTitle:
+      "Henüz metrik snapshot yok. Cron job'u beklerken (saatlik 0:00, günlük 06:00) veya manuel tetiklenebilir.",
+    scheduleHourly: "SAATLİK",
+    scheduleDaily: "GÜNLÜK",
+    snapshotSuffix: "snapshot",
+    noDataYet: "Veri henüz yok",
+  },
   saved: {
     breadcrumb: "ERPAIO · KAYITLI SORGULAR",
     title: "Sık Kullanılan Sorgular",

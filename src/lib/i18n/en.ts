@@ -292,6 +292,19 @@ export const en: Dictionary = {
     badgeStale: "STALE",
     badgeVeryStale: "VERY STALE",
   },
+  overview: {
+    breadcrumb: "ERPAIO · LIVE METRICS",
+    title: "Live Metrics",
+    description:
+      "Pre-computed — from hourly/daily cron snapshots, zero wait.",
+    lastUpdated: (when: string) => ` Last updated: ${when}`,
+    emptyTitle:
+      "No metric snapshots yet. While waiting for the cron job (hourly 0:00, daily 06:00) you can also trigger it manually.",
+    scheduleHourly: "HOURLY",
+    scheduleDaily: "DAILY",
+    snapshotSuffix: "snapshot",
+    noDataYet: "No data yet",
+  },
   saved: {
     breadcrumb: "ERPAIO · SAVED QUERIES",
     title: "Frequently Used Queries",

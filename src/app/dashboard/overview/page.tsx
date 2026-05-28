@@ -5,6 +5,7 @@ import { formatTimestamp } from "@/lib/format/time";
 import { changeDelta } from "@/lib/format/changeDelta";
 import { sparklinePoints } from "@/lib/charts/sparkline";
 import SetupChecklist from "@/components/SetupChecklist";
+import { useI18n } from "@/lib/i18n/context";
 
 interface DashboardMetric {
   key: string;
@@ -25,6 +26,7 @@ interface DashboardResponse {
 }
 
 export default function OverviewPage() {
+  const { t } = useI18n();
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,11 +42,11 @@ export default function OverviewPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · ANLIK METRİKLER</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Anlık Metrikler</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.overview.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>{t.overview.title}</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24 }}>
-        Pre-computed — saatlik/günlük cron snapshotlarından, sıfır bekleme.
-        {data && ` Son güncelleme: ${formatTimestamp(data.generatedAt)}`}
+        {t.overview.description}
+        {data && t.overview.lastUpdated(formatTimestamp(data.generatedAt))}
       </p>
 
       <SetupChecklist />
@@ -61,8 +63,8 @@ export default function OverviewPage() {
 
       {!loading && data && data.metrics.every((m) => m.latest === null) && (
         <div style={{ marginTop: 40, padding: 20, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, color: "#475569", fontSize: 12 }}>
-          Henüz metrik snapshot yok. Cron job&apos;u beklerken (saatlik 0:00, günlük 06:00) veya{" "}
-          <code style={{ color: "#0A0A0A" }}>/api/cron/anomaly-detection</code> manuel tetiklenebilir.
+          {t.overview.emptyTitle}{" "}
+          <code style={{ color: "#0A0A0A" }}>/api/cron/anomaly-detection</code>
         </div>
       )}
     </div>
@@ -70,6 +72,7 @@ export default function OverviewPage() {
 }
 
 function MetricCard({ metric }: { metric: DashboardMetric }) {
+  const { t } = useI18n();
   const hasData = metric.latest !== null;
   const change = metric.changePercent;
   const delta = changeDelta(change);
@@ -86,7 +89,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
     }}>
       <div>
         <div style={{ fontSize: 9, color: "#94A3B8", letterSpacing: 2, marginBottom: 4 }}>
-          {metric.schedule === "hourly" ? "SAATLİK" : "GÜNLÜK"} · {metric.sampleCount} snapshot
+          {metric.schedule === "hourly" ? t.overview.scheduleHourly : t.overview.scheduleDaily} · {metric.sampleCount} {t.overview.snapshotSuffix}
         </div>
         <div style={{ fontSize: 12, color: "#0F172A", fontWeight: 600 }}>{metric.label}</div>
         <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>{metric.description}</div>
@@ -114,7 +117,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 11, color: "#94A3B8" }}>Veri henüz yok</div>
+        <div style={{ fontSize: 11, color: "#94A3B8" }}>{t.overview.noDataYet}</div>
       )}
     </div>
   );
