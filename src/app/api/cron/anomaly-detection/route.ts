@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           ok: true,
-          message: "İşlenecek aktif tenant yok",
+          message: "No active tenants to process",
           durationMs: Date.now() - startedAt,
         },
         { headers: { [REQUEST_ID_HEADER]: requestId } },

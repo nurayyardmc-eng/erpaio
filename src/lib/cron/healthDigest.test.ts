@@ -111,7 +111,7 @@ describe("cron/healthDigest", () => {
           totalTenantsFailed: 5,
         },
       ]);
-      expect(html).toContain("3 cron başarısızlığı");
+      expect(html).toContain("3 cron failures in the last 24 hours");
       expect(html).toContain("watchlists");
     });
 
@@ -228,7 +228,7 @@ describe("cron/healthDigest", () => {
         },
       ]);
       // Total 8 = 5+3
-      expect(html).toContain("8 cron başarısızlığı");
+      expect(html).toContain("8 cron failures in the last 24 hours");
     });
   });
 });

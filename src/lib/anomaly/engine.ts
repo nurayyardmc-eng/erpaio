@@ -64,7 +64,7 @@ export async function runAnomalyDetectionForTenant(
   const erpConnection = tenant?.connections[0];
 
   if (!erpConnection) {
-    result.errors.push({ metric: "_setup", error: "Aktif ERP bağlantısı yok" });
+    result.errors.push({ metric: "_setup", error: "No active ERP connection" });
     return result;
   }
 

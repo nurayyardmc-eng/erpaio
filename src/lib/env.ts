@@ -33,6 +33,15 @@ const ServerEnvSchema = z.object({
   STRIPE_PRICE_PRO: z.string().optional(),
   STRIPE_PRICE_ENTERPRISE: z.string().optional(),
 
+  // iyzico (TR market payment provider) — scaffold only.
+  // Gated by isIyzicoConfigured(); falls back to Stripe when missing.
+  IYZICO_API_KEY: z.string().optional(),
+  IYZICO_SECRET_KEY: z.string().optional(),
+  IYZICO_BASE_URL: z.string().url().or(z.literal("")).optional(),
+  IYZICO_PRICE_PRO: z.string().optional(),
+  IYZICO_PRICE_ENTERPRISE: z.string().optional(),
+  IYZICO_WEBHOOK_SECRET: z.string().optional(),
+
   MAINTENANCE_MODE: z.enum(["true", "false"]).optional(),
 
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),

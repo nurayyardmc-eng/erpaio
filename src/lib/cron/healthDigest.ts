@@ -109,10 +109,10 @@ export function formatCronHealthDigestHtml(summary: FailureSummaryByJob[]): stri
 <html><body style="font-family:-apple-system,Segoe UI,Inter,sans-serif;background:#F9FAFB;color:#0F172A;margin:0;padding:24px;">
   <div style="max-width:760px;margin:0 auto;background:#FFFFFF;border-radius:12px;padding:32px;border:1px solid #E5E7EB;">
     <div style="color:#0A0A0A;font-size:10px;letter-spacing:3px;margin-bottom:8px;">ERPAIO · CRON HEALTH</div>
-    <h1 style="font-size:22px;margin:0 0 8px;letter-spacing:-0.5px;">Son 24 saatte ${totalFailures} cron başarısızlığı</h1>
+    <h1 style="font-size:22px;margin:0 0 8px;letter-spacing:-0.5px;">${totalFailures} cron failures in the last 24 hours</h1>
     <p style="color:#737373;font-size:13px;line-height:1.6;margin:0 0 24px;">
-      Aşağıdaki işler son 24 saatte FAILED veya PARTIAL_FAILURE durumuyla sonlandı.
-      Sentry'de detaylı stack trace mevcut. Yönetici dashboard:
+      The jobs below ended with FAILED or PARTIAL_FAILURE status in the last 24 hours.
+      Full stack traces available in Sentry. Admin dashboard:
       <a href="https://erpaio.vercel.app/admin/cron-runs" style="color:#0A0A0A;">erpaio.vercel.app/admin/cron-runs</a>
     </p>
     <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;font-size:13px;">
@@ -129,8 +129,8 @@ export function formatCronHealthDigestHtml(summary: FailureSummaryByJob[]): stri
       <tbody>${rows}</tbody>
     </table>
     <p style="color:#94A3B8;font-size:11px;line-height:1.5;margin:24px 0 0;">
-      Bu özet ERPAIO daily cleanup cron'unun bir parçasıdır.
-      Notification list'ten çıkmak için SYSADMIN_NOTIFY_EMAIL env'ini kaldırın.
+      This summary is part of the ERPAIO daily cleanup cron.
+      To unsubscribe, remove the SYSADMIN_NOTIFY_EMAIL env var.
     </p>
   </div>
 </body></html>`;
