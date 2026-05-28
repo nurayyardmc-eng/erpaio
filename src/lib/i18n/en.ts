@@ -358,6 +358,20 @@ export const en: Dictionary = {
     badgeStale: "STALE",
     badgeVeryStale: "VERY STALE",
   },
+  welcomeWizard: {
+    brand: "WELCOME TO ERPAIO",
+    title: "Ask your ERP data in plain language",
+    subtitle:
+      "ERPAIO turns your natural-language questions into SQL and queries your ERP database live. Get started in 3 simple steps.",
+    step1Label: "Connect your ERP",
+    step1Desc: "A read-only user + host/port — passwords are AES-256-GCM encrypted. Takes about 30 seconds.",
+    step2Label: "Ask in plain language",
+    step2Desc: "Write questions like \"top 5 best-selling products this week\" — we generate the SQL.",
+    step3Label: "Get answers",
+    step3Desc: "Table + chart + cache + email export. Detects anomalies and notifies you.",
+    cta: "Get Started",
+    dismissAria: "Close",
+  },
   commandPalette: {
     placeholder: "Search commands or pages…",
     escLabel: "esc",

@@ -6,6 +6,7 @@ import CommandPalette from "@/components/CommandPalette";
 import HelpFab from "@/components/HelpFab";
 import NpsPrompt from "@/components/NpsPrompt";
 import TrialBanner from "@/components/TrialBanner";
+import WelcomeWizard from "@/components/WelcomeWizard";
 import { colors } from "@/lib/theme";
 
 // I18nProvider root layout'tan geliyor — burada wrap'lemiyoruz.
@@ -29,6 +30,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Track SSSS — NPS prompt (90gün cool-down + 30s delay). Önceden dead code
           olarak duruyordu; layout'a mount edildi. localStorage gating'i kendisi yapar. */}
       <NpsPrompt />
+      {/* Feature 4.1 — first-run welcome wizard (only shows when setup score == 0
+          + not previously dismissed). Self-gates via API + localStorage. */}
+      <WelcomeWizard />
     </div>
   );
 }

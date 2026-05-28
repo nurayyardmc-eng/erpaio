@@ -365,6 +365,19 @@ export interface Dictionary {
     badgeStale: string;
     badgeVeryStale: string;
   };
+  welcomeWizard: {
+    brand: string;
+    title: string;
+    subtitle: string;
+    step1Label: string;
+    step1Desc: string;
+    step2Label: string;
+    step2Desc: string;
+    step3Label: string;
+    step3Desc: string;
+    cta: string;
+    dismissAria: string;
+  };
   commandPalette: {
     placeholder: string;
     escLabel: string;

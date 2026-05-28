@@ -358,6 +358,20 @@ export const tr: Dictionary = {
     badgeStale: "ESKİ",
     badgeVeryStale: "ÇOK ESKİ",
   },
+  welcomeWizard: {
+    brand: "ERPAIO'YA HOŞ GELDİN",
+    title: "ERP verilerine doğal dilde sor",
+    subtitle:
+      "ERPAIO, Türkçe sorularını SQL'e çevirip ERP veritabanından anlık yanıt verir. 3 basit adımla başlayabilirsin.",
+    step1Label: "ERP'ni bağla",
+    step1Desc: "Read-only kullanıcı + host/port — şifreler AES-256-GCM ile şifrelenir. 30 saniyede tamamlanır.",
+    step2Label: "Doğal dilde sor",
+    step2Desc: "\"Bu hafta en çok satan 5 ürün hangileri?\" gibi sorular yaz — SQL'i biz üretiriz.",
+    step3Label: "Sonuçları al",
+    step3Desc: "Tablo + grafik + cache + e-postaya gönder. Anomali tespit eder, sana bildirim atar.",
+    cta: "Hemen Başla",
+    dismissAria: "Kapat",
+  },
   commandPalette: {
     placeholder: "Komut veya sayfa ara…",
     escLabel: "esc",
