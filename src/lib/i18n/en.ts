@@ -292,6 +292,27 @@ export const en: Dictionary = {
     badgeStale: "STALE",
     badgeVeryStale: "VERY STALE",
   },
+  saved: {
+    breadcrumb: "ERPAIO · SAVED QUERIES",
+    title: "Frequently Used Queries",
+    description:
+      "Queries that succeeded at least twice. Click to re-run in chat. Pin the ones you use most.",
+    emptyTitle: "No saved queries yet",
+    emptyDescription:
+      "Successful queries from chat are cached automatically. You can re-access them here.",
+    csvBtn: "↓ CSV",
+    reliabilityLabel: (pct: string) => `Reliability: ${pct}%`,
+    runStats: (success: number, failed: number) => `${success} ok / ${failed} failed`,
+    lastUsedLabel: "Last",
+    pinTitle: "Pin",
+    unpinTitle: "Unpin",
+    deleteTitle: "Delete query",
+    deleteConfirmTitle: "Delete query?",
+    deleteConfirmMessage: (question: string) => `"${question}" will be removed from cache.`,
+    deleteConfirmYes: "Delete",
+    deletedToast: "Deleted",
+    deleteFailedToast: "Could not delete",
+  },
   audit: {
     breadcrumb: "ERPAIO · ACTIVITY LOG",
     title: "Activity Log",

@@ -299,6 +299,25 @@ export interface Dictionary {
     badgeStale: string;
     badgeVeryStale: string;
   };
+  saved: {
+    breadcrumb: string;
+    title: string;
+    description: string;
+    emptyTitle: string;
+    emptyDescription: string;
+    csvBtn: string;
+    reliabilityLabel: (pct: string) => string;
+    runStats: (success: number, failed: number) => string;
+    lastUsedLabel: string;
+    pinTitle: string;
+    unpinTitle: string;
+    deleteTitle: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessage: (question: string) => string;
+    deleteConfirmYes: string;
+    deletedToast: string;
+    deleteFailedToast: string;
+  };
   audit: {
     breadcrumb: string;
     title: string;

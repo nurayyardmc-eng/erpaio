@@ -292,6 +292,27 @@ export const tr: Dictionary = {
     badgeStale: "ESKİ",
     badgeVeryStale: "ÇOK ESKİ",
   },
+  saved: {
+    breadcrumb: "ERPAIO · KAYITLI SORGULAR",
+    title: "Sık Kullanılan Sorgular",
+    description:
+      "En az 2 kez başarıyla çalıştırılan sorgular. Tıklayarak chat'te yeniden çalıştırabilirsiniz. Sık kullandığınızı pinleyebilirsiniz.",
+    emptyTitle: "Henüz kayıtlı sorgu yok",
+    emptyDescription:
+      "Sohbette sorduğunuz başarılı sorgular otomatik olarak cache'e yazılır. Buradan tekrar erişebilirsiniz.",
+    csvBtn: "↓ CSV",
+    reliabilityLabel: (pct: string) => `Güvenilirlik: %${pct}`,
+    runStats: (success: number, failed: number) => `${success} başarılı / ${failed} hata`,
+    lastUsedLabel: "Son",
+    pinTitle: "Sabitle",
+    unpinTitle: "Sabitlemeyi kaldır",
+    deleteTitle: "Sorguyu sil",
+    deleteConfirmTitle: "Sorguyu sil?",
+    deleteConfirmMessage: (question: string) => `"${question}" cache'den kaldırılacak.`,
+    deleteConfirmYes: "Sil",
+    deletedToast: "Silindi",
+    deleteFailedToast: "Silinemedi",
+  },
   audit: {
     breadcrumb: "ERPAIO · AKTİVİTE LOGU",
     title: "Aktivite Logu",

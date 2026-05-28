@@ -11,6 +11,7 @@ import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { postJson } from "@/lib/http/clientFetch";
 import { formatPercentInt } from "@/lib/format/percent";
+import { useI18n } from "@/lib/i18n/context";
 
 interface SavedQuery {
   id: string;
@@ -24,6 +25,7 @@ interface SavedQuery {
 }
 
 export default function SavedQueriesPage() {
+  const { t } = useI18n();
   const [queries, setQueries] = useState<SavedQuery[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -85,9 +87,9 @@ export default function SavedQueriesPage() {
     e.preventDefault();
     e.stopPropagation();
     const ok = await confirmDialog({
-      title: "Sorguyu sil?",
-      message: `"${q.question}" cache'den kaldırılacak.`,
-      confirmLabel: "Sil",
+      title: t.saved.deleteConfirmTitle,
+      message: t.saved.deleteConfirmMessage(q.question),
+      confirmLabel: t.saved.deleteConfirmYes,
       destructive: true,
     });
     if (!ok) return;
@@ -98,22 +100,22 @@ export default function SavedQueriesPage() {
       const res = await fetch(`/api/saved-queries/${encodeURIComponent(q.id)}`, { method: "DELETE" });
       if (!res.ok) {
         setQueries(prev);
-        showToast("Silinemedi", "error");
+        showToast(t.saved.deleteFailedToast, "error");
         return;
       }
-      showToast("Silindi", "success");
+      showToast(t.saved.deletedToast, "success");
     } catch {
       setQueries(prev);
-      showToast("Silinemedi", "error");
+      showToast(t.saved.deleteFailedToast, "error");
     }
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9FAFB", color: "#0F172A", fontFamily: "inherit", padding: 40 }}>
-      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>ERPAIO · KAYITLI SORGULAR</div>
-      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Sık Kullanılan Sorgular</h1>
+      <div style={{ color: "#0A0A0A", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>{t.saved.breadcrumb}</div>
+      <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>{t.saved.title}</h1>
       <p style={{ color: "#94A3B8", fontSize: 11, marginBottom: 24, maxWidth: 600 }}>
-        En az 2 kez başarıyla çalıştırılan sorgular. Tıklayarak chat&apos;te yeniden çalıştırabilirsiniz. Sık kullandığınızı pinleyebilirsiniz.
+        {t.saved.description}
       </p>
 
       {loading && (
@@ -129,8 +131,8 @@ export default function SavedQueriesPage() {
       {!loading && !error && queries.length === 0 && (
         <EmptyState
           icon={<Bookmark size={28} />}
-          title="Henüz kayıtlı sorgu yok"
-          description="Sohbette sorduğunuz başarılı sorgular otomatik olarak cache'e yazılır. Buradan tekrar erişebilirsiniz."
+          title={t.saved.emptyTitle}
+          description={t.saved.emptyDescription}
         />
       )}
 
@@ -153,7 +155,7 @@ export default function SavedQueriesPage() {
             }}
             style={{ padding: "6px 14px", borderRadius: 100, border: "1px solid rgba(10,10,10,0.12)", background: "transparent", color: "#525252", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
           >
-            ↓ CSV
+            {t.saved.csvBtn}
           </button>
         </div>
       )}
@@ -185,18 +187,18 @@ export default function SavedQueriesPage() {
               }}>{q.sqlQuery}</pre>
               <div style={{ display: "flex", gap: 12, fontSize: 9, color: "#94A3B8" }}>
                 <span style={{ color: q.reliability > 0.9 ? "#10B981" : q.reliability > 0.7 ? "#F59E0B" : "#EF4444" }}>
-                  Güvenilirlik: %{formatPercentInt(q.reliability)}
+                  {t.saved.reliabilityLabel(formatPercentInt(q.reliability))}
                 </span>
                 <span>·</span>
-                <span>{q.successCount} başarılı / {q.failCount} hata</span>
+                <span>{t.saved.runStats(q.successCount, q.failCount)}</span>
                 <span>·</span>
-                <span>Son: {formatDate(q.lastUsedAt)}</span>
+                <span>{t.saved.lastUsedLabel}: {formatDate(q.lastUsedAt)}</span>
               </div>
             </Link>
             <button
               onClick={(e) => togglePin(q, e)}
-              title={q.pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
-              aria-label={q.pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
+              title={q.pinned ? t.saved.unpinTitle : t.saved.pinTitle}
+              aria-label={q.pinned ? t.saved.unpinTitle : t.saved.pinTitle}
               style={{
                 position: "absolute",
                 top: 12,
@@ -215,8 +217,8 @@ export default function SavedQueriesPage() {
             </button>
             <button
               onClick={(e) => removeQuery(q, e)}
-              title="Sorguyu sil"
-              aria-label="Sorguyu sil"
+              title={t.saved.deleteTitle}
+              aria-label={t.saved.deleteTitle}
               style={{
                 position: "absolute",
                 top: 12,
