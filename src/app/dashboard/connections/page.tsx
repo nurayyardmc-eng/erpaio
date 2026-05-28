@@ -10,6 +10,7 @@ import { isOwnerOrAdmin } from "@/lib/auth/role";
 import { postJson } from "@/lib/http/clientFetch";
 import { readOnlyUserSql } from "@/lib/db/readOnlyUserSql";
 import type { ErpType } from "@/lib/db/erpTypes";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Connection {
   id: string;
@@ -23,21 +24,23 @@ interface Connection {
   schemaCache?: { builtAt: string; tableCount: number } | null;
 }
 
-// Schema age → renk eşlemesi.
-const SCHEMA_AGE_BADGE: Record<Exclude<SchemaAgeStatus, "never">, { fg: string; bg: string; label: string }> = {
-  fresh: { fg: "#065F46", bg: "#D1FAE5", label: "GÜNCEL" },
-  stale: { fg: "#92400E", bg: "#FEF3C7", label: "ESKİ" },
-  "very-stale": { fg: "#991B1B", bg: "#FEE2E2", label: "ÇOK ESKİ" },
+// Schema age → renk eşlemesi. Label resolved via i18n inside component.
+const SCHEMA_AGE_COLORS: Record<Exclude<SchemaAgeStatus, "never">, { fg: string; bg: string }> = {
+  fresh: { fg: "#065F46", bg: "#D1FAE5" },
+  stale: { fg: "#92400E", bg: "#FEF3C7" },
+  "very-stale": { fg: "#991B1B", bg: "#FEE2E2" },
 };
 
+// ERP type meta (port + i18n key references). Label/desc resolved via t.connections.
 const ERP_TYPES = [
-  { id: "nebim_v3", label: "Nebim V3", desc: "Türkiye perakende standardı (MS SQL)", port: 1433 },
-  { id: "sap", label: "SAP", desc: "S/4HANA, ECC (MS SQL veya Oracle)", port: 1433 },
-  { id: "dynamics365", label: "Dynamics 365", desc: "Microsoft ERP (MS SQL)", port: 1433 },
-  { id: "postgres", label: "PostgreSQL", desc: "Odoo, ERPNext, custom (PG)", port: 5432 },
-];
+  { id: "nebim_v3", port: 1433, labelKey: "erpNebimLabel", descKey: "erpNebimDesc" },
+  { id: "sap", port: 1433, labelKey: "erpSapLabel", descKey: "erpSapDesc" },
+  { id: "dynamics365", port: 1433, labelKey: "erpDynamicsLabel", descKey: "erpDynamicsDesc" },
+  { id: "postgres", port: 5432, labelKey: "erpPostgresLabel", descKey: "erpPostgresDesc" },
+] as const;
 
 export default function ConnectionsPage() {
+  const { t } = useI18n();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -83,21 +86,21 @@ export default function ConnectionsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast(data.error || "Schema sync başarısız.", "error");
+        showToast(data.error || t.connections.schemaSyncFailed, "error");
       } else {
-        showToast(`Şema senkronlandı (${data.schemaCache?.tableCount ?? "?"} tablo).`, "success");
+        showToast(t.connections.schemaSyncSuccess(data.schemaCache?.tableCount ?? "?"), "success");
         refresh();
       }
     } catch {
-      showToast("Schema sync başarısız.", "error");
+      showToast(t.connections.schemaSyncFailed, "error");
     } finally {
       setSyncingId(null);
     }
   };
 
   const onTypeChange = (id: string) => {
-    const t = ERP_TYPES.find((x) => x.id === id);
-    setForm({ ...form, erpType: id, port: t?.port ?? 1433 });
+    const erp = ERP_TYPES.find((x) => x.id === id);
+    setForm({ ...form, erpType: id, port: erp?.port ?? 1433 });
     // Yeni ERP type seçildiğinde SQL panel'i kapat (içerik değişti)
     setShowSetupSql(false);
   };
@@ -106,18 +109,19 @@ export default function ConnectionsPage() {
     const script = readOnlyUserSql(form.erpType as ErpType);
     try {
       await navigator.clipboard.writeText(script.sql);
-      showToast("SQL kopyalandı. IT departmanınıza gönderebilirsiniz.", "success");
+      showToast(t.connections.setupSqlCopySuccess, "success");
     } catch {
-      showToast("Kopyalama başarısız. Manuel seçip kopyalayın.", "error");
+      showToast(t.connections.setupSqlCopyFailed, "error");
     }
   };
 
   const emailSetupSql = () => {
     const script = readOnlyUserSql(form.erpType as ErpType);
-    const erpLabel = ERP_TYPES.find((x) => x.id === form.erpType)?.label ?? form.erpType;
-    const subject = encodeURIComponent(`ERPAIO ${erpLabel} için read-only kullanıcı oluşturma`);
+    const meta = ERP_TYPES.find((x) => x.id === form.erpType);
+    const erpLabel = meta ? t.connections[meta.labelKey] : form.erpType;
+    const subject = encodeURIComponent(`${t.connections.setupSqlEmailSubject} (${erpLabel})`);
     const body = encodeURIComponent(
-      `Merhaba,\n\nERPAIO platformunu ${erpLabel} veritabanımıza bağlamak için aşağıdaki SQL'i çalıştırıp bana erpaio_readonly kullanıcısı ve şifresini iletebilir misiniz?\n\nNotlar: ${script.notes}\n\n--- SQL ---\n\n${script.sql}\n\nTeşekkürler.`,
+      `${t.connections.setupSqlEmailIntro}\n\n${t.connections.setupSqlEmailNotes}: ${script.notes}\n\n--- SQL ---\n\n${script.sql}\n`,
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -130,14 +134,14 @@ export default function ConnectionsPage() {
       const res = await postJson("/api/connections", form);
       const data = await res.json();
       if (!res.ok || !data.id) {
-        showToast(data.error || "Bağlantı eklenemedi", "error");
+        showToast(data.error || t.connections.toastAddFailed, "error");
         return;
       }
-      showToast("Bağlantı eklendi, test ediliyor…", "info");
+      showToast(t.connections.toastAddTesting, "info");
       const test = await fetch(`/api/connections/${data.id}/test`);
       const testData = await test.json();
       if (testData.ok) {
-        showToast(`Bağlantı başarılı! ${testData.tableCount} tablo bulundu.`, "success");
+        showToast(`${t.connections.toastTestSuccess} (${testData.tableCount})`, "success");
         setForm({ erpType: "nebim_v3", host: "", port: 1433, dbName: "", username: "", password: "" });
         setShowForm(false);
       } else {
@@ -145,12 +149,12 @@ export default function ConnectionsPage() {
         if (testData.hint && testData.error) {
           setLastError({ title: testData.error, hint: testData.hint, category: testData.category ?? "unknown" });
         } else {
-          showToast("Bağlantı başarısız. Bilgileri kontrol edin.", "error");
+          showToast(t.connections.toastTestFailed, "error");
         }
       }
       refresh();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Ağ hatası", "error");
+      showToast(err instanceof Error ? err.message : t.common.networkError, "error");
     } finally {
       setSubmitting(false);
     }
@@ -167,10 +171,10 @@ export default function ConnectionsPage() {
             letterSpacing: -1,
             margin: "0 0 8px",
           }}>
-            ERP Bağlantıları
+            {t.connections.title}
           </h1>
           <p style={{ color: colors.textMuted, fontSize: 14, margin: 0 }}>
-            ERP veritabanlarınıza read-only bağlantı kurun. Şifreler AES-256-GCM ile şifrelenir.
+            {t.connections.subtitle}
           </p>
         </div>
         {!showForm && (
@@ -188,7 +192,7 @@ export default function ConnectionsPage() {
               whiteSpace: "nowrap",
             }}
           >
-            + Yeni Bağlantı
+            {t.connections.newBtn}
           </button>
         )}
       </div>
@@ -201,9 +205,9 @@ export default function ConnectionsPage() {
           padding: 28,
           marginBottom: 32,
         }}>
-          <h2 style={{ fontSize: 17, fontWeight: 600, margin: "0 0 6px" }}>Yeni Bağlantı</h2>
+          <h2 style={{ fontSize: 17, fontWeight: 600, margin: "0 0 6px" }}>{t.connections.formTitle}</h2>
           <p style={{ color: colors.textMuted, fontSize: 13, margin: "0 0 20px" }}>
-            Önce ERP tipinizi seçin, sonra bağlantı bilgilerini girin.
+            {t.connections.formDescription}
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -213,13 +217,13 @@ export default function ConnectionsPage() {
               gap: 10,
               marginBottom: 20,
             }}>
-              {ERP_TYPES.map((t) => {
-                const active = form.erpType === t.id;
+              {ERP_TYPES.map((erp) => {
+                const active = form.erpType === erp.id;
                 return (
                   <button
                     type="button"
-                    key={t.id}
-                    onClick={() => onTypeChange(t.id)}
+                    key={erp.id}
+                    onClick={() => onTypeChange(erp.id)}
                     style={{
                       textAlign: "left",
                       padding: 14,
@@ -231,25 +235,25 @@ export default function ConnectionsPage() {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                       <Database size={14} color={active ? colors.text : colors.textMuted} />
-                      <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{t.label}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{t.connections[erp.labelKey]}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.4 }}>{t.desc}</div>
+                    <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.4 }}>{t.connections[erp.descKey]}</div>
                   </button>
                 );
               })}
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 10, marginBottom: 12 }}>
-              <Field label="Host / IP">
+              <Field label={t.connections.fieldHost}>
                 <input
                   required
                   value={form.host}
                   onChange={(e) => setForm({ ...form, host: e.target.value })}
-                  placeholder="db.firma.com"
+                  placeholder={t.connections.placeholderHost}
                   style={inputStyle}
                 />
               </Field>
-              <Field label="Port">
+              <Field label={t.connections.fieldPort}>
                 <input
                   type="number"
                   required
@@ -260,27 +264,27 @@ export default function ConnectionsPage() {
               </Field>
             </div>
 
-            <Field label="Veritabanı Adı">
+            <Field label={t.connections.fieldDbName}>
               <input
                 required
                 value={form.dbName}
                 onChange={(e) => setForm({ ...form, dbName: e.target.value })}
-                placeholder="NebimDB"
+                placeholder={t.connections.placeholderDbName}
                 style={inputStyle}
               />
             </Field>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <Field label="Kullanıcı Adı">
+              <Field label={t.connections.fieldUsername}>
                 <input
                   required
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  placeholder="erpaio_readonly"
+                  placeholder={t.connections.placeholderUsername}
                   style={inputStyle}
                 />
               </Field>
-              <Field label="Şifre">
+              <Field label={t.connections.fieldPassword}>
                 <input
                   type="password"
                   required
@@ -304,7 +308,7 @@ export default function ConnectionsPage() {
               marginBottom: 12,
             }}>
               <ShieldCheck size={14} color={colors.brand} />
-              <span>Şifre AES-256-GCM ile şifrelenir. Sadece SELECT yetkisi olan kullanıcı önerilir.</span>
+              <span>{t.connections.securityNote}</span>
             </div>
 
             {/* Read-only user setup helper — IT'ye kopyala-yapıştır SQL */}
@@ -323,7 +327,7 @@ export default function ConnectionsPage() {
                 textDecoration: "underline",
               }}
             >
-              {showSetupSql ? "Kullanıcı oluşturma SQL'ini gizle" : "IT'ye göndermek için kullanıcı oluşturma SQL'ini göster"}
+              {showSetupSql ? t.connections.setupSqlToggleHide : t.connections.setupSqlToggleShow}
             </button>
 
             {showSetupSql && (
@@ -369,7 +373,7 @@ export default function ConnectionsPage() {
                       gap: 6,
                     }}
                   >
-                    <Copy size={12} /> SQL&apos;i Kopyala
+                    <Copy size={12} /> {t.connections.setupSqlCopy}
                   </button>
                   <button
                     type="button"
@@ -388,7 +392,7 @@ export default function ConnectionsPage() {
                       gap: 6,
                     }}
                   >
-                    <Mail size={12} /> IT&apos;ye E-posta Hazırla
+                    <Mail size={12} /> {t.connections.setupSqlEmail}
                   </button>
                 </div>
               </div>
@@ -417,7 +421,7 @@ export default function ConnectionsPage() {
                   <button
                     type="button"
                     onClick={() => setLastError(null)}
-                    aria-label="Kapat"
+                    aria-label={t.connections.closeAria}
                     style={{
                       background: "transparent",
                       border: "none",
@@ -449,7 +453,7 @@ export default function ConnectionsPage() {
                   cursor: "pointer",
                 }}
               >
-                {submitting ? "Bağlanıyor…" : "Bağlantıyı Test Et ve Kaydet"}
+                {submitting ? t.connections.submitting : t.connections.submit}
               </button>
               <button
                 type="button"
@@ -465,7 +469,7 @@ export default function ConnectionsPage() {
                   cursor: "pointer",
                 }}
               >
-                İptal
+                {t.connections.cancel}
               </button>
             </div>
           </form>
@@ -479,8 +483,8 @@ export default function ConnectionsPage() {
       ) : connections.length === 0 ? (
         <EmptyState
           icon={<Server size={28} />}
-          title="Henüz bağlantı yok"
-          description="Yukarıdaki butonla ilk ERP bağlantınızı ekleyin. Şema 30 saniyede taranır."
+          title={t.connections.emptyTitle}
+          description={t.connections.emptyDescription}
         />
       ) : (
         <div>
@@ -492,7 +496,7 @@ export default function ConnectionsPage() {
             textTransform: "uppercase",
             marginBottom: 12,
           }}>
-            Mevcut Bağlantılar ({connections.length})
+            {t.connections.listHeader(connections.length)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {connections.map((conn) => {
@@ -500,7 +504,14 @@ export default function ConnectionsPage() {
               const builtAt = conn.schemaCache?.builtAt ?? null;
               const ageStatus = schemaAgeStatus(builtAt);
               const ageRel = schemaAgeRelative(builtAt);
-              const ageBadge = ageStatus !== "never" ? SCHEMA_AGE_BADGE[ageStatus] : null;
+              const ageColors = ageStatus !== "never" ? SCHEMA_AGE_COLORS[ageStatus] : null;
+              const ageLabel = ageStatus === "fresh"
+                ? t.connections.badgeFresh
+                : ageStatus === "stale"
+                ? t.connections.badgeStale
+                : ageStatus === "very-stale"
+                ? t.connections.badgeVeryStale
+                : null;
               return (
                 <div key={conn.id} className="elevated" style={{
                   background: colors.card,
@@ -533,32 +544,32 @@ export default function ConnectionsPage() {
                       {/* Schema cache age — Track RRR. AI sorgu üretimi bu snapshot'a göre çalışır. */}
                       {ageStatus === "never" ? (
                         <div style={{ fontSize: 11, color: "#94A3B8", fontStyle: "italic", marginTop: 4 }}>
-                          henüz şema sync&apos;i yok
+                          {t.connections.noSchemaSync}
                         </div>
                       ) : (
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
-                          {ageBadge && (
+                          {ageColors && ageLabel && (
                             <span style={{
                               fontSize: 10,
                               letterSpacing: 0.8,
                               fontWeight: 700,
                               padding: "2px 8px",
                               borderRadius: 4,
-                              background: ageBadge.bg,
-                              color: ageBadge.fg,
+                              background: ageColors.bg,
+                              color: ageColors.fg,
                             }}>
-                              {ageBadge.label}
+                              {ageLabel}
                             </span>
                           )}
                           {conn.schemaCache?.tableCount !== undefined && (
                             <span style={{ fontSize: 11, color: colors.textMuted }}>
-                              {conn.schemaCache.tableCount} tablo
+                              {conn.schemaCache.tableCount} {t.connections.tableSuffix}
                             </span>
                           )}
                           {ageRel && (
                             <span style={{ fontSize: 11, color: "#94A3B8", fontStyle: "italic" }}>
                               {ageRel.value}
-                              {ageRel.unit === "hour" ? " saat önce" : " gün önce"}
+                              {ageRel.unit === "hour" ? t.connections.hourSuffix : t.connections.daySuffix}
                             </span>
                           )}
                         </div>
@@ -578,13 +589,13 @@ export default function ConnectionsPage() {
                       fontWeight: 600,
                     }}>
                       {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                      {isActive ? "Aktif" : conn.status}
+                      {isActive ? t.connections.statusActive : conn.status}
                     </span>
                     {canManage && (
                       <button
                         onClick={() => syncNow(conn.id)}
                         disabled={syncingId === conn.id}
-                        title="ERP schema'yı yeniden tarayıp cache'i güncelle"
+                        title={t.connections.syncNowTitle}
                         style={{
                           background: "transparent",
                           border: `1px solid ${colors.border}`,
@@ -597,7 +608,7 @@ export default function ConnectionsPage() {
                           fontFamily: "inherit",
                         }}
                       >
-                        {syncingId === conn.id ? "Senkronize ediliyor..." : "Şimdi senkronize et"}
+                        {syncingId === conn.id ? t.connections.syncingBtn : t.connections.syncNowBtn}
                       </button>
                     )}
                   </div>
