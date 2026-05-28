@@ -112,7 +112,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
   }
 
   // Look up tenant by either subscriptionId or customerId.
-  const tenant = await prisma.tenant.findFirst({
+  let tenant = await prisma.tenant.findFirst({
     where: {
       OR: [
         ...(subRef ? [{ iyzicoSubscriptionId: subRef }] : []),
@@ -127,24 +127,59 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
     },
   });
 
-  if (!tenant) {
-    // First-time activation: tenant doesn't have iyzicoSubscriptionId yet.
-    // We expect the conversationId field (we set it = tenantId at checkout)
-    // to be in event metadata. iyzico passes it back via subscription detail.
-    if (subRef && event.iyziEventType === "subscription.activation") {
-      const detail = await getSubscription(subRef);
-      // conversationId not directly in detail — for now we accept that the
-      // first event arrives before tenant lookup is possible and rely on
-      // the user being redirected to /dashboard/settings?upgrade=success
-      // which can manually trigger a sync. Real iyzico integration tests
-      // are needed here.
+  // Feature 9.0 — first-time activation reconciliation.
+  // The tenant has paymentProvider="iyzico" set (by /api/billing/checkout)
+  // but iyzicoSubscriptionId is still null because iyzico generates that
+  // only after the user actually pays. So the activation webhook arrives
+  // for an "unknown" tenant. We reconcile by finding the unique tenant
+  // that recently kicked off an iyzico checkout (paymentProvider="iyzico"
+  // AND iyzicoSubscriptionId IS NULL) and claim it. If multiple tenants
+  // are in this state simultaneously we refuse to guess — admin must
+  // resolve manually.
+  if (!tenant && subRef && event.iyziEventType === "subscription.activation") {
+    // Tenant has no updatedAt — paymentProvider="iyzico" + iyzicoSubscriptionId=null
+    // is a transient state lasting from checkout init until this webhook arrives
+    // (usually < 60s). Concurrent upgrades are rare at pilot scale, but we
+    // refuse to guess when ambiguity exists.
+    const candidates = await prisma.tenant.findMany({
+      where: {
+        paymentProvider: "iyzico",
+        iyzicoSubscriptionId: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        defaultLocale: true,
+        users: { where: { role: "owner" }, select: { email: true }, take: 1 },
+      },
+      take: 2,
+    });
+    if (candidates.length === 1) {
+      tenant = candidates[0];
       log.info(
-        { subRef, customerRef: detail.customerReferenceCode },
-        "iyzico activation for unknown tenant — manual sync required",
+        { tenantId: tenant.id, subRef },
+        "iyzico activation reconciled with pending-checkout tenant",
       );
+    } else if (candidates.length > 1) {
+      // Race condition — multiple tenants checked out concurrently.
+      // Refuse to guess; sysadmin will trigger manual sync.
+      const detail = await getSubscription(subRef).catch(() => null);
+      log.warn(
+        {
+          subRef,
+          customerRef: detail?.customerReferenceCode,
+          candidateCount: candidates.length,
+        },
+        "iyzico activation: multiple pending-checkout tenants — manual sync required",
+      );
+      return;
+    } else {
+      log.info({ subRef }, "iyzico activation for unknown tenant with no pending checkout");
+      return;
     }
-    return;
   }
+
+  if (!tenant) return;
 
   const ownerEmail = tenant.users[0]?.email ?? null;
   const locale = tenant.defaultLocale;
