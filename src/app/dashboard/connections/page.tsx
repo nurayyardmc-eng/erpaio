@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Database, Server, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
+import { Database, Server, ShieldCheck, CheckCircle2, XCircle, Copy, Mail } from "lucide-react";
 import { showToast } from "@/components/Toaster";
 import EmptyState from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
@@ -8,6 +8,8 @@ import { colors } from "@/lib/theme";
 import { schemaAgeRelative, schemaAgeStatus, type SchemaAgeStatus } from "@/lib/schema/age";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
 import { postJson } from "@/lib/http/clientFetch";
+import { readOnlyUserSql } from "@/lib/db/readOnlyUserSql";
+import type { ErpType } from "@/lib/db/erpTypes";
 
 interface Connection {
   id: string;
@@ -42,6 +44,7 @@ export default function ConnectionsPage() {
   const [showForm, setShowForm] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [showSetupSql, setShowSetupSql] = useState(false);
   const [form, setForm] = useState({
     erpType: "nebim_v3",
     host: "",
@@ -93,6 +96,28 @@ export default function ConnectionsPage() {
   const onTypeChange = (id: string) => {
     const t = ERP_TYPES.find((x) => x.id === id);
     setForm({ ...form, erpType: id, port: t?.port ?? 1433 });
+    // Yeni ERP type seçildiğinde SQL panel'i kapat (içerik değişti)
+    setShowSetupSql(false);
+  };
+
+  const copySetupSql = async () => {
+    const script = readOnlyUserSql(form.erpType as ErpType);
+    try {
+      await navigator.clipboard.writeText(script.sql);
+      showToast("SQL kopyalandı. IT departmanınıza gönderebilirsiniz.", "success");
+    } catch {
+      showToast("Kopyalama başarısız. Manuel seçip kopyalayın.", "error");
+    }
+  };
+
+  const emailSetupSql = () => {
+    const script = readOnlyUserSql(form.erpType as ErpType);
+    const erpLabel = ERP_TYPES.find((x) => x.id === form.erpType)?.label ?? form.erpType;
+    const subject = encodeURIComponent(`ERPAIO ${erpLabel} için read-only kullanıcı oluşturma`);
+    const body = encodeURIComponent(
+      `Merhaba,\n\nERPAIO platformunu ${erpLabel} veritabanımıza bağlamak için aşağıdaki SQL'i çalıştırıp bana erpaio_readonly kullanıcısı ve şifresini iletebilir misiniz?\n\nNotlar: ${script.notes}\n\n--- SQL ---\n\n${script.sql}\n\nTeşekkürler.`,
+    );
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -268,11 +293,98 @@ export default function ConnectionsPage() {
               fontSize: 12,
               color: colors.textMuted,
               marginTop: 16,
-              marginBottom: 16,
+              marginBottom: 12,
             }}>
               <ShieldCheck size={14} color={colors.brand} />
               <span>Şifre AES-256-GCM ile şifrelenir. Sadece SELECT yetkisi olan kullanıcı önerilir.</span>
             </div>
+
+            {/* Read-only user setup helper — IT'ye kopyala-yapıştır SQL */}
+            <button
+              type="button"
+              onClick={() => setShowSetupSql((v) => !v)}
+              style={{
+                background: "transparent",
+                color: colors.brand,
+                border: "none",
+                padding: 0,
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                marginBottom: 16,
+                textDecoration: "underline",
+              }}
+            >
+              {showSetupSql ? "Kullanıcı oluşturma SQL'ini gizle" : "IT'ye göndermek için kullanıcı oluşturma SQL'ini göster"}
+            </button>
+
+            {showSetupSql && (
+              <div style={{
+                background: colors.bgSubtle,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 10,
+                padding: 16,
+                marginBottom: 16,
+              }}>
+                <p style={{ fontSize: 12, color: colors.textMuted, margin: "0 0 12px", lineHeight: 1.5 }}>
+                  {readOnlyUserSql(form.erpType as ErpType).notes}
+                </p>
+                <pre style={{
+                  background: colors.card,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 8,
+                  padding: 12,
+                  fontSize: 11,
+                  fontFamily: "var(--font-jetbrains-mono), Menlo, monospace",
+                  overflow: "auto",
+                  margin: "0 0 12px",
+                  maxHeight: 240,
+                  whiteSpace: "pre-wrap",
+                }}>
+                  {readOnlyUserSql(form.erpType as ErpType).sql}
+                </pre>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={copySetupSql}
+                    style={{
+                      background: colors.text,
+                      color: colors.bg,
+                      border: "none",
+                      borderRadius: 100,
+                      padding: "8px 16px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Copy size={12} /> SQL&apos;i Kopyala
+                  </button>
+                  <button
+                    type="button"
+                    onClick={emailSetupSql}
+                    style={{
+                      background: "transparent",
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 100,
+                      padding: "8px 16px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Mail size={12} /> IT&apos;ye E-posta Hazırla
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div style={{ display: "flex", gap: 10 }}>
               <button
