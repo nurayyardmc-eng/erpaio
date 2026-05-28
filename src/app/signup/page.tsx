@@ -6,8 +6,10 @@ import { Mail, Lock, User, Building2, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 import { postJson } from "@/lib/http/clientFetch";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function SignupPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "", name: "", tenantName: "" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -18,7 +20,7 @@ export default function SignupPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!acceptedTerms || !acceptedPrivacy) {
-      setError("Kullanım Koşulları ve KVKK aydınlatma metnini onaylamanız gerekiyor.");
+      setError(t.signup.errConsentRequired);
       return;
     }
     setLoading(true);
@@ -32,13 +34,13 @@ export default function SignupPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Kayıt başarısız.");
+        setError(data.error || t.signup.errSignupFailed);
         setLoading(false);
         return;
       }
       router.push(`/login?email=${encodeURIComponent(form.email)}&signup=ok`);
     } catch {
-      setError("Ağ hatası.");
+      setError(t.signup.errNetwork);
       setLoading(false);
     }
   };
@@ -64,33 +66,33 @@ export default function SignupPage() {
           <Logo size={96} variant="full" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 8px", fontWeight: 700, letterSpacing: -0.5 }}>
-          Hesap Oluştur
+          {t.signup.title}
         </h1>
         <p style={{ color: colors.textMuted, fontSize: 14, marginBottom: 28 }}>
-          14 gün ücretsiz Pro deneme — kart bilgisi gerekmez.
+          {t.signup.tagline}
         </p>
 
         <form onSubmit={submit}>
-          <Field label="Şirket Adı" icon={<Building2 size={16} />}>
+          <Field label={t.signup.fieldCompanyName} icon={<Building2 size={16} />}>
             <input
               required
               value={form.tenantName}
               onChange={(e) => setForm({ ...form, tenantName: e.target.value })}
-              placeholder="Acme Ltd."
+              placeholder={t.signup.placeholderCompanyName}
               style={{ ...inputStyle, paddingLeft: 42 }}
             />
           </Field>
 
-          <Field label="Adın" icon={<User size={16} />}>
+          <Field label={t.signup.fieldName} icon={<User size={16} />}>
             <input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Ali Yılmaz"
+              placeholder={t.signup.placeholderName}
               style={{ ...inputStyle, paddingLeft: 42 }}
             />
           </Field>
 
-          <Field label="Email" icon={<Mail size={16} />}>
+          <Field label={t.signup.fieldEmail} icon={<Mail size={16} />}>
             <input
               required type="email"
               autoComplete="email"
@@ -100,7 +102,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field label="Şifre (min 8 karakter)" icon={<Lock size={16} />}>
+          <Field label={t.signup.fieldPassword} icon={<Lock size={16} />}>
             <input
               required type="password"
               autoComplete="new-password"
@@ -117,23 +119,24 @@ export default function SignupPage() {
               checked={acceptedTerms}
               onChange={setAcceptedTerms}
             >
+              {t.signup.consentTermsPrefix}
               <Link href="/terms" target="_blank" style={{ color: colors.text, textDecoration: "underline" }}>
-                Kullanım Koşulları
+                {t.signup.consentTermsLink}
               </Link>
-              &apos;nı okudum ve kabul ediyorum.
+              {t.signup.consentTermsSuffix}
             </ConsentCheckbox>
             <ConsentCheckbox
               checked={acceptedPrivacy}
               onChange={setAcceptedPrivacy}
             >
               <Link href="/privacy" target="_blank" style={{ color: colors.text, textDecoration: "underline" }}>
-                KVKK Aydınlatma Metni
+                {t.signup.consentPrivacyLink}
               </Link>
-              {" "}ve{" "}
+              {t.signup.consentPrivacyMiddle}
               <Link href="/privacy" target="_blank" style={{ color: colors.text, textDecoration: "underline" }}>
-                Gizlilik Politikası
+                {t.signup.consentPrivacyEnd}
               </Link>
-              &apos;nı okudum, kişisel verilerimin işlenmesine açık rıza veriyorum.
+              {t.signup.consentPrivacySuffix}
             </ConsentCheckbox>
           </div>
 
@@ -171,12 +174,12 @@ export default function SignupPage() {
               cursor: loading || !acceptedTerms || !acceptedPrivacy ? "not-allowed" : "pointer",
             }}
           >
-            {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+            {loading ? t.signup.submitting : t.signup.submit}
           </button>
         </form>
 
         <div style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: colors.textMuted }}>
-          Hesabın var mı? <Link href="/login" style={{ color: colors.brand, fontWeight: 600 }}>Giriş Yap</Link>
+          {t.signup.haveAccountPrefix}<Link href="/login" style={{ color: colors.brand, fontWeight: 600 }}>{t.signup.haveAccountLink}</Link>
         </div>
       </div>
     </div>

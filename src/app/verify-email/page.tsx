@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 import { postJson } from "@/lib/http/clientFetch";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function VerifyEmailPage() {
   return (
@@ -24,12 +25,13 @@ function Loader() {
       alignItems: "center",
       justifyContent: "center",
     }}>
-      Yükleniyor...
+      ...
     </div>
   );
 }
 
 function Inner() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -41,7 +43,7 @@ function Inner() {
       // Token missing in URL → mark invalid synchronously so the page can render its error state on first paint.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setState("err");
-      setMsg("Link geçersiz.");
+      setMsg(t.verifyEmail.missingTokenBody);
       return;
     }
     postJson("/api/auth/verify-email", { token })
@@ -49,18 +51,18 @@ function Inner() {
         const d = await r.json();
         if (r.ok) {
           setState("ok");
-          setMsg("Email doğrulandı.");
+          setMsg(t.verifyEmail.successBody);
           setTimeout(() => router.push("/dashboard"), 2000);
         } else {
           setState("err");
-          setMsg(d.error || "Doğrulama başarısız.");
+          setMsg(d.error || t.verifyEmail.errGeneric);
         }
       })
       .catch(() => {
         setState("err");
-        setMsg("Ağ hatası.");
+        setMsg(t.common.networkError);
       });
-  }, [token, router]);
+  }, [token, router, t.verifyEmail.missingTokenBody, t.verifyEmail.successBody, t.verifyEmail.errGeneric, t.common.networkError]);
 
   const stateColor = state === "ok" ? colors.success : state === "err" ? colors.error : colors.textMuted;
 
@@ -86,7 +88,7 @@ function Inner() {
           <Logo size={96} variant="full" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
-          Email Doğrulama
+          {state === "ok" ? t.verifyEmail.successTitle : state === "err" ? t.verifyEmail.errTitle : t.verifyEmail.verifying}
         </h1>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
           {state === "verifying" ? (
@@ -98,13 +100,8 @@ function Inner() {
           )}
         </div>
         <p style={{ color: stateColor, fontSize: 15, fontWeight: 500 }}>
-          {msg || "Kontrol ediliyor..."}
+          {msg || t.verifyEmail.verifying}
         </p>
-        {state === "ok" && (
-          <p style={{ color: colors.textSubtle, fontSize: 13, marginTop: 16 }}>
-            Yönlendiriliyorsun...
-          </p>
-        )}
       </div>
     </div>
   );

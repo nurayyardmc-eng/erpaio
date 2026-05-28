@@ -5,8 +5,10 @@ import { CheckCircle2, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 import { postJson } from "@/lib/http/clientFetch";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function ForgotPasswordPage() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function ForgotPasswordPage() {
           <Logo size={96} variant="full" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
-          Şifremi Unuttum
+          {t.forgotPassword.title}
         </h1>
 
         {sent ? (
@@ -58,10 +60,10 @@ export default function ForgotPasswordPage() {
               gap: 8,
             }}>
               <CheckCircle2 size={16} />
-              Email gönderildi
+              {t.forgotPassword.successTitle}
             </div>
             <p style={{ color: colors.textMuted, fontSize: 14, lineHeight: 1.6 }}>
-              Eğer <strong style={{ color: colors.text }}>{email}</strong> sistemde kayıtlıysa, şifre sıfırlama linkini bu adrese gönderdik. Link 1 saat geçerli.
+              {t.forgotPassword.successBody}
             </p>
             <Link href="/login" style={{
               display: "inline-block",
@@ -70,16 +72,16 @@ export default function ForgotPasswordPage() {
               fontSize: 14,
               fontWeight: 500,
             }}>
-              ← Giriş&apos;e dön
+              {t.forgotPassword.backToLogin}
             </Link>
           </div>
         ) : (
           <form onSubmit={submit}>
             <p style={{ color: colors.textMuted, fontSize: 14, marginBottom: 24 }}>
-              Email&apos;ini gir, sıfırlama linki yollayalım.
+              {t.forgotPassword.description}
             </p>
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Email</label>
+              <label style={labelStyle}>{t.forgotPassword.fieldEmail}</label>
               <div style={{ position: "relative" }}>
                 <Mail size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: colors.textMuted, pointerEvents: "none" }} />
                 <input
@@ -104,10 +106,10 @@ export default function ForgotPasswordPage() {
                 fontWeight: 600,
               }}
             >
-              {loading ? "Gönderiliyor..." : "Sıfırlama linki yolla"}
+              {loading ? t.forgotPassword.submitting : t.forgotPassword.submit}
             </button>
             <div style={{ marginTop: 20, textAlign: "center", fontSize: 13 }}>
-              <Link href="/login" style={{ color: colors.textMuted }}>← Giriş</Link>
+              <Link href="/login" style={{ color: colors.textMuted }}>{t.forgotPassword.backToLogin}</Link>
             </div>
           </form>
         )}

@@ -6,6 +6,7 @@ import { CheckCircle2, Lock, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 import { postJson } from "@/lib/http/clientFetch";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function ResetPasswordPage() {
   return (
@@ -25,12 +26,13 @@ function Loader() {
       alignItems: "center",
       justifyContent: "center",
     }}>
-      Yükleniyor...
+      ...
     </div>
   );
 }
 
 function ResetPasswordInner() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -46,15 +48,15 @@ function ResetPasswordInner() {
     // Sync error/invalid flag with URL token param; runs once on mount and again only if token changes.
     if (!token) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setError("Geçersiz link.");
+      setError(t.resetPassword.errInvalidToken);
       setTokenInvalid(true);
     }
-  }, [token]);
+  }, [token, t.resetPassword.errInvalidToken]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      setError("Şifreler eşleşmiyor.");
+      setError(t.resetPassword.errMismatch);
       return;
     }
     setLoading(true);
@@ -63,9 +65,9 @@ function ResetPasswordInner() {
       const res = await postJson("/api/auth/reset-password", { token, password });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Hata.");
-        // Backend mesajı "Link geçersiz veya süresi dolmuş." → token-invalid CTA
-        if (typeof data.error === "string" && /geçersiz|süresi/i.test(data.error)) {
+        setError(data.error || t.common.error);
+        // Backend mesajı "Link geçersiz veya süresi dolmuş." / "Link is invalid or expired."
+        if (typeof data.error === "string" && /geçersiz|süresi|invalid|expired/i.test(data.error)) {
           setTokenInvalid(true);
         }
         setLoading(false);
@@ -74,7 +76,7 @@ function ResetPasswordInner() {
       setOk(true);
       setTimeout(() => router.push("/login"), 1500);
     } catch {
-      setError("Ağ hatası.");
+      setError(t.resetPassword.errNetwork);
       setLoading(false);
     }
   };
@@ -100,7 +102,7 @@ function ResetPasswordInner() {
           <Logo size={96} variant="full" />
         </div>
         <h1 style={{ color: colors.text, fontSize: 24, margin: "0 0 24px", fontWeight: 700, letterSpacing: -0.5 }}>
-          Yeni Şifre
+          {t.resetPassword.title}
         </h1>
 
         {ok ? (
@@ -116,12 +118,12 @@ function ResetPasswordInner() {
             gap: 8,
           }}>
             <CheckCircle2 size={18} />
-            Şifre değiştirildi. Yönlendiriliyorsun...
+            {t.resetPassword.successTitle}
           </div>
         ) : (
           <form onSubmit={submit}>
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Yeni Şifre (min 8 karakter)</label>
+              <label style={labelStyle}>{t.resetPassword.fieldNewPassword}</label>
               <div style={{ position: "relative" }}>
                 <Lock size={16} style={iconStyle} />
                 <input
@@ -133,7 +135,7 @@ function ResetPasswordInner() {
               </div>
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Tekrar</label>
+              <label style={labelStyle}>{t.resetPassword.fieldConfirmPassword}</label>
               <div style={{ position: "relative" }}>
                 <Lock size={16} style={iconStyle} />
                 <input
@@ -178,7 +180,7 @@ function ResetPasswordInner() {
                   boxSizing: "border-box",
                 }}
               >
-                Yeni şifre sıfırlama linki iste →
+                {t.forgotPassword.submit} →
               </Link>
             ) : (
               <button
@@ -195,7 +197,7 @@ function ResetPasswordInner() {
                   fontWeight: 600,
                 }}
               >
-                {loading ? "Kaydediliyor..." : "Şifreyi Değiştir"}
+                {loading ? t.resetPassword.submitting : t.resetPassword.submit}
               </button>
             )}
           </form>
