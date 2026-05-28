@@ -4,6 +4,12 @@ import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { sendEmail } from "@/lib/notifications/email";
 import { transactionalEmailHtml } from "@/lib/notifications/emailLayout";
+import {
+  subscriptionActivatedEmail,
+  trialWillEndEmail,
+  subscriptionCancelledEmail,
+  paymentFailedEmail,
+} from "@/lib/billing/stripeEmails";
 
 export const runtime = "nodejs";
 
@@ -99,15 +105,18 @@ export async function POST(req: Request) {
           log.info({ tenantId: tenant.id, plan }, "Subscription activated");
 
           if (tenant.ownerEmail) {
+            // Feature 5.2 — locale TODO: tenant.locale schema field not yet
+            // added; default "tr" preserves current behavior. EN variants
+            // ready in stripeEmails.ts for when persistence lands.
+            const content = subscriptionActivatedEmail({
+              plan,
+              tenantName: tenant.name,
+              dashboardUrl: `${baseUrl}/dashboard`,
+            }, "tr");
             await sendEmail({
               to: tenant.ownerEmail,
-              subject: `ERPAIO ${plan.toUpperCase()} planı aktif`,
-              html: emailWrap(
-                `${plan.toUpperCase()} planına hoş geldiniz`,
-                `Ödemeniz başarıyla alındı. ${tenant.name} hesabınız artık ${plan} planında. Tüm Pro özellikler aktif: 2M aylık token, sınırsız watchlist, kapsamlı raporlama.`,
-                "Dashboard'a Git →",
-                `${baseUrl}/dashboard`,
-              ),
+              subject: content.subject,
+              html: emailWrap(content.heading, content.body, content.ctaText, content.ctaUrl),
               tenantId: tenant.id,
             }).catch((emailErr) => {
               log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
@@ -141,15 +150,14 @@ export async function POST(req: Request) {
         const customerId = typeof sub.customer === "string" ? sub.customer : null;
         const tenant = await findTenantByMetadataOrCustomer(sub.metadata, customerId);
         if (tenant?.ownerEmail) {
+          const content = trialWillEndEmail({
+            tenantName: tenant.name,
+            pricingUrl: `${baseUrl}/pricing`,
+          }, "tr");
           await sendEmail({
             to: tenant.ownerEmail,
-            subject: "ERPAIO Pro denemenizin bitmesine 3 gün kaldı",
-            html: emailWrap(
-              "3 gün sonra ücretlendirme başlıyor",
-              `${tenant.name} için Pro deneme süreniz 3 gün sonra bitecek ve kayıtlı kartınızdan ücret çekilecek. Vazgeçmek için 3 gün içinde Pricing sayfasından plan değişikliği yapabilirsiniz.`,
-              "Planları İncele →",
-              `${baseUrl}/pricing`,
-            ),
+            subject: content.subject,
+            html: emailWrap(content.heading, content.body, content.ctaText, content.ctaUrl),
             tenantId: tenant.id,
           }).catch((emailErr) => {
             log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
@@ -171,15 +179,14 @@ export async function POST(req: Request) {
           log.info({ tenantId: tenant.id }, "Subscription cancelled — downgraded to starter");
 
           if (tenant.ownerEmail) {
+            const content = subscriptionCancelledEmail({
+              tenantName: tenant.name,
+              pricingUrl: `${baseUrl}/pricing`,
+            }, "tr");
             await sendEmail({
               to: tenant.ownerEmail,
-              subject: "ERPAIO aboneliğiniz iptal edildi",
-              html: emailWrap(
-                "Aboneliğiniz iptal edildi",
-                `${tenant.name} aboneliğiniz iptal edildi. Hesabınız Starter plana düştü, verileriniz korunuyor. Yeniden başlatmak için pricing sayfasını ziyaret edin.`,
-                "Pro'ya Dön →",
-                `${baseUrl}/pricing`,
-              ),
+              subject: content.subject,
+              html: emailWrap(content.heading, content.body, content.ctaText, content.ctaUrl),
               tenantId: tenant.id,
             }).catch((emailErr) => {
               log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
@@ -205,15 +212,14 @@ export async function POST(req: Request) {
         log.warn({ customerId, tenantId: tenant?.id }, "Payment failed");
 
         if (tenant?.ownerEmail) {
+          const content = paymentFailedEmail({
+            tenantName: tenant.name,
+            invoiceUrl: invoice.hosted_invoice_url ?? `${baseUrl}/dashboard/settings`,
+          }, "tr");
           await sendEmail({
             to: tenant.ownerEmail,
-            subject: "ERPAIO — Ödemeniz başarısız oldu",
-            html: emailWrap(
-              "Kart ödemesi alınamadı",
-              `${tenant.name} için son ödeme denemesi başarısız oldu. Kart bilgilerinizi güncellemek ya da yeni kart eklemek için billing sayfanızı ziyaret edin. 7 gün içinde çözülmezse hesabınız Starter plana düşer.`,
-              "Faturayı Görüntüle →",
-              invoice.hosted_invoice_url ?? `${baseUrl}/dashboard/settings`,
-            ),
+            subject: content.subject,
+            html: emailWrap(content.heading, content.body, content.ctaText, content.ctaUrl),
             tenantId: tenant.id,
           }).catch((emailErr) => {
             log.error({ err: emailErr, tenantId: tenant.id }, "Stripe webhook email send failed");
