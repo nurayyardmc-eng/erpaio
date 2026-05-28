@@ -25,7 +25,12 @@ export interface SlackPayload {
 // Exported for test (Track JJJJ). Pure block-kit builder, no I/O.
 export function buildSlackBody(payload: Omit<SlackPayload, "webhookUrl">) {
   const color = SEVERITY_COLORS[payload.severity] ?? "#9AA5B4";
-  const body = localizedAlertDescription(payload.evidence ?? null, payload.description ?? null, payload.locale ?? "tr");
+  const locale = payload.locale ?? "tr";
+  const body = localizedAlertDescription(payload.evidence ?? null, payload.description ?? null, locale);
+  // Feature 8.1 — locale-aware context labels.
+  const labels = locale === "en"
+    ? { severity: "Severity", source: "Source" }
+    : { severity: "Önem", source: "Kaynak" };
   return {
     attachments: [
       {
@@ -42,8 +47,8 @@ export function buildSlackBody(payload: Omit<SlackPayload, "webhookUrl">) {
           {
             type: "context",
             elements: [
-              { type: "mrkdwn", text: `*Severity:* ${payload.severity.toUpperCase()}` },
-              { type: "mrkdwn", text: `*Source:* ERPAIO` },
+              { type: "mrkdwn", text: `*${labels.severity}:* ${payload.severity.toUpperCase()}` },
+              { type: "mrkdwn", text: `*${labels.source}:* ERPAIO` },
             ],
           },
         ],

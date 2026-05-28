@@ -63,12 +63,20 @@ describe("notifications/slack/buildSlackBody", () => {
     expect(buildSlackBody({ severity: "low", title: "x", description: null }).attachments[0].blocks).toHaveLength(2);
   });
 
-  it("context block always present and uppercases severity", () => {
+  it("context block always present and uppercases severity (TR default)", () => {
     const body = buildSlackBody({ severity: "medium", title: "x" });
     const ctx = body.attachments[0].blocks.find((b) => (b as { type: string }).type === "context");
     expect(ctx).toBeDefined();
     const elements = (ctx as { elements: Array<{ text: string }> }).elements;
-    expect(elements[0].text).toBe("*Severity:* MEDIUM");
+    expect(elements[0].text).toBe("*Önem:* MEDIUM");
+    expect(elements[1].text).toBe("*Kaynak:* ERPAIO");
+  });
+
+  it("context block uses EN labels when locale=en (Feature 8.1)", () => {
+    const body = buildSlackBody({ severity: "high", title: "x", locale: "en" });
+    const ctx = body.attachments[0].blocks.find((b) => (b as { type: string }).type === "context");
+    const elements = (ctx as { elements: Array<{ text: string }> }).elements;
+    expect(elements[0].text).toBe("*Severity:* HIGH");
     expect(elements[1].text).toBe("*Source:* ERPAIO");
   });
 
