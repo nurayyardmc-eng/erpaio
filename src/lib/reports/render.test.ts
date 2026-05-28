@@ -3,6 +3,7 @@ import {
   escHtml,
   shouldFireSchedule,
   renderReportHtml,
+  reportEmailSubject,
   SCHEDULE_FILTER,
 } from "./render";
 
@@ -164,5 +165,49 @@ describe("reports/render/renderReportHtml", () => {
   it("includes row count badge in SQL header", () => {
     const html = renderReportHtml("R", "q", "sql", [{ a: 1 }, { a: 2 }, { a: 3 }]);
     expect(html).toContain("SQL · 3 satır");
+  });
+});
+
+describe("reports/render/renderReportHtml — locale: en", () => {
+  it("EN brand label", () => {
+    const html = renderReportHtml("Monthly", "q", "sql", [], "en");
+    expect(html).toContain("ERPAIO REPORT");
+    expect(html).not.toContain("ERPAIO RAPOR");
+  });
+
+  it("EN SQL row badge", () => {
+    const html = renderReportHtml("R", "q", "sql", [{ a: 1 }, { a: 2 }, { a: 3 }], "en");
+    expect(html).toContain("SQL · 3 rows");
+  });
+
+  it("EN truncation footer", () => {
+    const rows = Array.from({ length: 150 }, (_, i) => ({ id: i }));
+    const html = renderReportHtml("R", "q", "sql", rows, "en");
+    expect(html).toContain("Showing first 100 rows (of 150 total)");
+  });
+
+  it("≤ 100 rows EN → no truncation footer", () => {
+    const html = renderReportHtml("R", "q", "sql", [{ a: 1 }], "en");
+    expect(html).not.toContain("Showing first 100 rows");
+  });
+
+  it("unknown locale defaults to TR", () => {
+    const html = renderReportHtml("R", "q", "sql", [{ a: 1 }], "fr");
+    expect(html).toContain("ERPAIO RAPOR");
+  });
+});
+
+describe("reports/render/reportEmailSubject", () => {
+  it("TR prefix by default", () => {
+    expect(reportEmailSubject("Daily Sales")).toBe("[ERPAIO Rapor] Daily Sales");
+  });
+  it("TR prefix explicit", () => {
+    expect(reportEmailSubject("Daily Sales", "tr")).toBe("[ERPAIO Rapor] Daily Sales");
+  });
+  it("EN prefix", () => {
+    expect(reportEmailSubject("Daily Sales", "en")).toBe("[ERPAIO Report] Daily Sales");
+  });
+  it("unknown locale → TR", () => {
+    expect(reportEmailSubject("X", "fr")).toBe("[ERPAIO Rapor] X");
   });
 });

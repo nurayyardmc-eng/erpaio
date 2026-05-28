@@ -7,7 +7,7 @@ import { deriveCronFinalStatus } from "@/lib/cron/finalStatus";
 import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
-import { shouldFireSchedule, renderReportHtml } from "@/lib/reports/render";
+import { shouldFireSchedule, renderReportHtml, reportEmailSubject } from "@/lib/reports/render";
 import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
 import { errorMessage } from "@/lib/errors/errorMessage";
 
@@ -46,11 +46,15 @@ export async function GET(req: NextRequest) {
       }
 
       const rows = await queryERP(r.connectionId, sql);
-      const html = renderReportHtml(r.name, r.question, sql, rows);
+      // Feature 5.3 — locale TODO: ScheduledReport has no `locale` column yet;
+      // tenant-derived locale would require either a tenant.defaultLocale field
+      // or per-user locale persistence. For now defaults to TR (back-compat).
+      const locale = "tr";
+      const html = renderReportHtml(r.name, r.question, sql, rows, locale);
 
       await sendEmail({
         to: r.emailTo,
-        subject: `[ERPAIO Rapor] ${r.name}`,
+        subject: reportEmailSubject(r.name, locale),
         html,
       });
 
