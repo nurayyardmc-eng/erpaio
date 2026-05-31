@@ -57,6 +57,13 @@ export default function PrivacyPage() {
           ]} />
           Üçüncü taraflar yalnızca hizmet sunumu için gerekli minimum veriyle çalışır,
           başka amaçla kullanmamayı taahhüt eder.
+          <br />
+          <br />
+          Güncel ve detaylı liste:{" "}
+          <a href="/sub-processors" style={{ color: "#0A0A0A", textDecoration: "underline" }}>
+            /sub-processors
+          </a>{" "}
+          (her vendor için bölge, paylaşılan veri ve DPA bağlantısı dahil — GDPR Art. 28(2)).
         </Section>
 
         <Section title="5. Veri saklama süreleri">
