@@ -39,6 +39,10 @@ export default auth((req) => {
   }
 });
 
+// Sprint F.12 — exclude .css, .js, .html, .json, .txt, .xml from middleware.
+// Original matcher only excluded image + font extensions, so /landing.css
+// (introduced by F.5a) was 302'ing to /login. Production / landing pages
+// have been unstyled since F.5a as a result. Hot fix.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|css|js|html|json|txt|xml|map)$).*)"],
 };
