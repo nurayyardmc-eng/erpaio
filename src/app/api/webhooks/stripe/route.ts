@@ -289,6 +289,12 @@ export async function POST(req: Request) {
   } catch (err) {
     log.error({ err, type: event.type }, "Webhook handler error");
     Sentry.captureException(err, { tags: { component: "stripe-webhook", event: event.type } });
+    // Sprint A.2 — release the idempotency claim so Stripe's automatic retry
+    // can re-process. Without this, a single transient handler failure would
+    // mark the event "processed" forever and silently lose the side-effect.
+    await prisma.processedWebhook
+      .delete({ where: { id: event.id } })
+      .catch((delErr) => log.warn({ delErr, eventId: event.id }, "Failed to release idempotency claim"));
     return Response.json({ error: "Handler error." }, { status: 500 });
   }
 

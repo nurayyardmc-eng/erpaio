@@ -71,14 +71,38 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
-  // Idempotency — iyzico can replay events; use referenceCode as dedup key.
-  if (event.iyziReferenceCode) {
-    const already = await prisma.processedWebhook.findUnique({
-      where: { id: `iyzico:${event.iyziReferenceCode}` },
-    });
-    if (already) {
-      log.info({ eventId: event.iyziReferenceCode }, "Webhook replay — skipped");
-      return Response.json({ ok: true, replay: true });
+  // Sprint A.2 — race-safe idempotency.
+  //
+  // Earlier code did findUnique → process → create. Between the read and the
+  // create, a concurrent replay could pass the read check and both runs would
+  // process the same event (duplicate side-effects, double subscription
+  // updates, double notification emails).
+  //
+  // Correct order: INSERT FIRST. The unique constraint on ProcessedWebhook.id
+  // is the only race-safe primitive; either we create the row (single winner)
+  // or we get P2002 (replay, bail). If the handler then fails, we delete the
+  // marker so the next retry can re-process.
+  const dedupId = event.iyziReferenceCode ? `iyzico:${event.iyziReferenceCode}` : null;
+  if (dedupId) {
+    try {
+      await prisma.processedWebhook.create({
+        data: {
+          id: dedupId,
+          provider: "iyzico",
+          eventType: event.iyziEventType,
+        },
+      });
+    } catch (err) {
+      // P2002 unique-constraint violation → another worker already claimed this
+      // event. Treat as a benign replay.
+      if (err && typeof err === "object" && "code" in err && err.code === "P2002") {
+        log.info({ eventId: event.iyziReferenceCode }, "Webhook replay — skipped");
+        return Response.json({ ok: true, replay: true });
+      }
+      // Unexpected DB error — log and bail; iyzico will retry.
+      log.error({ err }, "iyzico idempotency claim failed");
+      Sentry.captureException(err, { tags: { component: "iyzico-webhook" } });
+      return Response.json({ error: "Idempotency claim failed." }, { status: 500 });
     }
   }
 
@@ -87,18 +111,13 @@ export async function POST(req: Request) {
   } catch (err) {
     log.error({ err, eventType: event.iyziEventType }, "iyzico webhook processing failed");
     Sentry.captureException(err, { tags: { component: "iyzico-webhook" }, extra: { event } });
+    // Release the idempotency claim so the next iyzico retry can re-process.
+    if (dedupId) {
+      await prisma.processedWebhook
+        .delete({ where: { id: dedupId } })
+        .catch((delErr) => log.warn({ delErr }, "Failed to release idempotency claim"));
+    }
     return Response.json({ error: "Processing failed." }, { status: 500 });
-  }
-
-  // Mark as processed (Stripe pattern). Best-effort — duplicate keys ignored.
-  if (event.iyziReferenceCode) {
-    await prisma.processedWebhook.create({
-      data: {
-        id: `iyzico:${event.iyziReferenceCode}`,
-        provider: "iyzico",
-        eventType: event.iyziEventType,
-      },
-    }).catch(() => {});
   }
 
   return Response.json({ ok: true });
