@@ -124,6 +124,7 @@ export default function AdminPage() {
           { href: "/admin/activity", label: "Activity Log" },
           { href: "/admin/key-history", label: "Encryption Keys" },
           { href: "/admin/readiness", label: "Setup Checklist" },
+          { href: "/admin/feature-flags", label: "Feature Flags" },
         ] as const).map((l) => (
           <Link key={l.href} href={l.href} style={{
             padding: "6px 12px",
