@@ -62,3 +62,10 @@ jobs:
           ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
           ANTHROPIC_API_KEY: "sk-ant-ci-placeholder"
           CRON_SECRET: "ci-placeholder-cron-secret"
+
+      # Sprint F.1 — catch bundle-size regressions before they hit prod.
+      # Fails CI if total client JS in .next/static/chunks exceeds budget.
+      - name: Bundle size budget
+        run: node scripts/check-bundle-size.mjs
+        env:
+          BUNDLE_BUDGET_KB: 3500
