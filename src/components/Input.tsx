@@ -1,5 +1,5 @@
 "use client";
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { colors } from "@/lib/theme";
 
@@ -11,13 +11,20 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, Props>(function Input(
-  { label, icon, error, hint, style, ...rest },
+  { label, icon, error, hint, style, id, ...rest },
   ref,
 ) {
+  // Sprint C.2 — generate a stable id so <label htmlFor> and the input
+  // are explicitly associated. Caller can still pass id={} to override.
+  const reactId = useId();
+  const inputId = id ?? `input-${reactId}`;
+  const errorId = `${inputId}-error`;
+  const hintId = `${inputId}-hint`;
+
   return (
     <div style={{ marginBottom: 14 }}>
       {label && (
-        <label style={{
+        <label htmlFor={inputId} style={{
           display: "block",
           fontSize: 13,
           fontWeight: 500,
@@ -44,6 +51,9 @@ const Input = forwardRef<HTMLInputElement, Props>(function Input(
         )}
         <input
           ref={ref}
+          id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : hint ? hintId : undefined}
           {...rest}
           style={{
             width: "100%",
@@ -60,12 +70,16 @@ const Input = forwardRef<HTMLInputElement, Props>(function Input(
         />
       </div>
       {error && (
-        <div style={{ fontSize: 12, color: colors.error, marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+        <div
+          id={errorId}
+          role="alert"
+          style={{ fontSize: 12, color: colors.error, marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}
+        >
           {error}
         </div>
       )}
       {!error && hint && (
-        <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 6 }}>
+        <div id={hintId} style={{ fontSize: 12, color: colors.textMuted, marginTop: 6 }}>
           {hint}
         </div>
       )}
