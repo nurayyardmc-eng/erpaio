@@ -327,4 +327,29 @@ select:focus-visible {
   .responsive-dashboard-pad {
     padding: 20px 16px !important;
   }
+  /* Sprint B.2 — chat history sidebar overlays the chat area on mobile
+     instead of consuming 260px of the 375px viewport. Backdrop catches
+     outside taps to close. */
+  .chat-history-aside.open {
+    position: fixed !important;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: min(80vw, 280px) !important;
+    z-index: 30;
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.12);
+  }
+  .chat-history-backdrop {
+    position: fixed;
+    inset: 56px 0 0 0;
+    background: rgba(0, 0, 0, 0.32);
+    z-index: 29;
+    cursor: pointer;
+  }
+}
+@media (min-width: 641px) {
+  /* Hide the backdrop entirely on desktop — sidebar is inline, not overlay. */
+  .chat-history-backdrop {
+    display: none;
+  }
 }

@@ -502,15 +502,26 @@ export default function ChatPage() {
 
   return (
     <div style={{ height: "calc(100vh - 56px)", background: "#FAFAF8", fontFamily: "inherit", color: "#0A0A0A", display: "flex" }}>
-      {/* Sidebar — sohbet geçmişi */}
-      <aside style={{
-        width: historyOpen ? 260 : 0,
-        transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        overflow: "hidden",
-        borderRight: historyOpen ? "1px solid rgba(10,10,10,0.08)" : "none",
-        background: "#FFFFFF",
-        flexShrink: 0,
-      }}>
+      {/* Sidebar — sohbet geçmişi. Mobile: kayan overlay (fixed + z-index)
+          so the 260px panel doesn't squeeze the chat area on small screens. */}
+      {historyOpen && (
+        <div
+          className="chat-history-backdrop"
+          onClick={() => setHistoryOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={historyOpen ? "chat-history-aside open" : "chat-history-aside"}
+        style={{
+          width: historyOpen ? 260 : 0,
+          transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          overflow: "hidden",
+          borderRight: historyOpen ? "1px solid rgba(10,10,10,0.08)" : "none",
+          background: "#FFFFFF",
+          flexShrink: 0,
+        }}
+      >
         <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(10,10,10,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: 11, color: "#737373", letterSpacing: 2, fontWeight: 600, textTransform: "uppercase" }}>{t.chat.historyTitle}</div>
           <button
