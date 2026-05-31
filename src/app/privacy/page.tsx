@@ -111,6 +111,8 @@ export default function PrivacyPage() {
         <Section title="10. İletişim">
           Veri sorumlusu: <strong>ERPAIO</strong>
           <br />Email: <a href="mailto:privacy@erpaio.com" style={{ color: "#0A0A0A" }}>privacy@erpaio.com</a>
+          <br />Enterprise müşteri DPA (Veri İşleme Sözleşmesi) için:{" "}
+          <a href="/dpa" style={{ color: "#0A0A0A" }}>/dpa</a>
         </Section>
       </div>
     </div>
