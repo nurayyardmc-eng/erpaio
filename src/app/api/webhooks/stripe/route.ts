@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { stripe, isStripeConfigured } from "@/lib/billing/stripe";
+import { stripe, isStripeConfigured, classifyStripeEvent } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
 import { sendEmail } from "@/lib/notifications/email";
@@ -85,6 +85,15 @@ export async function POST(req: Request) {
     log.info({ eventId: event.id, type: event.type }, "Duplicate webhook — skipped");
     return Response.json({ received: true, duplicate: true });
   }
+
+  // Sprint F.6 — classifyStripeEvent telemetry için: log her event'in
+  // hangi internal action'a map olduğunu yazsın. Dispatch hala event.type
+  // üzerinden çünkü Stripe SDK'sı event.data.object'i type discriminant
+  // olarak event.type üstünden narrow ediyor; action enum üzerinden narrowing
+  // çalışmaz. Klasifikasyon tablosu yine de lib/billing/stripe.ts'de tek
+  // yerde test edilebilir (mirrors iyzico classifyIyzicoEvent / 7.7).
+  const action = classifyStripeEvent(event.type);
+  log.debug({ type: event.type, action }, "Stripe event classified");
 
   try {
     switch (event.type) {
@@ -284,7 +293,7 @@ export async function POST(req: Request) {
         break;
       }
       default:
-        log.debug({ type: event.type }, "Unhandled event");
+        log.debug({ type: event.type, action }, "Unhandled event");
     }
   } catch (err) {
     log.error({ err, type: event.type }, "Webhook handler error");

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isStripeConfigured, stripe, PRICE_IDS } from "./stripe";
+import { isStripeConfigured, stripe, PRICE_IDS, classifyStripeEvent } from "./stripe";
 
 describe("billing/stripe", () => {
   describe("isStripeConfigured", () => {
@@ -34,6 +34,54 @@ describe("billing/stripe", () => {
     it("values match env vars", () => {
       expect(PRICE_IDS.pro).toBe(process.env.STRIPE_PRICE_PRO);
       expect(PRICE_IDS.enterprise).toBe(process.env.STRIPE_PRICE_ENTERPRISE);
+    });
+  });
+
+  describe("classifyStripeEvent", () => {
+    it("checkout.session.completed → activate", () => {
+      expect(classifyStripeEvent("checkout.session.completed")).toBe("activate");
+    });
+
+    it("subscription created/updated → update", () => {
+      expect(classifyStripeEvent("customer.subscription.created")).toBe("update");
+      expect(classifyStripeEvent("customer.subscription.updated")).toBe("update");
+    });
+
+    it("trial_will_end → trial-ending", () => {
+      expect(classifyStripeEvent("customer.subscription.trial_will_end")).toBe("trial-ending");
+    });
+
+    it("subscription deleted → cancel", () => {
+      expect(classifyStripeEvent("customer.subscription.deleted")).toBe("cancel");
+    });
+
+    it("subscription paused/resumed → pause / resume", () => {
+      expect(classifyStripeEvent("customer.subscription.paused")).toBe("pause");
+      expect(classifyStripeEvent("customer.subscription.resumed")).toBe("resume");
+    });
+
+    it("invoice events split correctly", () => {
+      expect(classifyStripeEvent("invoice.payment_succeeded")).toBe("payment-succeeded");
+      expect(classifyStripeEvent("invoice.payment_failed")).toBe("payment-failed");
+      expect(classifyStripeEvent("invoice.paid")).toBe("invoice-paid");
+    });
+
+    it("customer.deleted → customer-deleted", () => {
+      expect(classifyStripeEvent("customer.deleted")).toBe("customer-deleted");
+    });
+
+    it("unknown event type → unhandled", () => {
+      expect(classifyStripeEvent("payout.created")).toBe("unhandled");
+      expect(classifyStripeEvent("totally_made_up.event")).toBe("unhandled");
+      expect(classifyStripeEvent("")).toBe("unhandled");
+    });
+
+    it("case-sensitive: uppercased variant → unhandled", () => {
+      expect(classifyStripeEvent("CHECKOUT.SESSION.COMPLETED")).toBe("unhandled");
+    });
+
+    it("trailing whitespace variant → unhandled (no trim)", () => {
+      expect(classifyStripeEvent("invoice.paid ")).toBe("unhandled");
     });
   });
 });
