@@ -23,24 +23,79 @@ export default function AdminPage() {
   const [tenants, setTenants] = useState<AdminTenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editPlan, setEditPlan] = useState<string>("");
+  const [editBudget, setEditBudget] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    try {
+      const r = await fetch("/api/admin/tenants");
+      const d = await r.json();
+      if (!r.ok) {
+        setError(d.error || "Yetkisiz");
+      } else {
+        setTenants(d.tenants ?? []);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Hata");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch("/api/admin/tenants")
-      .then(async (r) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/admin/tenants");
         const d = await r.json();
-        if (!r.ok) {
-          setError(d.error || "Yetkisiz");
-          setLoading(false);
-          return;
-        }
-        setTenants(d.tenants ?? []);
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError(e instanceof Error ? e.message : "Hata");
-        setLoading(false);
-      });
+        if (cancelled) return;
+        if (!r.ok) setError(d.error || "Yetkisiz");
+        else setTenants(d.tenants ?? []);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Hata");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
+
+  // Sprint F.2 — sysadmin mutation handler. Validates inputs client-side
+  // and trusts the server zod schema for the final pass. Refreshes the
+  // table on success so the new plan/budget shows immediately.
+  const submitEdit = async (id: string, kind: "save" | "reset") => {
+    setSaving(true);
+    try {
+      const body: Record<string, unknown> = { id };
+      if (kind === "save") {
+        if (editPlan) body.plan = editPlan;
+        const budgetNum = Number(editBudget);
+        if (editBudget && Number.isFinite(budgetNum) && budgetNum > 0) {
+          body.monthlyTokenBudget = budgetNum;
+        }
+      } else {
+        body.resetTokensUsed = true;
+      }
+      const r = await fetch("/api/admin/tenants", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (!r.ok) {
+        setError(d.error || "Patch failed");
+      } else {
+        setEditing(null);
+        setEditPlan("");
+        setEditBudget("");
+        load();
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (error) {
     return (
@@ -119,7 +174,7 @@ export default function AdminPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
             <thead>
               <tr>
-                {["Tenant", "Plan", "Kullanıcı", "Bağlantı", "Cache", "Alert", "Token", "Oluşturma"].map((h) => (
+                {["Tenant", "Plan", "Kullanıcı", "Bağlantı", "Cache", "Alert", "Token", "Oluşturma", ""].map((h) => (
                   <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#0A0A0A", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
@@ -152,6 +207,39 @@ export default function AdminPage() {
                     </td>
                     <td style={{ padding: "8px 10px", color: "#94A3B8", fontSize: 9 }}>
                       {formatDate(t.createdAt)}
+                    </td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", whiteSpace: "nowrap" }}>
+                      {editing === t.id ? (
+                        <div style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+                          <select
+                            value={editPlan}
+                            onChange={(e) => setEditPlan(e.target.value)}
+                            style={{ fontSize: 10, padding: "2px 4px", border: "1px solid #E5E7EB", borderRadius: 4 }}
+                          >
+                            <option value="">(plan)</option>
+                            <option value="starter">starter</option>
+                            <option value="pro">pro</option>
+                            <option value="enterprise">enterprise</option>
+                          </select>
+                          <input
+                            type="number"
+                            placeholder="budget"
+                            value={editBudget}
+                            onChange={(e) => setEditBudget(e.target.value)}
+                            style={{ width: 90, fontSize: 10, padding: "2px 4px", border: "1px solid #E5E7EB", borderRadius: 4 }}
+                          />
+                          <button disabled={saving} onClick={() => submitEdit(t.id, "save")} style={{ fontSize: 10, padding: "2px 8px", background: "#0A0A0A", color: "#FFFFFF", border: "none", borderRadius: 4, cursor: saving ? "wait" : "pointer" }}>Kaydet</button>
+                          <button disabled={saving} onClick={() => submitEdit(t.id, "reset")} title="Token sayacını sıfırla" style={{ fontSize: 10, padding: "2px 6px", background: "#FEF3C7", color: "#92400E", border: "none", borderRadius: 4, cursor: saving ? "wait" : "pointer" }}>↻ token</button>
+                          <button disabled={saving} onClick={() => { setEditing(null); setEditPlan(""); setEditBudget(""); }} style={{ fontSize: 10, padding: "2px 6px", background: "transparent", color: "#94A3B8", border: "none", cursor: "pointer" }}>×</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setEditing(t.id); setEditPlan(t.plan); setEditBudget(String(t.monthlyTokenBudget)); }}
+                          style={{ fontSize: 10, padding: "2px 8px", background: "transparent", color: "#475569", border: "1px solid #E5E7EB", borderRadius: 4, cursor: "pointer" }}
+                        >
+                          Düzenle
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
