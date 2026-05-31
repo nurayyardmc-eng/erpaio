@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import Toaster from "@/components/Toaster";
 import ConfirmHost from "@/components/Confirm";
@@ -172,9 +173,33 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// Sprint F.11 — root layout reads erpaio_lang cookie so <html lang> + dir
+// match the user's selected language. Default remains tr (no cookie set =
+// freshly visited dashboard, which is TR-only). When a visitor clicks
+// "AR" on the landing language switcher, the middleware sets the cookie
+// and the next request renders <html lang="ar" dir="rtl"> — fixing
+// landing-ssr RTL SEO/a11y and screen-reader pronunciation.
+//
+// Dashboard content is still TR regardless of cookie (multi-lang dashboard
+// refactor is a separate sprint); this only affects html-level attributes.
+// AR cookie on dashboard = <html lang="ar" dir="rtl"> with TR content —
+// suboptimal but accurate: the user explicitly opted into AR, so honoring
+// the cookie attributes is the right behavior pending dashboard i18n.
+
+type RootLang = "tr" | "en" | "ar";
+
+function isRootLang(value: string | undefined): value is RootLang {
+  return value === "tr" || value === "en" || value === "ar";
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const cookieLang = cookieStore.get("erpaio_lang")?.value;
+  const lang: RootLang = isRootLang(cookieLang) ? cookieLang : "tr";
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   return (
-    <html lang="tr" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang={lang} dir={dir} className={`${inter.variable} ${playfair.variable}`}>
       <head>
         <script
           type="application/ld+json"
