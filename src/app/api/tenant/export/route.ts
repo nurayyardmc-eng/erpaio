@@ -20,7 +20,31 @@ export async function GET(req: Request) {
   const tenantId = session.user.tenantId;
   const log = childLogger({ component: "tenant-export", tenantId });
 
-  const [tenant, users, connections, sessions, alerts, baselines, queryCache, annotations, scheduledReports, watchlists, integrations, npsResponses] = await Promise.all([
+  const [
+    tenant,
+    users,
+    connections,
+    sessions,
+    alerts,
+    baselines,
+    queryCache,
+    annotations,
+    scheduledReports,
+    watchlists,
+    integrations,
+    npsResponses,
+    // Sprint E.3 — additional tenant-scoped tables required for full
+    // GDPR Art. 20 portability + KVKK md. 11 right-of-access coverage.
+    activityLogs,
+    consentLogs,
+    invitations,
+    ipAllowlists,
+    apiTokens,
+    customMetrics,
+    notificationLogs,
+    slowQueryLogs,
+    pushTokens,
+  ] = await Promise.all([
     prisma.tenant.findUnique({
       where: { id: tenantId },
       select: {
@@ -53,19 +77,61 @@ export async function GET(req: Request) {
     prisma.queryCache.findMany({ where: { tenantId } }),
     prisma.schemaAnnotation.findMany({ where: { tenantId } }),
     prisma.scheduledReport.findMany({ where: { tenantId } }),
-    prisma.watchlist.findMany({ where: { tenantId } }),
+    prisma.watchlist.findMany({
+      where: { tenantId },
+      include: { triggers: { take: 200, orderBy: { triggeredAt: "desc" } } },
+    }),
     prisma.tenantIntegration.findMany({
       where: { tenantId },
       select: { id: true, kind: true, enabled: true, lastSuccessAt: true, lastErrorAt: true, lastError: true, createdAt: true },
     }),
     prisma.npsResponse.findMany({ where: { tenantId } }),
+    // ActivityLog — KVKK md. 13 / GDPR Art. 30 audit log; user has right
+    // to see their own activity history. Capped to 5000 most recent.
+    prisma.activityLog.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+      select: { id: true, userId: true, email: true, action: true, target: true, metadata: true, ipAddress: true, createdAt: true },
+    }),
+    // ConsentLog — KVKK md. 11 mandates user access to their consent history.
+    prisma.consentLog.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+      select: { id: true, userId: true, email: true, consentType: true, action: true, documentVer: true, ipAddress: true, context: true, createdAt: true },
+    }),
+    prisma.invitation.findMany({ where: { tenantId }, select: { id: true, email: true, role: true, invitedBy: true, acceptedAt: true, expiresAt: true, createdAt: true } }),
+    prisma.tenantIpAllowlist.findMany({ where: { tenantId } }),
+    // ApiToken — metadata only; tokenHash and the plaintext token are NEVER exported.
+    prisma.apiToken.findMany({
+      where: { user: { tenantId } },
+      select: { id: true, userId: true, name: true, lastUsedAt: true, expiresAt: true, createdAt: true },
+    }),
+    prisma.customMetric.findMany({ where: { tenantId } }),
+    prisma.notificationLog.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+    }),
+    prisma.slowQueryLog.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+    }),
+    // PushToken — metadata only; the push token value itself is omitted
+    // (it's effectively a credential to send notifications to the device).
+    prisma.pushToken.findMany({
+      where: { user: { tenantId } },
+      select: { id: true, userId: true, platform: true, lastSeenAt: true, createdAt: true },
+    }),
   ]);
 
   const exportBundle = {
     metadata: {
       exportedAt: new Date().toISOString(),
-      version: "1.0",
-      kvkkNotice: "Bu export KVKK md. 11 ve GDPR Art. 20 (data portability) hakkı kapsamındadır. Hassas alanlar (passwordHash, encrypted secrets, push tokens) DAHIL EDILMEMIŞTIR.",
+      version: "1.1",
+      kvkkNotice: "Bu export KVKK md. 11 ve GDPR Art. 20 (data portability) hakkı kapsamındadır. Hassas alanlar (passwordHash, encrypted ERP credentials, push token values, MFA secrets/recovery codes, email/password tokens, webhook signing secrets, integration webhook URLs) DAHIL EDILMEMIŞTIR.",
     },
     tenant,
     users,
@@ -79,6 +145,15 @@ export async function GET(req: Request) {
     watchlists,
     integrations,
     npsResponses,
+    activityLogs,
+    consentLogs,
+    invitations,
+    ipAllowlists,
+    apiTokens,
+    customMetrics,
+    notificationLogs,
+    slowQueryLogs,
+    pushTokens,
   };
 
   const totalMessages = sessions.reduce((acc, s) => acc + s.messages.length, 0);
@@ -97,6 +172,10 @@ export async function GET(req: Request) {
       messages: totalMessages,
       alerts: alerts.length,
       users: users.length,
+      activityLogs: activityLogs.length,
+      consentLogs: consentLogs.length,
+      notificationLogs: notificationLogs.length,
+      slowQueryLogs: slowQueryLogs.length,
     },
   });
 
