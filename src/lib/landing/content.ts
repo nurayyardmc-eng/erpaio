@@ -1,32 +1,39 @@
-// Sprint F.5b — landing content catalog.
+// Sprint F.5b — landing content catalog (EN catalog).
+// Sprint F.5c — refactored shape: section "title" is now a single HTML
+// string (containing <em> + <br/>) so each locale expresses word order
+// naturally without rigid prefix/em/suffix slots. Renderer feeds these
+// via dangerouslySetInnerHTML — content is fully static, not user input.
 //
-// Single source of truth for landing page copy + structure. The SSR
-// route (/landing-ssr) renders this verbatim. F.5c will add TR + AR
-// catalogs by replicating the LandingContent shape with translated
-// strings — the React component does not change.
-//
-// Structure mirrors the existing /public/landing.html sections exactly
-// so visual diff against the static EN HTML stays trivial during the
-// rollout.
+// Each locale fills the same shape. Adding a fourth locale = a single
+// new file (e.g., ES) and a switch in resolveLocale().
+
+import type { Locale } from "./locale";
 
 export interface LandingContent {
+  htmlLang: Locale;
+  dir: "ltr" | "rtl";
+
+  // Metadata
+  metaTitle: string;
+  metaDesc: string;
+
   // Topbar
   topbarTagline: string;
 
   // Nav
   navLinks: { href: string; label: string }[];
   signInLabel: string;
+  navAriaHome: string;
+  navAriaMenu: string;
 
   // Sidebar
   sidebarLinks: { href: string; label: string }[];
   sidebarFooterLinks: { href: string; label: string }[];
   sidebarCopyright: string;
 
-  // Hero
+  // Hero — heroTitle is HTML (contains <em> + <br/>).
   heroBadge: string;
-  heroH1Prefix: string;
-  heroH1Em: string;
-  heroH1Suffix: string;
+  heroTitle: string;
   heroDesc: string;
   ctaPrimary: string;
   ctaSecondary: string;
@@ -37,14 +44,13 @@ export interface LandingContent {
   // Marquee
   marqueeItems: string[];
 
-  // Core idea
-  coreIdea: { label: string; titleA: string; titleEm: string; titleB: string; desc: string; loop: string[] };
+  // Core idea — title is HTML.
+  coreIdea: { label: string; title: string; desc: string; loop: string[] };
 
   // Features
   features: {
     label: string;
-    titleA: string;
-    titleEm: string;
+    title: string;
     desc: string;
     cards: { number: string; title: string; body: string }[];
   };
@@ -52,9 +58,7 @@ export interface LandingContent {
   // Use cases
   useCases: {
     label: string;
-    titleA: string;
-    titleEm: string;
-    titleB: string;
+    title: string;
     desc: string;
     cards: { title: string; bullets: string[] }[];
   };
@@ -62,10 +66,9 @@ export interface LandingContent {
   // Platform / bento
   platform: {
     label: string;
-    titleA: string;
-    titleEm: string;
+    title: string;
     desc: string;
-    textToCode: { label: string; title: string; body: string };
+    textToCode: { label: string; title: string; body: string; codeHtml: string };
     rag: { label: string; title: string; body: string };
     connector: { label: string; title: string; body: string; chips: string[] };
     threePillars: { label: string; title: string; body: string };
@@ -75,8 +78,7 @@ export interface LandingContent {
   // How it works
   howItWorks: {
     label: string;
-    titleA: string;
-    titleEm: string;
+    title: string;
     desc: string;
     steps: { number: string; title: string; body: string }[];
   };
@@ -84,14 +86,13 @@ export interface LandingContent {
   // Trust
   trust: {
     label: string;
-    titleA: string;
-    titleEm: string;
+    title: string;
     desc: string;
     cards: { iconKey: "lock" | "users" | "check" | "doc" | "bulb"; title: string; body: string }[];
   };
 
   // Technology
-  technology: { label: string; titleA: string; titleEm: string; titleB: string; desc: string; chips: string[] };
+  technology: { label: string; title: string; desc: string; chips: string[] };
 
   // Trusted by
   trustedByLabel: string;
@@ -102,7 +103,7 @@ export interface LandingContent {
   quoteAttribution: string;
 
   // Final CTA
-  finalCta: { label: string; titleA: string; titleEm: string; titleB: string; desc: string; cta: string };
+  finalCta: { label: string; title: string; desc: string; cta: string };
 
   // Contact
   contact: {
@@ -132,7 +133,14 @@ export interface LandingContent {
   };
 }
 
+// ---------- EN ----------
+
 export const EN: LandingContent = {
+  htmlLang: "en",
+  dir: "ltr",
+  metaTitle: "ERPAIO \u2014 The Self-Improving AI System for ERP",
+  metaDesc:
+    "ERPAIO continuously monitors your business, notifies what matters, learns from outcomes, and turns insights into controlled actions \u2014 without changing your existing ERP.",
   topbarTagline: "A Self-Improving System for Your ERP",
   navLinks: [
     { href: "#core-idea", label: "Vision" },
@@ -143,6 +151,8 @@ export const EN: LandingContent = {
     { href: "#contact", label: "Contact" },
   ],
   signInLabel: "Sign In",
+  navAriaHome: "Home",
+  navAriaMenu: "Menu",
   sidebarLinks: [
     { href: "#core-idea", label: "Vision" },
     { href: "#features", label: "Features" },
@@ -159,9 +169,7 @@ export const EN: LandingContent = {
   ],
   sidebarCopyright: "\u00A9 2026 ERPAIO",
   heroBadge: "Self-Improving AI System",
-  heroH1Prefix: "A self-improving",
-  heroH1Em: "AI system",
-  heroH1Suffix: " for your ERP.",
+  heroTitle: "A self-improving<br/><em>AI system</em> for your ERP.",
   heroDesc:
     "Continuously monitors your business, notifies what matters, learns from outcomes, and turns insights into controlled actions\u2014without changing your existing ERP.",
   ctaPrimary: "Request a Demo",
@@ -187,17 +195,14 @@ export const EN: LandingContent = {
   ],
   coreIdea: {
     label: "The Core Idea",
-    titleA: "Not a tool.",
-    titleEm: "self-improving",
-    titleB: " system.",
+    title: "Not a tool.<br/>A <em>self-improving</em> system.",
     desc:
       "ERPAIO operates as a continuous loop that learns from your business. It observes, understands, evaluates, detects, notifies, acts, and improves\u2014running 24/7 across your entire operation.",
     loop: ["Observe", "Understand", "Evaluate", "Detect", "Notify", "Act", "Learn"],
   },
   features: {
     label: "Capabilities",
-    titleA: "A complete",
-    titleEm: "intelligence",
+    title: "A complete<br/><em>intelligence</em> system",
     desc:
       "Always-on monitoring across all modules. Continuous AI feedback on positive and negative signals. Proactive notifications with actionable insights and approval workflows.",
     cards: [
@@ -214,9 +219,7 @@ export const EN: LandingContent = {
   },
   useCases: {
     label: "Use Cases",
-    titleA: "Real use cases",
-    titleEm: "business",
-    titleB: "across your ",
+    title: "Real use cases<br/>across your <em>business</em>",
     desc: "From retail to manufacturing to finance\u2014the same intelligence engine, adapted to your vertical.",
     cards: [
       { title: "Retail", bullets: ["Detect unusual sales drops or spikes", "Identify optimization opportunities in pricing", "Get notified about slow or fast-moving inventory"] },
@@ -226,14 +229,15 @@ export const EN: LandingContent = {
   },
   platform: {
     label: "Platform",
-    titleA: "Dashboards wait.\nERPAIO ",
-    titleEm: "notifies.",
+    title: "Dashboards wait.<br/>ERPAIO <em>notifies.</em>",
     desc:
       "From passive checking to proactive notification. From static analysis to continuous learning. From data to decisions to controlled actions\u2014with full approval flows and audit trails.",
     textToCode: {
       label: "Core Experience",
       title: "Text \u2192 Code \u2192 Text",
       body: "Type a question like you\u2019d ask a colleague. The agent reads ERP tables, generates structured queries, and returns human-readable answers with data citations. Every action is a draft requiring approval.",
+      codeHtml:
+        '<span class="comment">// You ask:</span><br/><span class="str">"Show low-stock items in Istanbul"</span><br/><br/><span class="comment">// Agent generates:</span><br/><span class="kw">SELECT</span> product, stock, reorder_point<br/><span class="kw">FROM</span> inventory<br/><span class="kw">WHERE</span> warehouse = <span class="str">\'IST\'</span><br/><span class="kw">AND</span> stock &lt; reorder_point<br/><br/><span class="comment">// You get:</span><br/><span class="str">"12 items below reorder point. Top 3: SKU-4821 (3 left), SKU-1190 (5 left)..."</span>',
     },
     rag: {
       label: "AI Engine",
@@ -260,8 +264,7 @@ export const EN: LandingContent = {
   },
   howItWorks: {
     label: "Process",
-    titleA: "A self-improving",
-    titleEm: "intelligence loop",
+    title: "A self-improving<br/><em>intelligence loop</em>",
     desc: "From connection to continuous intelligence in days, not months. Zero ERP modifications, zero risk.",
     steps: [
       { number: "01", title: "Connect", body: "Secure, read-only integration with no ERP modifications required. API pull, event streaming, CDC, or bulk export. Adapters for SAP, Oracle, Dynamics, Nebim, Logo, Mikro, and more." },
@@ -274,8 +277,7 @@ export const EN: LandingContent = {
   },
   trust: {
     label: "Enterprise Trust",
-    titleA: "Built for ",
-    titleEm: "enterprise",
+    title: "Built for <em>enterprise</em> trust",
     desc: "Security, compliance, and transparency are not features\u2014they are the foundation.",
     cards: [
       { iconKey: "lock", title: "Read-Only Connection", body: "No disruption to your ERP. Zero modifications required." },
@@ -287,9 +289,7 @@ export const EN: LandingContent = {
   },
   technology: {
     label: "Under the Hood",
-    titleA: "Advanced systems,",
-    titleEm: "unified",
-    titleB: " intelligence",
+    title: "Advanced systems,<br/><em>unified</em> intelligence",
     desc: "Multiple advanced systems working together as a single, self-improving intelligence engine.",
     chips: ["Semantic Data Modeling", "Knowledge Graphs", "Retrieval-Augmented Generation", "Text-to-SQL", "AI Agents", "Causal Inference"],
   },
@@ -299,9 +299,7 @@ export const EN: LandingContent = {
   quoteAttribution: "ERPAIO \u2014 From passive checking to proactive intelligence",
   finalCta: {
     label: "Get Started",
-    titleA: "Let your ERP think,\nnotify, and ",
-    titleEm: "improve",
-    titleB: " itself",
+    title: "Let your ERP think,<br/>notify, and <em>improve</em> itself",
     desc: "Move beyond dashboards and operate with a system that continuously learns, alerts, and acts.",
     cta: "Request a Demo",
   },

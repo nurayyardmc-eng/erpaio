@@ -1,30 +1,51 @@
-// Sprint F.5b — SSR landing page (EN only, side-by-side with static
-// /landing.html for visual diff). F.5c will add TR + AR catalogs; F.5d
-// will switch the middleware to route to this SSR page and delete the
-// static HTML files.
+// Sprint F.5b — SSR landing page (EN-only side-by-side with static
+// /landing.html for visual diff).
+// Sprint F.5c — extended to TR + AR via locale catalogs + cookie-based
+// resolver (?lang query overrides erpaio_lang cookie). HTML title slots
+// use dangerouslySetInnerHTML so each locale expresses word order
+// naturally with its own <em> / <br/> markup. Content is from typed
+// catalog constants — no user input — so dangerouslySetInnerHTML is safe.
 //
-// Mounted at /landing-ssr — does NOT intercept /landing.html yet.
+// Mounted at /landing-ssr — does NOT intercept /landing.html yet. F.5d
+// will switch the middleware once visual parity is verified.
 
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { EN, type LandingContent } from "@/lib/landing/content";
+import { TR } from "@/lib/landing/contentTr";
+import { AR } from "@/lib/landing/contentAr";
+import { resolveLocale, type Locale } from "@/lib/landing/locale";
 import { LandingInteractive } from "./LandingInteractive";
 
-export const metadata = {
-  title: "ERPAIO \u2014 The Self-Improving AI System for ERP",
-  description:
-    "ERPAIO continuously monitors your business, notifies what matters, learns from outcomes, and turns insights into controlled actions \u2014 without changing your existing ERP.",
-};
+const CATALOGS: Record<Locale, LandingContent> = { en: EN, tr: TR, ar: AR };
 
-export default function LandingSsrPage() {
-  // Resolve locale (F.5c will expand). For now: always EN.
-  const t: LandingContent = EN;
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const params = await searchParams;
+  const cookieStore = await cookies();
+  const locale = resolveLocale(params.lang, cookieStore.get("erpaio_lang")?.value);
+  const t = CATALOGS[locale];
+  return { title: t.metaTitle, description: t.metaDesc };
+}
+
+export default async function LandingSsrPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const params = await searchParams;
+  const cookieStore = await cookies();
+  const locale = resolveLocale(params.lang, cookieStore.get("erpaio_lang")?.value);
+  const t: LandingContent = CATALOGS[locale];
 
   return (
-    <>
-      {/* Shared landing CSS extracted in F.5a — same file the static HTMLs use. */}
+    <div lang={t.htmlLang} dir={t.dir}>
+      {/* Shared landing CSS extracted in F.5a. */}
       {/* eslint-disable-next-line @next/next/no-css-tags */}
       <link rel="stylesheet" href="/landing.css" />
-      {/* Google Fonts loaded inline to match the static HTML parity exactly. */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
@@ -33,8 +54,8 @@ export default function LandingSsrPage() {
 
       <ScrollTopBtn />
       <Topbar tagline={t.topbarTagline} />
-      <Nav t={t} />
-      <Sidebar t={t} />
+      <Nav t={t} locale={locale} />
+      <Sidebar t={t} locale={locale} />
       <Hero t={t} />
       <StatsBar stats={t.stats} />
       <Marquee items={t.marqueeItems} />
@@ -52,8 +73,14 @@ export default function LandingSsrPage() {
       <Footer t={t.footer} />
 
       <LandingInteractive />
-    </>
+    </div>
   );
+}
+
+// ---------- Helpers ----------
+
+function HtmlBlock({ html, as: As = "div", className, style }: { html: string; as?: "div" | "h1" | "p" | "span"; className?: string; style?: React.CSSProperties }) {
+  return <As className={className} style={style} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 // ---------- Components ----------
@@ -83,11 +110,17 @@ function Topbar({ tagline }: { tagline: string }) {
   );
 }
 
-function LangSwitcher({ wrapperStyle, optionStyle }: { wrapperStyle: React.CSSProperties; optionStyle: React.CSSProperties }) {
+function LangSwitcher({ locale, wrapperStyle, optionStyle }: { locale: Locale; wrapperStyle: React.CSSProperties; optionStyle: React.CSSProperties }) {
   return (
     <span style={wrapperStyle}>
       {(["en", "tr", "ar"] as const).map((lang) => (
-        <a key={lang} href={`?lang=${lang}`} className="lang-opt" data-lang={lang} style={optionStyle}>
+        <a
+          key={lang}
+          href={`?lang=${lang}`}
+          className="lang-opt"
+          data-lang={lang}
+          style={{ ...optionStyle, color: lang === locale ? "var(--text)" : "var(--text-secondary)" }}
+        >
           {lang.toUpperCase()}
         </a>
       ))}
@@ -95,10 +128,10 @@ function LangSwitcher({ wrapperStyle, optionStyle }: { wrapperStyle: React.CSSPr
   );
 }
 
-function Nav({ t }: { t: LandingContent }) {
+function Nav({ t, locale }: { t: LandingContent; locale: Locale }) {
   return (
     <nav>
-      <Link href="/" aria-label="Home" style={{ display: "flex", alignItems: "center" }}>
+      <Link href="/" aria-label={t.navAriaHome} style={{ display: "flex", alignItems: "center" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="nav-logo" src="/logo-mark.svg" alt="ERPAIO" style={{ height: 44, width: "auto", display: "block" }} />
       </Link>
@@ -125,6 +158,7 @@ function Nav({ t }: { t: LandingContent }) {
           </a>
         ))}
         <LangSwitcher
+          locale={locale}
           wrapperStyle={{
             display: "inline-flex",
             gap: 0,
@@ -136,10 +170,10 @@ function Nav({ t }: { t: LandingContent }) {
             fontSize: 10,
             letterSpacing: 1.5,
           }}
-          optionStyle={{ padding: "5px 10px", color: "var(--text-secondary)", textDecoration: "none" }}
+          optionStyle={{ padding: "5px 10px", textDecoration: "none" }}
         />
       </div>
-      <button className="hamburger" id="hamburger" aria-label="Menu">
+      <button className="hamburger" id="hamburger" aria-label={t.navAriaMenu}>
         <span></span>
         <span></span>
         <span></span>
@@ -148,7 +182,7 @@ function Nav({ t }: { t: LandingContent }) {
   );
 }
 
-function Sidebar({ t }: { t: LandingContent }) {
+function Sidebar({ t, locale }: { t: LandingContent; locale: Locale }) {
   return (
     <>
       <div className="sidebar-overlay" id="sidebarOverlay"></div>
@@ -186,6 +220,7 @@ function Sidebar({ t }: { t: LandingContent }) {
             </a>
           ))}
           <LangSwitcher
+            locale={locale}
             wrapperStyle={{
               display: "flex",
               gap: 0,
@@ -198,7 +233,7 @@ function Sidebar({ t }: { t: LandingContent }) {
               letterSpacing: 1.5,
               alignSelf: "center",
             }}
-            optionStyle={{ padding: "8px 16px", color: "var(--text-secondary)", textDecoration: "none" }}
+            optionStyle={{ padding: "8px 16px", textDecoration: "none" }}
           />
         </nav>
         <div className="sidebar-footer">
@@ -229,12 +264,7 @@ function Hero({ t }: { t: LandingContent }) {
       <div className="hero-badge">
         <span className="dot"></span> {t.heroBadge}
       </div>
-      <h1>
-        {t.heroH1Prefix}
-        <br />
-        <em>{t.heroH1Em}</em>
-        {t.heroH1Suffix}
-      </h1>
+      <HtmlBlock as="h1" html={t.heroTitle} />
       <p>{t.heroDesc}</p>
       <div className="hero-actions">
         <Link href="/signup" className="btn-primary">
@@ -281,11 +311,7 @@ function CoreIdea({ t }: { t: LandingContent["coreIdea"] }) {
     <section id="core-idea">
       <div className="core-idea">
         <div className="section-label">{t.label}</div>
-        <div className="section-title">
-          {t.titleA}
-          <br />A <em>{t.titleEm}</em>
-          {t.titleB}
-        </div>
+        <HtmlBlock className="section-title" html={t.title} />
         <div className="section-desc">{t.desc}</div>
         <div className="loop-steps">
           {t.loop.map((step) => (
@@ -305,11 +331,7 @@ function Features({ t }: { t: LandingContent["features"] }) {
       <div className="features">
         <div className="features-header">
           <div className="section-label">{t.label}</div>
-          <div className="section-title">
-            {t.titleA}
-            <br />
-            <em>{t.titleEm}</em> system
-          </div>
+          <HtmlBlock className="section-title" html={t.title} />
           <div className="section-desc">{t.desc}</div>
         </div>
         <div className="features-grid">
@@ -332,12 +354,7 @@ function UseCases({ t }: { t: LandingContent["useCases"] }) {
       <div className="use-cases">
         <div className="use-cases-header">
           <div className="section-label">{t.label}</div>
-          <div className="section-title">
-            {t.titleA}
-            <br />
-            {t.titleB}
-            <em>{t.titleEm}</em>
-          </div>
+          <HtmlBlock className="section-title" html={t.title} />
           <div className="section-desc">{t.desc}</div>
         </div>
         <div className="use-cases-grid">
@@ -363,10 +380,7 @@ function Platform({ t }: { t: LandingContent["platform"] }) {
       <div className="showcase">
         <div className="showcase-header">
           <div className="section-label">{t.label}</div>
-          <div className="section-title">
-            {t.titleA}
-            <em>{t.titleEm}</em>
-          </div>
+          <HtmlBlock className="section-title" html={t.title} />
           <div className="section-desc">{t.desc}</div>
         </div>
         <div className="bento-grid">
@@ -374,27 +388,7 @@ function Platform({ t }: { t: LandingContent["platform"] }) {
             <div className="bento-label">{t.textToCode.label}</div>
             <h3>{t.textToCode.title}</h3>
             <p>{t.textToCode.body}</p>
-            <div className="code-block">
-              <span className="comment">{"// You ask:"}</span>
-              <br />
-              <span className="str">{"\"Show low-stock items in Istanbul\""}</span>
-              <br />
-              <br />
-              <span className="comment">{"// Agent generates:"}</span>
-              <br />
-              <span className="kw">SELECT</span> product, stock, reorder_point
-              <br />
-              <span className="kw">FROM</span> inventory
-              <br />
-              <span className="kw">WHERE</span> warehouse = <span className="str">{"'IST'"}</span>
-              <br />
-              <span className="kw">AND</span> stock {"<"} reorder_point
-              <br />
-              <br />
-              <span className="comment">{"// You get:"}</span>
-              <br />
-              <span className="str">{"\"12 items below reorder point. Top 3: SKU-4821 (3 left), SKU-1190 (5 left)...\""}</span>
-            </div>
+            <HtmlBlock className="code-block" html={t.textToCode.codeHtml} />
           </div>
           <div className="bento-item elevated fade-in medium">
             <div className="bento-label">{t.rag.label}</div>
@@ -450,11 +444,7 @@ function HowItWorks({ t }: { t: LandingContent["howItWorks"] }) {
       <div className="how-it-works">
         <div className="how-it-works-header">
           <div className="section-label">{t.label}</div>
-          <div className="section-title">
-            {t.titleA}
-            <br />
-            <em>{t.titleEm}</em>
-          </div>
+          <HtmlBlock className="section-title" html={t.title} />
           <div className="section-desc">{t.desc}</div>
         </div>
         <div className="steps">
@@ -533,10 +523,7 @@ function Trust({ t }: { t: LandingContent["trust"] }) {
     <section id="trust" style={{ background: "var(--bg-alt)" }}>
       <div className="trust">
         <div className="section-label">{t.label}</div>
-        <div className="section-title">
-          {t.titleA}
-          <em>{t.titleEm}</em> trust
-        </div>
+        <HtmlBlock className="section-title" html={t.title} />
         <div className="section-desc" style={{ margin: "20px auto 0" }}>
           {t.desc}
         </div>
@@ -561,12 +548,7 @@ function Technology({ t }: { t: LandingContent["technology"] }) {
     <section id="technology">
       <div className="tech">
         <div className="section-label">{t.label}</div>
-        <div className="section-title">
-          {t.titleA}
-          <br />
-          <em>{t.titleEm}</em>
-          {t.titleB}
-        </div>
+        <HtmlBlock className="section-title" html={t.title} />
         <div className="section-desc">{t.desc}</div>
         <div className="tech-chips">
           {t.chips.map((c) => (
@@ -581,6 +563,11 @@ function Technology({ t }: { t: LandingContent["technology"] }) {
 }
 
 function TrustedBy({ label, items }: { label: string; items: string[] }) {
+  const interleaved: React.ReactNode[] = [];
+  items.forEach((it, i) => {
+    interleaved.push(<span key={`it-${i}`}>{it}</span>);
+    if (i < items.length - 1) interleaved.push(<span key={`sep-${i}`}>{"\u2022"}</span>);
+  });
   return (
     <section
       style={{
@@ -609,9 +596,7 @@ function TrustedBy({ label, items }: { label: string; items: string[] }) {
             color: "var(--text-secondary)",
           }}
         >
-          {items.map((it, i) => (
-            <span key={i}>{it}</span>
-          )).flatMap((node, i, arr) => i < arr.length - 1 ? [node, <span key={`sep${i}`}>{"\u2022"}</span>] : [node])}
+          {interleaved}
         </div>
       </div>
     </section>
@@ -635,11 +620,7 @@ function FinalCta({ t }: { t: LandingContent["finalCta"] }) {
     <section style={{ background: "var(--bg-alt)" }}>
       <div className="final-cta">
         <div className="section-label">{t.label}</div>
-        <div className="section-title">
-          {t.titleA}
-          <em>{t.titleEm}</em>
-          {t.titleB}
-        </div>
+        <HtmlBlock className="section-title" html={t.title} />
         <div className="section-desc">{t.desc}</div>
         <div style={{ marginTop: 40 }}>
           <Link href="/signup" className="btn-primary">
