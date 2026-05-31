@@ -1,51 +1,65 @@
 name: Weekly DB Backup
 
 on:
-  schedule:
-    - cron: '0 3 * * 0'
-  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
 
 jobs:
-  backup:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Install postgres client 17
-        run: |
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client-17
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install postgres client 17
+        # ubuntu-latest (24.04 noble) artık apt-key komutunu kaldırdı.
+        # Modern pattern: gpg --dearmor ile keyring'i /etc/apt/keyrings altına
+        # yaz, sources satırını signed-by= ile bağla. Eski apt-key add
+        # sessizce fail ediyordu, dolayısıyla apt-get update PGDG paketlerini
+        # imzasız olarak reddediyor ve install fail.
+        run: |
+          set -euo pipefail
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg
+          CODENAME="$(lsb_release -cs)"
+          echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt ${CODENAME}-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          # Yolu doğrula — sonraki adım /usr/lib/postgresql/17/bin/pg_dump'a güveniyor.
+          /usr/lib/postgresql/17/bin/pg_dump --version
 
-      - name: Validate DIRECT_URL secret
-        env:
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: |
-          if [ -z "$DIRECT_URL" ]; then
-            echo "::error::DIRECT_URL secret is not set in repo settings"
-            exit 1
-          fi
-          echo "::add-mask::$DIRECT_URL"
+      - name: Validate DIRECT_URL secret
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: |
+          if [ -z "$DIRECT_URL" ]; then
+            echo "::error::DIRECT_URL secret is not set in repo settings"
+            exit 1
+          fi
+          echo "::add-mask::$DIRECT_URL"
 
-      - name: Run pg_dump
-        env:
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: |
-          set -o pipefail
-          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
-          OUT="erpaio-backup-${TS}.dump"
-          # 17 versiyonunun pg_dump yolunu kullanıyoruz
-          /usr/lib/postgresql/17/bin/pg_dump \
-            -Fc --no-owner --no-privileges --no-acl \
-            --exclude-schema='pg_*' --exclude-schema='information_schema' \
-            -d "$DIRECT_URL" \
-            -f "$OUT"
-          ls -lh "$OUT"
+      - name: Run pg_dump
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: |
+          set -euo pipefail
+          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          OUT="erpaio-backup-${TS}.dump"
+          # PG 17 client'ı kullanıyoruz; Supabase PG 17 sunucusuyla bire bir
+          # uyumlu wire protocol. Eski client (14/16) "server version 17
+          # is not supported" hatasıyla bail eder.
+          /usr/lib/postgresql/17/bin/pg_dump \
+            -Fc --no-owner --no-privileges --no-acl \
+            --exclude-schema='pg_*' --exclude-schema='information_schema' \
+            -d "$DIRECT_URL" \
+            -f "$OUT"
+          ls -lh "$OUT"
 
-      - name: Upload backup artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: erpaio-db-backup-${{ github.run_number }}
-          path: erpaio-backup-*.dump
-          retention-days: 30
-          
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: erpaio-db-backup-${{ github.run_number }}
+          path: erpaio-backup-*.dump
+          retention-days: 30
+          if-no-files-found: error
