@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardHeader from "@/components/DashboardHeader";
+import DashboardFooter from "@/components/DashboardFooter";
 import CommandPalette from "@/components/CommandPalette";
 import HelpFab from "@/components/HelpFab";
 import NpsPrompt from "@/components/NpsPrompt";
@@ -24,6 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <main style={{ flex: 1, minWidth: 0, overflow: "auto" }}>
           {children}
         </main>
+        <DashboardFooter />
       </div>
       <CommandPalette />
       <HelpFab />
