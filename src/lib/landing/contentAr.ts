@@ -237,7 +237,7 @@ export const AR: LandingContent = {
         { href: "#", label: "GitHub" },
       ] },
     ],
-    badges: ["\uD83C\uDDF9\uD83C\uDDF7 KVKK uyumlu", "\uD83C\uDDEA\uD83C\uDDFA GDPR Art. 32", "AES-256-GCM", "7/24 \u0130zleme"],
+    badges: ["KVKK uyumlu", "GDPR Art. 32", "AES-256-GCM", "7/24 \u0130zleme"],
     copyright: "\u00A9 2026 ERPAIO. \u062C\u0645\u064A\u0639 \u0627\u0644\u062D\u0642\u0648\u0642 \u0645\u062D\u0641\u0648\u0638\u0629.",
     legalLinks: "\u0633\u064A\u0627\u0633\u0629 \u0627\u0644\u062E\u0635\u0648\u0635\u064A\u0629 \u00B7 \u0634\u0631\u0648\u0637 \u0627\u0644\u062E\u062F\u0645\u0629",
   },

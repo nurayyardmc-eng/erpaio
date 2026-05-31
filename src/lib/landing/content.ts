@@ -346,7 +346,7 @@ export const EN: LandingContent = {
         { href: "#", label: "GitHub" },
       ] },
     ],
-    badges: ["\uD83C\uDDF9\uD83C\uDDF7 KVKK uyumlu", "\uD83C\uDDEA\uD83C\uDDFA GDPR Art. 32", "AES-256-GCM", "7/24 \u0130zleme"],
+    badges: ["KVKK uyumlu", "GDPR Art. 32", "AES-256-GCM", "7/24 \u0130zleme"],
     copyright: "\u00A9 2026 ERPAIO. All rights reserved.",
     legalLinks: "Privacy Policy \u00B7 Terms of Service",
   },
