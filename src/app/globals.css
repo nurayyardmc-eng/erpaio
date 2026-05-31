@@ -353,3 +353,17 @@ select:focus-visible {
     display: none;
   }
 }
+
+/* Sprint B.3 — bar chart label/value columns are fixed at 90px+60px which
+   consumes ~50% of a 320px viewport. Shrink them on mobile so the bar
+   gets the majority of horizontal space. */
+@media (max-width: 640px) {
+  .mini-chart-bar-label {
+    width: 60px !important;
+    font-size: 10px;
+  }
+  .mini-chart-bar-value {
+    width: 44px !important;
+    font-size: 10px;
+  }
+}

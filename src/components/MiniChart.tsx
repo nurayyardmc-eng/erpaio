@@ -73,11 +73,11 @@ function BarChart({ hint, rows }: Props) {
       <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "0 8px" }}>
         {values.slice(0, 12).map((v, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10 }}>
-            <div style={{ width: 90, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.label}</div>
+            <div className="mini-chart-bar-label" style={{ width: 90, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.label}</div>
             <div style={{ flex: 1, height: 16, background: "#E5E7EB", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${(v.value / max) * 100}%`, background: COLORS[0] }} />
             </div>
-            <div style={{ width: 60, color: "#0F172A", fontFamily: "inherit", textAlign: "right" }}>{formatN(v.value)}</div>
+            <div className="mini-chart-bar-value" style={{ width: 60, color: "#0F172A", fontFamily: "inherit", textAlign: "right" }}>{formatN(v.value)}</div>
           </div>
         ))}
       </div>
@@ -150,6 +150,8 @@ const chartBox: React.CSSProperties = {
   borderRadius: 8,
   padding: 12,
   marginTop: 8,
+  maxWidth: "100%",
+  overflowX: "auto",
 };
 
 function ChartHeader({ title, reason }: { title: string; reason: string }) {
