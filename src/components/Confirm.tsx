@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n/context";
@@ -29,6 +29,7 @@ export function confirmDialog(opts: Omit<ConfirmOpts, "id" | "resolve">): Promis
 export default function ConfirmHost() {
   const { t } = useI18n();
   const [stack, setStack] = useState<ConfirmOpts[]>([]);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -47,12 +48,48 @@ export default function ConfirmHost() {
     });
   };
 
+  // Sprint C.1 — keyboard handling. Escape closes (counts as cancel).
+  // Tab cycles focus inside the dialog so keyboard users can't escape
+  // the modal without explicitly cancelling/confirming.
+  useEffect(() => {
+    if (stack.length === 0) return;
+    const top = stack[stack.length - 1];
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close(top.id, false);
+        return;
+      }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stack.length]);
+
   if (stack.length === 0) return null;
   const top = stack[stack.length - 1];
 
   return (
     <div
       onClick={() => close(top.id, false)}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={`confirm-title-${top.id}`}
       style={{
         position: "fixed",
         inset: 0,
@@ -67,6 +104,7 @@ export default function ConfirmHost() {
       }}
     >
       <div
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
         style={{
           background: colors.card,
@@ -91,7 +129,7 @@ export default function ConfirmHost() {
             <AlertTriangle size={22} color={colors.error} />
           </div>
         )}
-        <h3 style={{
+        <h3 id={`confirm-title-${top.id}`} style={{
           fontFamily: "var(--font-playfair), Georgia, serif",
           fontSize: 22,
           fontWeight: 400,

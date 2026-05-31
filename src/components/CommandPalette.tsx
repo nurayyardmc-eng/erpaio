@@ -83,6 +83,13 @@ export default function CommandPalette() {
       }
       if (!open) return;
       if (e.key === "Escape") setOpen(false);
+      // Sprint C.1 — trap Tab inside the palette. Only the search input is
+      // focusable, so Tab from it would leak focus to the page beneath the
+      // backdrop. Keep focus on the input.
+      if (e.key === "Tab") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setActive((a) => Math.min(a + 1, filtered.length - 1));
@@ -123,6 +130,9 @@ export default function CommandPalette() {
   return (
     <div
       onClick={() => setOpen(false)}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.commandPalette.placeholder}
       style={{
         position: "fixed",
         inset: 0,
