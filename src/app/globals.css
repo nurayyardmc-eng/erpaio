@@ -311,3 +311,20 @@ select:focus-visible {
     flex-direction: column !important;
   }
 }
+
+/* Sprint B.1 — collapse two-column form grids to single column on mobile.
+   Applied to the connections page form (host/port and user/password rows)
+   plus any future side-by-side fields. */
+@media (max-width: 640px) {
+  .responsive-form-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  .responsive-form-grid-hp {
+    grid-template-columns: 1fr !important;
+  }
+  /* Dashboard page containers — fat 40px padding squeezes phone screens
+     under 375px. Reduce to 16px and let h1 + content breathe. */
+  .responsive-dashboard-pad {
+    padding: 20px 16px !important;
+  }
+}

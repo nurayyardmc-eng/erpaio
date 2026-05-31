@@ -161,7 +161,7 @@ export default function ConnectionsPage() {
   };
 
   return (
-    <div style={{ padding: 40, maxWidth: 920, margin: "0 auto" }}>
+    <div className="responsive-dashboard-pad" style={{ padding: 40, maxWidth: 920, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 32 }}>
         <div>
           <h1 style={{
@@ -243,7 +243,7 @@ export default function ConnectionsPage() {
               })}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 10, marginBottom: 12 }}>
+            <div className="responsive-form-grid-hp" style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 10, marginBottom: 12 }}>
               <Field label={t.connections.fieldHost}>
                 <input
                   required
@@ -274,7 +274,7 @@ export default function ConnectionsPage() {
               />
             </Field>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div className="responsive-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <Field label={t.connections.fieldUsername}>
                 <input
                   required
