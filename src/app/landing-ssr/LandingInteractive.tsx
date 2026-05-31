@@ -106,6 +106,28 @@ export function LandingInteractive() {
     const ea = document.getElementById("emailAddr");
     if (ea) ea.textContent = "inf" + "o@erp" + "ai.io";
 
+    // Sprint F.10 — fade-in observer (port of /public/landing-fadein.js).
+    // Without this, .fade-in elements render normally (no scroll-triggered
+    // animation), which would be a subtle feature regression vs the static
+    // HTML. IntersectionObserver fallback: if unsupported, .fade-in stays
+    // visible (CSS has no opacity:0 base for .fade-in, so default state is
+    // already visible — animation is enrichment, not gating).
+    let fadeObserver: IntersectionObserver | null = null;
+    if ("IntersectionObserver" in window) {
+      fadeObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              fadeObserver?.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
+      );
+      document.querySelectorAll(".fade-in").forEach((el) => fadeObserver?.observe(el));
+    }
+
     return () => {
       hamburger?.removeEventListener("click", onHamburgerClick);
       closeBtn?.removeEventListener("click", onCloseClick);
@@ -116,6 +138,7 @@ export function LandingInteractive() {
       window.removeEventListener("scroll", onScrollNav);
       window.removeEventListener("scroll", onScrollTopVisibility);
       scrollTopBtn?.removeEventListener("click", onScrollTopClick);
+      fadeObserver?.disconnect();
     };
   }, []);
 
