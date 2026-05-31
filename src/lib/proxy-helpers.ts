@@ -9,6 +9,14 @@ export const PUBLIC_PATHS = [
   "/login",
   "/privacy",
   "/terms",
+  // Sprint F.10 — added /dpa (F.4), /help, /about, /changelog, /landing-ssr.
+  // Each is a public marketing/legal page; unauthed visitors were being 302'd
+  // to /login because PUBLIC_PATHS wasn't updated when those pages shipped.
+  "/dpa",
+  "/help",
+  "/about",
+  "/changelog",
+  "/landing-ssr",
   "/signup",
   "/forgot-password",
   "/reset-password",
