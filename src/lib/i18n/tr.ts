@@ -552,6 +552,10 @@ export const tr: Dictionary = {
   },
   dashboardHeader: {
     openPaletteAria: "Komut paleti aç",
+    searchLabel: "Ara",
+  },
+  toaster: {
+    closeAria: "Kapat",
   },
   helpFab: {
     title: "Yardım",

@@ -103,7 +103,7 @@ export default function DashboardHeader({ email, name }: Props) {
         >
           <Search size={14} />
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            Ara
+            {t.dashboardHeader.searchLabel}
             <kbd style={{
               fontSize: 10,
               border: `1px solid ${colors.border}`,

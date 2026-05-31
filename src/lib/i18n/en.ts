@@ -552,6 +552,10 @@ export const en: Dictionary = {
   },
   dashboardHeader: {
     openPaletteAria: "Open command palette",
+    searchLabel: "Search",
+  },
+  toaster: {
+    closeAria: "Close",
   },
   helpFab: {
     title: "Help",

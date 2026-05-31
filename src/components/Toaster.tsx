@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 import { colors } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n/context";
 
 interface Toast {
   id: number;
@@ -51,6 +52,7 @@ export default function Toaster() {
 }
 
 function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
+  const { t } = useI18n();
   // Local kind-specific palette using theme tokens. Local var renamed `palette`
   // to avoid shadowing imported `colors` from @/lib/theme.
   const palette = {
@@ -86,7 +88,7 @@ function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       <div style={{ flex: 1, paddingTop: 4, lineHeight: 1.4 }}>{toast.message}</div>
       <button
         onClick={onClose}
-        aria-label="Kapat"
+        aria-label={t.toaster.closeAria}
         style={{
           position: "absolute",
           right: 10,

@@ -530,6 +530,10 @@ export interface Dictionary {
   };
   dashboardHeader: {
     openPaletteAria: string;
+    searchLabel: string;
+  };
+  toaster: {
+    closeAria: string;
   };
   helpFab: {
     title: string;
