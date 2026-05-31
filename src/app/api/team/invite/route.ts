@@ -58,8 +58,23 @@ export async function POST(req: Request) {
     });
   }
 
-  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-  if (existing) return localizedError(req, 409, { tr: "Bu email kayıtlı.", en: "This email is already registered." });
+  // Sprint A.1 — tenant-scoped lookup to prevent global email enumeration.
+  // Earlier code did a global findUnique({ where: { email } }), which let any
+  // owner/admin probe whether ANY email was registered ANYWHERE in the platform
+  // (cross-tenant info disclosure). Now we only block if the email already
+  // belongs to a member of THIS tenant — that's the only collision that
+  // actually matters for the invite flow. Users registered with other tenants
+  // can still be invited; the accept-invite flow handles tenant switching.
+  const existing = await prisma.user.findFirst({
+    where: { email, tenantId: session.user.tenantId },
+    select: { id: true },
+  });
+  if (existing) {
+    return localizedError(req, 409, {
+      tr: "Bu email zaten ekibinizde.",
+      en: "This email is already in your team.",
+    });
+  }
 
   const rawToken = generateSecureToken();
   const tokenHash = sha256Hex(rawToken);
