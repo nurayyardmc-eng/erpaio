@@ -1,63 +1,51 @@
 name: Weekly DB Backup
 
 on:
-  schedule:
-    # 03:00 UTC her Pazar — düşük trafik penceresi.
-    # Supabase otomatik daily backup zaten var (Pro plan); bu workflow
-    # GitHub Actions artifact'a haftalık pg_dump alır → audit + restore source.
-    - cron: '0 3 * * 0'
-  workflow_dispatch:
-
-# Artifact retention: 30 gün (GitHub default). Tek bir backup ~5-50MB civarı,
-# tenant sayısına göre büyür; ücretsiz tier'da rahat sığar.
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
 
 jobs:
-  backup:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Install postgres client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install postgres client 17
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
 
-      - name: Validate DIRECT_URL secret
-        env:
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: |
-          if [ -z "$DIRECT_URL" ]; then
-            echo "::error::DIRECT_URL secret is not set in repo settings"
-            echo "::error::Add via Settings → Secrets → Actions"
-            exit 1
-          fi
-          # Mask the connection string in any subsequent logs
-          echo "::add-mask::$DIRECT_URL"
+      - name: Validate DIRECT_URL secret
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: |
+          if [ -z "$DIRECT_URL" ]; then
+            echo "::error::DIRECT_URL secret is not set in repo settings"
+            exit 1
+          fi
+          echo "::add-mask::$DIRECT_URL"
 
-      - name: Run pg_dump (custom format, compressed)
-        env:
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: |
-          set -o pipefail
-          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
-          OUT="erpaio-backup-${TS}.dump"
-          echo "Starting pg_dump → $OUT"
-          # -Fc = custom format (compressed, pg_restore-compatible)
-          # --no-owner / --no-privileges: portable across roles
-          # Single transaction for consistency without locking writes (Supabase MVCC)
-          pg_dump \
-            -Fc --no-owner --no-privileges --no-acl \
-            --exclude-schema='pg_*' --exclude-schema='information_schema' \
-            -d "$DIRECT_URL" \
-            -f "$OUT"
-          ls -lh "$OUT"
-          # Print row counts of major tables for the artifact summary
-          echo "=== Backup size ==="
-          du -h "$OUT"
+      - name: Run pg_dump
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: |
+          set -o pipefail
+          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          OUT="erpaio-backup-${TS}.dump"
+          # 17 versiyonunun pg_dump yolunu kullanıyoruz
+          /usr/lib/postgresql/17/bin/pg_dump \
+            -Fc --no-owner --no-privileges --no-acl \
+            --exclude-schema='pg_*' --exclude-schema='information_schema' \
+            -d "$DIRECT_URL" \
+            -f "$OUT"
+          ls -lh "$OUT"
 
-      - name: Upload backup artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: erpaio-db-backup-${{ github.run_number }}
-          path: erpaio-backup-*.dump
-          retention-days: 30
-          if-no-files-found: error
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: erpaio-db-backup-${{ github.run_number }}
+          path: erpaio-backup-*.dump
+          retention-days: 30
+          
