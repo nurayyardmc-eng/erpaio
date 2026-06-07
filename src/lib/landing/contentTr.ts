@@ -168,14 +168,14 @@ export const TR: LandingContent = {
   quoteAttribution: "ERPAIO \u2014 ERP\u2019niz, T\u00FCrk\u00E7e do\u011Fal dille",
   finalCta: {
     label: "Ba\u015Flay\u0131n",
-    title: "ERP\u2019inizin d\u00FC\u015F\u00FCnmesine, bildirmesine<br/>ve kendini <em>geli\u015Ftirmesine</em> izin verin",
-    desc: "Dashboardlar\u0131n \u00F6tesine ge\u00E7in ve s\u00FCrekli \u00F6\u011Frenen, uyaran ve eyleme ge\u00E7en bir sistemle \u00E7al\u0131\u015F\u0131n.",
+    title: "ERP\u2019nize T\u00FCrk\u00E7e sorun,<br/>saniyede <em>cevab\u0131 al\u0131n</em>",
+    desc: "Dashboardlar\u0131n ve karma\u015F\u0131k raporlar\u0131n \u00F6tesine ge\u00E7in. Sorular\u0131n\u0131z\u0131 do\u011Fal dille sorun, an\u0131nda ve do\u011Fru cevaplar al\u0131n.",
     cta: "Demo Talep Et",
   },
   contact: {
     label: "\u0130leti\u015Fim",
     title: "Konu\u015Fal\u0131m",
-    desc: "\u0130ster perakende, \u00FCretim, finans, ister ba\u015Fka bir dikeyde olun\u2014kendi kendini geli\u015Ftiren bir AI sisteminin ERP\u2019nizin sizin i\u00E7in nas\u0131l \u00E7al\u0131\u015Ft\u0131\u011F\u0131n\u0131 nas\u0131l d\u00F6n\u00FC\u015Ft\u00FCrd\u00FC\u011F\u00FCn\u00FC g\u00F6stermemize izin verin.",
+    desc: "\u0130ster perakende, \u00FCretim, finans, ister ba\u015Fka bir dikeyde olun\u2014ERP verinize do\u011Fal dille soru sorup saniyeler i\u00E7inde nas\u0131l cevap alaca\u011F\u0131n\u0131z\u0131 g\u00F6sterelim.",
     location: "\u0130stanbul, T\u00FCrkiye",
     firstName: { label: "\u0130sim", placeholder: "Ahmet" },
     lastName: { label: "Soyisim", placeholder: "Y\u0131lmaz" },

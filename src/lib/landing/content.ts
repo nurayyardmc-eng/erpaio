@@ -302,14 +302,14 @@ export const EN: LandingContent = {
   quoteAttribution: "ERPAIO \u2014 your ERP, in plain language",
   finalCta: {
     label: "Get Started",
-    title: "Let your ERP think,<br/>notify, and <em>improve</em> itself",
-    desc: "Move beyond dashboards and operate with a system that continuously learns, alerts, and acts.",
+    title: "Ask your ERP in plain language,<br/>get the <em>answer</em> in seconds",
+    desc: "Move beyond dashboards and complex reports. Ask your questions in natural language and get instant, accurate answers.",
     cta: "Request a Demo",
   },
   contact: {
     label: "Contact",
     title: "Let\u2019s talk",
-    desc: "Whether you\u2019re in retail, manufacturing, finance, or any other vertical\u2014let us show you how a self-improving AI system transforms the way your ERP works for you.",
+    desc: "Whether you\u2019re in retail, manufacturing, finance, or any other vertical\u2014let us show you how to ask your ERP data questions in plain language and get answers in seconds.",
     location: "Istanbul, Turkey",
     firstName: { label: "First Name", placeholder: "John" },
     lastName: { label: "Last Name", placeholder: "Doe" },
