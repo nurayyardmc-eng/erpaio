@@ -55,6 +55,46 @@ export const PREF_COLUMN: Record<PushCategory, "pushPrefAlerts" | "pushPrefAnoma
   watchlists: "pushPrefWatchlists",
 };
 
+/** User row shape carrying the three push-pref boolean columns. */
+export type PushPrefsRow = Record<(typeof PREF_COLUMN)[PushCategory], boolean>;
+
+/**
+ * Prisma `select` for the push-pref columns. Single source so GET + PATCH
+ * (api/me/notification-prefs) can't drift apart.
+ */
+export const PUSH_PREFS_SELECT = {
+  pushPrefAlerts: true,
+  pushPrefAnomaly: true,
+  pushPrefWatchlists: true,
+} as const;
+
+/**
+ * Prisma column row → public API shape (category-keyed). Pure.
+ *   { pushPrefAlerts:true,... } → { alerts:true, anomaly:..., watchlists:... }
+ */
+export function mapPushPrefsRow(row: PushPrefsRow): Record<PushCategory, boolean> {
+  return {
+    alerts: row[PREF_COLUMN.alerts],
+    anomaly: row[PREF_COLUMN.anomaly],
+    watchlists: row[PREF_COLUMN.watchlists],
+  };
+}
+
+/**
+ * Partial PATCH body (category-keyed) → Prisma update data (column-keyed).
+ * Only defined categories are written, so an empty body yields {} (no-op). Pure.
+ */
+export function buildPushPrefsUpdate(
+  body: Partial<Record<PushCategory, boolean>>,
+): Partial<PushPrefsRow> {
+  const data: Partial<PushPrefsRow> = {};
+  (Object.keys(PREF_COLUMN) as PushCategory[]).forEach((cat) => {
+    const value = body[cat];
+    if (value !== undefined) data[PREF_COLUMN[cat]] = value;
+  });
+  return data;
+}
+
 /**
  * PushToken sorgusunun where clause'ını oluşturur. Kategori undefined ise
  * filtre boş → legacy davranış (tüm tokenlar). Kategori varsa ilgili User

@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { buildPushTokenWhere, chunkArray, EXPO_PUSH_BATCH_SIZE, PREF_COLUMN } from "./push";
+import {
+  buildPushTokenWhere,
+  chunkArray,
+  EXPO_PUSH_BATCH_SIZE,
+  PREF_COLUMN,
+  PUSH_PREFS_SELECT,
+  mapPushPrefsRow,
+  buildPushPrefsUpdate,
+} from "./push";
 
 describe("notifications/push", () => {
   describe("chunkArray", () => {
@@ -76,6 +84,74 @@ describe("notifications/push", () => {
       // bu test TypeScript'te yakalar (Record<PushCategory,...> exhaustive).
       // Runtime'da da 3 anahtarı doğrula:
       expect(Object.keys(PREF_COLUMN).sort()).toEqual(["alerts", "anomaly", "watchlists"]);
+    });
+  });
+
+  describe("PUSH_PREFS_SELECT — single-source Prisma select", () => {
+    it("selects exactly the three pref columns from PREF_COLUMN", () => {
+      expect(Object.keys(PUSH_PREFS_SELECT).sort()).toEqual(
+        Object.values(PREF_COLUMN).sort(),
+      );
+    });
+
+    it("every column flagged true", () => {
+      expect(Object.values(PUSH_PREFS_SELECT).every((v) => v === true)).toBe(true);
+    });
+  });
+
+  describe("mapPushPrefsRow — column row → API shape", () => {
+    it("maps each column to its category key", () => {
+      expect(
+        mapPushPrefsRow({
+          pushPrefAlerts: true,
+          pushPrefAnomaly: false,
+          pushPrefWatchlists: true,
+        }),
+      ).toEqual({ alerts: true, anomaly: false, watchlists: true });
+    });
+
+    it("all-false row → all-false prefs", () => {
+      expect(
+        mapPushPrefsRow({
+          pushPrefAlerts: false,
+          pushPrefAnomaly: false,
+          pushPrefWatchlists: false,
+        }),
+      ).toEqual({ alerts: false, anomaly: false, watchlists: false });
+    });
+  });
+
+  describe("buildPushPrefsUpdate — PATCH body → Prisma data", () => {
+    it("empty body → {} (no-op PATCH)", () => {
+      expect(buildPushPrefsUpdate({})).toEqual({});
+    });
+
+    it("single field → single column written", () => {
+      expect(buildPushPrefsUpdate({ anomaly: false })).toEqual({
+        pushPrefAnomaly: false,
+      });
+    });
+
+    it("all fields → all columns written", () => {
+      expect(
+        buildPushPrefsUpdate({ alerts: true, anomaly: false, watchlists: true }),
+      ).toEqual({
+        pushPrefAlerts: true,
+        pushPrefAnomaly: false,
+        pushPrefWatchlists: true,
+      });
+    });
+
+    it("false is written (distinct from undefined/omitted)", () => {
+      const out = buildPushPrefsUpdate({ alerts: false });
+      expect(out).toEqual({ pushPrefAlerts: false });
+      expect("pushPrefAnomaly" in out).toBe(false);
+    });
+
+    it("explicit undefined is skipped (not written as undefined)", () => {
+      const out = buildPushPrefsUpdate({ alerts: true, anomaly: undefined });
+      expect(out).toEqual({ pushPrefAlerts: true });
+      expect("pushPrefAnomaly" in out).toBe(false);
     });
   });
 

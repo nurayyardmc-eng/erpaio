@@ -9,6 +9,11 @@ import {
   noFieldsToUpdateError,
 } from "@/lib/http/searchParams";
 import { recordUserActivity } from "@/lib/audit/activity";
+import {
+  PUSH_PREFS_SELECT,
+  mapPushPrefsRow,
+  buildPushPrefsUpdate,
+} from "@/lib/notifications/push";
 
 /**
  * Per-user push notification opt-in preferences.
@@ -42,16 +47,12 @@ export async function GET(req: Request) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { pushPrefAlerts: true, pushPrefAnomaly: true, pushPrefWatchlists: true },
+    select: PUSH_PREFS_SELECT,
   });
   if (!user) return userNotFoundError(req);
 
   return Response.json({
-    prefs: PrefsResponseSchema.parse({
-      alerts: user.pushPrefAlerts,
-      anomaly: user.pushPrefAnomaly,
-      watchlists: user.pushPrefWatchlists,
-    }),
+    prefs: PrefsResponseSchema.parse(mapPushPrefsRow(user)),
   });
 }
 
@@ -66,21 +67,14 @@ export async function PATCH(req: Request) {
   if (body instanceof Response) return body;
 
   // Sadece gönderilen alanları güncelle — boş PATCH no-op.
-  const data: {
-    pushPrefAlerts?: boolean;
-    pushPrefAnomaly?: boolean;
-    pushPrefWatchlists?: boolean;
-  } = {};
-  if (body.alerts !== undefined) data.pushPrefAlerts = body.alerts;
-  if (body.anomaly !== undefined) data.pushPrefAnomaly = body.anomaly;
-  if (body.watchlists !== undefined) data.pushPrefWatchlists = body.watchlists;
+  const data = buildPushPrefsUpdate(body);
 
   if (Object.keys(data).length === 0) return noFieldsToUpdateError(req);
 
   const user = await prisma.user.update({
     where: { id: session.user.id },
     data,
-    select: { pushPrefAlerts: true, pushPrefAnomaly: true, pushPrefWatchlists: true },
+    select: PUSH_PREFS_SELECT,
   });
 
   await recordUserActivity(req, session, {
@@ -90,10 +84,6 @@ export async function PATCH(req: Request) {
   });
 
   return Response.json({
-    prefs: {
-      alerts: user.pushPrefAlerts,
-      anomaly: user.pushPrefAnomaly,
-      watchlists: user.pushPrefWatchlists,
-    },
+    prefs: mapPushPrefsRow(user),
   });
 }
