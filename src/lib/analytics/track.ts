@@ -26,7 +26,6 @@ export interface TrackProps {
 // Flip via NEXT_PUBLIC_ANALYTICS_ENABLED at build time. While false,
 // track() is a cheap no-op (events are dropped) — safe to ship call
 // sites before the vendor is chosen.
-const ENABLED = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === "true";
 
 declare global {
   interface Window {
@@ -35,8 +34,16 @@ declare global {
   }
 }
 
+// Enablement is signalled by the PRESENCE of window.posthog: PostHogLoader
+// only injects the snippet when analytics is actually enabled (resolved
+// server-side from ANALYTICS_ENABLED / NEXT_PUBLIC_ANALYTICS_ENABLED at
+// runtime). We must NOT gate on process.env.NEXT_PUBLIC_ANALYTICS_ENABLED
+// here — this is a client module, so that value is build-time inlined and
+// is empty whenever the var is set non-prefixed or as a Vercel "Sensitive"
+// var. Relying on it silently dropped every custom event while $pageview
+// (fired by the snippet itself) still worked. window.posthog?. already
+// no-ops cleanly when analytics is off.
 export function track(event: AnalyticsEvent, props: TrackProps = {}): void {
-  if (!ENABLED) return;
   if (typeof window === "undefined") return;
   try {
     // PostHog-shaped dispatch. Swap this block for any vendor; call
