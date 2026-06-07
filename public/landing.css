@@ -247,3 +247,13 @@ a:focus-visible,button:focus-visible,.hamburger:focus-visible,
   .stat-number{font-size:40px}
   .vertical-tags{justify-content:center}
 }
+/* Phones — fine-tune the above-the-fold hero so the CTA fits + rises */
+@media(max-width:480px){
+  .hero{padding:104px 18px 56px}
+  .hero h1{font-size:clamp(32px,8.5vw,46px);letter-spacing:-1px}
+  .hero p{font-size:16px;margin-top:22px}
+  /* Two pills overflow a phone row — stack full-width (bigger tap targets too) */
+  .hero-actions{flex-direction:column;align-self:stretch;width:100%;gap:12px;margin-top:36px}
+  .hero-actions .btn-primary,.hero-actions .btn-secondary{width:100%;text-align:center;padding:15px 24px}
+  section,.contact-section{padding:64px 18px}
+}

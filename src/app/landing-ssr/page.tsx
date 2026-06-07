@@ -328,7 +328,7 @@ function Hero({ t }: { t: LandingContent }) {
         className="hero-logo logo-anim"
         src="/logo.svg"
         alt="ERPAIO"
-        style={{ height: "clamp(220px,40vh,380px)", width: "auto", maxWidth: "90%", margin: "0 auto 4px", display: "block" }}
+        style={{ height: "clamp(150px,42vw,360px)", width: "auto", maxWidth: "90%", margin: "0 auto 4px", display: "block" }}
       />
       <div className="hero-badge">
         <span className="dot"></span> {t.heroBadge}
