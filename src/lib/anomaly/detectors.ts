@@ -5,6 +5,7 @@ import {
 } from "./messages";
 // Track XXXX: deduped — implementation lives in @/lib/threshold/compare.
 import { compareThreshold, thresholdOpSymbol } from "@/lib/threshold/compare";
+import { round2 } from "@/lib/format/round";
 
 export type AnomalySeverity = "low" | "medium" | "high" | "critical";
 
@@ -103,14 +104,14 @@ export function detectZScore(params: ZScoreParams): AnomalyResult {
 
   return buildResult({
     isAnomaly, severity,
-    score: Number(zScore.toFixed(2)),
+    score: round2(zScore),
     messageKey: isAnomaly ? "zscore.anomaly" : "zscore.withinRange",
     messageParams: { label: metricLabel, current, mean, zScore, pctDeviation },
     algorithm: "zscore",
     context: {
       currentValue: current,
-      expectedValue: Number(mean.toFixed(2)),
-      deviation: Number(pctDeviation.toFixed(2)),
+      expectedValue: round2(mean),
+      deviation: round2(pctDeviation),
       sampleSize,
     },
   });
@@ -176,14 +177,14 @@ export function detectMovingAverage(params: MovingAvgParams): AnomalyResult {
 
   return buildResult({
     isAnomaly, severity,
-    score: Number(pctDeviation.toFixed(2)),
+    score: round2(pctDeviation),
     messageKey: isAnomaly ? "movingAvg.anomaly" : "movingAvg.withinRange",
     messageParams: { label: metricLabel, current, avg, pctDeviation },
     algorithm: "moving_avg",
     context: {
       currentValue: current,
-      expectedValue: Number(avg.toFixed(2)),
-      deviation: Number(pctDeviation.toFixed(2)),
+      expectedValue: round2(avg),
+      deviation: round2(pctDeviation),
       sampleSize: history.length,
     },
   });
@@ -261,7 +262,7 @@ function normalResult(
     algorithm: alg,
     context: {
       currentValue: current,
-      expectedValue: Number(expected.toFixed(2)),
+      expectedValue: round2(expected),
       sampleSize,
     },
   });
