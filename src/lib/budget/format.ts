@@ -1,4 +1,4 @@
-import { ONE_DAY_MS } from "@/lib/time/units";
+import { ONE_DAY_MS, toDate } from "@/lib/time/units";
 
 /**
  * Tenant token usage formatters — web + mobile UI'da kullanılır.
@@ -46,7 +46,7 @@ export function budgetStatusLevel(percentUsed: number): BudgetStatusLevel {
  * Geçmiş tarih → 0 (defensive, edge case clock skew).
  */
 export function daysUntilReset(resetsOn: string | Date, now: Date = new Date()): number {
-  const target = resetsOn instanceof Date ? resetsOn : new Date(resetsOn);
+  const target = toDate(resetsOn);
   if (Number.isNaN(target.getTime())) return 0;
   const diffMs = target.getTime() - now.getTime();
   if (diffMs <= 0) return 0;

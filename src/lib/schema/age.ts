@@ -15,7 +15,7 @@
  *   null builtAt         → "never"      — gri (hiç sync olmadı)
  */
 
-import { ONE_DAY_MS, ONE_HOUR_MS } from "@/lib/time/units";
+import { ONE_DAY_MS, ONE_HOUR_MS, toDate } from "@/lib/time/units";
 
 export const STALE_DAYS = 7;
 export const VERY_STALE_DAYS = 30;
@@ -27,7 +27,7 @@ export function schemaAgeStatus(
   now: Date = new Date(),
 ): SchemaAgeStatus {
   if (!builtAt) return "never";
-  const built = builtAt instanceof Date ? builtAt : new Date(builtAt);
+  const built = toDate(builtAt);
   if (Number.isNaN(built.getTime())) return "never";
   const ageMs = now.getTime() - built.getTime();
   if (ageMs < 0) return "fresh"; // gelecek zaman = clock skew, defensive
@@ -49,7 +49,7 @@ export function schemaAgeRelative(
   now: Date = new Date(),
 ): { value: number; unit: "hour" | "day" } | null {
   if (!builtAt) return null;
-  const built = builtAt instanceof Date ? builtAt : new Date(builtAt);
+  const built = toDate(builtAt);
   if (Number.isNaN(built.getTime())) return null;
   const ageMs = now.getTime() - built.getTime();
   if (ageMs < 0) return { value: 0, unit: "hour" };

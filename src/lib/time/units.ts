@@ -53,3 +53,17 @@ export function daysFromNow(days: number, now: number = Date.now()): Date {
 export function daysAgo(days: number, now: number = Date.now()): Date {
   return new Date(now - days * ONE_DAY_MS);
 }
+
+/**
+ * Coerce a `Date | string | number` to a `Date`. A `Date` passes through
+ * unchanged; anything else goes through `new Date(...)`.
+ *
+ * Replaces the `x instanceof Date ? x : new Date(x)` ternary that was inlined
+ * across the date formatters/classifiers (format/time, chat/exportMarkdown,
+ * schema/age, budget/format). Callers keep their own NaN guard afterwards —
+ * this is pure coercion only, so an invalid input yields an Invalid Date that
+ * the caller can detect via `Number.isNaN(d.getTime())`.
+ */
+export function toDate(value: Date | string | number): Date {
+  return value instanceof Date ? value : new Date(value);
+}

@@ -7,6 +7,8 @@
  * and would benefit from shared use in other pages.
  */
 
+import { toDate } from "@/lib/time/units";
+
 /**
  * "5m ago" / "5d önce" — relative time from now to an ISO timestamp.
  * `null` input → "—" (placeholder for missing data).
@@ -52,7 +54,7 @@ export function formatTimestamp(
   locale: string = "tr",
 ): string {
   if (!iso) return "—";
-  const date = iso instanceof Date ? iso : new Date(iso);
+  const date = toDate(iso);
   if (Number.isNaN(date.getTime())) return "—";
   const tag = locale === "en" ? "en-US" : "tr-TR";
   return date.toLocaleString(tag);
@@ -73,7 +75,7 @@ export function formatDate(
   locale: string = "tr",
 ): string {
   if (!iso) return "—";
-  const date = iso instanceof Date ? iso : new Date(iso);
+  const date = toDate(iso);
   if (Number.isNaN(date.getTime())) return "—";
   const tag = locale === "en" ? "en-US" : "tr-TR";
   return date.toLocaleDateString(tag);

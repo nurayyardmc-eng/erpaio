@@ -5,6 +5,7 @@ import {
   ONE_DAY_MS,
   daysFromNow,
   daysAgo,
+  toDate,
 } from "./units";
 
 describe("time/units constants", () => {
@@ -77,5 +78,25 @@ describe("time/units daysAgo", () => {
 
   it("0 days = now", () => {
     expect(daysAgo(0, NOW).getTime()).toBe(NOW);
+  });
+});
+
+describe("time/units toDate", () => {
+  it("passes a Date through unchanged (same reference)", () => {
+    const d = new Date("2026-05-26T12:00:00Z");
+    expect(toDate(d)).toBe(d);
+  });
+
+  it("parses an ISO string to the same instant", () => {
+    const iso = "2026-05-26T12:00:00Z";
+    expect(toDate(iso).getTime()).toBe(new Date(iso).getTime());
+  });
+
+  it("accepts an epoch-ms number", () => {
+    expect(toDate(1_700_000_000_000).getTime()).toBe(1_700_000_000_000);
+  });
+
+  it("invalid string yields an Invalid Date the caller can NaN-guard", () => {
+    expect(Number.isNaN(toDate("not-a-date").getTime())).toBe(true);
   });
 });

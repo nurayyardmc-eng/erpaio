@@ -18,7 +18,7 @@
  * Pure function — DB/network bağımsız, test edilir.
  */
 
-import { ONE_DAY_MS } from "@/lib/time/units";
+import { ONE_DAY_MS, toDate } from "@/lib/time/units";
 
 export type TrialUrgency = "info" | "warning" | "danger" | "expired";
 
@@ -42,9 +42,7 @@ export function trialBannerStatus(
   if (input.subscriptionStatus === "active") return null;
   if (!input.trialEndsAt) return null;
 
-  const target = input.trialEndsAt instanceof Date
-    ? input.trialEndsAt
-    : new Date(input.trialEndsAt);
+  const target = toDate(input.trialEndsAt);
   if (Number.isNaN(target.getTime())) return null;
 
   const diffMs = target.getTime() - now.getTime();

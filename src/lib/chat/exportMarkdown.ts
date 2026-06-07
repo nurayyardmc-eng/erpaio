@@ -11,6 +11,7 @@
  */
 
 import { exportFilenameTimestamp } from "@/lib/format/exportFilename";
+import { toDate } from "@/lib/time/units";
 
 export interface ChatExportMessage {
   role: "user" | "assistant" | "system" | string;
@@ -37,7 +38,7 @@ const ROLE_LABEL_TR: Record<string, string> = {
 
 function fmtDate(d: string | Date | null | undefined, locale: "tr" | "en"): string {
   if (!d) return "";
-  const date = d instanceof Date ? d : new Date(d);
+  const date = toDate(d);
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleString(locale === "en" ? "en-US" : "tr-TR");
 }
