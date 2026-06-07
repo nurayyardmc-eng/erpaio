@@ -5,6 +5,7 @@ import { formatTimestamp } from "@/lib/format/time";
 import { changeDelta } from "@/lib/format/changeDelta";
 import { sparklinePoints } from "@/lib/charts/sparkline";
 import SetupChecklist from "@/components/SetupChecklist";
+import { QuotaWidget } from "@/components/QuotaWidget";
 import { useI18n } from "@/lib/i18n/context";
 
 interface DashboardMetric {
@@ -50,6 +51,9 @@ export default function OverviewPage() {
       </p>
 
       <SetupChecklist />
+
+      {/* P3 — token quota transparency widget */}
+      <QuotaWidget />
 
       {loading && <div className="skeleton" style={{ height: 16, borderRadius: 8, width: 200 }} />}
 
