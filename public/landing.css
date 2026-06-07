@@ -1,4 +1,4 @@
-:root{--bg:#FAFAF8;--bg-alt:#F2F1EE;--bg-card:#FFF;--bg-dark:#0A0A0A;--text:#0A0A0A;--text-secondary:#6B6B6B;--text-dim:#9E9E9E;--text-light:#FAFAF8;--border:#E2E0DB;--border-dark:#D0CEC8;--radius:12px}
+:root{--bg:#FAFAF8;--bg-alt:#F2F1EE;--bg-card:#FFF;--bg-dark:#0A0A0A;--text:#0A0A0A;--text-secondary:#6B6B6B;--text-dim:#8A8A8A;--text-light:#FAFAF8;--border:#E2E0DB;--border-dark:#D0CEC8;--radius:12px}
 *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
@@ -142,7 +142,7 @@ section{padding:120px 48px;position:relative}
 .form-group input,.form-group textarea,.form-group select{width:100%;padding:14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text-light);font-size:14px;font-family:'Outfit',sans-serif;font-weight:300;transition:all .3s;outline:none}
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:rgba(255,255,255,.3)}
 .form-group input::placeholder,.form-group textarea::placeholder{color:#444}.form-group textarea{resize:vertical;min-height:110px}
-.form-group select{appearance:none}.form-group select option{background:var(--bg-dark);color:#aaa}
+.form-group select{appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23888' stroke-width='1.5'%3E%3Cpath d='M1 1.5 6 6.5l5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:42px}.form-group select option{background:var(--bg-dark);color:#aaa}
 .form-submit{width:100%;padding:16px;background:var(--text-light);border:none;border-radius:8px;color:var(--bg-dark);font-size:14px;font-weight:500;cursor:pointer;transition:all .3s;font-family:'Outfit',sans-serif;margin-top:6px}
 .form-submit:hover{opacity:.9;transform:translateY(-1px)}
 .success-msg{display:none;text-align:center;padding:40px 20px}.success-msg.show{display:block}
@@ -155,7 +155,7 @@ footer{background:var(--bg-dark);border-top:1px solid rgba(255,255,255,.06);padd
 .footer-brand-logo{height:18px;opacity:.8}.footer-tagline{font-size:13px;color:#555;margin-top:14px;max-width:260px;line-height:1.6;font-weight:300}
 .footer-links{display:flex;gap:56px}.footer-col h4{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:18px;font-weight:400}
 .footer-col a{display:block;font-size:13px;color:#777;text-decoration:none;margin-bottom:10px;transition:color .3s;font-weight:300}.footer-col a:hover{color:var(--text-light)}
-.footer-bottom{max-width:1100px;margin:40px auto 0;padding-top:24px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:12px;color:#444;font-weight:300}
+.footer-bottom{max-width:1100px;margin:40px auto 0;padding-top:24px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:12px;color:#8A8A8A;font-weight:300}
 
 /* SCROLL TO TOP */
 .scroll-top-btn{position:fixed;bottom:32px;right:32px;z-index:999;width:44px;height:44px;border-radius:50%;background:var(--bg-dark);border:1px solid rgba(255,255,255,.12);color:var(--text-light);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.25);font-size:16px;opacity:0;pointer-events:none;transform:translateY(12px)}
@@ -198,6 +198,21 @@ footer{background:var(--bg-dark);border-top:1px solid rgba(255,255,255,.06);padd
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* RESPONSIVE */
+/* ACCESSIBILITY — keyboard focus visibility (WCAG 2.4.7). Only shows on
+   keyboard navigation (:focus-visible), so mouse users see no change. */
+a:focus-visible,button:focus-visible,.hamburger:focus-visible,
+.form-group input:focus-visible,.form-group select:focus-visible,.form-group textarea:focus-visible,
+.lang-opt:focus-visible,.loop-chip:focus-visible{outline:2px solid var(--text);outline-offset:3px;border-radius:6px}
+.contact-form a:focus-visible,.contact-form button:focus-visible,.form-group :focus-visible{outline-color:var(--text-light)}
+
+/* Respect reduced-motion preference (WCAG 2.3.3): stop the marquee, pulses
+   and entrance animations for users who opt out of motion. */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .marquee-track{animation:none}
+  .hero-logo,.hero-badge,.hero h1,.hero p,.hero-actions,.stats-bar{animation:none;opacity:1;transform:none}
+}
+
 @media(max-width:900px){
   .topbar{padding:5px 16px;font-size:9px;gap:6px;letter-spacing:1px}
   .topbar-sep,.topbar span{display:none}
