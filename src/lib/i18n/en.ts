@@ -373,6 +373,7 @@ export const en: Dictionary = {
     securityNote: "Password is encrypted with AES-256-GCM. SELECT-only user is recommended.",
     privacyTitle: "Your data stays safe",
     privacyNote: "Your ERP data is never stored on our servers — it is processed read-only, only at query time, and never leaves your tenant boundary. ERPAIO can run SELECT against your database only.",
+    sandboxLink: "Not ready yet? Try it with sample data →",
     setupSqlToggleShow: "Show user creation SQL to send to IT",
     setupSqlToggleHide: "Hide user creation SQL",
     setupSqlCopy: "Copy SQL",

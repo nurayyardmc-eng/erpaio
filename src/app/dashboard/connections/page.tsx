@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Database, Server, ShieldCheck, CheckCircle2, XCircle, Copy, Mail } from "lucide-react";
 import { showToast } from "@/components/Toaster";
 import EmptyState from "@/components/EmptyState";
@@ -176,6 +177,13 @@ export default function ConnectionsPage() {
           <p style={{ color: colors.textMuted, fontSize: 14, margin: 0 }}>
             {t.connections.subtitle}
           </p>
+          {/* P8 — demo sandbox entry for users not ready to connect */}
+          <Link
+            href="/dashboard/sandbox"
+            style={{ display: "inline-block", marginTop: 10, fontSize: 13, color: colors.brand, textDecoration: "none", fontWeight: 500 }}
+          >
+            {t.connections.sandboxLink}
+          </Link>
         </div>
         {!showForm && (
           <button

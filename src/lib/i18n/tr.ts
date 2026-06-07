@@ -373,6 +373,7 @@ export const tr: Dictionary = {
     securityNote: "Şifre AES-256-GCM ile şifrelenir. Sadece SELECT yetkisi olan kullanıcı önerilir.",
     privacyTitle: "Verileriniz güvende",
     privacyNote: "ERP verileriniz sunucularımızda saklanmaz; yalnızca sorgu anında, salt-okunur olarak işlenir ve kiracı sınırınızın dışına asla çıkmaz. ERPAIO veritabanınıza yalnızca SELECT çalıştırabilir.",
+    sandboxLink: "Henüz hazır değil misiniz? Örnek veriyle deneyin →",
     setupSqlToggleShow: "IT'ye göndermek için kullanıcı oluşturma SQL'ini göster",
     setupSqlToggleHide: "Kullanıcı oluşturma SQL'ini gizle",
     setupSqlCopy: "SQL'i Kopyala",

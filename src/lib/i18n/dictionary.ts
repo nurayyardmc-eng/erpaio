@@ -382,6 +382,7 @@ export interface Dictionary {
     securityNote: string;
     privacyTitle: string;
     privacyNote: string;
+    sandboxLink: string;
     setupSqlToggleShow: string;
     setupSqlToggleHide: string;
     setupSqlCopy: string;
