@@ -380,6 +380,8 @@ export interface Dictionary {
     placeholderDbName: string;
     placeholderUsername: string;
     securityNote: string;
+    privacyTitle: string;
+    privacyNote: string;
     setupSqlToggleShow: string;
     setupSqlToggleHide: string;
     setupSqlCopy: string;

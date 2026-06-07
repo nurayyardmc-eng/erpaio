@@ -311,6 +311,28 @@ export default function ConnectionsPage() {
               <span>{t.connections.securityNote}</span>
             </div>
 
+            {/* P4 — privacy assurance: data not stored, processed in real-time, read-only */}
+            <div style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start",
+              background: "#F0FDF4",
+              border: "1px solid #BBF7D0",
+              borderRadius: 10,
+              padding: "12px 14px",
+              marginBottom: 16,
+            }}>
+              <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0, marginTop: 1 }} />
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#065F46", marginBottom: 4 }}>
+                  {t.connections.privacyTitle}
+                </div>
+                <div style={{ fontSize: 12, lineHeight: 1.55, color: "#047857" }}>
+                  {t.connections.privacyNote}
+                </div>
+              </div>
+            </div>
+
             {/* Read-only user setup helper — IT'ye kopyala-yapıştır SQL */}
             <button
               type="button"

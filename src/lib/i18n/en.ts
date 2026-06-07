@@ -371,6 +371,8 @@ export const en: Dictionary = {
     placeholderDbName: "NebimDB",
     placeholderUsername: "erpaio_readonly",
     securityNote: "Password is encrypted with AES-256-GCM. SELECT-only user is recommended.",
+    privacyTitle: "Your data stays safe",
+    privacyNote: "Your ERP data is never stored on our servers — it is processed read-only, only at query time, and never leaves your tenant boundary. ERPAIO can run SELECT against your database only.",
     setupSqlToggleShow: "Show user creation SQL to send to IT",
     setupSqlToggleHide: "Hide user creation SQL",
     setupSqlCopy: "Copy SQL",

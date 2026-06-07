@@ -371,6 +371,8 @@ export const tr: Dictionary = {
     placeholderDbName: "NebimDB",
     placeholderUsername: "erpaio_readonly",
     securityNote: "Şifre AES-256-GCM ile şifrelenir. Sadece SELECT yetkisi olan kullanıcı önerilir.",
+    privacyTitle: "Verileriniz güvende",
+    privacyNote: "ERP verileriniz sunucularımızda saklanmaz; yalnızca sorgu anında, salt-okunur olarak işlenir ve kiracı sınırınızın dışına asla çıkmaz. ERPAIO veritabanınıza yalnızca SELECT çalıştırabilir.",
     setupSqlToggleShow: "IT'ye göndermek için kullanıcı oluşturma SQL'ini göster",
     setupSqlToggleHide: "Kullanıcı oluşturma SQL'ini gizle",
     setupSqlCopy: "SQL'i Kopyala",
