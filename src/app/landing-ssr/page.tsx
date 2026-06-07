@@ -34,7 +34,41 @@ export async function generateMetadata({
   const cookieStore = await cookies();
   const locale = resolveLocale(params.lang, cookieStore.get("erpaio_lang")?.value);
   const t = CATALOGS[locale];
-  return { title: t.metaTitle, description: t.metaDesc };
+
+  // Gözden Kaçanlar — locale-aware OpenGraph + Twitter + hreflang for the
+  // SSR landing (previously only title + description). Brand/SEO: share
+  // cards now render the correct per-locale title/description and language.
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://erpaio.vercel.app";
+  const ogLocale = locale === "tr" ? "tr_TR" : locale === "ar" ? "ar_SA" : "en_US";
+  const ogImage = { url: `${baseUrl}/logo.png`, width: 1254, height: 1254, alt: "ERPAIO" };
+
+  return {
+    title: t.metaTitle,
+    description: t.metaDesc,
+    alternates: {
+      canonical: baseUrl,
+      languages: {
+        tr: `${baseUrl}/?lang=tr`,
+        en: `${baseUrl}/?lang=en`,
+        ar: `${baseUrl}/?lang=ar`,
+      },
+    },
+    openGraph: {
+      type: "website",
+      url: baseUrl,
+      siteName: "ERPAIO",
+      title: t.metaTitle,
+      description: t.metaDesc,
+      locale: ogLocale,
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t.metaTitle,
+      description: t.metaDesc,
+      images: [ogImage.url],
+    },
+  };
 }
 
 export default async function LandingSsrPage({
