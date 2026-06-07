@@ -18,6 +18,7 @@ import {
   invalidQuestionError,
 } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
+import { estimateChatTokens } from "@/lib/budget/estimate";
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError } from "@/lib/i18n/server";
@@ -51,7 +52,8 @@ export async function POST(req: Request) {
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
   if (!limit.success) return rateLimited429(req, limit);
 
-  const budget = await checkAndConsume(tenantId, 5000);
+  // P2 — question-aware pre-flight estimate (was a flat 5000).
+  const budget = await checkAndConsume(tenantId, estimateChatTokens({ questionChars: question.length }));
   if (!budget.ok) {
     return budgetExhaustedError(req, budget);
   }

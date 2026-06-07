@@ -31,6 +31,7 @@ import { useI18n } from "@/lib/i18n/context";
 import { postJson, patchJson } from "@/lib/http/clientFetch";
 import { sliceHighlight } from "@/lib/chat/highlight";
 import { erpSuggestedQuestions } from "@/lib/chat/erpSuggestedQuestions";
+import { QueryCostHint } from "@/components/QueryCostHint";
 import type { ErpType } from "@/lib/db/erpTypes";
 
 interface Connection {
@@ -1187,14 +1188,14 @@ export default function ChatPage() {
 
         {/* Input — sticky + safe area */}
         <div className="safe-bottom" style={{
-          padding: "12px 16px",
           borderTop: "1px solid #E5E7EB",
-          display: "flex",
-          gap: 10,
           background: "#FFFFFF",
           position: "sticky",
           bottom: 0,
         }}>
+          {/* P2 — pre-flight token cost hint */}
+          {selectedConn && <div style={{ paddingTop: 8 }}><QueryCostHint question={input} /></div>}
+          <div style={{ padding: "8px 16px 12px", display: "flex", gap: 10 }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -1210,6 +1211,7 @@ export default function ChatPage() {
           >
             {loading ? t.chat.sendingButton : t.chat.sendButton}
           </button>
+          </div>
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ import {
   sqlValidationError,
 } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
+import { estimateChatTokens } from "@/lib/budget/estimate";
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
@@ -74,7 +75,10 @@ export async function POST(req: Request) {
   const limit = await rateLimit(tenantId, RATE_LIMITS.CHAT);
   if (!limit.success) return rateLimited429(req, limit, { includeRateLimitInfo: true });
 
-  const budget = await checkAndConsume(tenantId, 5000);
+  // P2 — question-aware pre-flight estimate replaces the old flat 5000.
+  // Schema context isn't built yet here, so estimateChatTokens falls back
+  // to a typical context size; the gate stays protective (leans high).
+  const budget = await checkAndConsume(tenantId, estimateChatTokens({ questionChars: question.length }));
   if (!budget.ok) return budgetExhaustedError(req, budget);
 
   if (detectInjection(question)) return invalidQuestionError(req);
