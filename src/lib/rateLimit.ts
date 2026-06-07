@@ -12,6 +12,10 @@ const hasUpstash =
 
 const redis = hasUpstash ? Redis.fromEnv() : null;
 
+// Exported so the daily token ledger (lib/budget/dailyLimit) can reuse the
+// same Upstash client instead of constructing a second one.
+export { redis as sharedRedis, hasUpstash };
+
 let warned = false;
 function warnFallbackOnce() {
   if (warned || hasUpstash) return;

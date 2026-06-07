@@ -22,6 +22,7 @@ import {
 } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
 import { estimateChatTokens } from "@/lib/budget/estimate";
+import { checkDailyTokenLimit, recordDailyTokens } from "@/lib/budget/dailyLimit";
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError, localizedError } from "@/lib/i18n/server";
@@ -78,8 +79,13 @@ export async function POST(req: Request) {
   // P2 — question-aware pre-flight estimate replaces the old flat 5000.
   // Schema context isn't built yet here, so estimateChatTokens falls back
   // to a typical context size; the gate stays protective (leans high).
-  const budget = await checkAndConsume(tenantId, estimateChatTokens({ questionChars: question.length }));
+  const estimate = estimateChatTokens({ questionChars: question.length });
+  const budget = await checkAndConsume(tenantId, estimate);
   if (!budget.ok) return budgetExhaustedError(req, budget);
+
+  // P16 — daily cost kill-switch (second safety net under the monthly cap).
+  const daily = await checkDailyTokenLimit(tenantId, estimate);
+  if (!daily.ok) return budgetExhaustedError(req, { reason: daily.reason });
 
   if (detectInjection(question)) return invalidQuestionError(req);
 
@@ -191,6 +197,7 @@ ${schema}`;
       };
       const totalTokens = calculateBillableTokens(usage);
       void recordUsage(tenantId, totalTokens);
+      void recordDailyTokens(tenantId, totalTokens);
       log.info(
         {
           event: "ai_generated",

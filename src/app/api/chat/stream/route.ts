@@ -19,6 +19,7 @@ import {
 } from "@/lib/http/searchParams";
 import { checkAndConsume, recordUsage, budgetExhaustedError } from "@/lib/budget";
 import { estimateChatTokens } from "@/lib/budget/estimate";
+import { checkDailyTokenLimit, recordDailyTokens } from "@/lib/budget/dailyLimit";
 import { loadProfile, resolveProfileSlug } from "@/lib/erpProfiles";
 import { z } from "zod";
 import { jsonError } from "@/lib/i18n/server";
@@ -53,10 +54,15 @@ export async function POST(req: Request) {
   if (!limit.success) return rateLimited429(req, limit);
 
   // P2 — question-aware pre-flight estimate (was a flat 5000).
-  const budget = await checkAndConsume(tenantId, estimateChatTokens({ questionChars: question.length }));
+  const estimate = estimateChatTokens({ questionChars: question.length });
+  const budget = await checkAndConsume(tenantId, estimate);
   if (!budget.ok) {
     return budgetExhaustedError(req, budget);
   }
+
+  // P16 — daily cost kill-switch (second safety net under the monthly cap).
+  const daily = await checkDailyTokenLimit(tenantId, estimate);
+  if (!daily.ok) return budgetExhaustedError(req, { reason: daily.reason });
 
   if (detectInjection(question)) {
     return invalidQuestionError(req);
@@ -149,7 +155,10 @@ ${schema}`;
         });
 
         log.info({ event: "stream_ok", cacheHit, latencyMs, rows: rows.length }, "Chat stream completed");
-        if (!cacheHit) void recordUsage(tenantId, 5000);
+        if (!cacheHit) {
+          void recordUsage(tenantId, 5000);
+          void recordDailyTokens(tenantId, 5000);
+        }
       } catch (err) {
         const e = err as { name?: string; message?: string };
         log.warn({ err, event: "stream_error" }, "Chat stream failed");
