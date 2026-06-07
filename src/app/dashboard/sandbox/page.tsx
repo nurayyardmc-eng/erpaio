@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Database, Play, ArrowRight } from "lucide-react";
+import { track } from "@/lib/analytics/track";
 
 interface Scenario {
   q: string;
@@ -79,6 +80,8 @@ export default function SandboxPage() {
     timers.current = [];
     setActive(scenario);
     setPhase("running");
+    // Funnel step 4 — activation signal (post-signup sample query).
+    track("ai_demo_run", { source: "sandbox" });
     timers.current.push(setTimeout(() => setPhase("sql"), 700));
     timers.current.push(setTimeout(() => setPhase("done"), 1400));
   }

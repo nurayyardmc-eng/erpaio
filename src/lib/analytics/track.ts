@@ -15,7 +15,9 @@ export type AnalyticsEvent =
   | "demo_request_submitted"
   | "demo_request_error"
   | "ai_demo_run"
-  | "cta_click";
+  | "cta_click"
+  | "signup_completed"
+  | "erp_connection_created";
 
 export interface TrackProps {
   [key: string]: string | number | boolean | undefined;

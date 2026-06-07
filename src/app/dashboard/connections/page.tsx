@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Database, Server, ShieldCheck, CheckCircle2, XCircle, Copy, Mail } from "lucide-react";
 import { showToast } from "@/components/Toaster";
+import { track } from "@/lib/analytics/track";
 import EmptyState from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
@@ -171,6 +172,8 @@ export default function ConnectionsPage() {
       const test = await fetch(`/api/connections/${data.id}/test`);
       const testData = await test.json();
       if (testData.ok) {
+        // Funnel step 5 — a real, validated ERP connection (activation).
+        track("erp_connection_created", { erpType: form.erpType });
         showToast(`${t.connections.toastTestSuccess} (${testData.tableCount})`, "success");
         setForm({ erpType: "nebim_v3", host: "", port: 1433, dbName: "", username: "", password: "" });
         setShowForm(false);

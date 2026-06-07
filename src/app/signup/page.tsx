@@ -6,6 +6,7 @@ import { Mail, Lock, User, Building2, AlertCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { colors } from "@/lib/theme";
 import { postJson } from "@/lib/http/clientFetch";
+import { track } from "@/lib/analytics/track";
 import { useI18n } from "@/lib/i18n/context";
 
 export default function SignupPage() {
@@ -38,6 +39,7 @@ export default function SignupPage() {
         setLoading(false);
         return;
       }
+      track("signup_completed");
       router.push(`/login?email=${encodeURIComponent(form.email)}&signup=ok`);
     } catch {
       setError(t.signup.errNetwork);
