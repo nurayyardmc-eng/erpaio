@@ -9,7 +9,6 @@
 // Mounted at /landing-ssr — does NOT intercept /landing.html yet. F.5d
 // will switch the middleware once visual parity is verified.
 
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { EN, type LandingContent } from "@/lib/landing/content";
 import { TR } from "@/lib/landing/contentTr";
@@ -211,7 +210,7 @@ function Nav({ t, locale }: { t: LandingContent; locale: Locale }) {
         <img className="nav-logo" src="/logo-mark.svg" alt="ERPAIO" style={{ height: 44, width: "auto", display: "block" }} />
       </button>
       <div className="nav-links">
-        <Link
+        <a
           href="/login"
           style={{
             padding: "8px 18px",
@@ -226,7 +225,7 @@ function Nav({ t, locale }: { t: LandingContent; locale: Locale }) {
           }}
         >
           {t.signInLabel}
-        </Link>
+        </a>
         {t.navLinks.map((l) => (
           <a key={l.href} href={l.href}>
             {l.label}
@@ -268,7 +267,7 @@ function Sidebar({ t, locale }: { t: LandingContent; locale: Locale }) {
           </button>
         </div>
         <nav className="sidebar-nav">
-          <Link
+          <a
             href="/login"
             className="sidebar-link"
             style={{
@@ -283,7 +282,7 @@ function Sidebar({ t, locale }: { t: LandingContent; locale: Locale }) {
             }}
           >
             {t.signInLabel}
-          </Link>
+          </a>
           {t.sidebarLinks.map((l) => (
             <a key={l.href} href={l.href} className="sidebar-link">
               {l.label}
@@ -342,9 +341,9 @@ function Hero({ t }: { t: LandingContent }) {
         <a href="#ai-demo" className="btn-primary" data-cta="hero_primary">
           {t.ctaPrimary}
         </a>
-        <Link href="/signup" className="btn-secondary" data-cta="hero_secondary">
+        <a href="/signup" className="btn-secondary" data-cta="hero_secondary">
           {t.ctaSecondary}
-        </Link>
+        </a>
       </div>
       {/* Growth #4 — above-the-fold trust signals: kill the "will it touch
           our production ERP?" fear before the user even scrolls. */}
@@ -722,9 +721,9 @@ function FinalCta({ t }: { t: LandingContent["finalCta"] }) {
         <HtmlBlock className="section-title" html={t.title} />
         <div className="section-desc">{t.desc}</div>
         <div style={{ marginTop: 40 }}>
-          <Link href="/signup" className="btn-primary" data-cta="final_cta">
+          <a href="/signup" className="btn-primary" data-cta="final_cta">
             {t.cta}
-          </Link>
+          </a>
         </div>
       </div>
     </section>
