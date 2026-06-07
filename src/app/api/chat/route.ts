@@ -32,6 +32,7 @@ import { pickDialect, dialectRules } from "@/lib/ai/dialect";
 import { formatChatHistoryForAi } from "@/lib/ai/chatHistory";
 import { calculateBillableTokens, isPromptCacheHit } from "@/lib/ai/tokenUsage";
 import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
+import { withCircuitBreaker } from "@/lib/ai/circuitBreaker";
 import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
 import { truncateRows } from "@/lib/chat/rowLimit";
 
@@ -167,21 +168,25 @@ ${schema}`;
         ? await loadConversationHistory(sessionId, tenantId)
         : [];
 
-      const msg = await anthropicClient.messages.create({
-        model: MODEL_SONNET,
-        max_tokens: 1024,
-        system: [
-          {
-            type: "text",
-            text: systemText,
-            cache_control: { type: "ephemeral" },
-          },
-        ],
-        messages: [
-          ...conversationHistory,
-          { role: "user", content: question },
-        ],
-      });
+      // P26 — circuit breaker: reject fast if Anthropic is failing instead
+      // of hammering it on every request.
+      const msg = await withCircuitBreaker(() =>
+        anthropicClient.messages.create({
+          model: MODEL_SONNET,
+          max_tokens: 1024,
+          system: [
+            {
+              type: "text",
+              text: systemText,
+              cache_control: { type: "ephemeral" },
+            },
+          ],
+          messages: [
+            ...conversationHistory,
+            { role: "user", content: question },
+          ],
+        }),
+      );
 
       const rawText = extractAnthropicText(msg);
 

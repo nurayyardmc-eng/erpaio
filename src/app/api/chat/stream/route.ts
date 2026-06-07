@@ -26,6 +26,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
 import { truncateRows } from "@/lib/chat/rowLimit";
 import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
+import { withCircuitBreaker } from "@/lib/ai/circuitBreaker";
 
 export const maxDuration = 60;
 
@@ -112,18 +113,22 @@ ${sampleContext}
 ${schema}`;
 
           let buffer = "";
-          await anthropicClient.messages
-            .stream({
-              model: MODEL_SONNET,
-              max_tokens: 1024,
-              system: [{ type: "text", text: systemText, cache_control: { type: "ephemeral" } }],
-              messages: [{ role: "user", content: question }],
-            })
-            .on("text", (delta) => {
-              buffer += delta;
-              send("sql_delta", { text: delta });
-            })
-            .finalMessage();
+          // P26 — circuit breaker around the streaming call; finalMessage()
+          // is the awaited promise the breaker keys success/failure on.
+          await withCircuitBreaker(() =>
+            anthropicClient.messages
+              .stream({
+                model: MODEL_SONNET,
+                max_tokens: 1024,
+                system: [{ type: "text", text: systemText, cache_control: { type: "ephemeral" } }],
+                messages: [{ role: "user", content: question }],
+              })
+              .on("text", (delta) => {
+                buffer += delta;
+                send("sql_delta", { text: delta });
+              })
+              .finalMessage(),
+          );
 
           sql = buffer.trim();
           send("sql_done", { sql });
