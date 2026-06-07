@@ -1,5 +1,9 @@
 :root{--bg:#FAFAF8;--bg-alt:#F2F1EE;--bg-card:#FFF;--bg-dark:#0A0A0A;--text:#0A0A0A;--text-secondary:#6B6B6B;--text-dim:#8A8A8A;--text-light:#FAFAF8;--border:#E2E0DB;--border-dark:#D0CEC8;--radius:12px}
-*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+*{margin:0;padding:0;box-sizing:border-box}
+/* scroll-padding-top so in-page anchor jumps (menu → #section) land BELOW
+   the fixed topbar+nav (~67px) instead of hiding the section heading under
+   it. Fixes janky "page transitions" when navigating via the menu. */
+html{scroll-behavior:smooth;scroll-padding-top:84px}
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
 /* TOPBAR */
