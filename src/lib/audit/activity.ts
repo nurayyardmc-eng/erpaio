@@ -38,7 +38,8 @@ export type ActivityAction =
   | "connection.schema.sync"
   | "email.change.request"
   | "email.change.complete"
-  | "tenant.export";
+  | "tenant.export"
+  | "retention.help_sent";
 
 export interface RecordActivityInput {
   userId?: string | null;
