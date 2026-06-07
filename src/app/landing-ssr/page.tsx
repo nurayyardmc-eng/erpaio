@@ -661,11 +661,16 @@ function Technology({ t }: { t: LandingContent["technology"] }) {
 }
 
 function TrustedBy({ label, items }: { label: string; items: string[] }) {
-  const interleaved: React.ReactNode[] = [];
-  items.forEach((it, i) => {
-    interleaved.push(<span key={`it-${i}`}>{it}</span>);
-    if (i < items.length - 1) interleaved.push(<span key={`sep-${i}`}>{"\u2022"}</span>);
-  });
+  const interleaved: React.ReactNode[] = items.map((it, i) => (
+    <span key={`it-${i}`} style={{ display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
+      {it}
+      {i < items.length - 1 && (
+        <span aria-hidden="true" style={{ margin: "0 clamp(12px, 3.5vw, 48px)", opacity: 0.5 }}>
+          {"\u2022"}
+        </span>
+      )}
+    </span>
+  ));
   return (
     <section
       style={{
@@ -683,7 +688,7 @@ function TrustedBy({ label, items }: { label: string; items: string[] }) {
           style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: 48,
+            gap: "14px 0",
             justifyContent: "center",
             alignItems: "center",
             opacity: 0.5,
