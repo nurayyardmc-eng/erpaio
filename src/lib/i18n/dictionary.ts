@@ -387,6 +387,9 @@ export interface Dictionary {
     importBtn: string;
     importToast: string;
     importError: string;
+    itHandoffTitle: string;
+    itHandoffBody: string;
+    itHandoffCta: string;
     setupSqlToggleShow: string;
     setupSqlToggleHide: string;
     setupSqlCopy: string;

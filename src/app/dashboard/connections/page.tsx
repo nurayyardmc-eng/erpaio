@@ -325,6 +325,49 @@ export default function ConnectionsPage() {
               })}
             </div>
 
+            {/* Growth #2 — IT handoff as a PRIMARY path. The biggest connection
+                drop-off is the evaluator not having the DB password; offer the
+                one-click "send my IT a ready setup request" up front. */}
+            <div style={{
+              display: "flex",
+              gap: 12,
+              alignItems: "flex-start",
+              background: "#EFF6FF",
+              border: "1px solid #BFDBFE",
+              borderRadius: 10,
+              padding: "14px 16px",
+              marginBottom: 16,
+            }}>
+              <Mail size={18} color="#1D4ED8" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#1E3A8A", marginBottom: 4 }}>
+                  {t.connections.itHandoffTitle}
+                </div>
+                <div style={{ fontSize: 12, lineHeight: 1.55, color: "#1E40AF", marginBottom: 10 }}>
+                  {t.connections.itHandoffBody}
+                </div>
+                <button
+                  type="button"
+                  onClick={emailSetupSql}
+                  style={{
+                    background: "#1D4ED8",
+                    color: "#FFFFFF",
+                    border: "none",
+                    borderRadius: 100,
+                    padding: "8px 16px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <Mail size={13} /> {t.connections.itHandoffCta}
+                </button>
+              </div>
+            </div>
+
             <div className="responsive-form-grid-hp" style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 10, marginBottom: 12 }}>
               <Field label={t.connections.fieldHost}>
                 <input
