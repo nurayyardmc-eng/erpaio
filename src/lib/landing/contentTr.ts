@@ -191,6 +191,7 @@ export const TR: LandingContent = {
     sending: "G\u00F6nderiliyor...",
     successTitle: "Mesaj G\u00F6nderildi",
     successBody: "24 saat i\u00E7inde size geri d\u00F6nece\u011Fiz.",
+    errorBody: "Bir hata olu\u015Ftu. L\u00FCtfen tekrar deneyin ya da bize do\u011Frudan e-posta yaz\u0131n.",
   },
   footer: {
     tagline: "Anlayan, bildiren ve eyleme ge\u00E7en, kendi kendini geli\u015Ftiren bir sistem.",

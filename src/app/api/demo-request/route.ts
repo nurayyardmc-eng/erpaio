@@ -13,10 +13,16 @@ import { childLogger } from "@/lib/observability/logger";
 import { sendEmail } from "@/lib/notifications/email";
 import { buildLeadEmail } from "@/lib/leads/leadEmail";
 
+// Superset shape: the structured demo form sends `erp`; the general
+// "Konuşalım" contact form sends company/interest/message instead. Both land
+// here so there is a single lead pipeline (no duplicate endpoint).
 const BodySchema = z.object({
   name: z.string().min(1).max(120),
   email: z.string().email().max(200),
-  erp: z.enum(["nebim", "sap", "oracle", "dynamics", "logo", "mikro", "other"]),
+  erp: z.enum(["nebim", "sap", "oracle", "dynamics", "logo", "mikro", "other"]).optional(),
+  company: z.string().max(160).optional(),
+  interest: z.string().max(160).optional(),
+  message: z.string().max(4000).optional(),
   locale: z.enum(["en", "tr", "ar"]).optional(),
 });
 
@@ -43,8 +49,8 @@ export async function POST(req: Request) {
   // storing the full address in app logs.
   const emailDomain = body.email.split("@")[1] ?? "unknown";
   log.info(
-    { erp: body.erp, locale: body.locale ?? "en", emailDomain },
-    "Demo request received",
+    { kind: body.erp ? "demo" : "contact", erp: body.erp ?? null, locale: body.locale ?? "en", emailDomain },
+    "Lead received",
   );
 
   // P5 — production lead delivery. Email the sales inbox with replyTo set

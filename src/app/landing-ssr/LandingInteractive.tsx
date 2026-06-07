@@ -77,17 +77,66 @@ export function LandingInteractive() {
       sidebarLinkHandlers.push({ el: link, handler });
     });
 
-    // Form submit "fake" (parity with static HTML; real wire-up is a future sprint).
+    // Real lead submission — POSTs the "Konuşalım" contact form to the shared
+    // /api/demo-request pipeline (Resend delivery to LEAD_NOTIFY_EMAIL). On
+    // failure we surface #formError and restore the button (no fake success).
     const formBtn = document.getElementById("formSubmit");
-    function onFormSubmit(this: HTMLElement) {
-      this.textContent = "Sending...";
-      this.style.opacity = ".6";
-      setTimeout(() => {
+    const formErr = document.getElementById("formError");
+    let submitting = false;
+    const fieldValue = (id: string): string => {
+      const el = document.getElementById(id) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | HTMLSelectElement
+        | null;
+      return el?.value.trim() ?? "";
+    };
+    async function submitLead(btn: HTMLButtonElement): Promise<void> {
+      const name = `${fieldValue("cf-first")} ${fieldValue("cf-last")}`.trim();
+      const email = fieldValue("cf-email");
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (formErr) formErr.hidden = true;
+      if (!name || !emailOk) {
+        if (formErr) formErr.hidden = false;
+        return;
+      }
+      submitting = true;
+      const sending = btn.dataset.sending || "Sending...";
+      const original = btn.dataset.default || btn.textContent || "";
+      btn.textContent = sending;
+      btn.style.opacity = ".6";
+      const lang = (document.documentElement.lang || "tr").slice(0, 2);
+      const locale = ["tr", "en", "ar"].includes(lang) ? lang : "tr";
+      try {
+        const res = await fetch("/api/demo-request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            company: fieldValue("cf-company") || undefined,
+            interest: fieldValue("cf-interest") || undefined,
+            message: fieldValue("cf-message") || undefined,
+            locale,
+          }),
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
         const content = document.getElementById("formContent");
         const success = document.getElementById("successMsg");
         if (content) content.style.display = "none";
         if (success) success.className = "success-msg show";
-      }, 1200);
+        track("demo_request_submitted", { source: "contact" });
+      } catch {
+        if (formErr) formErr.hidden = false;
+        btn.textContent = original;
+        btn.style.opacity = "";
+        submitting = false;
+        track("demo_request_error", { source: "contact" });
+      }
+    }
+    function onFormSubmit() {
+      if (submitting || !formBtn) return;
+      void submitLead(formBtn as HTMLButtonElement);
     }
     formBtn?.addEventListener("click", onFormSubmit);
 
@@ -118,7 +167,7 @@ export function LandingInteractive() {
 
     // Email anti-scrape — assemble at runtime, no static MAILTO in HTML.
     const ea = document.getElementById("emailAddr");
-    if (ea) ea.textContent = "inf" + "o@erp" + "ai.io";
+    if (ea) ea.textContent = "inf" + "o@erp" + "aio.app";
 
     // Sprint F.10 — fade-in observer (port of /public/landing-fadein.js).
     // Without this, .fade-in elements render normally (no scroll-triggered

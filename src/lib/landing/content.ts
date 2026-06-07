@@ -123,6 +123,7 @@ export interface LandingContent {
     sending: string;
     successTitle: string;
     successBody: string;
+    errorBody: string;
   };
 
   // Footer
@@ -325,6 +326,7 @@ export const EN: LandingContent = {
     sending: "Sending...",
     successTitle: "Message Sent",
     successBody: "We\u2019ll get back to you within 24 hours.",
+    errorBody: "Something went wrong. Please try again or email us directly.",
   },
   footer: {
     tagline: "A self-improving system that understands, notifies, and acts.",

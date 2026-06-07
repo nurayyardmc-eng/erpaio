@@ -147,6 +147,8 @@ section{padding:120px 48px;position:relative}
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:rgba(255,255,255,.3)}
 .form-group input::placeholder,.form-group textarea::placeholder{color:#444}.form-group textarea{resize:vertical;min-height:110px}
 .form-group select{appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23888' stroke-width='1.5'%3E%3Cpath d='M1 1.5 6 6.5l5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:42px}.form-group select option{background:var(--bg-dark);color:#aaa}
+.form-error{color:#e06666;font-size:13px;font-weight:300;margin:0 0 8px}
+.form-error[hidden]{display:none}
 .form-submit{width:100%;padding:16px;background:var(--text-light);border:none;border-radius:8px;color:var(--bg-dark);font-size:14px;font-weight:500;cursor:pointer;transition:all .3s;font-family:'Outfit',sans-serif;margin-top:6px}
 .form-submit:hover{opacity:.9;transform:translateY(-1px)}
 .success-msg{display:none;text-align:center;padding:40px 20px}.success-msg.show{display:block}

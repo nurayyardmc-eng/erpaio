@@ -759,25 +759,25 @@ function Contact({ t }: { t: LandingContent["contact"] }) {
             <div id="formContent">
               <div className="form-row">
                 <div className="form-group">
-                  <label>{t.firstName.label}</label>
-                  <input type="text" placeholder={t.firstName.placeholder} />
+                  <label htmlFor="cf-first">{t.firstName.label}</label>
+                  <input id="cf-first" name="firstName" type="text" placeholder={t.firstName.placeholder} />
                 </div>
                 <div className="form-group">
-                  <label>{t.lastName.label}</label>
-                  <input type="text" placeholder={t.lastName.placeholder} />
+                  <label htmlFor="cf-last">{t.lastName.label}</label>
+                  <input id="cf-last" name="lastName" type="text" placeholder={t.lastName.placeholder} />
                 </div>
               </div>
               <div className="form-group">
-                <label>{t.email.label}</label>
-                <input type="email" placeholder={t.email.placeholder} />
+                <label htmlFor="cf-email">{t.email.label}</label>
+                <input id="cf-email" name="email" type="email" placeholder={t.email.placeholder} />
               </div>
               <div className="form-group">
-                <label>{t.company.label}</label>
-                <input type="text" placeholder={t.company.placeholder} />
+                <label htmlFor="cf-company">{t.company.label}</label>
+                <input id="cf-company" name="company" type="text" placeholder={t.company.placeholder} />
               </div>
               <div className="form-group">
-                <label>{t.interest.label}</label>
-                <select defaultValue="">
+                <label htmlFor="cf-interest">{t.interest.label}</label>
+                <select id="cf-interest" name="interest" defaultValue="">
                   <option value="" disabled>
                     {t.interest.placeholderOption}
                   </option>
@@ -787,10 +787,18 @@ function Contact({ t }: { t: LandingContent["contact"] }) {
                 </select>
               </div>
               <div className="form-group">
-                <label>{t.message.label}</label>
-                <textarea placeholder={t.message.placeholder}></textarea>
+                <label htmlFor="cf-message">{t.message.label}</label>
+                <textarea id="cf-message" name="message" placeholder={t.message.placeholder}></textarea>
               </div>
-              <button className="form-submit" id="formSubmit">
+              <p id="formError" className="form-error" role="alert" hidden>
+                {t.errorBody}
+              </p>
+              <button
+                className="form-submit"
+                id="formSubmit"
+                data-sending={t.sending}
+                data-default={t.submit}
+              >
                 {t.submit}
               </button>
             </div>

@@ -57,4 +57,50 @@ describe("lib/leads/leadEmail/buildLeadEmail", () => {
     expect(html.startsWith("<!doctype html>")).toBe(true);
     expect(html).toContain("DEMO REQUEST");
   });
+
+  describe("general contact variant (no erp)", () => {
+    const contact = {
+      name: "Mehmet Demir",
+      email: "mehmet@firma.com",
+      company: "Demir A.Ş.",
+      interest: "Kurumsal Entegrasyon",
+      message: "5 mağazamız var, stok sorgusu istiyoruz.",
+      locale: "tr" as const,
+    };
+
+    it("subject is 'New contact' (no ERP) when erp omitted", () => {
+      expect(buildLeadEmail(contact).subject).toBe("New contact — Mehmet Demir");
+    });
+
+    it("badge + heading switch to CONTACT", () => {
+      const { html, text } = buildLeadEmail(contact);
+      expect(html).toContain("CONTACT");
+      expect(html).not.toContain("DEMO REQUEST");
+      expect(text).toContain("New contact message");
+    });
+
+    it("includes company / interest / message rows, omits ERP", () => {
+      const { html, text } = buildLeadEmail(contact);
+      for (const fragment of ["Demir A.Ş.", "Kurumsal Entegrasyon", "stok sorgusu"]) {
+        expect(html).toContain(fragment);
+        expect(text).toContain(fragment);
+      }
+      expect(text).not.toContain("ERP:");
+    });
+
+    it("escapes HTML in the free-text message (XSS guard)", () => {
+      const { html } = buildLeadEmail({ ...contact, message: "<img src=x onerror=alert(1)>" });
+      expect(html).not.toContain("<img src=x");
+      expect(html).toContain("&lt;img");
+    });
+
+    it("omits optional rows that are not provided", () => {
+      const { text } = buildLeadEmail({ name: "A B", email: "a@b.com" });
+      expect(text).not.toContain("Company:");
+      expect(text).not.toContain("Interest:");
+      expect(text).not.toContain("Message:");
+      expect(text).not.toContain("ERP:");
+      expect(text).toContain("Locale: en");
+    });
+  });
 });
