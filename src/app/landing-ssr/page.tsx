@@ -838,6 +838,7 @@ function Footer({ t }: { t: LandingContent["footer"] }) {
           opacity: 0.6,
           fontFamily: "JetBrains Mono,monospace",
           fontSize: 11,
+          fontWeight: 300,
           letterSpacing: 1.5,
           textTransform: "uppercase",
           color: "#888",
