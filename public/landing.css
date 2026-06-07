@@ -69,7 +69,8 @@ section{padding:120px 48px;position:relative}
 .use-case-card li::before{content:'\2192';color:var(--text-dim);font-size:12px;flex-shrink:0}
 
 /* SHOWCASE / BENTO */
-.showcase{max-width:1100px;margin:0 auto}.showcase-header{margin-bottom:80px}
+.showcase{max-width:1100px;margin:0 auto}.showcase-header{margin-bottom:80px;text-align:center}
+.showcase-header .section-title{margin:0 auto}.showcase-header .section-desc{margin:20px auto 0}
 .bento-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
 .bento-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:40px;position:relative;overflow:hidden;transition:all .4s ease}
 .bento-item:hover{box-shadow:0 8px 32px rgba(0,0,0,.06);border-color:var(--border-dark)}
@@ -78,7 +79,7 @@ section{padding:120px 48px;position:relative}
 .bento-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:18px}
 .bento-item h3{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;margin-bottom:12px}
 .bento-item p{font-size:14px;color:var(--text-secondary);line-height:1.7;max-width:380px;font-weight:300}
-.code-block{background:var(--bg-dark);border-radius:8px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;color:#888;margin-top:24px;max-width:360px}
+.code-block{background:var(--bg-dark);border-radius:8px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;color:#888;margin-top:24px;max-width:360px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .code-block .kw{color:#ccc}.code-block .str{color:#999}.code-block .comment{color:#555}
 .pulse-visual{position:absolute;right:20px;bottom:20px;width:80px;height:80px;opacity:.35;pointer-events:none}
 .pulse-ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--text);opacity:0;animation:pulseRing 3s infinite}
@@ -215,4 +216,11 @@ footer{background:var(--bg-dark);border-top:1px solid rgba(255,255,255,.06);padd
   .loop-chip:not(:last-child)::after{display:none}
   .hero{padding:140px 20px 80px}
   .scroll-top-btn{bottom:24px;right:24px;width:40px;height:40px}
+  /* Mobile overflow + fit fixes */
+  .bento-item{padding:28px}
+  .code-block{max-width:100%}
+  .sidebar{padding:28px 24px}
+  .sidebar-nav a{letter-spacing:2px;font-size:14px;word-break:break-word}
+  .stat-number{font-size:40px}
+  .vertical-tags{justify-content:center}
 }
