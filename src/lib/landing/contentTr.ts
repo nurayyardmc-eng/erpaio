@@ -63,16 +63,16 @@ export const TR: LandingContent = {
   ],
   coreIdea: {
     label: "\u00C7ekirdek Fikir",
-    title: "Bir ara\u00E7 de\u011Fil.<br/>Kendi kendini <em>geli\u015Ftiren</em> bir sistem.",
+    title: "Bir ara\u00E7 de\u011Fil.<br/>\u0130\u015Finizi <em>anlayan</em> bir sistem.",
     desc:
-      "ERPAIO i\u015Fletmenizden \u00F6\u011Frenen s\u00FCrekli bir d\u00F6ng\u00FC olarak \u00E7al\u0131\u015F\u0131r. G\u00F6zlemler, anlar, de\u011Ferlendirir, tespit eder, bildirir, eyleme ge\u00E7er ve iyile\u015Fir\u2014t\u00FCm operasyonunuz boyunca 24/7 \u00E7al\u0131\u015F\u0131r.",
+      "ERPAIO yaln\u0131zca soru cevaplamaz; i\u015F kal\u0131plar\u0131n\u0131z\u0131 \u00F6\u011Frenir, sapmalar\u0131 fark eder ve \u00F6nemli olan\u0131 siz sormadan bildirir \u2014 7/24.",
     loop: ["G\u00F6zlemle", "Anla", "De\u011Ferlendir", "Tespit Et", "Bildir", "Eyleme Ge\u00E7", "\u00D6\u011Fren"],
   },
   features: {
     label: "Yetenekler",
-    title: "Eksiksiz bir<br/><em>zeka</em> sistemi",
+    title: "Sormaktan<br/>\u00E7ok <em>daha fazlas\u0131</em>",
     desc:
-      "T\u00FCm mod\u00FCller \u00FCzerinde her zaman a\u00E7\u0131k izleme. Olumlu ve olumsuz sinyaller \u00FCzerinde s\u00FCrekli AI geri bildirimi. Eyleme ge\u00E7irilebilir i\u00E7g\u00F6r\u00FCler ve onay i\u015F ak\u0131\u015Flar\u0131yla proaktif bildirimler.",
+      "T\u00FCm mod\u00FCllerde s\u00FCrekli izleme, anomali tespiti ve proaktif bildirim. \u00DCretilen her sorgu salt-okunur; \u00F6nerilen her eylem sizin onay\u0131n\u0131zla \u00E7al\u0131\u015F\u0131r.",
     cards: [
       { number: "01", title: "S\u00FCrekli \u0130zleme", body: "Her ERP mod\u00FCl\u00FCnde her zaman a\u00E7\u0131k g\u00F6r\u00FCn\u00FCrl\u00FCk. Etkinlikleri ger\u00E7ek zamanl\u0131 olarak izler, performans\u0131 s\u00FCrekli de\u011Ferlendirir ve \u00F6nemli olan\u0131 y\u00FCzeye \u00E7\u0131kar\u0131r\u2014riskler, f\u0131rsatlar, geciken ak\u0131\u015Flar ve tamamlanan operasyonlar." },
       { number: "02", title: "S\u00FCrekli Geri Bildirim", body: "Hem olumlu hem olumsuz performans\u0131 kapsayan AI \u00FCretimi operasyonel geri bildirim. S\u00FCrekli de\u011Ferlendirme, sorunlar\u0131n yan\u0131 s\u0131ra iyile\u015Fmeleri de vurgular\u2014b\u00F6ylece tam resmi g\u00F6r\u00FCrs\u00FCn\u00FCz." },

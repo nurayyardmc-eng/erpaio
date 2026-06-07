@@ -195,16 +195,16 @@ export const EN: LandingContent = {
   ],
   coreIdea: {
     label: "The Core Idea",
-    title: "Not a tool.<br/>A <em>self-improving</em> system.",
+    title: "Not a tool.<br/>A system that <em>understands</em> your business.",
     desc:
-      "ERPAIO operates as a continuous loop that learns from your business. It observes, understands, evaluates, detects, notifies, acts, and improves\u2014running 24/7 across your entire operation.",
+      "ERPAIO doesn\u2019t just answer questions \u2014 it learns your business patterns, spots deviations, and tells you what matters before you ask. 24/7.",
     loop: ["Observe", "Understand", "Evaluate", "Detect", "Notify", "Act", "Learn"],
   },
   features: {
     label: "Capabilities",
-    title: "A complete<br/><em>intelligence</em> system",
+    title: "Much more<br/>than just <em>asking</em>",
     desc:
-      "Always-on monitoring across all modules. Continuous AI feedback on positive and negative signals. Proactive notifications with actionable insights and approval workflows.",
+      "Always-on monitoring, anomaly detection, and proactive notifications across every module. Every generated query is read-only; every proposed action runs only with your approval.",
     cards: [
       { number: "01", title: "Continuous Monitoring", body: "Always-on visibility across every ERP module. Tracks activities in real time, evaluates performance continuously, and surfaces what matters\u2014risks, opportunities, overdue flows, and fulfilled operations." },
       { number: "02", title: "Continuous Feedback", body: "AI-generated operational feedback covering both positive and negative performance. Continuous evaluation highlights improvements alongside problems\u2014so you see the full picture." },
