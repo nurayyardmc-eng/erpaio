@@ -106,6 +106,35 @@ export default function ConnectionsPage() {
     setShowSetupSql(false);
   };
 
+  // P29 — restore from a config backup. Pre-fills the form with the first
+  // connection's metadata; the password is intentionally NOT in the backup,
+  // so the user re-enters it and saves through the normal create flow.
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-importing the same file
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const c = Array.isArray(parsed?.connections) ? parsed.connections[0] : null;
+      if (!c || typeof c.host !== "string" || typeof c.dbName !== "string") {
+        showToast(t.connections.importError, "error");
+        return;
+      }
+      setForm({
+        erpType: typeof c.erpType === "string" ? c.erpType : "nebim_v3",
+        host: c.host,
+        port: typeof c.port === "number" ? c.port : 1433,
+        dbName: c.dbName,
+        username: typeof c.username === "string" ? c.username : "",
+        password: "",
+      });
+      setShowForm(true);
+      showToast(t.connections.importToast, "success");
+    } catch {
+      showToast(t.connections.importError, "error");
+    }
+  };
+
   const copySetupSql = async () => {
     const script = readOnlyUserSql(form.erpType as ErpType);
     try {
@@ -186,22 +215,64 @@ export default function ConnectionsPage() {
           </Link>
         </div>
         {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            style={{
-              background: colors.text,
-              color: colors.bg,
-              padding: "10px 20px",
-              borderRadius: 100,
-              fontSize: 13,
-              fontWeight: 500,
-              border: "none",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t.connections.newBtn}
-          </button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {/* P29 — config backup (no secrets) + restore (prefills form) */}
+            <a
+              href="/api/connections/export"
+              download
+              style={{
+                background: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.borderStrong}`,
+                padding: "9px 16px",
+                borderRadius: 100,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t.connections.exportBtn}
+            </a>
+            <label
+              style={{
+                background: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.borderStrong}`,
+                padding: "9px 16px",
+                borderRadius: 100,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t.connections.importBtn}
+              <input
+                type="file"
+                accept="application/json,.json"
+                style={{ display: "none" }}
+                onChange={handleImportFile}
+              />
+            </label>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                background: colors.text,
+                color: colors.bg,
+                padding: "10px 20px",
+                borderRadius: 100,
+                fontSize: 13,
+                fontWeight: 500,
+                border: "none",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t.connections.newBtn}
+            </button>
+          </div>
         )}
       </div>
 

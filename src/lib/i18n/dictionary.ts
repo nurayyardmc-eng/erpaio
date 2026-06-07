@@ -383,6 +383,10 @@ export interface Dictionary {
     privacyTitle: string;
     privacyNote: string;
     sandboxLink: string;
+    exportBtn: string;
+    importBtn: string;
+    importToast: string;
+    importError: string;
     setupSqlToggleShow: string;
     setupSqlToggleHide: string;
     setupSqlCopy: string;
