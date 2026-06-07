@@ -16,6 +16,10 @@ import { TR } from "@/lib/landing/contentTr";
 import { AR } from "@/lib/landing/contentAr";
 import { resolveLocale, type Locale } from "@/lib/landing/locale";
 import { LandingInteractive } from "./LandingInteractive";
+import { EnterpriseTrust } from "@/components/landing/EnterpriseTrust";
+import { AiDemoPreview } from "@/components/landing/AiDemoPreview";
+import { DemoRequest } from "@/components/landing/DemoRequest";
+import { LandingErrorBoundary } from "@/components/landing/LandingErrorBoundary";
 
 const CATALOGS: Record<Locale, LandingContent> = { en: EN, tr: TR, ar: AR };
 
@@ -63,12 +67,31 @@ export default async function LandingSsrPage({
       <Features t={t.features} />
       <UseCases t={t.useCases} />
       <Platform t={t.platform} />
+
+      {/* Sprint G.3 — interactive AI demo right after we explain the
+          platform: prove the loop the moment it's described. */}
+      <LandingErrorBoundary section="ai-demo">
+        <AiDemoPreview locale={locale} />
+      </LandingErrorBoundary>
+
       <HowItWorks t={t.howItWorks} />
       <Trust t={t.trust} />
+
+      {/* Sprint G.1 — enterprise trust pillars (read-only / RBAC /
+          human approval / audit) after the high-level trust band. */}
+      <EnterpriseTrust locale={locale} />
+
       <Technology t={t.technology} />
       <TrustedBy label={t.trustedByLabel} items={t.trustedByItems} />
       <Quote text={t.quoteText} attribution={t.quoteAttribution} />
       <FinalCta t={t.finalCta} />
+
+      {/* Sprint G.2 — lead-gen demo request form before the generic
+          contact section. */}
+      <LandingErrorBoundary section="demo-request">
+        <DemoRequest locale={locale} />
+      </LandingErrorBoundary>
+
       <Contact t={t.contact} />
       <Footer t={t.footer} />
 

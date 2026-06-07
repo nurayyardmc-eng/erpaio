@@ -118,6 +118,8 @@ export const RATE_LIMITS = {
   ALERT_MUTATE: { prefix: "alert-mut", max: 60, windowMs: 60_000 }, // 60/dk / user — create + bulk PATCH
   CUSTOM_METRIC_MUTATE: { prefix: "cm-mut", max: 20, windowMs: 60_000 }, // 20/dk / user — create/delete custom metric
   CONNECTION_MUTATE: { prefix: "conn-mut", max: 10, windowMs: 60_000 }, // 10/dk / user — create connection (rare; signup-time spike OK)
+  // --- Public / pre-signup (IP-based) ---
+  DEMO_REQUEST: { prefix: "demo-req", max: 5, windowMs: ONE_HOUR_MS }, // 5/saat / IP — landing lead-gen, bot/spam koruması
 } as const;
 
 /**
