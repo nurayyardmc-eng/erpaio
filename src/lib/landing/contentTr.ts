@@ -36,12 +36,12 @@ export const TR: LandingContent = {
     { href: "#", label: "GitHub" },
   ],
   sidebarCopyright: "\u00A9 2026 ERPAIO",
-  heroBadge: "Kendi Kendini Geli\u015Ftiren AI Sistemi",
-  heroTitle: "ERP\u2019iniz i\u00E7in kendi kendini<br/>geli\u015Ftiren <em>AI sistemi</em>.",
+  heroBadge: "ERP\u2019niz i\u00E7in T\u00FCrk\u00E7e AI",
+  heroTitle: "IT\u2019den rapor beklemeyi b\u0131rak\u0131n.<br/>Sorun, <em>saniyede cevap al\u0131n.</em>",
   heroDesc:
-    "\u0130\u015Fletmenizi s\u00FCrekli izler, \u00F6nemli olan\u0131 bildirir, sonu\u00E7lardan \u00F6\u011Frenir ve i\u00E7g\u00F6r\u00FCleri kontroll\u00FC eylemlere d\u00F6n\u00FC\u015Ft\u00FCr\u00FCr\u2014mevcut ERP\u2019nizi de\u011Fi\u015Ftirmeden.",
-  ctaPrimary: "Demo Talep Et",
-  ctaSecondary: "Nas\u0131l \u00C7al\u0131\u015F\u0131r",
+    "\u201CBu ay en \u00E7ok satan 5 \u00FCr\u00FCn?\u201D yaz\u0131n \u2014 ERPAIO salt-okunur SQL \u00FCretip an\u0131nda cevaplar. Kod yok, bekleme yok.",
+  ctaPrimary: "\u00D6rnek veriyle dene",
+  ctaSecondary: "\u00DCcretsiz ba\u015Fla",
   stats: [
     { number: "$73B", label: "K\u00FCresel ERP Pazar\u0131" },
     { number: "9", label: "Sekt\u00F6r Dikeyi" },

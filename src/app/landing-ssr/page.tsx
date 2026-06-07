@@ -338,12 +338,14 @@ function Hero({ t }: { t: LandingContent }) {
       <HtmlBlock as="h1" html={t.heroTitle} />
       <p>{t.heroDesc}</p>
       <div className="hero-actions">
-        <Link href="/signup" className="btn-primary" data-cta="hero_primary">
+        {/* Growth #3 — lead with the zero-commitment on-page demo; signup
+            one click away as secondary. */}
+        <a href="#ai-demo" className="btn-primary" data-cta="hero_primary">
           {t.ctaPrimary}
-        </Link>
-        <a href="#how-it-works" className="btn-secondary" data-cta="hero_secondary">
-          {t.ctaSecondary}
         </a>
+        <Link href="/signup" className="btn-secondary" data-cta="hero_secondary">
+          {t.ctaSecondary}
+        </Link>
       </div>
     </section>
   );

@@ -22,16 +22,16 @@ describe("lib/landing/locale/resolveLocale", () => {
     expect(resolveLocale(undefined, "ar")).toBe("ar");
   });
 
-  it("no query, no cookie → en (default)", () => {
-    expect(resolveLocale(undefined, undefined)).toBe("en");
+  it("no query, no cookie → tr (primary-market default)", () => {
+    expect(resolveLocale(undefined, undefined)).toBe("tr");
   });
 
   it("invalid query value falls through to cookie", () => {
-    expect(resolveLocale("xx", "tr")).toBe("tr");
+    expect(resolveLocale("xx", "en")).toBe("en");
   });
 
-  it("invalid query AND invalid cookie → en", () => {
-    expect(resolveLocale("xx", "yy")).toBe("en");
+  it("invalid query AND invalid cookie → tr (default)", () => {
+    expect(resolveLocale("xx", "yy")).toBe("tr");
   });
 
   it("empty string query treated as invalid (falls through)", () => {

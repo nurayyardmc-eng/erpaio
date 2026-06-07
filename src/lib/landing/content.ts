@@ -168,12 +168,12 @@ export const EN: LandingContent = {
     { href: "#", label: "GitHub" },
   ],
   sidebarCopyright: "\u00A9 2026 ERPAIO",
-  heroBadge: "Self-Improving AI System",
-  heroTitle: "A self-improving<br/><em>AI system</em> for your ERP.",
+  heroBadge: "Natural-language AI for your ERP",
+  heroTitle: "Stop waiting on IT for reports.<br/>Ask, get <em>answers in seconds.</em>",
   heroDesc:
-    "Continuously monitors your business, notifies what matters, learns from outcomes, and turns insights into controlled actions\u2014without changing your existing ERP.",
-  ctaPrimary: "Request a Demo",
-  ctaSecondary: "See How It Works",
+    "Type \u201CTop 5 products this month?\u201D \u2014 ERPAIO writes read-only SQL and answers instantly. No code, no waiting.",
+  ctaPrimary: "Try with sample data",
+  ctaSecondary: "Start free",
   stats: [
     { number: "$73B", label: "Global ERP Market" },
     { number: "9", label: "Industry Verticals" },
