@@ -5,6 +5,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { recordUserActivity } from "@/lib/audit/activity";
 import { requireOwner } from "@/lib/auth/role";
 import { exportFilenameTimestamp } from "@/lib/format/exportFilename";
+import { jsonDownloadResponse } from "@/lib/http/download";
 
 export const maxDuration = 300;
 
@@ -179,11 +180,8 @@ export async function GET(req: Request) {
     },
   });
 
-  return new Response(JSON.stringify(exportBundle, null, 2), {
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="erpaio-export-${tenantId}-${exportFilenameTimestamp()}.json"`,
-      "Cache-Control": "no-store",
-    },
-  });
+  return jsonDownloadResponse(
+    exportBundle,
+    `erpaio-export-${tenantId}-${exportFilenameTimestamp()}.json`,
+  );
 }

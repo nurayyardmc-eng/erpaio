@@ -8,6 +8,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { jsonError } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db/prisma";
 import { buildConfigExport } from "@/lib/connections/configExport";
+import { jsonDownloadResponse } from "@/lib/http/download";
 
 export async function GET(req: Request) {
   const session = await getAuth(req);
@@ -28,11 +29,7 @@ export async function GET(req: Request) {
   });
 
   const payload = buildConfigExport(rows);
-  return new Response(JSON.stringify(payload, null, 2), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Disposition": 'attachment; filename="erpaio-connections.json"',
-    },
-  });
+  // no-store added via jsonDownloadResponse — a credentials-adjacent backup
+  // should not be cached, matching the other export endpoints.
+  return jsonDownloadResponse(payload, "erpaio-connections.json");
 }

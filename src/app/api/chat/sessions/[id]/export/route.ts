@@ -6,6 +6,7 @@ import {
   chatSessionToMarkdown,
   type ChatExportMessage,
 } from "@/lib/chat/exportMarkdown";
+import { fileDownloadResponse } from "@/lib/http/download";
 
 /**
  * Chat session markdown export — kullanıcı kendi sohbet geçmişini indirir.
@@ -53,12 +54,8 @@ export async function GET(
   const markdown = chatSessionToMarkdown(exportShape, locale);
   const filename = chatSessionFilename(exportShape);
 
-  return new Response(markdown, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/markdown; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-      "Cache-Control": "no-store",
-    },
+  return fileDownloadResponse(markdown, {
+    filename,
+    contentType: "text/markdown; charset=utf-8",
   });
 }
