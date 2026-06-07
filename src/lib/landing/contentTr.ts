@@ -6,10 +6,10 @@ import type { LandingContent } from "./content";
 export const TR: LandingContent = {
   htmlLang: "tr",
   dir: "ltr",
-  metaTitle: "ERPAIO \u2014 ERP\u2019iniz \u0130\u00E7in Kendi Kendini Geli\u015Ftiren AI Sistemi",
+  metaTitle: "ERPAIO \u2014 ERP\u2019nize sorun, saniyede cevap al\u0131n",
   metaDesc:
-    "ERPAIO i\u015Fletmenizi s\u00FCrekli izler, \u00F6nemli olan\u0131 bildirir, sonu\u00E7lardan \u00F6\u011Frenir ve i\u00E7g\u00F6r\u00FCleri kontroll\u00FC eylemlere d\u00F6n\u00FC\u015Ft\u00FCr\u00FCr \u2014 mevcut ERP\u2019nizi de\u011Fi\u015Ftirmeden.",
-  topbarTagline: "ERP\u2019iniz i\u00E7in Kendi Kendini Geli\u015Ftiren Sistem",
+    "ERP veritaban\u0131n\u0131za T\u00FCrk\u00E7e do\u011Fal dille soru sorun. ERPAIO salt-okunur SQL \u00FCretip an\u0131nda cevaplar \u2014 anomali uyar\u0131lar\u0131, \u00E7oklu kanal bildirim, ERP\u2019nize dokunmadan.",
+  topbarTagline: "ERP\u2019nize sorun, saniyede cevap al\u0131n",
   navLinks: [
     { href: "#core-idea", label: "Vizyon" },
     { href: "#features", label: "Yetenekler" },
@@ -161,10 +161,10 @@ export const TR: LandingContent = {
     desc: "Tek bir, kendi kendini geli\u015Ftiren zeka motoru olarak birlikte \u00E7al\u0131\u015Fan birden fazla ileri sistem.",
     chips: ["Semantik Veri Modelleme", "Bilgi Graflar\u0131", "Retrieval-Augmented Generation", "Text-to-SQL", "AI Asistanlar", "Nedensel \u00C7\u0131kar\u0131m"],
   },
-  trustedByLabel: "\u00D6nde Gelen Ekiplerin Tercihi",
-  trustedByItems: ["Pilot Grup A", "Perakende Co.", "Tekstil A.\u015E.", "Anatolia ERP", "Mavi Lojistik"],
-  quoteText: "Ba\u015Fka bir dashboard de\u011Fil. \u0130zleyen, \u00F6\u011Frenen ve bildiren bir sistem.",
-  quoteAttribution: "ERPAIO \u2014 Pasif kontrolden proaktif zekaya",
+  trustedByLabel: "ERP\u2019nizle \u00E7al\u0131\u015F\u0131r",
+  trustedByItems: ["Nebim V3", "SAP S/4HANA", "Oracle Fusion", "Dynamics 365", "Logo", "Mikro"],
+  quoteText: "Rapor beklemeyi b\u0131rak\u0131n. Sorun, cevab\u0131 an\u0131nda al\u0131n.",
+  quoteAttribution: "ERPAIO \u2014 ERP\u2019niz, T\u00FCrk\u00E7e do\u011Fal dille",
   finalCta: {
     label: "Ba\u015Flay\u0131n",
     title: "ERP\u2019inizin d\u00FC\u015F\u00FCnmesine, bildirmesine<br/>ve kendini <em>geli\u015Ftirmesine</em> izin verin",

@@ -138,10 +138,10 @@ export interface LandingContent {
 export const EN: LandingContent = {
   htmlLang: "en",
   dir: "ltr",
-  metaTitle: "ERPAIO \u2014 The Self-Improving AI System for ERP",
+  metaTitle: "ERPAIO \u2014 Ask your ERP, get answers in seconds",
   metaDesc:
-    "ERPAIO continuously monitors your business, notifies what matters, learns from outcomes, and turns insights into controlled actions \u2014 without changing your existing ERP.",
-  topbarTagline: "A Self-Improving System for Your ERP",
+    "Ask your ERP database in plain language. ERPAIO writes read-only SQL and answers instantly \u2014 anomaly alerts, multi-channel notifications, no changes to your ERP.",
+  topbarTagline: "Ask your ERP, get answers in seconds",
   navLinks: [
     { href: "#core-idea", label: "Vision" },
     { href: "#features", label: "Features" },
@@ -293,10 +293,10 @@ export const EN: LandingContent = {
     desc: "Multiple advanced systems working together as a single, self-improving intelligence engine.",
     chips: ["Semantic Data Modeling", "Knowledge Graphs", "Retrieval-Augmented Generation", "Text-to-SQL", "AI Agents", "Causal Inference"],
   },
-  trustedByLabel: "Trusted by Forward-Thinking Teams",
-  trustedByItems: ["Pilot Group A", "Retail Co.", "Tekstil A.\u015E.", "Anatolia ERP", "Mavi Logistics"],
-  quoteText: "Not another dashboard. A system that watches, learns, and notifies.",
-  quoteAttribution: "ERPAIO \u2014 From passive checking to proactive intelligence",
+  trustedByLabel: "Works with your ERP",
+  trustedByItems: ["Nebim V3", "SAP S/4HANA", "Oracle Fusion", "Dynamics 365", "Logo", "Mikro"],
+  quoteText: "Stop waiting on reports. Ask, and get the answer.",
+  quoteAttribution: "ERPAIO \u2014 your ERP, in plain language",
   finalCta: {
     label: "Get Started",
     title: "Let your ERP think,<br/>notify, and <em>improve</em> itself",
