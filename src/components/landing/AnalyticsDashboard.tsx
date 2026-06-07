@@ -21,6 +21,17 @@ import { track } from "@/lib/analytics/track";
 
 type RangeKey = "7d" | "30d" | "90d";
 type AnalysisKey = "top_products" | "rep_performance";
+// Sprint G.12 — global contextual filter: branch / store. "all" = no
+// extra predicate; a specific branch injects an AND into the WHERE block.
+type BranchKey = "all" | "ist" | "ank" | "izm";
+
+// Branch code as it would appear in the ERP (Nebim) orders table. Used
+// to build the injected predicate `AND o.branch_code = '…'`.
+const BRANCH_CODE: Record<Exclude<BranchKey, "all">, string> = {
+  ist: "IST",
+  ank: "ANK",
+  izm: "IZM",
+};
 
 interface Bar {
   label: string;
@@ -40,11 +51,41 @@ interface DashCopy {
   desc: string;
   rangeLabel: string;
   analysisLabel: string;
+  branchLabel: string;
   sqlLabel: string;
   ranges: { value: RangeKey; label: string }[];
   analyses: { value: AnalysisKey; label: string }[];
+  branches: { value: BranchKey; label: string }[];
   // data[analysis][range]
   data: Record<AnalysisKey, Record<RangeKey, Dataset>>;
+}
+
+/**
+ * Inject the branch predicate into a base SELECT's WHERE block (G.12).
+ * The orders table is aliased `o` in every analysis, so the filter is a
+ * single AND on o.branch_code inserted right before GROUP BY. "all" →
+ * the SQL is returned unchanged. Bars are scaled down to suggest a
+ * narrower slice when a branch is selected.
+ */
+function applyBranch(sql: string, branch: BranchKey): string {
+  if (branch === "all") return sql;
+  const predicate = `  AND o.branch_code = '${BRANCH_CODE[branch]}'\n`;
+  return sql.replace(/\nGROUP BY/, `\n${predicate}GROUP BY`);
+}
+
+function scaleBars(bars: Bar[], branch: BranchKey): Bar[] {
+  if (branch === "all") return bars;
+  // Deterministic per-branch fraction so the chart visibly responds.
+  const frac = branch === "ist" ? 0.55 : branch === "ank" ? 0.3 : 0.15;
+  return bars.map((b) => {
+    const v = Math.max(1, Math.round(b.value * frac));
+    const isCurrency = b.display.startsWith("₺");
+    return {
+      label: b.label,
+      value: v,
+      display: isCurrency ? `₺${v}K` : String(v),
+    };
+  });
 }
 
 // Shared bar shapes per analysis; the range only scales the SQL window +
@@ -55,9 +96,11 @@ function buildCopy(
   desc: string,
   rangeLabel: string,
   analysisLabel: string,
+  branchLabel: string,
   sqlLabel: string,
   ranges: { value: RangeKey; label: string }[],
   analyses: { value: AnalysisKey; label: string }[],
+  branches: { value: BranchKey; label: string }[],
   topProductBars: Record<RangeKey, Bar[]>,
   repBars: Record<RangeKey, Bar[]>,
   unitCurrency: string,
@@ -78,9 +121,11 @@ function buildCopy(
     desc,
     rangeLabel,
     analysisLabel,
+    branchLabel,
     sqlLabel,
     ranges,
     analyses,
+    branches,
     data: {
       top_products: mk(sqlProducts, topProductBars, unitCurrency),
       rep_performance: mk(sqlReps, repBars, unitSales),
@@ -143,6 +188,7 @@ const COPY: Record<Locale, DashCopy> = {
     "Choose a window and an analysis. ERPAIO writes the read-only SQL and renders the result.",
     "Time range",
     "Analysis",
+    "Branch / store",
     "AI-generated SQL",
     [
       { value: "7d", label: "Last 7 days" },
@@ -152,6 +198,12 @@ const COPY: Record<Locale, DashCopy> = {
     [
       { value: "top_products", label: "Top-selling products" },
       { value: "rep_performance", label: "Sales rep performance" },
+    ],
+    [
+      { value: "all", label: "All branches" },
+      { value: "ist", label: "Istanbul" },
+      { value: "ank", label: "Ankara" },
+      { value: "izm", label: "Izmir" },
     ],
     PRODUCT_BARS,
     REP_BARS,
@@ -164,6 +216,7 @@ const COPY: Record<Locale, DashCopy> = {
     "Bir zaman aralığı ve analiz seçin. ERPAIO salt-okunur SQL'i yazar ve sonucu çizer.",
     "Zaman aralığı",
     "Analiz türü",
+    "Şube / mağaza",
     "AI-üretimi SQL",
     [
       { value: "7d", label: "Son 7 gün" },
@@ -173,6 +226,12 @@ const COPY: Record<Locale, DashCopy> = {
     [
       { value: "top_products", label: "En çok satan ürünler" },
       { value: "rep_performance", label: "Satış danışmanı performansı" },
+    ],
+    [
+      { value: "all", label: "Tüm şubeler" },
+      { value: "ist", label: "İstanbul" },
+      { value: "ank", label: "Ankara" },
+      { value: "izm", label: "İzmir" },
     ],
     PRODUCT_BARS,
     REP_BARS,
@@ -185,6 +244,7 @@ const COPY: Record<Locale, DashCopy> = {
     "اختر نطاقًا زمنيًا ونوع تحليل. يكتب ERPAIO استعلام SQL للقراءة فقط ويعرض النتيجة.",
     "النطاق الزمني",
     "نوع التحليل",
+    "الفرع / المتجر",
     "SQL مُولّد بالذكاء الاصطناعي",
     [
       { value: "7d", label: "آخر 7 أيام" },
@@ -194,6 +254,12 @@ const COPY: Record<Locale, DashCopy> = {
     [
       { value: "top_products", label: "المنتجات الأكثر مبيعًا" },
       { value: "rep_performance", label: "أداء مندوبي المبيعات" },
+    ],
+    [
+      { value: "all", label: "كل الفروع" },
+      { value: "ist", label: "إسطنبول" },
+      { value: "ank", label: "أنقرة" },
+      { value: "izm", label: "إزمير" },
     ],
     PRODUCT_BARS,
     REP_BARS,
@@ -259,14 +325,21 @@ export function AnalyticsDashboard({ locale = "en" }: { locale?: Locale }) {
   const rtl = locale === "ar";
   const [range, setRange] = useState<RangeKey>("30d");
   const [analysis, setAnalysis] = useState<AnalysisKey>("top_products");
-  const dataset = t.data[analysis][range];
+  const [branch, setBranch] = useState<BranchKey>("all");
+  const baseDataset = t.data[analysis][range];
+  // G.12 — the selected branch is injected live into the WHERE block and
+  // visibly scales the chart, demonstrating contextual-filter → SQL.
+  const sql = applyBranch(baseDataset.sql, branch);
+  const bars = scaleBars(baseDataset.bars, branch);
 
-  function onChange(next: { range?: RangeKey; analysis?: AnalysisKey }) {
+  function onChange(next: { range?: RangeKey; analysis?: AnalysisKey; branch?: BranchKey }) {
     const r = next.range ?? range;
     const a = next.analysis ?? analysis;
+    const b = next.branch ?? branch;
     if (next.range) setRange(next.range);
     if (next.analysis) setAnalysis(next.analysis);
-    track("ai_demo_run", { source: "analytics", analysis: a, range: r, locale });
+    if (next.branch) setBranch(next.branch);
+    track("ai_demo_run", { source: "analytics", analysis: a, range: r, branch: b, locale });
   }
 
   const selectStyle: React.CSSProperties = {
@@ -346,11 +419,28 @@ export function AnalyticsDashboard({ locale = "en" }: { locale?: Locale }) {
                 ))}
               </select>
             </div>
+            <div>
+              <label htmlFor="ad-branch" style={fieldLabel}>
+                {t.branchLabel}
+              </label>
+              <select
+                id="ad-branch"
+                value={branch}
+                onChange={(e) => onChange({ branch: e.target.value as BranchKey })}
+                style={selectStyle}
+              >
+                {t.branches.map((b) => (
+                  <option key={b.value} value={b.value}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Chart */}
           <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 12, padding: 16, marginBottom: 20 }}>
-            <BarChart bars={dataset.bars} rtl={rtl} />
+            <BarChart bars={bars} rtl={rtl} />
           </div>
 
           {/* Live SQL */}
@@ -371,7 +461,7 @@ export function AnalyticsDashboard({ locale = "en" }: { locale?: Locale }) {
                 textAlign: "left",
               }}
             >
-              <code>{dataset.sql}</code>
+              <code>{sql}</code>
             </pre>
           </div>
         </div>
