@@ -46,16 +46,6 @@ export function isApiPath(path: string): boolean {
   return path.startsWith("/api");
 }
 
-/**
- * Map the `erpaio_lang` cookie value to a static landing HTML file.
- * Unknown / missing language → default English landing.
- */
-export function pickLandingFile(lang: string | undefined | null): string {
-  if (lang === "tr") return "/landing-tr.html";
-  if (lang === "ar") return "/landing-ar.html";
-  return "/landing.html";
-}
-
 export function isSupportedLandingLang(lang: string | undefined | null): boolean {
   if (!lang) return false;
   return (SUPPORTED_LANDING_LANGS as readonly string[]).includes(lang);

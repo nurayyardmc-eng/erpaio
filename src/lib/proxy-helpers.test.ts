@@ -3,7 +3,6 @@ import {
   isPathPublic,
   isMaintenanceBypassed,
   isApiPath,
-  pickLandingFile,
   isSupportedLandingLang,
   PUBLIC_PATHS,
   MAINTENANCE_BYPASS,
@@ -83,34 +82,6 @@ describe("proxy-helpers/isApiPath", () => {
 
   it("path that starts with 'api' but no leading slash → false", () => {
     expect(isApiPath("api/me")).toBe(false);
-  });
-});
-
-describe("proxy-helpers/pickLandingFile", () => {
-  it("tr → /landing-tr.html", () => {
-    expect(pickLandingFile("tr")).toBe("/landing-tr.html");
-  });
-
-  it("ar → /landing-ar.html (RTL)", () => {
-    expect(pickLandingFile("ar")).toBe("/landing-ar.html");
-  });
-
-  it("en → /landing.html (default English)", () => {
-    expect(pickLandingFile("en")).toBe("/landing.html");
-  });
-
-  it("unknown lang → /landing.html (default English)", () => {
-    expect(pickLandingFile("de")).toBe("/landing.html");
-    expect(pickLandingFile("xx")).toBe("/landing.html");
-  });
-
-  it("undefined / null → /landing.html (default)", () => {
-    expect(pickLandingFile(undefined)).toBe("/landing.html");
-    expect(pickLandingFile(null)).toBe("/landing.html");
-  });
-
-  it("empty string → default", () => {
-    expect(pickLandingFile("")).toBe("/landing.html");
   });
 });
 

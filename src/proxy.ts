@@ -42,8 +42,10 @@ export default auth((req) => {
   // headers. (CDN-level stale-while-revalidate would require moving the
   // locale into the URL path — a follow-up, not needed for correctness.)
   //
-  // Rollback: the static /landing-*.html files remain on disk; reverting
-  // this block to the previous rewrite restores them instantly.
+  // Rollback (P7): the static /landing-*.html files have been removed now
+  // that the SSR cutover is verified in production. Restoring the old
+  // behavior means reverting the P7 deletion commit (files remain in git
+  // history) — no longer an instant on-disk swap.
   if (isRoot && !isLoggedIn) {
     const res = NextResponse.rewrite(new URL("/landing-ssr", req.url));
     res.headers.set("Cache-Control", "private, no-cache, must-revalidate");
