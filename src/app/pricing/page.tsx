@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, X as XIcon } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -18,6 +19,19 @@ interface Plan {
 
 export default function PricingPage() {
   const { t } = useI18n();
+  // Revenue path fix — a logged-in (e.g. trial) user must NOT be sent to
+  // /signup (dead end: they already have an account). Detect auth and send
+  // them to the in-app upgrade screen instead. Trial-warning emails drive
+  // traffic here, so this closes the trial → paid loop.
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setAuthed(!!d?.user); })
+      .catch(() => { if (!cancelled) setAuthed(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const plans: Plan[] = [
     {
@@ -165,22 +179,35 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                href={p.name === t.pricing.enterpriseName ? "mailto:sales@erpaio.com" : "/signup"}
-                style={{
-                  display: "block",
-                  background: p.popular ? colors.brand : colors.bg,
-                  color: p.popular ? colors.textInverse : colors.brand,
-                  border: `1px solid ${colors.brand}`,
-                  borderRadius: 10,
-                  padding: 14,
-                  textAlign: "center",
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                {p.cta}
-              </Link>
+              {(() => {
+                const isEnterprise = p.name === t.pricing.enterpriseName;
+                const href = isEnterprise
+                  ? "mailto:sales@erpaio.com"
+                  : authed
+                    ? "/dashboard/settings"
+                    : "/signup";
+                // Logged-in users see "Manage plan" instead of the trial CTA
+                // (which is meaningless once you already have an account).
+                const label = !isEnterprise && authed ? t.pricing.manageCta : p.cta;
+                return (
+                  <Link
+                    href={href}
+                    style={{
+                      display: "block",
+                      background: p.popular ? colors.brand : colors.bg,
+                      color: p.popular ? colors.textInverse : colors.brand,
+                      border: `1px solid ${colors.brand}`,
+                      borderRadius: 10,
+                      padding: 14,
+                      textAlign: "center",
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {label}
+                  </Link>
+                );
+              })()}
             </div>
           ))}
         </div>

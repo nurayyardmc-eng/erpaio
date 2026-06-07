@@ -469,6 +469,7 @@ export const tr: Dictionary = {
     perMonth: "/ay",
     footer: "KDV dahil değildir. Yıllık ödemede %20 indirim. Plan değişiklikleri pro-rata.",
     trust: ["Salt-okunur ERP bağlantısı", "AES-256 şifreli", "Veriniz saklanmaz", "İstediğiniz zaman iptal"],
+    manageCta: "Planı yönet",
     linkPrivacy: "Gizlilik",
     linkTerms: "Koşullar",
   },

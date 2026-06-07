@@ -449,6 +449,7 @@ export interface Dictionary {
     perMonth: string;
     footer: string;
     trust: string[];
+    manageCta: string;
     linkPrivacy: string;
     linkTerms: string;
   };
