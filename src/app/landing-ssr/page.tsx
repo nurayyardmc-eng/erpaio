@@ -204,10 +204,12 @@ function LangSwitcher({ locale, wrapperStyle, optionStyle }: { locale: Locale; w
 function Nav({ t, locale }: { t: LandingContent; locale: Locale }) {
   return (
     <nav>
-      <Link href="/" aria-label={t.navAriaHome} style={{ display: "flex", alignItems: "center" }}>
+      {/* The ERPAIO emblem IS the menu trigger (single emblem, no separate
+          hamburger). id="hamburger" keeps LandingInteractive's toggle wired. */}
+      <button className="hamburger" id="hamburger" aria-label={t.navAriaMenu} style={{ display: "flex", alignItems: "center" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="nav-logo" src="/logo-mark.svg" alt="ERPAIO" style={{ height: 44, width: "auto", display: "block" }} />
-      </Link>
+      </button>
       <div className="nav-links">
         <Link
           href="/login"
@@ -246,11 +248,6 @@ function Nav({ t, locale }: { t: LandingContent; locale: Locale }) {
           optionStyle={{ padding: "5px 10px", textDecoration: "none" }}
         />
       </div>
-      <button className="hamburger" id="hamburger" aria-label={t.navAriaMenu}>
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
     </nav>
   );
 }
