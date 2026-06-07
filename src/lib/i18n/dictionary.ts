@@ -1059,6 +1059,9 @@ export interface Dictionary {
     sendButton: string;
     sendingButton: string;
     genericRunError: string;
+    upsellTitle: string;
+    upsellBody: string;
+    upsellCta: string;
     genericSqlError: string;
   };
 }

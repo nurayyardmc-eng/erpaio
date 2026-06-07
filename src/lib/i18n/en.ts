@@ -1109,6 +1109,9 @@ export const en: Dictionary = {
     sendButton: "Send",
     sendingButton: "…",
     genericRunError: "Error.",
+    upsellTitle: "Your monthly token quota is used up",
+    upsellBody: "You've reached your token quota for this month. Upgrade your plan for uninterrupted queries; your quota resets automatically each month.",
+    upsellCta: "Upgrade plan",
     genericSqlError: "SQL error.",
   },
 };

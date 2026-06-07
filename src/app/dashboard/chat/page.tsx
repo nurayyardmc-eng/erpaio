@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   AlertCircle,
@@ -101,6 +102,8 @@ interface AssistantSuccessMsg {
 
 interface AssistantLoadingMsg { role: "assistant"; status: "loading" }
 interface AssistantErrorMsg { role: "assistant"; status: "error"; content: string }
+// P12 — budget exhausted (402) renders as a graceful upsell, not an error.
+interface AssistantUpsellMsg { role: "assistant"; status: "upsell"; content: string }
 interface AssistantConfirmMsg {
   role: "assistant";
   status: "confirm";
@@ -111,7 +114,7 @@ interface AssistantConfirmMsg {
   ambiguity: string | null;
 }
 interface UserMsg { role: "user"; content: string }
-type Msg = UserMsg | AssistantLoadingMsg | AssistantErrorMsg | AssistantSuccessMsg | AssistantConfirmMsg;
+type Msg = UserMsg | AssistantLoadingMsg | AssistantErrorMsg | AssistantUpsellMsg | AssistantSuccessMsg | AssistantConfirmMsg;
 
 export default function ChatPage() {
   const { t } = useI18n();
@@ -439,6 +442,16 @@ export default function ChatPage() {
         forceRun,
       });
       const data = await res.json();
+      // P12 — 402 from /api/chat uniquely means token budget exhausted
+      // (rate limit is 429, validation 400/422). Render a graceful upsell
+      // prompt instead of a raw error so the user is guided to upgrade.
+      if (res.status === 402) {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", status: "upsell", content: data.error ?? t.chat.upsellBody },
+        ]);
+        return;
+      }
       if (!res.ok) throw new Error(data.error);
       if (data.sessionId) setSessionId(data.sessionId);
 
@@ -961,6 +974,23 @@ export default function ChatPage() {
                   {msg.status === "error" && (
                     <div style={{ background: "#FEE2E2", border: "1px solid #EF444430", borderRadius: 8, padding: "10px 14px", color: "#EF4444", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
                       <AlertCircle size={16} /> {msg.content}
+                    </div>
+                  )}
+                  {/* P12 — graceful upsell on budget exhaustion */}
+                  {msg.status === "upsell" && (
+                    <div style={{ background: "#FEF3C7", border: "1px solid #F59E0B40", borderRadius: 10, padding: 16 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#92400E", marginBottom: 6 }}>
+                        {t.chat.upsellTitle}
+                      </div>
+                      <div style={{ fontSize: 13, color: "#92400E", lineHeight: 1.55, marginBottom: 12 }}>
+                        {msg.content}
+                      </div>
+                      <Link
+                        href="/dashboard/settings"
+                        style={{ display: "inline-block", background: "#0A0A0A", color: "#FAFAF8", borderRadius: 100, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}
+                      >
+                        {t.chat.upsellCta}
+                      </Link>
                     </div>
                   )}
                   {msg.status === "confirm" && (

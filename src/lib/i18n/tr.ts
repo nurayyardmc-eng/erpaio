@@ -1108,6 +1108,9 @@ export const tr: Dictionary = {
     sendButton: "Gönder",
     sendingButton: "…",
     genericRunError: "Hata.",
+    upsellTitle: "Aylık token kotanız doldu",
+    upsellBody: "Bu ay için token kotanıza ulaştınız. Kesintisiz sorgu için planınızı yükseltin; kotanız her ay otomatik sıfırlanır.",
+    upsellCta: "Planı Yükselt",
     genericSqlError: "SQL hatası.",
   },
 };
