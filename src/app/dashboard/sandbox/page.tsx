@@ -71,6 +71,10 @@ export default function SandboxPage() {
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
+    // Growth #1 — mark the sandbox as seen so the /dashboard onboarding
+    // router sends this user to the connection wizard on the next visit
+    // instead of looping them back here. 1-year cookie.
+    document.cookie = "erpaio_sandbox_seen=1; path=/; max-age=31536000; samesite=lax";
     const pending = timers.current;
     return () => pending.forEach(clearTimeout);
   }, []);

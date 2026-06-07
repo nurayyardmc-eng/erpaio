@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 
@@ -31,8 +32,15 @@ export default async function DashboardPage() {
     }),
   ]);
 
+  // Growth #1 — Sandbox-first onboarding. A brand-new user (no connection)
+  // sees the value sandbox BEFORE the ERP-credential wall. Once they've
+  // seen it (erpaio_sandbox_seen cookie, set by the sandbox page), the
+  // next /dashboard entry sends them on to the connection wizard so they
+  // aren't looped back into the sandbox.
   if (connectionCount === 0) {
-    redirect("/dashboard/connections");
+    const cookieStore = await cookies();
+    const sawSandbox = cookieStore.get("erpaio_sandbox_seen")?.value === "1";
+    redirect(sawSandbox ? "/dashboard/connections" : "/dashboard/sandbox");
   }
   if (chatCount === 0) {
     redirect("/dashboard/overview");
