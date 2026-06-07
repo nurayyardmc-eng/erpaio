@@ -304,10 +304,10 @@ function Hero({ t }: { t: LandingContent }) {
       <HtmlBlock as="h1" html={t.heroTitle} />
       <p>{t.heroDesc}</p>
       <div className="hero-actions">
-        <Link href="/signup" className="btn-primary">
+        <Link href="/signup" className="btn-primary" data-cta="hero_primary">
           {t.ctaPrimary}
         </Link>
-        <a href="#how-it-works" className="btn-secondary">
+        <a href="#how-it-works" className="btn-secondary" data-cta="hero_secondary">
           {t.ctaSecondary}
         </a>
       </div>
@@ -660,7 +660,7 @@ function FinalCta({ t }: { t: LandingContent["finalCta"] }) {
         <HtmlBlock className="section-title" html={t.title} />
         <div className="section-desc">{t.desc}</div>
         <div style={{ marginTop: 40 }}>
-          <Link href="/signup" className="btn-primary">
+          <Link href="/signup" className="btn-primary" data-cta="final_cta">
             {t.cta}
           </Link>
         </div>

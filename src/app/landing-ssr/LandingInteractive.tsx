@@ -8,9 +8,23 @@
 // a pure server component. Each effect tears down on unmount.
 
 import { useEffect } from "react";
+import { track, trackPageView } from "@/lib/analytics/track";
 
 export function LandingInteractive() {
   useEffect(() => {
+    // Sprint G — conversion funnel instrumentation. Page-view on mount +
+    // click tracking on every [data-cta] element. track() is a no-op
+    // until NEXT_PUBLIC_ANALYTICS_ENABLED is set, so this is safe to ship
+    // ahead of the vendor wiring; events start flowing the moment it's on.
+    trackPageView(window.location.pathname);
+    const ctaEls = Array.from(document.querySelectorAll<HTMLElement>("[data-cta]"));
+    const ctaHandlers: Array<{ el: HTMLElement; handler: () => void }> = [];
+    ctaEls.forEach((el) => {
+      const handler = () => track("cta_click", { cta: el.dataset.cta ?? "unknown" });
+      el.addEventListener("click", handler);
+      ctaHandlers.push({ el, handler });
+    });
+
     const hamburger = document.getElementById("hamburger");
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("sidebarOverlay");
@@ -134,6 +148,7 @@ export function LandingInteractive() {
       overlay?.removeEventListener("click", onOverlayClick);
       document.removeEventListener("keydown", onKey);
       sidebarLinkHandlers.forEach(({ el, handler }) => el.removeEventListener("click", handler));
+      ctaHandlers.forEach(({ el, handler }) => el.removeEventListener("click", handler));
       formBtn?.removeEventListener("click", onFormSubmit);
       window.removeEventListener("scroll", onScrollNav);
       window.removeEventListener("scroll", onScrollTopVisibility);
