@@ -215,9 +215,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <CookieConsent />
         </I18nProvider>
         <PostHogLoader
-          enabled={process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === "true"}
-          postHogKey={process.env.NEXT_PUBLIC_POSTHOG_KEY}
-          host={process.env.NEXT_PUBLIC_POSTHOG_HOST}
+          enabled={
+            process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === "true" ||
+            process.env.ANALYTICS_ENABLED === "true"
+          }
+          postHogKey={process.env.NEXT_PUBLIC_POSTHOG_KEY ?? process.env.POSTHOG_KEY}
+          host={process.env.NEXT_PUBLIC_POSTHOG_HOST ?? process.env.POSTHOG_HOST}
         />
       </body>
     </html>
