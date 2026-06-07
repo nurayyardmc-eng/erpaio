@@ -5,6 +5,7 @@ import "./globals.css";
 import Toaster from "@/components/Toaster";
 import ConfirmHost from "@/components/Confirm";
 import CookieConsent from "@/components/CookieConsent";
+import { PostHogLoader } from "@/components/analytics/PostHogLoader";
 import { I18nProvider } from "@/lib/i18n/context";
 
 const inter = Inter({
@@ -213,6 +214,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ConfirmHost />
           <CookieConsent />
         </I18nProvider>
+        <PostHogLoader />
       </body>
     </html>
   );
