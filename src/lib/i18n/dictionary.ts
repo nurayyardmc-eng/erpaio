@@ -448,6 +448,7 @@ export interface Dictionary {
     enterpriseFeatures: string[];
     perMonth: string;
     footer: string;
+    trust: string[];
     linkPrivacy: string;
     linkTerms: string;
   };

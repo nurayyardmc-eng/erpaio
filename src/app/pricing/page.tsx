@@ -185,8 +185,27 @@ export default function PricingPage() {
           ))}
         </div>
 
+        {/* Decision-point trust signals — reduce the security objection
+            right where the user is choosing a plan. */}
         <div style={{
-          marginTop: 56,
+          marginTop: 48,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "12px 24px",
+          justifyContent: "center",
+          fontSize: 13,
+          color: colors.textMuted,
+        }}>
+          {t.pricing.trust.map((item) => (
+            <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Check size={15} strokeWidth={2.5} color={colors.brand} />
+              {item}
+            </span>
+          ))}
+        </div>
+
+        <div style={{
+          marginTop: 28,
           textAlign: "center",
           color: colors.textSubtle,
           fontSize: 13,

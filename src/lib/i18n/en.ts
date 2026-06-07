@@ -468,6 +468,7 @@ export const en: Dictionary = {
     ],
     perMonth: "/mo",
     footer: "VAT not included. 20% off annual plans. Plan changes are pro-rated.",
+    trust: ["Read-only ERP connection", "AES-256 encrypted", "Your data is never stored", "Cancel anytime"],
     linkPrivacy: "Privacy",
     linkTerms: "Terms",
   },
