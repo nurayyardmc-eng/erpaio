@@ -7,6 +7,7 @@ import { errorMessage } from "@/lib/errors/errorMessage";
 import { pickEmailSender, fromDomainOf } from "./sender";
 import { escapeHtml } from "@/lib/html/escape";
 import { localizedAlertDescription, type AnomalyMessageParams } from "@/lib/anomaly/messages";
+import { isFresh } from "@/lib/cache/ttl";
 
 const log = childLogger({ component: "email" });
 
@@ -21,7 +22,7 @@ const CACHE_TTL = 5 * 60_000;
 
 async function resolveSenderFor(tenantId: string): Promise<string> {
   const cached = senderCache.get(tenantId);
-  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.from;
+  if (cached && isFresh(cached.ts, CACHE_TTL)) return cached.from;
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },

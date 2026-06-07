@@ -1,6 +1,7 @@
 import { queryERP } from "@/lib/db/connector";
 import type { ErpProfile } from "@/lib/erpProfiles";
 import { childLogger } from "@/lib/observability/logger";
+import { isFresh } from "./ttl";
 
 interface CacheEntry {
   data: Record<string, Row[]>;
@@ -22,7 +23,7 @@ export async function getSampleRows(
 ): Promise<Record<string, Row[]>> {
   const key = `${connectionId}:${profile.slug}`;
   const cached = memCache.get(key);
-  if (cached && Date.now() - cached.ts < TTL_MS) return cached.data;
+  if (cached && isFresh(cached.ts, TTL_MS)) return cached.data;
 
   const result: Record<string, Row[]> = {};
 

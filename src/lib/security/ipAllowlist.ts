@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { isFresh } from "@/lib/cache/ttl";
 
 const cache = new Map<string, { cidrs: string[]; ts: number }>();
 const TTL_MS = 5 * 60_000;
@@ -23,7 +24,7 @@ export function cidrMatch(ip: string, cidr: string): boolean {
 
 export async function getAllowlist(tenantId: string): Promise<string[]> {
   const cached = cache.get(tenantId);
-  if (cached && Date.now() - cached.ts < TTL_MS) return cached.cidrs;
+  if (cached && isFresh(cached.ts, TTL_MS)) return cached.cidrs;
 
   const rows = await prisma.tenantIpAllowlist.findMany({
     where: { tenantId },

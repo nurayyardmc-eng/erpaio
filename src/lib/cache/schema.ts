@@ -4,13 +4,14 @@ import { dialectFromErpType, getDialect } from "@/lib/db/dialect";
 import { invalidateForTenant } from "./queryCache";
 import { invalidateSampleRows } from "./sampleRows";
 import { childLogger } from "@/lib/observability/logger";
+import { isFresh } from "./ttl";
 
 const memCache = new Map<string, { data: string; ts: number }>();
 const TTL_MS = 60 * 60 * 1000;
 
 export async function getSchema(connectionId: string): Promise<string> {
   const mem = memCache.get(connectionId);
-  if (mem && Date.now() - mem.ts < TTL_MS) return mem.data;
+  if (mem && isFresh(mem.ts, TTL_MS)) return mem.data;
 
   const snapshot = await prisma.schemaCache.findUnique({
     where: { connectionId },

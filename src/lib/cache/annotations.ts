@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { isFresh } from "./ttl";
 
 interface CacheEntry {
   data: AnnotationLookup;
@@ -15,7 +16,7 @@ const TTL_MS = 5 * 60 * 1000;
 
 export async function getAnnotations(tenantId: string): Promise<AnnotationLookup> {
   const cached = memCache.get(tenantId);
-  if (cached && Date.now() - cached.ts < TTL_MS) return cached.data;
+  if (cached && isFresh(cached.ts, TTL_MS)) return cached.data;
 
   const rows = await prisma.schemaAnnotation.findMany({
     where: { tenantId },
