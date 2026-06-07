@@ -42,6 +42,7 @@ export const TR: LandingContent = {
     "\u201CBu ay en \u00E7ok satan 5 \u00FCr\u00FCn?\u201D yaz\u0131n \u2014 ERPAIO salt-okunur SQL \u00FCretip an\u0131nda cevaplar. Kod yok, bekleme yok.",
   ctaPrimary: "\u00D6rnek veriyle dene",
   ctaSecondary: "\u00DCcretsiz ba\u015Fla",
+  heroTrust: ["Salt-okunur", "AES-256 \u015Fifreli", "Veriniz saklanmaz"],
   stats: [
     { number: "$73B", label: "K\u00FCresel ERP Pazar\u0131" },
     { number: "9", label: "Sekt\u00F6r Dikeyi" },

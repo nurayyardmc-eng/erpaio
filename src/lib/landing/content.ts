@@ -37,6 +37,8 @@ export interface LandingContent {
   heroDesc: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  /** Compact above-the-fold trust signals shown under the hero CTAs. */
+  heroTrust: string[];
 
   // Stats bar
   stats: { number: string; label: string }[];
@@ -174,6 +176,7 @@ export const EN: LandingContent = {
     "Type \u201CTop 5 products this month?\u201D \u2014 ERPAIO writes read-only SQL and answers instantly. No code, no waiting.",
   ctaPrimary: "Try with sample data",
   ctaSecondary: "Start free",
+  heroTrust: ["Read-only", "AES-256 encrypted", "Your data is never stored"],
   stats: [
     { number: "$73B", label: "Global ERP Market" },
     { number: "9", label: "Industry Verticals" },

@@ -347,6 +347,33 @@ function Hero({ t }: { t: LandingContent }) {
           {t.ctaSecondary}
         </Link>
       </div>
+      {/* Growth #4 — above-the-fold trust signals: kill the "will it touch
+          our production ERP?" fear before the user even scrolls. */}
+      <div
+        style={{
+          marginTop: 22,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px 20px",
+          justifyContent: "center",
+          fontSize: 12,
+          letterSpacing: 0.3,
+          color: "var(--text-secondary)",
+          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+        }}
+      >
+        {t.heroTrust.map((item, i) => (
+          <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {i > 0 && <span aria-hidden style={{ opacity: 0.4 }}>·</span>}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ opacity: 0.7 }}>
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              {item}
+            </span>
+          </span>
+        ))}
+      </div>
     </section>
   );
 }
