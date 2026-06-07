@@ -4,7 +4,6 @@ import {
   isPathPublic,
   isMaintenanceBypassed,
   isApiPath,
-  pickLandingFile,
   isSupportedLandingLang,
 } from "@/lib/proxy-helpers";
 
@@ -28,10 +27,27 @@ export default auth((req) => {
     return res;
   }
 
-  // Unauth user on root → serve static landing.html based on cookie language
+  // Sprint G — landing cutover. Unauth visitors at root now get the SSR
+  // landing (/landing-ssr) instead of the static /landing-*.html files,
+  // so the new Product & Growth sections (AI demo, analytics, enterprise
+  // trust, data connection, lead-gen) are live. The SSR page resolves
+  // locale from the erpaio_lang cookie itself (same cookie the old static
+  // rewrite keyed on), so language selection is preserved.
+  //
+  // Cache: locale is cookie-determined, so this response is NOT safe to
+  // share-cache at the CDN — every locale would collide on the "/" key
+  // and a TR visitor could be served a cached EN page. Mark it private +
+  // must-revalidate; the SSR render is light and fast, while the heavy
+  // assets (landing.css, fonts, images) carry their own long-lived cache
+  // headers. (CDN-level stale-while-revalidate would require moving the
+  // locale into the URL path — a follow-up, not needed for correctness.)
+  //
+  // Rollback: the static /landing-*.html files remain on disk; reverting
+  // this block to the previous rewrite restores them instantly.
   if (isRoot && !isLoggedIn) {
-    const lang = req.cookies.get("erpaio_lang")?.value;
-    return NextResponse.rewrite(new URL(pickLandingFile(lang), req.url));
+    const res = NextResponse.rewrite(new URL("/landing-ssr", req.url));
+    res.headers.set("Cache-Control", "private, no-cache, must-revalidate");
+    return res;
   }
 
   if (!isLoggedIn && !isPathPublic(path) && !isApiPath(path)) {
