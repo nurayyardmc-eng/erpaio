@@ -18,6 +18,8 @@ import { resolveLocale, type Locale } from "@/lib/landing/locale";
 import { LandingInteractive } from "./LandingInteractive";
 import { EnterpriseTrust } from "@/components/landing/EnterpriseTrust";
 import { AiDemoPreview } from "@/components/landing/AiDemoPreview";
+import { AnalyticsDashboard } from "@/components/landing/AnalyticsDashboard";
+import { DataConnection } from "@/components/landing/DataConnection";
 import { DemoRequest } from "@/components/landing/DemoRequest";
 import { LandingErrorBoundary } from "@/components/landing/LandingErrorBoundary";
 
@@ -74,12 +76,24 @@ export default async function LandingSsrPage({
         <AiDemoPreview locale={locale} />
       </LandingErrorBoundary>
 
+      {/* Sprint G.5 — analytics dashboard demo (range + analysis →
+          chart + live AI SQL). */}
+      <LandingErrorBoundary section="analytics">
+        <AnalyticsDashboard locale={locale} />
+      </LandingErrorBoundary>
+
       <HowItWorks t={t.howItWorks} />
       <Trust t={t.trust} />
 
       {/* Sprint G.1 — enterprise trust pillars (read-only / RBAC /
           human approval / audit) after the high-level trust band. */}
       <EnterpriseTrust locale={locale} />
+
+      {/* Sprint G.6 — data connection flow demo (masked credential +
+          security assurance). Sits with the trust narrative. */}
+      <LandingErrorBoundary section="data-connection">
+        <DataConnection locale={locale} />
+      </LandingErrorBoundary>
 
       <Technology t={t.technology} />
       <TrustedBy label={t.trustedByLabel} items={t.trustedByItems} />
