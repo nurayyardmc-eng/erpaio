@@ -40,6 +40,10 @@ nav{position:fixed;top:12px;left:0;right:0;z-index:1000;padding:5px 16px;display
 section{padding:120px 48px;position:relative}
 .section-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:3px;margin-bottom:16px}
 .section-title{font-family:'Playfair Display',serif;font-size:clamp(32px,4.5vw,52px);letter-spacing:-1px;line-height:1.15;max-width:650px;font-weight:400}
+/* Growth-phase island sections center their own section-title (the base
+   class caps width but doesn't center the box; legacy sections add their
+   own per-section margin:auto). */
+#ai-demo .section-title,#analytics-dashboard .section-title,#enterprise-trust .section-title,#data-connection .section-title,#demo-request .section-title{margin-left:auto;margin-right:auto}
 .section-desc{font-size:16px;color:var(--text-secondary);line-height:1.75;max-width:480px;margin-top:20px;font-weight:300}
 
 /* CORE IDEA */
