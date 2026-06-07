@@ -43,7 +43,9 @@ export async function generateMetadata({
   const ogImage = { url: `${baseUrl}/logo.png`, width: 1254, height: 1254, alt: "ERPAIO" };
 
   return {
-    title: t.metaTitle,
+    // absolute → bypass the root layout's "%s | ERPAIO" template so the
+    // tab title isn't "ERPAIO — … | ERPAIO" (ERPAIO twice).
+    title: { absolute: t.metaTitle },
     description: t.metaDesc,
     alternates: {
       canonical: baseUrl,

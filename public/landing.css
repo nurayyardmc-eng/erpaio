@@ -169,14 +169,14 @@ footer{background:var(--bg-dark);border-top:1px solid rgba(255,255,255,.06);padd
 /* SIDEBAR */
 .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:1500;pointer-events:none;transition:background .5s cubic-bezier(.77,0,.18,1)}
 .sidebar-overlay.active{background:rgba(0,0,0,.3);pointer-events:all;backdrop-filter:blur(4px)}
-.sidebar{position:fixed;top:0;right:0;width:420px;max-width:85vw;height:100vh;background:var(--bg);border-left:1px solid var(--border);z-index:1600;display:flex;flex-direction:column;justify-content:space-between;padding:32px 40px;transform:translateX(100%);transition:transform .6s cubic-bezier(.77,0,.18,1)}
+.sidebar{position:fixed;top:0;left:0;width:420px;max-width:85vw;height:100vh;background:var(--bg);border-right:1px solid var(--border);z-index:1600;display:flex;flex-direction:column;justify-content:space-between;padding:32px 40px;transform:translateX(-100%);transition:transform .6s cubic-bezier(.77,0,.18,1)}
 .sidebar.active{transform:translateX(0)}
 .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:40px;border-bottom:1px solid var(--border)}
 .sidebar-close{width:44px;height:44px;background:none;border:1.5px solid var(--text);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;padding:0}
 .sidebar-close svg{width:16px;height:16px;stroke:var(--text);stroke-width:2;transition:stroke .3s}
 .sidebar-close:hover{background:var(--text)}.sidebar-close:hover svg{stroke:var(--bg)}
 .sidebar-nav{display:flex;flex-direction:column;flex:1;padding-top:20px}
-.sidebar-nav a{font-family:'Outfit',sans-serif;font-size:15px;font-weight:300;text-transform:uppercase;letter-spacing:3px;color:var(--text);text-decoration:none;padding:20px 0;border-bottom:1px solid var(--border);position:relative;transform:translateX(40px);opacity:0;transition:color .3s,transform .5s cubic-bezier(.77,0,.18,1),opacity .5s ease}
+.sidebar-nav a{font-family:'Outfit',sans-serif;font-size:15px;font-weight:300;text-transform:uppercase;letter-spacing:3px;color:var(--text);text-decoration:none;padding:20px 0;border-bottom:1px solid var(--border);position:relative;transform:translateX(-40px);opacity:0;transition:color .3s,transform .5s cubic-bezier(.77,0,.18,1),opacity .5s ease}
 .sidebar-nav a:hover{color:var(--text-dim)}
 .sidebar-nav a::after{content:'\2192';position:absolute;right:0;top:50%;transform:translateY(-50%) translateX(10px);font-size:14px;opacity:0;transition:all .3s}
 .sidebar-nav a:hover::after{opacity:1;transform:translateY(-50%) translateX(0)}

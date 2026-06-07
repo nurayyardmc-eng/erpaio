@@ -47,7 +47,7 @@ export const TR: LandingContent = {
     { number: "$73B", label: "K\u00FCresel ERP Pazar\u0131" },
     { number: "9", label: "Sekt\u00F6r Dikeyi" },
     { number: "0", label: "ERP De\u011Fi\u015Fikli\u011Fi" },
-    { number: "24/7", label: "Proaktif \u0130zleme" },
+    { number: "7/24", label: "Proaktif \u0130zleme" },
   ],
   marqueeItems: [
     "G\u00FCnl\u00FCk \u0130\u015F Nabz\u0131",
