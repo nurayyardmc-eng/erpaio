@@ -297,7 +297,7 @@ export const EN: LandingContent = {
     desc: "Multiple advanced systems working together as a single, self-improving intelligence engine.",
     chips: ["Semantic Data Modeling", "Knowledge Graphs", "Retrieval-Augmented Generation", "Text-to-SQL", "AI Agents", "Causal Inference"],
   },
-  trustedByLabel: "Works with your ERP",
+  trustedByLabel: "Supported ERP systems",
   trustedByItems: ["Nebim V3", "SAP S/4HANA", "Oracle Fusion", "Dynamics 365", "Logo", "Mikro"],
   quoteText: "Stop waiting on reports. Ask, and get the answer.",
   quoteAttribution: "ERPAIO \u2014 your ERP, in plain language",

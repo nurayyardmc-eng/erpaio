@@ -162,7 +162,7 @@ export const TR: LandingContent = {
     desc: "Tek bir, kendi kendini geli\u015Ftiren zeka motoru olarak birlikte \u00E7al\u0131\u015Fan birden fazla ileri sistem.",
     chips: ["Semantik Veri Modelleme", "Bilgi Graflar\u0131", "Retrieval-Augmented Generation", "Text-to-SQL", "AI Asistanlar", "Nedensel \u00C7\u0131kar\u0131m"],
   },
-  trustedByLabel: "ERP\u2019nizle \u00E7al\u0131\u015F\u0131r",
+  trustedByLabel: "Desteklenen ERP sistemleri",
   trustedByItems: ["Nebim V3", "SAP S/4HANA", "Oracle Fusion", "Dynamics 365", "Logo", "Mikro"],
   quoteText: "Rapor beklemeyi b\u0131rak\u0131n. Sorun, cevab\u0131 an\u0131nda al\u0131n.",
   quoteAttribution: "ERPAIO \u2014 ERP\u2019niz, T\u00FCrk\u00E7e do\u011Fal dille",
