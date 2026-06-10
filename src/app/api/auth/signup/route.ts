@@ -8,7 +8,8 @@ import { sendEmail } from "@/lib/notifications/email";
 import { childLogger } from "@/lib/observability/logger";
 import { recordConsent, consentContextFromRequest } from "@/lib/auth/consent";
 import { jsonError } from "@/lib/i18n/server";
-import { parseJsonBody } from "@/lib/http/searchParams";
+import { parseJsonBody, internalServerError } from "@/lib/http/searchParams";
+import { errorMessage } from "@/lib/errors/errorMessage";
 import { slugify } from "@/lib/auth/slugify";
 import { randomSlugSuffix } from "@/lib/auth/randomSlugSuffix";
 import { welcomeEmailHtml } from "@/lib/auth/welcomeEmail";
@@ -58,27 +59,26 @@ export async function POST(req: Request) {
   const trialEndsAt = daysFromNow(14);
   const passwordHash = await hashPassword(password);
 
-  const tenant = await prisma.tenant.create({
-    data: {
-      name: tenantName,
-      slug,
-      plan: "starter",
-      trialEndsAt,
-      users: {
-        create: {
-          email,
-          passwordHash,
-          name: name ?? null,
-          role: "owner",
-        },
-      },
-    },
-    include: { users: true },
-  });
+  // Atomic: tenant + owner user + verification token are created together.
+  // If the token write fails we must NOT leave an orphaned account — that
+  // would block re-signup (the email now exists → 409) and strand the user.
+  // The transaction rolls everything back so a retry succeeds cleanly.
+  let tenant: Awaited<ReturnType<typeof createAccount>>["tenant"];
+  let verifyToken: string;
+  try {
+    const result = await createAccount({ tenantName, slug, trialEndsAt, email, passwordHash, name });
+    tenant = result.tenant;
+    verifyToken = result.verifyToken;
+  } catch (err) {
+    log.error({ err: errorMessage(err) }, "Signup transaction failed");
+    return internalServerError(req, err);
+  }
 
   log.info({ tenantId: tenant.id, userId: tenant.users[0].id }, "Signup completed");
 
   // KVKK/Privacy/Terms onayını append-only consent log'a yaz (md. 5 + md. 7).
+  // Best-effort tail (recordConsent never throws) — a consent-log hiccup must
+  // not 500 an account that already exists.
   const { ipAddress, userAgent } = consentContextFromRequest(req);
   const userId = tenant.users[0].id;
   const docVer = parsedBody.documentVer ?? "v1";
@@ -118,19 +118,59 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  const { raw: verifyToken } = await createEmailVerificationToken(tenant.users[0].id);
-  const verifyUrl = `${baseUrl()}/verify-email?token=${verifyToken}`;
-
-  void sendEmail({
-    to: email,
-    subject: "ERPAIO'ya hoş geldiniz",
-    html: welcomeEmailHtml(name ?? email, tenantName, verifyUrl),
-  });
+  // Welcome + verification email — best-effort, post-commit. Token was already
+  // minted inside the transaction above. Never let an email hiccup 500 signup.
+  try {
+    const verifyUrl = `${baseUrl()}/verify-email?token=${verifyToken}`;
+    void sendEmail({
+      to: email,
+      subject: "ERPAIO'ya hoş geldiniz",
+      html: welcomeEmailHtml(name ?? email, tenantName, verifyUrl),
+    });
+  } catch (err) {
+    log.warn({ err: errorMessage(err) }, "Welcome email dispatch failed (account created)");
+  }
 
   return Response.json({
     ok: true,
     tenant: { id: tenant.id, slug: tenant.slug, trialEndsAt: tenant.trialEndsAt },
     user: { id: tenant.users[0].id, email },
+  });
+}
+
+/**
+ * Atomically create the tenant, its owner user, and the email-verification
+ * token. Wrapped in a single transaction so a partial failure rolls back
+ * instead of orphaning an account (which would block re-signup with 409).
+ */
+async function createAccount(input: {
+  tenantName: string;
+  slug: string;
+  trialEndsAt: Date;
+  email: string;
+  passwordHash: string;
+  name?: string;
+}) {
+  return prisma.$transaction(async (tx) => {
+    const tenant = await tx.tenant.create({
+      data: {
+        name: input.tenantName,
+        slug: input.slug,
+        plan: "starter",
+        trialEndsAt: input.trialEndsAt,
+        users: {
+          create: {
+            email: input.email,
+            passwordHash: input.passwordHash,
+            name: input.name ?? null,
+            role: "owner",
+          },
+        },
+      },
+      include: { users: true },
+    });
+    const { raw: verifyToken } = await createEmailVerificationToken(tenant.users[0].id, tx);
+    return { tenant, verifyToken };
   });
 }
 

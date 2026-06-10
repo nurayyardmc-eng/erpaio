@@ -30,14 +30,18 @@ export interface EmailVerificationTokenResult {
   expiresAt: Date;
 }
 
+/** Minimal client surface — satisfied by both `prisma` and a `$transaction` tx. */
+type TokenDbClient = Pick<typeof prisma, "emailVerificationToken">;
+
 export async function createEmailVerificationToken(
   userId: string,
+  db: TokenDbClient = prisma,
 ): Promise<EmailVerificationTokenResult> {
   const raw = generateSecureToken();
   const tokenHash = sha256Hex(raw);
   const expiresAt = daysFromNow(EMAIL_VERIFICATION_TTL_DAYS);
 
-  await prisma.emailVerificationToken.create({
+  await db.emailVerificationToken.create({
     data: { userId, tokenHash, expiresAt },
   });
 
