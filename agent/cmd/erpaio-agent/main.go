@@ -1,15 +1,25 @@
-// erpaio-agent — On-prem MSSQL gateway for ERPAIO Cloud.
-// Skeleton: only CLI structure + entry. Full implementation in internal/.
+// erpaio-agent — On-prem MSSQL execution agent for ERPAIO Cloud.
+//
+// Polls the cloud over outbound HTTPS for SQL jobs, validates + executes them
+// against the local MSSQL (Nebim) instance, and posts results back. No inbound
+// ports, no WebSocket. The DB credentials live only on this machine.
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/nurayyardmc-eng/erpaio/agent/internal/config"
+	"github.com/nurayyardmc-eng/erpaio/agent/internal/connection"
+	"github.com/nurayyardmc-eng/erpaio/agent/internal/executor"
 	"github.com/spf13/cobra"
 )
 
-const Version = "0.1.0-skeleton"
+const Version = "0.2.0"
 
 var rootCmd = &cobra.Command{
 	Use:     "erpaio-agent",
@@ -19,53 +29,97 @@ var rootCmd = &cobra.Command{
 
 var registerCmd = &cobra.Command{
 	Use:   "register",
-	Short: "Register this agent with ERPAIO Cloud",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("[skeleton] register: cloud handshake + persist config")
+	Short: "Save cloud + local DB settings to ~/.erpaio-agent/config.yaml",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		f := cmd.Flags()
+		token, _ := f.GetString("token")
+		if token == "" {
+			return errors.New("--token is required (Dashboard → Connections → Set up agent)")
+		}
+		cloud, _ := f.GetString("cloud")
+		host, _ := f.GetString("db-host")
+		port, _ := f.GetInt("db-port")
+		name, _ := f.GetString("db-name")
+		user, _ := f.GetString("db-user")
+		pass, _ := f.GetString("db-password")
+
+		c := &config.Config{
+			Cloud: cloud, Token: token,
+			DBHost: host, DBPort: port, DBName: name, DBUser: user, DBPassword: pass,
+		}
+		if err := c.Save(); err != nil {
+			return err
+		}
+		p, _ := config.Path()
+		fmt.Printf("Saved %s\nStart the agent with: erpaio-agent run\n", p)
 		return nil
 	},
 }
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Run the agent (foreground)",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("[skeleton] run: connect to cloud, execute SQL, audit, repeat")
-		fmt.Println("Faza 10.6 deliverable — full impl 3-4 gün")
-		return nil
+	Short: "Run the agent (foreground): poll cloud, execute SQL locally, repeat",
+	RunE: func(_ *cobra.Command, _ []string) error {
+		c, err := config.Load()
+		if err != nil {
+			return err
+		}
+		exec, err := executor.Open(c.DSN())
+		if err != nil {
+			return err
+		}
+		defer exec.Close()
+
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+
+		if err := exec.Ping(ctx); err != nil {
+			return fmt.Errorf("cannot reach local DB %s:%d/%s: %w", c.DBHost, c.DBPort, c.DBName, err)
+		}
+		fmt.Printf("erpaio-agent %s — connected to %s:%d/%s, polling %s\n",
+			Version, c.DBHost, c.DBPort, c.DBName, c.Cloud)
+
+		err = connection.New(c.Cloud, c.Token, exec).Run(ctx)
+		if errors.Is(err, context.Canceled) {
+			fmt.Println("shutting down")
+			return nil
+		}
+		return err
 	},
 }
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Show agent status",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Printf("erpaio-agent %s · skeleton\n", Version)
-		fmt.Println("Bu sürüm üretim için kullanılmaz, sadece yapı referansı.")
+	Short: "Show agent config status",
+	RunE: func(_ *cobra.Command, _ []string) error {
+		c, err := config.Load()
+		if err != nil {
+			fmt.Printf("erpaio-agent %s — not registered (%v)\n", Version, err)
+			return nil
+		}
+		fmt.Printf("erpaio-agent %s\n  cloud: %s\n  db:    %s:%d/%s (user %s)\n  token: %s…\n",
+			Version, c.Cloud, c.DBHost, c.DBPort, c.DBName, c.DBUser, tokenPrefix(c.Token))
 		return nil
 	},
 }
 
-var installServiceCmd = &cobra.Command{
-	Use:   "install-service",
-	Short: "Install as systemd / launchd / Windows Service",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("[skeleton] install-service: platform-specific service registration")
-		return nil
-	},
+func tokenPrefix(s string) string {
+	if len(s) <= 8 {
+		return "set"
+	}
+	return s[:8]
 }
 
 func init() {
-	registerCmd.Flags().String("tenant", "", "ERPAIO tenant ID")
-	registerCmd.Flags().String("token", "", "Agent registration token (erpaio_agent_...)")
+	registerCmd.Flags().String("cloud", "https://erpaio.vercel.app", "ERPAIO Cloud base URL")
+	registerCmd.Flags().String("token", "", "Agent bearer token (from dashboard)")
 	registerCmd.Flags().String("db-host", "localhost", "MSSQL host")
 	registerCmd.Flags().Int("db-port", 1433, "MSSQL port")
 	registerCmd.Flags().String("db-name", "", "MSSQL database name")
 	registerCmd.Flags().String("db-user", "erpaio_readonly", "MSSQL read-only user")
 	registerCmd.Flags().String("db-password", "", "MSSQL password")
-	registerCmd.Flags().String("cloud", "wss://erpaio.vercel.app/api/agent/ws", "ERPAIO Cloud WebSocket URL")
 
-	rootCmd.AddCommand(registerCmd, runCmd, statusCmd, installServiceCmd)
+	rootCmd.AddCommand(registerCmd, runCmd, statusCmd)
 }
 
 func main() {

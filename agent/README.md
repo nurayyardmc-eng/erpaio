@@ -1,98 +1,92 @@
 # ERPAIO On-Prem Agent
 
-Müşteri sunucusunda çalışan, ERPAIO Cloud'a (`wss://erpaio.vercel.app/api/agent/ws`)
-WebSocket üzerinden bağlanan, gelen SQL'leri lokal MSSQL'de çalıştıran ve sonucu
-geri yollayan ufak bir Go binary.
+A small Go binary that runs on the customer's server, polls ERPAIO Cloud over
+**outbound HTTPS** for SQL jobs, executes them against the local MSSQL (Nebim)
+instance, and posts the results back. No inbound ports, no WebSocket.
 
-**Açık kaynak** — müşterinin güvenlik ekibi inceleyebilir, build edebilir,
-denetleyebilir. ERPAIO'nun **brain'i** (prompt mühendisliği, AI logic, profile
-bilgisi) Cloud'da kapalı kalır — agent sadece SQL execute eder.
+**Open source** — the customer's security team can read, build, and audit it.
+ERPAIO's "brain" (prompt engineering, AI logic, ERP profiles) stays in the
+cloud; the agent only executes already-generated read-only SQL.
 
-## Mimari
+## Architecture
 
 ```
-Müşteri Cihazı                              ERPAIO Cloud
-─────────────                               ───────────
-[Mobile / Web]
-      ↓
-[Cloud API] ←──── wss (mTLS) ────→  [Agent Service @ customer]
-                                              ↓ tcp/1433
-                                          [MSSQL]
+Customer server                         ERPAIO Cloud (Vercel)
+───────────────                         ─────────────────────
+[erpaio-agent] ──GET /api/agent/jobs/next──►  job queue (Postgres)
+      │  validate (local) + run on MSSQL
+      │  tcp/1433 → [MSSQL / Nebim]
+      └──POST /api/agent/jobs/{id}/result──►  result written back
 ```
 
-## Faza 10.6 / Y3 — Şu anki durum: skeleton
+Why polling and not WebSocket: Vercel's serverless functions cannot hold a
+persistent socket. The agent therefore drives everything with short outbound
+HTTPS requests — which also means **no firewall changes** on the customer side.
 
-Bu klasör agent'ın **iskelet kodunu** içeriyor. Üretim build'i için
-3-4 günlük ek geliştirme gerekir (mTLS auth, auto-update, multi-platform packaging).
+## Security
+
+- **Outbound only.** No inbound ports opened.
+- **Bearer token over HTTPS.** Generated in the dashboard (Connections → "Set up
+  agent"), shown once, stored hashed (SHA-256) in the cloud. Revoke any time.
+- **Credentials stay local.** The MSSQL user/password live only in
+  `~/.erpaio-agent/config.yaml` (mode 0600) — the cloud never stores them for
+  agent-backed connections.
+- **Defense in depth.** Every job is re-validated locally
+  (`internal/validator`, a port of `src/lib/validators/sql.ts`): SELECT/WITH
+  allowlist + DDL/DML/system-proc/comment/file blocklist. Non-reads are refused
+  before they touch the DB.
 
 ## Build
 
+> Requires the Go toolchain (1.22+). The first build fetches deps and creates
+> `go.sum`:
+
 ```bash
-cd ~/erpaio/agent
-go mod download
+cd agent
+go mod tidy
 go build -o erpaio-agent ./cmd/erpaio-agent
 ./erpaio-agent --help
 ```
 
 ## Configure
 
+Generate a token in the dashboard, then:
+
 ```bash
 ./erpaio-agent register \
-  --tenant=tenant_xxx \
-  --token=erpaio_agent_xxx... \
-  --db-host=localhost \
-  --db-port=1433 \
-  --db-name=NebimDB \
-  --db-user=erpaio_readonly \
-  --db-password='...' \
-  --cloud=wss://erpaio.vercel.app/api/agent/ws
+  --cloud=https://erpaio.vercel.app \
+  --token=erpaio_xxx... \
+  --db-host=localhost --db-port=1433 \
+  --db-name=NebimDB --db-user=erpaio_readonly --db-password='...'
 ```
 
-Config `~/.erpaio-agent/config.yaml` dosyasına yazılır.
+Config is written to `~/.erpaio-agent/config.yaml`.
 
 ## Run
 
 ```bash
-./erpaio-agent run
-# veya systemd:
-sudo ./erpaio-agent install-service
-sudo systemctl start erpaio-agent
+./erpaio-agent run        # foreground
+./erpaio-agent status     # show current config
 ```
 
-## Güvenlik
-
-- Tüm trafik mTLS (Cloud Cert Authority + Agent client cert)
-- DB credential lokal AES-256-GCM ile encrypted
-- Cloud'dan gelen SQL **lokal** validator'dan da geçer (defense in depth):
-  SELECT/WITH whitelist + DROP/UPDATE/EXEC denied
-- Audit log lokal SQLite'ta, müşteri istediği zaman okuyabilir
-- Auto-update sadece signed Ed25519 binary'lerini kabul eder
-
-## Yapı
+## Layout
 
 ```
 agent/
 ├── README.md (this)
 ├── go.mod
-├── cmd/erpaio-agent/main.go     # CLI entry
+├── cmd/erpaio-agent/main.go     # CLI: register / run / status
 └── internal/
-    ├── config/                   # config dosyası, env, validation
-    ├── connection/               # WebSocket cloud bağlantısı + reconnect
-    ├── executor/                 # mssql query execution + timeout
-    ├── validator/                # local SQL whitelist (defense in depth)
-    ├── audit/                    # SQLite audit log
-    ├── update/                   # signed binary auto-update
-    └── service/                  # systemd / launchd / Windows Service
+    ├── config/      # ~/.erpaio-agent/config.yaml load/save + DSN
+    ├── connection/  # outbound HTTPS poll loop (claim → execute → result)
+    ├── executor/    # MSSQL query (database/sql + go-mssqldb), timeouts
+    └── validator/   # local read-only SQL guard (+ tests)
 ```
 
-## Faza 10.6 deliverable plan (3-4 gün, müşteri talep ederse)
+## Roadmap (Phase 3 — on demand)
 
-- [ ] gorilla/websocket reconnect loop
-- [ ] mssql driver wrapper (timeout, cancellation)
-- [ ] SQL whitelist validator (TS Faza 7.5'tekinin Go portu)
-- [ ] SQLite audit (gorm)
-- [ ] systemd unit dosyası (Linux), launchd plist (macOS), Windows Service (sc.exe)
-- [ ] GitHub Actions ile signed multi-platform release (linux/darwin/windows × amd64/arm64)
-- [ ] Auto-update endpoint (`/api/agent/latest/<platform>/version` cloud'da)
-- [ ] Config CLI (register/run/uninstall/status)
-- [ ] mTLS cert generation + rotation flow
+- Local SQLite audit log (every executed query, readable by the customer)
+- Signed multi-platform releases + auto-update
+- Service install (systemd / launchd / Windows Service)
+- Token rotation + "agent offline" alerting
+- Optional Postgres/Oracle/MySQL executors (MSSQL-first today)
