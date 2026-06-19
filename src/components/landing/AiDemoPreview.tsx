@@ -63,7 +63,7 @@ const COPY: Record<Locale, DemoCopy> = {
     scenarios: [
       {
         q: "Which products are below reorder point in Istanbul?",
-        keywords: ["stock", "inventory", "reorder", "product", "warehouse", "sku", "low"],
+        keywords: ["stock", "inventory", "reorder", "warehouse", "sku", "low"],
         sql: "SELECT sku, stock, reorder_point\nFROM inventory\nWHERE warehouse = 'IST'\n  AND stock < reorder_point\nORDER BY stock ASC;",
         answer: "12 products are below their reorder point in the Istanbul warehouse. The most urgent: SKU-4821 (3 left), SKU-1190 (5 left), SKU-2277 (6 left). Combined reorder volume ≈ 480 units.",
         tableHead: ["SKU", "Stock", "Reorder"],
@@ -75,7 +75,7 @@ const COPY: Record<Locale, DemoCopy> = {
       },
       {
         q: "Top 3 customers by revenue last month",
-        keywords: ["revenue", "customer", "top", "income", "biggest", "client"],
+        keywords: ["revenue", "customer", "income", "biggest", "client"],
         sql: "SELECT c.name, SUM(o.total) AS revenue\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nWHERE o.created_at >= date_trunc('month', now()) - interval '1 month'\n  AND o.created_at <  date_trunc('month', now())\nGROUP BY c.name\nORDER BY revenue DESC\nLIMIT 3;",
         answer: "Last month's top customers: Perakende Co. (₺1.24M), Tekstil A.Ş. (₺890K) and Mavi Lojistik (₺610K). Together they account for 38% of total revenue.",
         tableHead: ["Customer", "Revenue", "Share"],
@@ -127,7 +127,7 @@ const COPY: Record<Locale, DemoCopy> = {
     scenarios: [
       {
         q: "İstanbul'da yeniden sipariş noktasının altındaki ürünler hangileri?",
-        keywords: ["stok", "ürün", "depo", "sipariş noktası", "envanter", "kritik stok", "sku"],
+        keywords: ["stok", "depo", "sipariş noktası", "envanter", "kritik stok", "sku"],
         sql: "SELECT sku, stock, reorder_point\nFROM inventory\nWHERE warehouse = 'IST'\n  AND stock < reorder_point\nORDER BY stock ASC;",
         answer: "İstanbul deposunda 12 ürün yeniden sipariş noktasının altında. En acil olanlar: SKU-4821 (3 kaldı), SKU-1190 (5 kaldı), SKU-2277 (6 kaldı). Toplam sipariş hacmi ≈ 480 adet.",
         tableHead: ["SKU", "Stok", "Sipariş Noktası"],
@@ -191,7 +191,7 @@ const COPY: Record<Locale, DemoCopy> = {
     scenarios: [
       {
         q: "ما المنتجات تحت نقطة إعادة الطلب في إسطنبول؟",
-        keywords: ["مخزون", "منتج", "مستودع", "إعادة الطلب", "نفاد"],
+        keywords: ["مخزون", "مستودع", "إعادة الطلب", "نفاد"],
         sql: "SELECT sku, stock, reorder_point\nFROM inventory\nWHERE warehouse = 'IST'\n  AND stock < reorder_point\nORDER BY stock ASC;",
         answer: "يوجد 12 منتجًا تحت نقطة إعادة الطلب في مستودع إسطنبول. الأكثر إلحاحًا: SKU-4821 (تبقّى 3)، SKU-1190 (تبقّى 5)، SKU-2277 (تبقّى 6). إجمالي حجم الطلب ≈ 480 وحدة.",
         tableHead: ["SKU", "المخزون", "نقطة الطلب"],
