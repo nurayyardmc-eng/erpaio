@@ -96,15 +96,15 @@ INSERT INTO products (id, name, price) VALUES
   ('p5', 'Çorap',           40.00);
 
 -- ── inventory ───────────────────────────────────────────────
--- Scenario 1 expectation: warehouse='IST' AND stock < reorder_point
+-- Scenario 1 expectation: warehouse='İstanbul' AND stock < reorder_point
 -- → 3 rows: SKU-4821, SKU-1190, SKU-2277 (ordered by stock ASC).
 INSERT INTO inventory (sku, product_name, warehouse, stock, reorder_point) VALUES
-  ('SKU-4821', 'Pamuklu Tişört', 'IST',  3, 25),  -- below
-  ('SKU-1190', 'Kot Pantolon',   'IST',  5, 20),  -- below
-  ('SKU-2277', 'Sweatshirt',     'IST',  6, 30),  -- below
-  ('SKU-3300', 'Mont',           'IST', 80, 25),  -- ok
-  ('SKU-9001', 'Çorap',          'IST', 12, 10),  -- ok
-  ('SKU-5500', 'Pamuklu Tişört', 'ANK',  2, 15);  -- below but different warehouse
+  ('SKU-4821', 'Pamuklu Tişört', 'İstanbul',  3, 25),  -- below
+  ('SKU-1190', 'Kot Pantolon',   'İstanbul',  5, 20),  -- below
+  ('SKU-2277', 'Sweatshirt',     'İstanbul',  6, 30),  -- below
+  ('SKU-3300', 'Mont',           'İstanbul', 80, 25),  -- ok
+  ('SKU-9001', 'Çorap',          'İstanbul', 12, 10),  -- ok
+  ('SKU-5500', 'Pamuklu Tişört', 'Ankara',  2, 15);  -- below but different warehouse
 
 -- ── orders ──────────────────────────────────────────────────
 -- Scenario 2 expectation: top 3 customers by revenue LAST month
