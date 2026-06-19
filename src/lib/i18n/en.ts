@@ -428,6 +428,11 @@ export const en: Dictionary = {
     agentCopied: "Token copied.",
     agentFailed: "Could not generate agent token.",
     agentClose: "Close",
+    agentOnline: "Agent online",
+    agentOffline: "Agent offline",
+    agentRevoke: "Revoke agent",
+    agentRevoked: "Agent revoked.",
+    agentRevokeFailed: "Could not revoke agent.",
   },
   pricing: {
     metaTitle: "Pricing · ERPAIO",

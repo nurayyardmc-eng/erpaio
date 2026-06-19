@@ -435,6 +435,11 @@ export interface Dictionary {
     agentCopied: string;
     agentFailed: string;
     agentClose: string;
+    agentOnline: string;
+    agentOffline: string;
+    agentRevoke: string;
+    agentRevoked: string;
+    agentRevokeFailed: string;
   };
   pricing: {
     metaTitle: string;

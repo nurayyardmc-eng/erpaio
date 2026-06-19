@@ -87,6 +87,13 @@ export async function GET(req: Request) {
       schemaCache: {
         select: { builtAt: true, tableCount: true },
       },
+      // On-prem agent liveness — newest active registration's last poll time.
+      agentRegistrations: {
+        where: { revoked: false },
+        select: { lastSeenAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
     },
   });
 

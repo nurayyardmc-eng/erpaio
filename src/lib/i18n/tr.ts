@@ -428,6 +428,11 @@ export const tr: Dictionary = {
     agentCopied: "Token kopyalandı.",
     agentFailed: "Agent token üretilemedi.",
     agentClose: "Kapat",
+    agentOnline: "Agent çevrimiçi",
+    agentOffline: "Agent çevrimdışı",
+    agentRevoke: "Agent'ı iptal et",
+    agentRevoked: "Agent iptal edildi.",
+    agentRevokeFailed: "Agent iptal edilemedi.",
   },
   pricing: {
     metaTitle: "Fiyatlandırma · ERPAIO",

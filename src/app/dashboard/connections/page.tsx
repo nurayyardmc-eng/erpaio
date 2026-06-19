@@ -9,7 +9,8 @@ import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
 import { schemaAgeRelative, schemaAgeStatus, type SchemaAgeStatus } from "@/lib/schema/age";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
-import { postJson } from "@/lib/http/clientFetch";
+import { postJson, deleteJson } from "@/lib/http/clientFetch";
+import { isAgentOnline } from "@/lib/agent/online";
 import { readOnlyUserSql } from "@/lib/db/readOnlyUserSql";
 import type { ErpType } from "@/lib/db/erpTypes";
 import { useI18n } from "@/lib/i18n/context";
@@ -21,6 +22,7 @@ interface Connection {
   dbName: string;
   status: string;
   connectionMode?: string;
+  agentRegistrations?: { lastSeenAt: string | null }[];
   lastSync?: string;
   createdAt: string;
   /** Schema cache snapshot — RRR'de eklendi; eski client'lar görmezden gelir. */
@@ -118,6 +120,24 @@ export default function ConnectionsPage() {
       refresh(); // connection is now in "agent" mode
     } catch {
       showToast(t.connections.agentFailed, "error");
+    } finally {
+      setAgentLoadingId(null);
+    }
+  };
+
+  const revokeAgent = async (id: string) => {
+    setAgentLoadingId(id);
+    try {
+      const res = await deleteJson("/api/agent/token", { connectionId: id });
+      if (!res.ok) {
+        showToast(t.connections.agentRevokeFailed, "error");
+        return;
+      }
+      if (agentPanel?.id === id) setAgentPanel(null);
+      showToast(t.connections.agentRevoked, "success");
+      refresh();
+    } catch {
+      showToast(t.connections.agentRevokeFailed, "error");
     } finally {
       setAgentLoadingId(null);
     }
@@ -692,6 +712,7 @@ export default function ConnectionsPage() {
                 ? t.connections.badgeVeryStale
                 : null;
               const isAgent = conn.connectionMode === "agent";
+              const agentOnline = isAgentOnline(conn.agentRegistrations?.[0]?.lastSeenAt);
               return (
                 <div key={conn.id}>
                 <div className="elevated" style={{
@@ -805,7 +826,12 @@ export default function ConnectionsPage() {
                         {syncingId === conn.id ? t.connections.syncingBtn : t.connections.syncNowBtn}
                       </button>
                     )}
-                    {canManage && (
+                    {isAgent && (
+                      <span style={{ fontSize: 10, fontWeight: 600, color: agentOnline ? "#10B981" : "#EF4444" }}>
+                        {agentOnline ? t.connections.agentOnline : t.connections.agentOffline}
+                      </span>
+                    )}
+                    {canManage && !isAgent && (
                       <button
                         onClick={() => generateAgentToken(conn.id)}
                         disabled={agentLoadingId === conn.id}
@@ -823,6 +849,25 @@ export default function ConnectionsPage() {
                         }}
                       >
                         {agentLoadingId === conn.id ? t.connections.agentGenerating : t.connections.agentBtn}
+                      </button>
+                    )}
+                    {canManage && isAgent && (
+                      <button
+                        onClick={() => revokeAgent(conn.id)}
+                        disabled={agentLoadingId === conn.id}
+                        style={{
+                          background: "transparent",
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: 100,
+                          padding: "4px 10px",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: agentLoadingId === conn.id ? "#94A3B8" : "#B91C1C",
+                          cursor: agentLoadingId === conn.id ? "not-allowed" : "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        {t.connections.agentRevoke}
                       </button>
                     )}
                   </div>

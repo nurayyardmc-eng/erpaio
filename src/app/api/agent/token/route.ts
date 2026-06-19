@@ -2,6 +2,7 @@
 // on-prem agent bound to one of the caller's connections, and flip that
 // connection into "agent" mode. Plaintext token returned ONCE.
 import { getAuth } from "@/lib/auth/dual";
+import { prisma } from "@/lib/db/prisma";
 import { jsonError } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkBodySize } from "@/lib/http/bodyLimit";
@@ -45,4 +46,39 @@ export async function POST(req: Request) {
   });
 
   return Response.json({ token: raw, agentId });
+}
+
+// DELETE /api/agent/token — revoke every agent registration for a connection
+// and return it to direct mode. The revoked token's next poll gets 401.
+export async function DELETE(req: Request) {
+  const session = await getAuth(req);
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.CONNECTION_MUTATE);
+  if (limited) return limited;
+
+  const body = await parseJsonBody(req, Schema);
+  if (body instanceof Response) return body;
+
+  const denied = await assertOwnedConnection(req, body.connectionId, session.user.tenantId);
+  if (denied) return denied;
+
+  await prisma.$transaction([
+    prisma.agentRegistration.updateMany({
+      where: { connectionId: body.connectionId, revoked: false },
+      data: { revoked: true },
+    }),
+    prisma.erpConnection.update({
+      where: { id: body.connectionId },
+      data: { connectionMode: "direct" },
+    }),
+  ]);
+
+  await recordUserActivity(req, session, {
+    action: "integration.update",
+    target: body.connectionId,
+    metadata: { agentToken: "revoked", mode: "direct" },
+  });
+
+  return Response.json({ ok: true });
 }
