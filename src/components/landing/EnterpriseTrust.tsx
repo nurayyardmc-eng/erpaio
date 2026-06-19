@@ -48,8 +48,8 @@ const COPY: Record<Locale, TrustCopy> = {
       },
       {
         iconKey: "approval",
-        title: "Human Approval",
-        body: "The AI drafts SQL and proposes actions — a human authorizes execution. Nothing runs against your ERP without an explicit, logged confirmation step.",
+        title: "Transparent & Editable",
+        body: "Every query the AI generates is shown in full alongside its results — review it, edit it, and re-run it yourself. With strictly read-only access, a query can never modify or delete your data.",
       },
       {
         iconKey: "audit",
@@ -75,8 +75,8 @@ const COPY: Record<Locale, TrustCopy> = {
       },
       {
         iconKey: "approval",
-        title: "İnsan Onayı",
-        body: "AI, SQL taslağı üretir ve eylem önerir — yürütmeyi bir insan yetkilendirir. ERP'nizde hiçbir şey açık ve loglanan onay adımı olmadan çalışmaz.",
+        title: "Şeffaf ve Düzenlenebilir",
+        body: "AI'ın ürettiği her sorgu, sonucuyla birlikte tam olarak gösterilir — inceleyin, düzenleyin, kendiniz yeniden çalıştırın. Salt-okunur erişim sayesinde bir sorgu verinizi asla değiştiremez veya silemez.",
       },
       {
         iconKey: "audit",
@@ -102,8 +102,8 @@ const COPY: Record<Locale, TrustCopy> = {
       },
       {
         iconKey: "approval",
-        title: "موافقة بشرية",
-        body: "يصيغ الذكاء الاصطناعي SQL ويقترح الإجراءات — ويُصرّح إنسان بالتنفيذ. لا شيء يعمل على ERP دون خطوة تأكيد صريحة ومُسجّلة.",
+        title: "شفّاف وقابل للتحرير",
+        body: "كل استعلام يولّده الذكاء الاصطناعي يُعرض بالكامل مع نتيجته — راجعه وعدّله وأعد تشغيله بنفسك. مع وصول للقراءة فقط، لا يمكن لأي استعلام تعديل بياناتك أو حذفها.",
       },
       {
         iconKey: "audit",

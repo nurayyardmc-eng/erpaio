@@ -320,6 +320,14 @@ function BarChart({ bars, rtl }: { bars: Bar[]; rtl: boolean }) {
   );
 }
 
+// Honest "this is example data" note — consistent with AiDemoPreview /
+// DataConnection so visitors never mistake the canned charts for live data.
+const DISCLAIMER: Record<Locale, string> = {
+  en: "Simulated dashboard — example data, no live ERP connection. Real dashboards are computed from your own data.",
+  tr: "Simüle panel — örnek veri, canlı ERP bağlantısı yok. Gerçek panolar kendi verinizden hesaplanır.",
+  ar: "لوحة مُحاكاة — بيانات أمثلة، لا يوجد اتصال ERP حي. تُحسب اللوحات الحقيقية من بياناتك.",
+};
+
 export function AnalyticsDashboard({ locale = "en" }: { locale?: Locale }) {
   const t = COPY[locale];
   const rtl = locale === "ar";
@@ -465,6 +473,10 @@ export function AnalyticsDashboard({ locale = "en" }: { locale?: Locale }) {
             </pre>
           </div>
         </div>
+
+        <p style={{ marginTop: 18, fontSize: 12, color: "var(--text-secondary)", opacity: 0.8 }}>
+          {DISCLAIMER[locale]}
+        </p>
       </div>
     </section>
   );
