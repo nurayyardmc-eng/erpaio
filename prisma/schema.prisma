@@ -163,6 +163,9 @@ model ErpConnection {
   username    String
   passwordEnc String
   status      String       @default("pending")
+  // "direct" = cloud connects via TCP; "agent" = on-prem agent executes
+  // locally (creds live on the agent, NOT here).
+  connectionMode String    @default("direct")
   lastSync    DateTime?
   createdAt   DateTime     @default(now())
   tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -172,6 +175,47 @@ model ErpConnection {
   tableEmbeddings  TableEmbedding[]
   customMetrics    CustomMetric[]
   slowQueries      SlowQueryLog[]
+  agentRegistrations AgentRegistration[]
+  agentQueryJobs     AgentQueryJob[]
+}
+
+// On-prem agent identity. Mirrors ApiToken: SHA-256 hashed bearer token,
+// looked up by tokenHash. Bound to one ErpConnection (and its tenant).
+model AgentRegistration {
+  id           String    @id @default(cuid())
+  tenantId     String
+  connectionId String
+  name         String?
+  tokenHash    String    @unique
+  revoked      Boolean   @default(false)
+  lastSeenAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  connection ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([tokenHash])
+}
+
+// Job queue for agent-backed connections. Cloud enqueues "pending"; the
+// on-prem agent claims (→"running"), executes locally, writes back
+// "done"/"error". Vercel-compatible (no persistent socket).
+model AgentQueryJob {
+  id           String    @id @default(cuid())
+  tenantId     String
+  connectionId String
+  sql          String
+  status       String    @default("pending")
+  resultJson   String?
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  claimedAt    DateTime?
+  completedAt  DateTime?
+
+  connection ErpConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId, status])
+  @@index([tenantId, status, createdAt])
 }
 
 model SchemaCache {

@@ -424,6 +424,17 @@ export interface Dictionary {
     badgeFresh: string;
     badgeStale: string;
     badgeVeryStale: string;
+    badgeAgent: string;
+    agentBtn: string;
+    agentTitle: string;
+    agentDesc: string;
+    agentGenerating: string;
+    agentTokenShown: string;
+    agentRegisterHint: string;
+    agentCopyToken: string;
+    agentCopied: string;
+    agentFailed: string;
+    agentClose: string;
   };
   pricing: {
     metaTitle: string;

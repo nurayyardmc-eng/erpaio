@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import { decrypt } from "@/lib/crypto/encrypt";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
+import { enqueueAgentJob, waitForAgentJob } from "@/lib/agent/queue";
 
 const log = childLogger({ component: "db-connector" });
 
@@ -183,37 +184,61 @@ export async function getPool(connectionId: string): Promise<sql.ConnectionPool>
 }
 
 export async function queryERP(connectionId: string, sqlStr: string): Promise<Record<string, unknown>[]> {
-  const entry = await getPoolEntry(connectionId);
-  const startedAt = Date.now();
-
-  // Hot path: try → ölç → eşiği aşıyorsa fire-and-forget log. Error path da
-  // log'lanır (errorMessage doldurulur) — slow + failing query'leri görmek
-  // admin debug için kritik.
-  try {
-    let rows: Record<string, unknown>[];
-    if (entry.kind === "postgres") {
-      const result = await (entry.pool as PgPool).query(sqlStr);
-      rows = result.rows as Record<string, unknown>[];
-    } else {
-      const result = await (entry.pool as sql.ConnectionPool).request().query(sqlStr);
-      rows = result.recordset as Record<string, unknown>[];
+  // Agent-backed connections never open a TCP pool — the on-prem agent executes
+  // locally. A cached pool therefore implies a direct connection, so we only
+  // pay the mode lookup when no pool exists yet (keeps the direct hot path at
+  // zero extra queries).
+  if (!pools.has(connectionId)) {
+    const conn = await prisma.erpConnection.findUnique({
+      where: { id: connectionId },
+      select: { connectionMode: true, tenantId: true },
+    });
+    if (conn?.connectionMode === "agent") {
+      return runWithSlowLog(connectionId, conn.tenantId, sqlStr, async () => {
+        const jobId = await enqueueAgentJob(connectionId, conn.tenantId, sqlStr);
+        return waitForAgentJob(jobId);
+      });
     }
+  }
+
+  const entry = await getPoolEntry(connectionId);
+  return runWithSlowLog(connectionId, entry.tenantId, sqlStr, () => execOnPool(entry, sqlStr));
+}
+
+/** Run the direct query against an already-resolved pool. */
+async function execOnPool(entry: PoolEntry, sqlStr: string): Promise<Record<string, unknown>[]> {
+  if (entry.kind === "postgres") {
+    const result = await (entry.pool as PgPool).query(sqlStr);
+    return result.rows as Record<string, unknown>[];
+  }
+  const result = await (entry.pool as sql.ConnectionPool).request().query(sqlStr);
+  return result.recordset as Record<string, unknown>[];
+}
+
+/**
+ * Shared timing + slow-query logging wrapper for both transports (direct pool
+ * and agent queue). try → ölç → eşiği aşıyorsa fire-and-forget log; error path
+ * da log'lanır (slow + failing query'leri görmek admin debug için kritik).
+ */
+async function runWithSlowLog(
+  connectionId: string,
+  tenantId: string,
+  sqlStr: string,
+  exec: () => Promise<Record<string, unknown>[]>,
+): Promise<Record<string, unknown>[]> {
+  const startedAt = Date.now();
+  try {
+    const rows = await exec();
     const durationMs = Date.now() - startedAt;
     if (durationMs >= SLOW_QUERY_THRESHOLD_MS) {
-      recordSlowQuery({
-        tenantId: entry.tenantId,
-        connectionId,
-        sql: sqlStr,
-        durationMs,
-        ok: true,
-      });
+      recordSlowQuery({ tenantId, connectionId, sql: sqlStr, durationMs, ok: true });
     }
     return rows;
   } catch (err) {
     const durationMs = Date.now() - startedAt;
     if (durationMs >= SLOW_QUERY_THRESHOLD_MS) {
       recordSlowQuery({
-        tenantId: entry.tenantId,
+        tenantId,
         connectionId,
         sql: sqlStr,
         durationMs,

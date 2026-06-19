@@ -79,6 +79,7 @@ export async function GET(req: Request) {
       host: true,
       dbName: true,
       status: true,
+      connectionMode: true,
       lastSync: true,
       createdAt: true,
       // Schema cache snapshot — UI'da "X tablo · Y gün önce" badge için.

@@ -20,6 +20,7 @@ interface Connection {
   host: string;
   dbName: string;
   status: string;
+  connectionMode?: string;
   lastSync?: string;
   createdAt: string;
   /** Schema cache snapshot — RRR'de eklendi; eski client'lar görmezden gelir. */
@@ -50,6 +51,10 @@ export default function ConnectionsPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [showSetupSql, setShowSetupSql] = useState(false);
+  // On-prem agent token panel — shows the freshly minted token (once) + the
+  // register command for the connection it belongs to.
+  const [agentPanel, setAgentPanel] = useState<{ id: string; token: string } | null>(null);
+  const [agentLoadingId, setAgentLoadingId] = useState<string | null>(null);
   // Feature 1.3 — Connection test fail edince user-friendly hint gosterir.
   const [lastError, setLastError] = useState<{ title: string; hint: string; category: string } | null>(null);
   const [form, setForm] = useState({
@@ -97,6 +102,33 @@ export default function ConnectionsPage() {
       showToast(t.connections.schemaSyncFailed, "error");
     } finally {
       setSyncingId(null);
+    }
+  };
+
+  const generateAgentToken = async (id: string) => {
+    setAgentLoadingId(id);
+    try {
+      const res = await postJson("/api/agent/token", { connectionId: id });
+      const data = await res.json();
+      if (!res.ok || !data.token) {
+        showToast(t.connections.agentFailed, "error");
+        return;
+      }
+      setAgentPanel({ id, token: data.token });
+      refresh(); // connection is now in "agent" mode
+    } catch {
+      showToast(t.connections.agentFailed, "error");
+    } finally {
+      setAgentLoadingId(null);
+    }
+  };
+
+  const copyAgentToken = async (token: string) => {
+    try {
+      await navigator.clipboard.writeText(token);
+      showToast(t.connections.agentCopied, "success");
+    } catch {
+      showToast(t.connections.setupSqlCopyFailed, "error");
     }
   };
 
@@ -659,8 +691,10 @@ export default function ConnectionsPage() {
                 : ageStatus === "very-stale"
                 ? t.connections.badgeVeryStale
                 : null;
+              const isAgent = conn.connectionMode === "agent";
               return (
-                <div key={conn.id} className="elevated" style={{
+                <div key={conn.id}>
+                <div className="elevated" style={{
                   background: colors.card,
                   border: `1px solid ${colors.border}`,
                   borderRadius: 12,
@@ -738,6 +772,19 @@ export default function ConnectionsPage() {
                       {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                       {isActive ? t.connections.statusActive : conn.status}
                     </span>
+                    {isAgent && (
+                      <span style={{
+                        fontSize: 10,
+                        letterSpacing: 0.8,
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        background: colors.brandSoft,
+                        color: colors.brand,
+                      }}>
+                        {t.connections.badgeAgent}
+                      </span>
+                    )}
                     {canManage && (
                       <button
                         onClick={() => syncNow(conn.id)}
@@ -758,7 +805,109 @@ export default function ConnectionsPage() {
                         {syncingId === conn.id ? t.connections.syncingBtn : t.connections.syncNowBtn}
                       </button>
                     )}
+                    {canManage && (
+                      <button
+                        onClick={() => generateAgentToken(conn.id)}
+                        disabled={agentLoadingId === conn.id}
+                        title={t.connections.agentTitle}
+                        style={{
+                          background: "transparent",
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: 100,
+                          padding: "4px 10px",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: agentLoadingId === conn.id ? "#94A3B8" : colors.text,
+                          cursor: agentLoadingId === conn.id ? "not-allowed" : "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        {agentLoadingId === conn.id ? t.connections.agentGenerating : t.connections.agentBtn}
+                      </button>
+                    )}
                   </div>
+                </div>
+                {agentPanel?.id === conn.id && (
+                  <div className="elevated" style={{
+                    background: colors.bgSubtle,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 12,
+                    padding: 18,
+                    marginTop: 8,
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{t.connections.agentTitle}</div>
+                      <button
+                        type="button"
+                        onClick={() => setAgentPanel(null)}
+                        aria-label={t.connections.agentClose}
+                        style={{ background: "transparent", border: "none", color: colors.textMuted, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0 }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <p style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.55, margin: "6px 0 14px" }}>
+                      {t.connections.agentDesc}
+                    </p>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, marginBottom: 6 }}>
+                      {t.connections.agentTokenShown}
+                    </div>
+                    <pre style={{
+                      background: colors.card,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 8,
+                      padding: 12,
+                      fontSize: 12,
+                      fontFamily: "var(--font-jetbrains-mono), Menlo, monospace",
+                      overflow: "auto",
+                      margin: "0 0 10px",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-all",
+                    }}>
+                      {agentPanel.token}
+                    </pre>
+                    <button
+                      type="button"
+                      onClick={() => copyAgentToken(agentPanel.token)}
+                      style={{
+                        background: colors.text,
+                        color: colors.bg,
+                        border: "none",
+                        borderRadius: 100,
+                        padding: "8px 16px",
+                        fontSize: 12,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        marginBottom: 14,
+                      }}
+                    >
+                      <Copy size={12} /> {t.connections.agentCopyToken}
+                    </button>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, marginBottom: 6 }}>
+                      {t.connections.agentRegisterHint}
+                    </div>
+                    <pre style={{
+                      background: colors.card,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 8,
+                      padding: 12,
+                      fontSize: 11,
+                      fontFamily: "var(--font-jetbrains-mono), Menlo, monospace",
+                      overflow: "auto",
+                      margin: 0,
+                      whiteSpace: "pre-wrap",
+                    }}>
+{`erpaio-agent register \\
+  --cloud=${typeof window !== "undefined" ? window.location.origin : "https://erpaio.vercel.app"} \\
+  --token=${agentPanel.token} \\
+  --db-host=localhost --db-port=1433 \\
+  --db-name=${conn.dbName} --db-user=READONLY_USER --db-password=YOUR_PASSWORD`}
+                    </pre>
+                  </div>
+                )}
                 </div>
               );
             })}

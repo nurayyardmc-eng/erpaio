@@ -124,6 +124,8 @@ export const RATE_LIMITS = {
   CONNECTION_MUTATE: { prefix: "conn-mut", max: 10, windowMs: 60_000 }, // 10/dk / user — create connection (rare; signup-time spike OK)
   // --- Public / pre-signup (IP-based) ---
   DEMO_REQUEST: { prefix: "demo-req", max: 5, windowMs: ONE_HOUR_MS }, // 5/saat / IP — landing lead-gen, bot/spam koruması
+  // --- On-prem agent (per-agent token) ---
+  AGENT_POLL: { prefix: "agent-poll", max: 600, windowMs: 60_000 }, // 600/dk / agent — ~10/s poll loop + result posts
 } as const;
 
 /**
