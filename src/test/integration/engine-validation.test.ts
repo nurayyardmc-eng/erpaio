@@ -19,6 +19,7 @@
 import { describe, it, expect } from "vitest";
 import { validateSQL } from "@/lib/validators/sql";
 import { parseAiResponse } from "@/lib/ai/parseResponse";
+import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
 
 const PG_URL = process.env.TEST_ERP_DATABASE_URL;
 const KEY = process.env.ANTHROPIC_API_KEY ?? "";
@@ -86,10 +87,7 @@ describe.skipIf(!PG_URL || !HAS_AI)("engine e2e — synthetic ERP", () => {
             system: systemPrompt(schema),
             messages: [{ role: "user", content: question }],
           });
-          const raw = msg.content
-            .map((b) => (b.type === "text" ? b.text : ""))
-            .join("");
-          const { sql, confidence } = parseAiResponse(raw);
+          const { sql, confidence } = parseAiResponse(extractAnthropicText(msg));
 
           // HARD invariant 1: read-only guard must accept the generated SQL.
           expect(() => validateSQL(sql), `validateSQL rejected: ${sql}`).not.toThrow();

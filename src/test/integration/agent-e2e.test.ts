@@ -47,28 +47,33 @@ describe.skipIf(!GATED)("agent transport e2e", () => {
       const nextRoute = await import("@/app/api/agent/jobs/next/route");
       const resultRoute = await import("@/app/api/agent/jobs/[id]/result/route");
 
-      const erpPool = new pg.Pool({ connectionString: PG_URL, max: 2 });
-
-      // 1) Seed cloud state: tenant + connection, then mint agent token
-      //    (which also flips the connection into "agent" mode).
-      const slug = `agent-e2e-${Date.now()}`;
-      const tenant = await prisma.tenant.create({ data: { name: "Agent E2E", slug } });
-      const conn = await prisma.erpConnection.create({
-        data: {
-          tenantId: tenant.id,
-          erpType: "postgres",
-          host: "on-prem-unused",
-          dbName: "unused",
-          username: "unused",
-          passwordEnc: "unused", // agent holds the real creds, not the cloud
-        },
-        select: { id: true },
-      });
-      const { raw: token } = await createAgentToken(tenant.id, conn.id, "e2e");
-
-      const authHeaders = { authorization: `Bearer ${token}`, "content-type": "application/json" };
-
+      // Declared out here so the finally can always clean up, even if pool
+      // creation or seeding throws.
+      let erpPool: import("pg").Pool | undefined;
+      let tenantId: string | undefined;
       try {
+        const pool = new pg.Pool({ connectionString: PG_URL, max: 2 });
+        erpPool = pool;
+
+        // 1) Seed cloud state: tenant + connection, then mint agent token
+        //    (which also flips the connection into "agent" mode).
+        const slug = `agent-e2e-${Date.now()}`;
+        const tenant = await prisma.tenant.create({ data: { name: "Agent E2E", slug } });
+        tenantId = tenant.id;
+        const conn = await prisma.erpConnection.create({
+          data: {
+            tenantId: tenant.id,
+            erpType: "postgres",
+            host: "on-prem-unused",
+            dbName: "unused",
+            username: "unused",
+            passwordEnc: "unused", // agent holds the real creds, not the cloud
+          },
+          select: { id: true },
+        });
+        const { raw: token } = await createAgentToken(tenant.id, conn.id, "e2e");
+        const authHeaders = { authorization: `Bearer ${token}`, "content-type": "application/json" };
+
         // 2) Caller side: agent-mode queryERP enqueues + waits for the result.
         const callerPromise = queryERP(conn.id, SQL);
 
@@ -81,7 +86,7 @@ describe.skipIf(!GATED)("agent transport e2e", () => {
             );
             if (res.status === 200) {
               const job = (await res.json()) as { id: string; sql: string };
-              const out = await erpPool.query(job.sql);
+              const out = await pool.query(job.sql);
               await resultRoute.POST(
                 new Request(`http://local/api/agent/jobs/${job.id}/result`, {
                   method: "POST",
@@ -109,12 +114,9 @@ describe.skipIf(!GATED)("agent transport e2e", () => {
           "Perakende Co.",
         ]);
         expect(Number(rows[0].total_overdue)).toBe(92000);
-
-         
-        console.log("AGENT E2E rows:", JSON.stringify(rows));
       } finally {
-        await prisma.tenant.delete({ where: { id: tenant.id } }).catch(() => {});
-        await erpPool.end();
+        if (tenantId) await prisma.tenant.delete({ where: { id: tenantId } }).catch(() => {});
+        if (erpPool) await erpPool.end();
       }
     },
     30_000,
