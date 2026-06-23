@@ -54,6 +54,28 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
   outputFileTracingRoot: path.resolve(__dirname),
+  // PostHog reverse proxy: route analytics through our own origin so that
+  // (a) the tightened CSP connect-src/script-src 'self' covers it (PostHog
+  // hosts are intentionally NOT whitelisted) and (b) ad-blockers — which
+  // block *.posthog.com but not same-origin first-party paths — stop eating
+  // client events. Without this, ZERO client events arrive (proven: a real
+  // visitor ran the demo, nothing reached PostHog). Static assets + ingestion
+  // target the US region (matches the phc_ project key). skipTrailingSlash-
+  // Redirect stops PostHog's trailing-slash endpoints from 308-redirecting
+  // and dropping the rewrite.
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+    ];
+  },
   async headers() {
     return [
       {

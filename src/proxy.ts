@@ -61,6 +61,10 @@ export default auth((req) => {
 // Original matcher only excluded image + font extensions, so /landing.css
 // (introduced by F.5a) was 302'ing to /login. Production / landing pages
 // have been unstyled since F.5a as a result. Hot fix.
+//
+// `ingest` excluded: the PostHog reverse-proxy rewrites (next.config.ts) run
+// AFTER proxy, so without this, /ingest/* would hit the auth gate below and
+// 302 to /login, breaking analytics ingestion.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|css|js|html|json|txt|xml|map)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|ingest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|css|js|html|json|txt|xml|map)$).*)"],
 };
