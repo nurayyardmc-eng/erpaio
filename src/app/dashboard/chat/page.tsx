@@ -144,12 +144,16 @@ export default function ChatPage() {
       })
       .catch(() => {});
     fetch("/api/connections")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("connections load failed"))))
       .then((data: Connection[]) => {
         const active = data.filter((c) => c.status === "active");
         setConnections(active);
         if (active.length > 0) setSelectedConn(active[0].id);
-      });
+      })
+      // Primary data path: unlike the cosmetic /api/me greeting fetch above,
+      // a failed connections load leaves the user unable to run any query —
+      // surface it instead of silently rendering an empty connection picker.
+      .catch(() => showToast(t.common.error, "error"));
 
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -161,7 +165,9 @@ export default function ChatPage() {
         window.history.replaceState({}, "", url.toString());
       }
     }
-  }, []);
+    // t is a stable per-locale module dict (i18n context); included so the
+    // error toast above uses the current locale's string.
+  }, [t]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
