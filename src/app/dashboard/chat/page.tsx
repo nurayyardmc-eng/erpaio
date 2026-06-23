@@ -80,6 +80,8 @@ function renderHighlightedSnippet(text: string, matchStart: number, matchLength:
   );
 }
 
+const RESULTS_PER_PAGE = 50;
+
 interface AssistantSuccessMsg {
   role: "assistant";
   status: "success";
@@ -87,6 +89,7 @@ interface AssistantSuccessMsg {
   results: Record<string, unknown>[];
   columns: string[];
   total: number;
+  resultPage?: number;
   latencyMs: number;
   messageId?: string;
   cacheHit?: boolean;
@@ -320,6 +323,17 @@ export default function ChatPage() {
       );
     }
   };
+
+  // Result table paging: backend returns up to DEFAULT_ROW_LIMIT (500) rows;
+  // we page through them 50 at a time instead of hard-capping the view at 50.
+  const setResultPage = (idx: number, page: number) =>
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i === idx && m.role === "assistant" && m.status === "success"
+          ? { ...m, resultPage: page }
+          : m,
+      ),
+    );
 
   const exportCsv = (msg: AssistantSuccessMsg) => {
     if (msg.results.length === 0) return;
@@ -1115,28 +1129,57 @@ export default function ChatPage() {
                           <pre style={{ margin: 0, fontSize: 11, color: "#8EC8E8", whiteSpace: "pre-wrap" }}>{msg.sql}</pre>
                         )}
                       </div>
-                      {msg.results?.length > 0 && (
-                        <div style={{ overflowX: "auto" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                            <thead>
-                              <tr>
-                                {msg.columns.map((col) => (
-                                  <th key={col} style={{ padding: "6px 10px", textAlign: "left", color: "#0A0A0A", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{col}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {msg.results.slice(0, 50).map((row, ri) => (
-                                <tr key={ri} style={{ borderBottom: "1px solid #FFFFFF" }}>
+                      {msg.results?.length > 0 && (() => {
+                        const count = msg.results.length;
+                        const totalPages = Math.ceil(count / RESULTS_PER_PAGE);
+                        const page = Math.min(Math.max(msg.resultPage ?? 0, 0), totalPages - 1);
+                        const start = page * RESULTS_PER_PAGE;
+                        const pageRows = msg.results.slice(start, start + RESULTS_PER_PAGE);
+                        const pagerBtn = (disabled: boolean) => ({
+                          background: "transparent",
+                          border: "1px solid #E5E7EB",
+                          borderRadius: 4,
+                          padding: "2px 10px",
+                          color: disabled ? "#CBD5E1" : "#475569",
+                          fontSize: 10,
+                          cursor: disabled ? "default" : "pointer",
+                          fontFamily: "inherit",
+                        });
+                        return (
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                              <thead>
+                                <tr>
                                   {msg.columns.map((col) => (
-                                    <td key={col} style={{ padding: "6px 10px", color: "#475569" }}>{String(row[col] ?? "")}</td>
+                                    <th key={col} style={{ padding: "6px 10px", textAlign: "left", color: "#0A0A0A", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>{col}</th>
                                   ))}
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+                              </thead>
+                              <tbody>
+                                {pageRows.map((row, ri) => (
+                                  <tr key={start + ri} style={{ borderBottom: "1px solid #FFFFFF" }}>
+                                    {msg.columns.map((col) => (
+                                      <td key={col} style={{ padding: "6px 10px", color: "#475569" }}>{String(row[col] ?? "")}</td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {count > RESULTS_PER_PAGE && (
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 6, fontSize: 10, color: "#94A3B8", flexWrap: "wrap" }}>
+                                <span>{t.chat.rowsShowing(start + 1, start + pageRows.length, count)}</span>
+                                <span style={{ display: "inline-flex", gap: 6 }}>
+                                  <button onClick={() => setResultPage(i, page - 1)} disabled={page === 0} aria-label={t.chat.prevPage} style={pagerBtn(page === 0)}>{t.chat.prevPage}</button>
+                                  <button onClick={() => setResultPage(i, page + 1)} disabled={page >= totalPages - 1} aria-label={t.chat.nextPage} style={pagerBtn(page >= totalPages - 1)}>{t.chat.nextPage}</button>
+                                </span>
+                              </div>
+                            )}
+                            {msg.total > count && (
+                              <div style={{ marginTop: 4, fontSize: 10, color: "#94A3B8" }}>{t.chat.rowsTruncatedNote(msg.total)}</div>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {msg.explanation && (
                         <div style={{ background: "#9C8AFF15", border: "1px solid #9C8AFF40", borderRadius: 8, padding: 12, marginTop: 8 }}>
                           <div style={{ fontSize: 9, color: "#9C8AFF", letterSpacing: 2, marginBottom: 6 }}>{t.chat.aiExplanationLabel}</div>

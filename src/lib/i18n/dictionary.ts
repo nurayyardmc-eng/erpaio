@@ -1077,6 +1077,10 @@ export interface Dictionary {
     cancelEditSql: string;
     aiExplanationLabel: string;
     relatedLabel: string;
+    rowsShowing: (start: number, end: number, total: number) => string;
+    rowsTruncatedNote: (total: number) => string;
+    prevPage: string;
+    nextPage: string;
     feedbackPrompt: string;
     feedbackHelpfulAria: string;
     feedbackUnhelpfulAria: string;
