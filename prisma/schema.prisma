@@ -255,6 +255,11 @@ model ChatMessage {
   feedback  Int?
   createdAt DateTime    @default(now())
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Hot paths: history load (session + createdAt order) and the cron
+  // question→SQL pairing lookup (findLastSqlForQuestion). The table had no
+  // index at all — not even on the sessionId FK — so both did seq scans.
+  @@index([sessionId, createdAt])
 }
 
 model Alert {
