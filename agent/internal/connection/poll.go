@@ -137,6 +137,12 @@ func (a *Agent) postResult(ctx context.Context, id string, body resultBody) {
 	}
 	io.Copy(io.Discard, resp.Body)
 	resp.Body.Close()
+	// A non-2xx write-back (e.g. 413 too-big, 401 auth, 5xx) means the cloud
+	// never recorded the result and the job will time out. Surface it instead of
+	// silently succeeding.
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		fmt.Printf("post result rejected: status %d (job %s)\n", resp.StatusCode, id)
+	}
 }
 
 func sleep(ctx context.Context, d time.Duration) {

@@ -14,8 +14,14 @@ const Schema = z.object({
   error: z.string().max(4000).optional(),
 });
 
+// The default 64 KB cap is for small JSON payloads; this endpoint receives a
+// full ERP query RESULT (rows), which easily exceeds that. Capping at 64 KB
+// rejected large results with a 413, so the job never completed and the cloud
+// false-timed-out on a query that actually succeeded.
+const MAX_RESULT_BYTES = 8 * 1024 * 1024; // 8 MB
+
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const tooBig = checkBodySize(req);
+  const tooBig = checkBodySize(req, MAX_RESULT_BYTES);
   if (tooBig) return tooBig;
 
   const agent = await authenticateAgent(req);
