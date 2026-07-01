@@ -1073,6 +1073,15 @@ export interface Dictionary {
     explainTitle: string;
     explainAria: string;
     explainLabel: string;
+    watchLabel: string;
+    watchTitle: string;
+    watchAria: string;
+    watchPrompt: string;
+    watchOpAria: string;
+    watchValAria: string;
+    watchSave: string;
+    watchCreated: string;
+    watchInvalidValue: string;
     runEditedSql: string;
     cancelEditSql: string;
     aiExplanationLabel: string;

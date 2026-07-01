@@ -20,6 +20,7 @@ import {
   Archive,
   ArchiveRestore,
   Trash2,
+  Bell,
 } from "lucide-react";
 import { rowsToCsv, downloadCsv } from "@/lib/csv";
 import { formatDate } from "@/lib/format/time";
@@ -30,6 +31,12 @@ import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
 import { useI18n } from "@/lib/i18n/context";
 import { postJson, patchJson } from "@/lib/http/clientFetch";
+import {
+  THRESHOLD_OPS,
+  thresholdOpSymbol,
+  extractFirstNumeric,
+  type ThresholdOp,
+} from "@/lib/threshold/compare";
 import { sliceHighlight } from "@/lib/chat/highlight";
 import { erpSuggestedQuestions } from "@/lib/chat/erpSuggestedQuestions";
 import { QueryCostHint } from "@/components/QueryCostHint";
@@ -136,6 +143,11 @@ export default function ChatPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
+  // "Bu metriği izle" — inline watchlist create from a numeric chat result.
+  // Keyed by message index; op/val editable, val defaults to the result value.
+  const [watchForm, setWatchForm] = useState<
+    { idx: number; op: ThresholdOp; val: string; saving: boolean } | null
+  >(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -347,6 +359,34 @@ export default function ChatPage() {
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     // xlsx lazy-loaded — first click takes ~200ms for chunk fetch, then cached.
     await downloadXlsx(`erpaio-${ts}.xlsx`, msg.results, msg.columns);
+  };
+
+  // A-design: create a watchlist straight from a numeric chat answer. Reuses
+  // the SAME question, so findLastSqlForQuestion resolves the paired SQL that
+  // produced this very result — the metric is guaranteed to evaluate.
+  const createWatchlist = async (idx: number, msg: AssistantSuccessMsg) => {
+    if (!watchForm || watchForm.idx !== idx || !msg.question || !selectedConn) return;
+    const thresholdVal = Number(watchForm.val);
+    if (!Number.isFinite(thresholdVal)) {
+      showToast(t.chat.watchInvalidValue, "error");
+      return;
+    }
+    setWatchForm({ ...watchForm, saving: true });
+    try {
+      const res = await postJson("/api/watchlists", {
+        name: msg.question.slice(0, 120),
+        question: msg.question,
+        connectionId: selectedConn,
+        thresholdOp: watchForm.op,
+        thresholdVal,
+      });
+      if (!res.ok) throw new Error("create failed");
+      showToast(t.chat.watchCreated, "success");
+      setWatchForm(null);
+    } catch {
+      showToast(t.common.error, "error");
+      setWatchForm({ ...watchForm, saving: false });
+    }
   };
 
   const fetchExplain = async (idx: number, msg: AssistantSuccessMsg) => {
@@ -1097,9 +1137,60 @@ export default function ChatPage() {
                                   {msg.explainLoading ? "..." : t.chat.explainLabel}
                                 </button>
                               )}
+                              {msg.question && extractFirstNumeric(msg.results[0]) !== null && (
+                                <button
+                                  onClick={() =>
+                                    setWatchForm(
+                                      watchForm?.idx === i
+                                        ? null
+                                        : { idx: i, op: "lt", val: String(extractFirstNumeric(msg.results[0]) ?? 0), saving: false },
+                                    )
+                                  }
+                                  title={t.chat.watchTitle} aria-label={t.chat.watchAria}
+                                  style={{ ...iconBtnSmall, display: "inline-flex", alignItems: "center", gap: 4 }}
+                                >
+                                  <Bell size={12} /> {t.chat.watchLabel}
+                                </button>
+                              )}
                             </>
                           )}
                         </div>
+                        {watchForm?.idx === i && msg.question && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", margin: "8px 0", padding: 8, background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6 }}>
+                            <Bell size={12} color="#475569" />
+                            <span style={{ fontSize: 11, color: "#475569" }}>{t.chat.watchPrompt}</span>
+                            <select
+                              value={watchForm.op}
+                              onChange={(e) => setWatchForm({ ...watchForm, op: e.target.value as ThresholdOp })}
+                              aria-label={t.chat.watchOpAria}
+                              style={{ fontSize: 12, padding: "3px 6px", border: "1px solid #E5E7EB", borderRadius: 4, background: "#FFFFFF", color: "#0A0A0A", fontFamily: "inherit" }}
+                            >
+                              {THRESHOLD_OPS.map((op) => (
+                                <option key={op} value={op}>{thresholdOpSymbol(op)}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              value={watchForm.val}
+                              onChange={(e) => setWatchForm({ ...watchForm, val: e.target.value })}
+                              aria-label={t.chat.watchValAria}
+                              style={{ width: 110, fontSize: 12, padding: "3px 6px", border: "1px solid #E5E7EB", borderRadius: 4, background: "#FFFFFF", color: "#0A0A0A", fontFamily: "inherit" }}
+                            />
+                            <button
+                              onClick={() => createWatchlist(i, msg)}
+                              disabled={watchForm.saving}
+                              style={{ background: "#10B98120", border: "1px solid #10B981", borderRadius: 4, padding: "4px 10px", color: "#10B981", fontSize: 10, cursor: watchForm.saving ? "default" : "pointer", fontFamily: "inherit" }}
+                            >
+                              {watchForm.saving ? "..." : t.chat.watchSave}
+                            </button>
+                            <button
+                              onClick={() => setWatchForm(null)}
+                              style={{ background: "transparent", border: "1px solid #E5E7EB", borderRadius: 4, padding: "4px 10px", color: "#94A3B8", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}
+                            >
+                              {t.chat.cancelEditSql}
+                            </button>
+                          </div>
+                        )}
                         {msg.editing ? (
                           <div>
                             <textarea
