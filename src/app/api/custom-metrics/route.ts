@@ -66,6 +66,25 @@ export async function POST(req: Request) {
     });
   }
 
+  // A "threshold" metric evaluates config.rules; if they're missing/invalid the
+  // detector gets an empty rule set and the metric silently never fires. Reject
+  // at create time instead of accepting a dead metric.
+  if (body.algorithm === "threshold") {
+    const RuleSchema = z.object({
+      condition: z.enum(["lt", "lte", "gt", "gte", "eq"]),
+      value: z.number(),
+      severity: z.enum(["low", "medium", "high", "critical"]),
+      message: z.string().optional(),
+    });
+    const rules = (body.configJson as { rules?: unknown } | null | undefined)?.rules;
+    if (!z.array(RuleSchema).min(1).safeParse(rules).success) {
+      return localizedError(req, 400, {
+        tr: "Eşik metriği için configJson.rules en az bir geçerli kural içermeli: { condition: lt|lte|gt|gte|eq, value: sayı, severity: low|medium|high|critical }.",
+        en: "A threshold metric needs configJson.rules with ≥1 valid rule: { condition: lt|lte|gt|gte|eq, value: number, severity: low|medium|high|critical }.",
+      });
+    }
+  }
+
   const notFound = await assertOwnedConnection(req, body.connectionId, session.user.tenantId);
   if (notFound) return notFound;
 
