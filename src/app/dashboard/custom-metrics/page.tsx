@@ -7,7 +7,7 @@ import { showToast } from "@/components/Toaster";
 import { useI18n } from "@/lib/i18n/context";
 import { colors } from "@/lib/theme";
 import { isOwnerOrAdmin } from "@/lib/auth/role";
-import { postJson } from "@/lib/http/clientFetch";
+import { postJson, patchJson } from "@/lib/http/clientFetch";
 
 /**
  * Custom metrics yönetimi — Track ZZZZ. YYYY engine wiring sundu;
@@ -140,6 +140,16 @@ export default function CustomMetricsPage() {
     await fetch(`/api/custom-metrics?id=${encodeURIComponent(m.id)}`, { method: "DELETE" });
     showToast(t.customMetrics.deletedToast, "success");
     refresh();
+  };
+
+  const toggleEnabled = async (m: CustomMetric) => {
+    const res = await patchJson(`/api/custom-metrics?id=${encodeURIComponent(m.id)}`, { enabled: !m.enabled });
+    if (res.ok) {
+      showToast(m.enabled ? t.customMetrics.disabledToast : t.customMetrics.enabledToast, "success");
+      refresh();
+    } else {
+      showToast(t.common.error, "error");
+    }
   };
 
   const canManage = isOwnerOrAdmin(userRole);
@@ -283,6 +293,11 @@ export default function CustomMetricsPage() {
                 {canManage && (
                   <button onClick={() => runTest(m)} style={btnSecondary} type="button" disabled={testResults[m.id] === "loading"}>
                     {testResults[m.id] === "loading" ? "..." : t.customMetrics.testRunBtn}
+                  </button>
+                )}
+                {canManage && (
+                  <button onClick={() => toggleEnabled(m)} style={btnSecondary} type="button">
+                    {m.enabled ? t.customMetrics.disableBtn : t.customMetrics.enableBtn}
                   </button>
                 )}
                 {canManage && (

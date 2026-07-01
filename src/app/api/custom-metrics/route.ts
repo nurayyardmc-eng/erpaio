@@ -118,6 +118,33 @@ export async function POST(req: Request) {
   return Response.json({ metric });
 }
 
+const PatchSchema = z.object({ enabled: z.boolean() });
+
+export async function PATCH(req: Request) {
+  const session = await getAuth(req);
+  if (!session?.user) return jsonError(req, "api.unauthorized", 401);
+  const denied = requireOwnerOrAdmin(req, session.user.role);
+  if (denied) return denied;
+
+  const limited = await enforceUserRateLimit(req, session.user.id, RATE_LIMITS.CUSTOM_METRIC_MUTATE);
+  if (limited) return limited;
+
+  const idParam = getRequiredIdParam(req);
+  if (idParam instanceof Response) return idParam;
+
+  const body = await parseJsonBody(req, PatchSchema);
+  if (body instanceof Response) return body;
+
+  const result = await prisma.customMetric.updateMany({
+    where: { id: idParam.id, tenantId: session.user.tenantId },
+    data: { enabled: body.enabled },
+  });
+  if (result.count === 0) {
+    return localizedError(req, 404, { tr: "Metrik bulunamadı.", en: "Metric not found." });
+  }
+  return Response.json({ ok: true, enabled: body.enabled });
+}
+
 export async function DELETE(req: Request) {
   const session = await getAuth(req);
   if (!session?.user) return jsonError(req, "api.unauthorized", 401);

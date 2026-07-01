@@ -922,6 +922,10 @@ export const en: Dictionary = {
     emptyDesc: "Define your own metric using the form above. The engine runs it automatically in cron runs.",
     testRunBtn: "Run test",
     testRunResultPrefix: "Current value:",
+    enableBtn: "Enable",
+    disableBtn: "Disable",
+    enabledToast: "Metric enabled.",
+    disabledToast: "Metric disabled.",
   },
   nps: {
     header: "Quick Survey",

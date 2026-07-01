@@ -921,6 +921,10 @@ export const tr: Dictionary = {
     emptyDesc: "Yukarıdaki formla kendi metric'inizi tanımlayın. Engine cron run'larında otomatik çalıştırır.",
     testRunBtn: "Test çalıştır",
     testRunResultPrefix: "Şu anki değer:",
+    enableBtn: "Etkinleştir",
+    disableBtn: "Devre dışı bırak",
+    enabledToast: "Metric etkinleştirildi.",
+    disabledToast: "Metric devre dışı bırakıldı.",
   },
   nps: {
     header: "Hızlı Anket",

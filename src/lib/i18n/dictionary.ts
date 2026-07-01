@@ -884,6 +884,10 @@ export interface Dictionary {
     emptyDesc: string;
     testRunBtn: string;
     testRunResultPrefix: string;
+    enableBtn: string;
+    disableBtn: string;
+    enabledToast: string;
+    disabledToast: string;
   };
   nps: {
     header: string;
