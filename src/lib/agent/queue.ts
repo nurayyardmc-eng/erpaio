@@ -4,10 +4,33 @@
  * on-prem agent writes back "done"/"error". No persistent socket required.
  */
 import { prisma } from "@/lib/db/prisma";
+import { isAgentOnline } from "./online";
 
-export const AGENT_JOB_TIMEOUT_MS = 12_000;
+// Must cover the on-prem agent's own QueryTimeout (15s, poll.go) plus the
+// agent's ~1s poll-pickup and the write-back/observe latency — otherwise a
+// legitimate 12–15s query completes on the agent but the cloud has already
+// abandoned the wait and surfaces a false timeout to the user. (Was 12s, which
+// was tighter than both the agent AND the direct-path requestTimeout of 15s.)
+export const AGENT_JOB_TIMEOUT_MS = 18_000;
 const POLL_MS = 300;
 const MAX_ERROR_LEN = 2000;
+
+/**
+ * Throw immediately if no live agent is polling this connection. Prevents an
+ * offline-agent request from hanging the full job timeout (which grew to 18s).
+ * Reuses isAgentOnline so "offline" here means the same thing the dashboard
+ * shows.
+ */
+export async function assertAgentOnline(connectionId: string): Promise<void> {
+  const reg = await prisma.agentRegistration.findFirst({
+    where: { connectionId, revoked: false },
+    orderBy: { lastSeenAt: "desc" },
+    select: { lastSeenAt: true },
+  });
+  if (!isAgentOnline(reg?.lastSeenAt?.toISOString() ?? null)) {
+    throw new Error("On-prem agent is offline (not polling). Start the agent and retry.");
+  }
+}
 
 /** Enqueue a SQL job for an agent-backed connection. Returns the job id. */
 export async function enqueueAgentJob(

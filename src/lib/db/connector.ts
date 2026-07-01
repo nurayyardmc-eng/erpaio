@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import { decrypt } from "@/lib/crypto/encrypt";
 import { prisma } from "@/lib/db/prisma";
 import { childLogger } from "@/lib/observability/logger";
-import { enqueueAgentJob, waitForAgentJob } from "@/lib/agent/queue";
+import { enqueueAgentJob, waitForAgentJob, assertAgentOnline } from "@/lib/agent/queue";
 
 const log = childLogger({ component: "db-connector" });
 
@@ -195,6 +195,9 @@ export async function queryERP(connectionId: string, sqlStr: string): Promise<Re
     });
     if (conn?.connectionMode === "agent") {
       return runWithSlowLog(connectionId, conn.tenantId, sqlStr, async () => {
+        // Fail fast when the agent isn't polling, rather than hanging the full
+        // 18s job timeout for a connection whose agent is offline.
+        await assertAgentOnline(connectionId);
         const jobId = await enqueueAgentJob(connectionId, conn.tenantId, sqlStr);
         return waitForAgentJob(jobId);
       });
