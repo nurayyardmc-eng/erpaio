@@ -115,6 +115,23 @@ describe("charts/detect", () => {
     expect(r.type).toBe("none");
   });
 
+  it("excludes id-like columns from the Y-axis metric (bigint ids serialize as strings)", () => {
+    // customer_id is numeric-looking but must NOT be the charted metric; ciro is.
+    const rows = [
+      { customer_id: "1001", ciro: "500" },
+      { customer_id: "1002", ciro: "800" },
+      { customer_id: "1003", ciro: "300" },
+    ];
+    const r = detectChartHint(rows, ["customer_id", "ciro"]);
+    expect(r.yColumns).toEqual(["ciro"]);
+    expect(r.yColumns).not.toContain("customer_id");
+  });
+
+  it("id-only numeric column → no metric → none", () => {
+    const rows = [{ id: "1", marka: "Nike" }, { id: "2", marka: "Adidas" }];
+    expect(detectChartHint(rows, ["id", "marka"]).type).toBe("none");
+  });
+
   it("treats pg string-serialized numbers as numeric (COUNT/SUM come back as strings)", () => {
     // pg returns bigint/numeric aggregates as strings; they must chart as a
     // metric, not be misread as a category label.

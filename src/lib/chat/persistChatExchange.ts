@@ -34,9 +34,24 @@ export interface ChatExchangeInput {
  * Helper bu lookup'i kapsuller; caller assistant message id'sini
  * isterse persist sonucundan alir.
  */
+// Cap the persisted result snapshot — a very wide result (few rows, many/large
+// columns) could still be large even after row truncation. Over the cap we drop
+// the snapshot (reload falls back to SQL-only) rather than store hundreds of KB.
+const RESULT_SNAPSHOT_MAX = 200_000; // ~200 KB
+
 export async function persistChatExchange(
   input: ChatExchangeInput,
 ): Promise<{ assistantMessageId: string | null }> {
+  let resultJson: string | null = null;
+  if (input.results) {
+    const snap = JSON.stringify({
+      results: input.results,
+      columns: input.columns ?? [],
+      total: input.total ?? input.rowCount,
+    });
+    resultJson = snap.length <= RESULT_SNAPSHOT_MAX ? snap : null;
+  }
+
   await prisma.chatMessage.createMany({
     data: [
       { sessionId: input.sessionId, role: "user", content: input.question },
@@ -48,9 +63,7 @@ export async function persistChatExchange(
         rowCount: input.rowCount,
         latencyMs: input.latencyMs,
         success: true,
-        resultJson: input.results
-          ? JSON.stringify({ results: input.results, columns: input.columns ?? [], total: input.total ?? input.rowCount })
-          : null,
+        resultJson,
       },
     ],
   });

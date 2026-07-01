@@ -108,9 +108,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const uid = typeof token.id === "string" ? token.id : token.sub;
       const checkedAt = typeof token.roleCheckedAt === "number" ? token.roleCheckedAt : 0;
       if (uid && Date.now() - checkedAt > ROLE_REFRESH_MS) {
-        const fresh = await prisma.user.findUnique({ where: { id: uid }, select: { role: true } });
-        if (fresh) token.role = fresh.role;
-        token.roleCheckedAt = Date.now();
+        try {
+          const fresh = await prisma.user.findUnique({ where: { id: uid }, select: { role: true } });
+          // A deleted/revoked user must NOT keep their old role — neutralize so
+          // every authz gate denies (fail closed). Only a live user's real role
+          // is trusted.
+          token.role = fresh ? fresh.role : "revoked";
+          token.roleCheckedAt = Date.now();
+        } catch {
+          // Transient DB error — keep the existing role rather than logging
+          // everyone out on a blip; retry on the next request (checkedAt unchanged).
+        }
       }
       return token;
     },

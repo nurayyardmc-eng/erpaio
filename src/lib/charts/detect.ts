@@ -37,7 +37,11 @@ export function detectChartHint(
     };
   });
 
-  const numericCols = cols.filter((c) => c.isNumeric);
+  // Identifier columns (id, *_id, *Id, uuid/guid) are numeric but meaningless as
+  // a chart metric — exclude them from the Y-axis. This matters now that numeric
+  // strings count as numeric (pg serializes bigint ids as strings).
+  const ID_RX = /(^id$|_id$|Id$|^uuid$|^guid$)/i;
+  const numericCols = cols.filter((c) => c.isNumeric && !ID_RX.test(c.name));
   const dateCol = cols.find((c) => c.isDateLike);
   const stringCol = cols.find((c) => c.isString && !c.isDateLike);
 
