@@ -4,7 +4,8 @@ import { getAuth } from "@/lib/auth/dual";
 import { rateLimit, rateLimited429, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { checkAndConsume, recordAnthropicUsage, budgetExhaustedError } from "@/lib/budget";
+import { checkAndConsume, recordAnthropicUsage, budgetExhaustedError, totalAnthropicTokens } from "@/lib/budget";
+import { checkDailyTokenLimit, recordDailyTokens } from "@/lib/budget/dailyLimit";
 import { MODEL_HAIKU, anthropicClient } from "@/lib/ai/models";
 import { extractAnthropicText } from "@/lib/ai/extractAnthropicText";
 import { stripCodeFences } from "@/lib/ai/stripCodeFences";
@@ -30,6 +31,9 @@ export async function POST(req: Request) {
 
   const budget = await checkAndConsume(session.user.tenantId, 1500);
   if (!budget.ok) return budgetExhaustedError(req, budget);
+  // Daily kill-switch — parity with the main chat route.
+  const daily = await checkDailyTokenLimit(session.user.tenantId, 1500);
+  if (!daily.ok) return budgetExhaustedError(req, daily);
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;
@@ -60,6 +64,7 @@ export async function POST(req: Request) {
     }
 
     recordAnthropicUsage(session.user.tenantId, msg);
+    void recordDailyTokens(session.user.tenantId, totalAnthropicTokens(msg.usage));
     log.info({ count: suggestions.length }, "Follow-up suggestions generated");
     return Response.json({ suggestions });
   } catch (err) {

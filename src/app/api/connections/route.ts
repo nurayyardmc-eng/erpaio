@@ -1,7 +1,8 @@
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { encrypt } from "@/lib/crypto/encrypt";
-import { jsonError } from "@/lib/i18n/server";
+import { jsonError, localizedError } from "@/lib/i18n/server";
+import { getPlan } from "@/lib/plans";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { recordUserActivity } from "@/lib/audit/activity";
@@ -35,6 +36,23 @@ export async function POST(req: Request) {
 
   const body = await parseJsonBody(req, Schema);
   if (body instanceof Response) return body;
+
+  // Enforce the plan's connection limit (was defined in PLANS but never checked
+  // here — starter tenants could add unlimited connections).
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: session.user.tenantId },
+    select: { plan: true },
+  });
+  const planLimits = getPlan(tenant?.plan ?? "starter");
+  const connCount = await prisma.erpConnection.count({
+    where: { tenantId: session.user.tenantId },
+  });
+  if (connCount >= planLimits.maxConnections) {
+    return localizedError(req, 402, {
+      tr: `${tenant?.plan ?? "starter"} planında ${planLimits.maxConnections} bağlantı limiti var. Plan yükseltin.`,
+      en: `${tenant?.plan ?? "starter"} plan has a ${planLimits.maxConnections} connection limit. Please upgrade.`,
+    });
+  }
 
   const profileMap: Record<string, string> = {
     nebim_v3: "nebim_v3",

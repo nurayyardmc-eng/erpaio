@@ -4,7 +4,8 @@ import { getAuth } from "@/lib/auth/dual";
 import { rateLimit, rateLimited429, RATE_LIMITS } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { parseJsonBody } from "@/lib/http/searchParams";
-import { checkAndConsume, recordAnthropicUsage, budgetExhaustedError } from "@/lib/budget";
+import { checkAndConsume, recordAnthropicUsage, budgetExhaustedError, totalAnthropicTokens } from "@/lib/budget";
+import { checkDailyTokenLimit, recordDailyTokens } from "@/lib/budget/dailyLimit";
 import { childLogger } from "@/lib/observability/logger";
 import { jsonError } from "@/lib/i18n/server";
 import { buildExplainPrompt } from "@/lib/ai/explainPrompt";
@@ -31,6 +32,10 @@ export async function POST(req: Request) {
 
   const budget = await checkAndConsume(session.user.tenantId, 2000);
   if (!budget.ok) return budgetExhaustedError(req, budget);
+  // Daily kill-switch — the main chat route enforces this; explain must too or
+  // it's a hole in the daily cap.
+  const daily = await checkDailyTokenLimit(session.user.tenantId, 2000);
+  if (!daily.ok) return budgetExhaustedError(req, daily);
 
   const body = await parseJsonBody(req, BodySchema);
   if (body instanceof Response) return body;
@@ -52,6 +57,7 @@ export async function POST(req: Request) {
     const explanation = extractAnthropicText(msg);
 
     recordAnthropicUsage(session.user.tenantId, msg);
+    void recordDailyTokens(session.user.tenantId, totalAnthropicTokens(msg.usage));
     log.info({ length: explanation.length }, "Result explanation generated");
     return Response.json({ explanation });
   } catch (err) {
