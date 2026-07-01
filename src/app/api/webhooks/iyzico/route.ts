@@ -19,6 +19,7 @@
  */
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
+import { getPlan, PLANS } from "@/lib/plans";
 import { sendEmail } from "@/lib/notifications/email";
 import { transactionalEmailHtml } from "@/lib/notifications/emailLayout";
 import { childLogger } from "@/lib/observability/logger";
@@ -222,6 +223,11 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
           iyzicoCustomerId: custRef ?? null,
           trialEndsAt: null,
           paymentProvider: "iyzico",
+          // Lift the enforced token budget to the paid plan + fresh cycle
+          // (checkAndConsume reads tenant.monthlyTokenBudget).
+          monthlyTokenBudget: getPlan(plan).monthlyTokenBudget,
+          monthlyTokensUsed: 0,
+          budgetResetAt: new Date(),
         },
       });
       if (ownerEmail) {
@@ -286,6 +292,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
           plan: "starter",
           subscriptionStatus: "canceled",
           iyzicoSubscriptionId: null,
+          monthlyTokenBudget: PLANS.starter.monthlyTokenBudget,
         },
       });
       if (ownerEmail) {
@@ -322,7 +329,7 @@ async function processIyzicoEvent(event: IyzicoWebhookEvent): Promise<void> {
     case "expire": {
       await prisma.tenant.update({
         where: { id: tenant.id },
-        data: { plan: "starter", subscriptionStatus: "expired" },
+        data: { plan: "starter", subscriptionStatus: "expired", monthlyTokenBudget: PLANS.starter.monthlyTokenBudget },
       });
       log.info({ tenantId: tenant.id }, "iyzico subscription expired");
       break;

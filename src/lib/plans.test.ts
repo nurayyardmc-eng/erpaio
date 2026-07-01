@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PLANS, hasFeature, getPlan } from "./plans";
+import { PLANS, hasFeature, getPlan, isPlanId } from "./plans";
 
 describe("plans", () => {
   describe("PLANS constant", () => {
@@ -58,6 +58,20 @@ describe("plans", () => {
 
     it("false on empty feature string", () => {
       expect(hasFeature("pro", "")).toBe(false);
+    });
+  });
+
+  describe("isPlanId", () => {
+    it("true only for the three known plan ids", () => {
+      expect(isPlanId("starter")).toBe(true);
+      expect(isPlanId("pro")).toBe(true);
+      expect(isPlanId("enterprise")).toBe(true);
+    });
+    it("false for unknown / empty / null / undefined (blocks unvalidated plan writes)", () => {
+      expect(isPlanId("free")).toBe(false);
+      expect(isPlanId("")).toBe(false);
+      expect(isPlanId(null)).toBe(false);
+      expect(isPlanId(undefined)).toBe(false);
     });
   });
 

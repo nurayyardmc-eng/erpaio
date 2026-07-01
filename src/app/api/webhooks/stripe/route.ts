@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { stripe, isStripeConfigured, classifyStripeEvent } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/db/prisma";
+import { getPlan, isPlanId, PLANS } from "@/lib/plans";
 import { childLogger } from "@/lib/observability/logger";
 import { sendEmail } from "@/lib/notifications/email";
 import { transactionalEmailHtml } from "@/lib/notifications/emailLayout";
@@ -102,7 +103,9 @@ export async function POST(req: Request) {
         const customerId = typeof cs.customer === "string" ? cs.customer : null;
         const tenant = await findTenantByMetadataOrCustomer(cs.metadata, customerId);
         const plan = cs.metadata?.plan;
-        if (tenant && plan) {
+        // isPlanId: never write an unvalidated plan string; also guarantees the
+        // budget below is the exact plan's allowance.
+        if (tenant && isPlanId(plan)) {
           await prisma.tenant.update({
             where: { id: tenant.id },
             data: {
@@ -111,6 +114,11 @@ export async function POST(req: Request) {
               stripeCustomerId: customerId,
               stripeSubscriptionId: typeof cs.subscription === "string" ? cs.subscription : null,
               trialEndsAt: null,
+              // Lift the enforced token budget to the paid plan + start a fresh
+              // cycle, else checkAndConsume keeps the stale starter cap.
+              monthlyTokenBudget: getPlan(plan).monthlyTokenBudget,
+              monthlyTokensUsed: 0,
+              budgetResetAt: new Date(),
             },
           });
           log.info({ tenantId: tenant.id, plan }, "Subscription activated");
@@ -183,7 +191,13 @@ export async function POST(req: Request) {
         if (tenant) {
           await prisma.tenant.update({
             where: { id: tenant.id },
-            data: { plan: "starter", subscriptionStatus: "cancelled" },
+            data: {
+              plan: "starter",
+              subscriptionStatus: "cancelled",
+              // Drop the budget back to starter — else a cancelled tenant keeps
+              // its old Pro/Enterprise allowance.
+              monthlyTokenBudget: PLANS.starter.monthlyTokenBudget,
+            },
           });
           log.info({ tenantId: tenant.id }, "Subscription cancelled — downgraded to starter");
 

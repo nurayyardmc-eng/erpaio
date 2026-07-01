@@ -28,6 +28,10 @@ export const PLANS: Record<PlanId, PlanFeatures> = {
   },
 };
 
+export function isPlanId(plan: string | null | undefined): plan is PlanId {
+  return plan === "starter" || plan === "pro" || plan === "enterprise";
+}
+
 export function hasFeature(plan: string, feature: string): boolean {
   const p = PLANS[plan as PlanId];
   return p ? p.features.includes(feature) : false;
