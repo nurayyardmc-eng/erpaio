@@ -289,6 +289,8 @@ model Alert {
 
   @@index([tenantId, falsePositiveAt])
   @@index([tenantId, metricKey, falsePositiveAt])
+  // Alert dashboard list: filter by status, newest-first.
+  @@index([tenantId, status, createdAt])
 }
 
 model AnomalyBaseline {
@@ -625,6 +627,10 @@ model QueryCache {
   /// Track EEEE — sık kullanılan sorgular için pin. Pinned sorular saved
   /// listenin üstünde gösterilir (pin desc → lastUsedAt desc).
   pinned       Boolean  @default(false)
+  /// connectionId is folded into questionHash for the key; this nullable column
+  /// exists only so a single connection's schema-sync can invalidate just its
+  /// own cached queries instead of the whole tenant's. Null on pre-migration rows.
+  connectionId String?
   lastUsedAt   DateTime @default(now())
   createdAt    DateTime @default(now())
 
@@ -633,6 +639,7 @@ model QueryCache {
   @@unique([tenantId, questionHash])
   @@index([tenantId, lastUsedAt(sort: Desc)])
   @@index([tenantId, pinned, lastUsedAt(sort: Desc)])
+  @@index([tenantId, connectionId])
 }
 
 /// Notification delivery log — alert sender'larından (whatsapp/email/push/

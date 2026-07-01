@@ -84,12 +84,14 @@ export async function writeCache(
     create: {
       tenantId,
       questionHash,
+      connectionId,
       question: normalizeQuestion(question),
       sqlQuery,
       successCount: 1,
     },
     update: {
       sqlQuery,
+      connectionId,
       successCount: { increment: 1 },
       lastUsedAt: new Date(),
     },
@@ -176,5 +178,19 @@ export async function applyFeedback(
 
 export async function invalidateForTenant(tenantId: string): Promise<number> {
   const result = await prisma.queryCache.deleteMany({ where: { tenantId } });
+  return result.count;
+}
+
+/**
+ * Invalidate only one connection's cached queries — used when a single
+ * connection's schema changes, so the tenant's OTHER connections keep their
+ * cache. Pre-migration rows have connectionId=null and aren't matched here;
+ * they simply age out / get overwritten.
+ */
+export async function invalidateForConnection(
+  tenantId: string,
+  connectionId: string,
+): Promise<number> {
+  const result = await prisma.queryCache.deleteMany({ where: { tenantId, connectionId } });
   return result.count;
 }

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { queryERP } from "@/lib/db/connector";
 import { dialectFromErpType, getDialect } from "@/lib/db/dialect";
-import { invalidateForTenant } from "./queryCache";
+import { invalidateForConnection } from "./queryCache";
 import { invalidateSampleRows } from "./sampleRows";
 import { childLogger } from "@/lib/observability/logger";
 import { isFresh } from "./ttl";
@@ -39,7 +39,8 @@ export async function getSchema(connectionId: string): Promise<string> {
       select: { tenantId: true },
     });
     if (conn) {
-      const deleted = await invalidateForTenant(conn.tenantId);
+      // Only THIS connection's cached queries — not the whole tenant's.
+      const deleted = await invalidateForConnection(conn.tenantId, connectionId);
       childLogger({ component: "schema-cache", connectionId, tenantId: conn.tenantId })
         .info({ event: "schema_changed", invalidatedQueries: deleted }, "Schema changed, query cache + sample rows invalidated");
     }
