@@ -174,6 +174,9 @@ async function iyzicoFetch<T>(
       "x-iyzi-rnd": randomKey,
     },
     body: method === "POST" ? JSON.stringify(body) : undefined,
+    // Bound the payment API call — checkout/cancel/webhook paths must not hang
+    // on a slow iyzico response.
+    signal: AbortSignal.timeout(15_000),
   });
 
   const text = await res.text();

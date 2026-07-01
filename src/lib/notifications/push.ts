@@ -146,6 +146,8 @@ export async function sendExpoBatch(
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(messages),
+    // A hung exp.host request would otherwise stall the sequential push loop.
+    signal: AbortSignal.timeout(10_000),
   });
 
   // A 5xx / rate-limit from Expo often returns an HTML or empty body; parsing

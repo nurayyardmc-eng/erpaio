@@ -62,6 +62,9 @@ export async function sendTeams(payload: TeamsPayload): Promise<{ ok: boolean }>
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      // Bound the call — a hung tenant webhook would otherwise stall the shared
+      // anomaly/watchlist cron loop (dispatchAlert awaits this).
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
       log.warn({ status: res.status }, "Teams webhook non-2xx");

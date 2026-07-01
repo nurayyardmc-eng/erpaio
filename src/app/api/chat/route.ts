@@ -187,7 +187,13 @@ ${schema}`;
             { role: "user", content: question },
           ],
         }),
-      );
+      ).catch((aiErr: unknown) => {
+        // Circuit-open + Anthropic SDK failures → the friendly 502 branch
+        // (nothing else threw name "AIError", so that branch was dead code).
+        const e = aiErr instanceof Error ? aiErr : new Error(String(aiErr));
+        e.name = "AIError";
+        throw e;
+      });
 
       const rawText = extractAnthropicText(msg);
 

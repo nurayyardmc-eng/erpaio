@@ -33,4 +33,7 @@ export const MODEL_HAIKU = "claude-haiku-4-5";
  * `vi.mock("@anthropic-ai/sdk")` ile mock'lanabilir.
  */
 import Anthropic from "@anthropic-ai/sdk";
-export const anthropicClient = new Anthropic();
+// Explicit timeout + bounded retries: without these a slow/hung Anthropic call
+// could sit past the route's maxDuration and never let the circuit breaker see a
+// failure. 30s per attempt, one retry for a transient blip.
+export const anthropicClient = new Anthropic({ timeout: 30_000, maxRetries: 1 });
