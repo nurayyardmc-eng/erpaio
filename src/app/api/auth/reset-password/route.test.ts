@@ -119,7 +119,9 @@ describe("POST /api/auth/reset-password", () => {
     expect(hashPassword).toHaveBeenCalledWith(VALID_PASSWORD);
     expect(userUpdate).toHaveBeenCalledWith({
       where: { id: "u1" },
-      data: { passwordHash: "HASHED" },
+      // reset also clears any account lockout (a forgot-password user is often
+      // the one who got locked out guessing).
+      data: { passwordHash: "HASHED", failedLoginCount: 0, lockedUntil: null },
     });
 
     // token marked used → single-use guarantee
