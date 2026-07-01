@@ -92,6 +92,7 @@ model User {
   emailChangeTokens    EmailChangeToken[]
   passwordResetTokens  PasswordResetToken[]
   scheduledReports     ScheduledReport[]
+  npsResponses         NpsResponse[]
   watchlists           Watchlist[]
 }
 
@@ -575,6 +576,7 @@ model NpsResponse {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   // userId SetNull — kullanıcı silinse de anket data'sı aggregated analysis için kalır
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, respondedAt])
 }
