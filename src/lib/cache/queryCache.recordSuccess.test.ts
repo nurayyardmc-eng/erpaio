@@ -30,6 +30,7 @@ describe("cache/queryCache/recordSuccess", () => {
       tenantId: "t1",
       question: "soru",
       sqlQuery: "SELECT 1",
+      connectionId: "conn-1",
     });
     expect(out).toBe("abc");
     expect(updateMock).toHaveBeenCalledTimes(1);
@@ -48,6 +49,7 @@ describe("cache/queryCache/recordSuccess", () => {
       tenantId: "t1",
       question: "soru",
       sqlQuery: "SELECT 1",
+      connectionId: "conn-1",
     });
     expect(out).toBe("new-cache-id");
     expect(upsertMock).toHaveBeenCalledTimes(1);
@@ -61,6 +63,7 @@ describe("cache/queryCache/recordSuccess", () => {
       tenantId: "t1",
       question: "soru",
       sqlQuery: "SELECT 1",
+      connectionId: "conn-1",
     });
     expect(out).toBeUndefined();
     expect(updateMock).not.toHaveBeenCalled();
@@ -75,6 +78,7 @@ describe("cache/queryCache/recordSuccess", () => {
       tenantId: "tenant-X",
       question: "Stoğum nedir?",
       sqlQuery: "SELECT stok FROM ...",
+      connectionId: "conn-1",
     });
     const call = upsertMock.mock.calls[0][0];
     expect(call.where.tenantId_questionHash.tenantId).toBe("tenant-X");
@@ -90,6 +94,7 @@ describe("cache/queryCache/recordSuccess", () => {
       tenantId: "t1",
       question: "soru",
       sqlQuery: "SELECT 1",
+      connectionId: "conn-1",
     });
     expect(upsertMock).not.toHaveBeenCalled();
   });

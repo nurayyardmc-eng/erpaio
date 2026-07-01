@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
-import { applyFeedback, hashQuestion } from "@/lib/cache/queryCache";
+import { applyFeedback } from "@/lib/cache/queryCache";
 import { childLogger } from "@/lib/observability/logger";
 import { setSentryUserFromSession } from "@/lib/observability/sentryUser";
 import { RATE_LIMITS, rateLimit, rateLimited429 } from "@/lib/rateLimit";
@@ -39,7 +39,7 @@ export async function PATCH(req: Request) {
       role: "assistant",
       session: { tenantId },
     },
-    select: { id: true, sessionId: true, createdAt: true },
+    select: { id: true, sessionId: true, createdAt: true, sqlQuery: true },
   });
 
   if (!message) return localizedError(req, 404, { tr: "Mesaj bulunamadı.", en: "Message not found." });
@@ -49,22 +49,15 @@ export async function PATCH(req: Request) {
     data: { feedback },
   });
 
-  const userMessage = await prisma.chatMessage.findFirst({
-    where: {
-      sessionId: message.sessionId,
-      role: "user",
-      createdAt: { lt: message.createdAt },
-    },
-    orderBy: { createdAt: "desc" },
-    select: { content: true },
-  });
-
   const log = childLogger({ component: "chat-feedback", tenantId, messageId });
 
-  if (userMessage) {
-    const questionHash = hashQuestion(userMessage.content, tenantId);
-    const cacheRow = await prisma.queryCache.findUnique({
-      where: { tenantId_questionHash: { tenantId, questionHash } },
+  // Match the cache row by the exact SQL being rated. This is connection-aware
+  // for free (the SQL is dialect/schema-specific) and avoids recomputing the
+  // now connection-scoped questionHash, which this route can't do — neither the
+  // message nor the session stores a connectionId.
+  if (message.sqlQuery) {
+    const cacheRow = await prisma.queryCache.findFirst({
+      where: { tenantId, sqlQuery: message.sqlQuery },
       select: { id: true },
     });
 

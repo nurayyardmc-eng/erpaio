@@ -19,16 +19,22 @@ export function normalizeQuestion(question: string): string {
   return question.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-export function hashQuestion(question: string, tenantId: string): string {
+// connectionId is part of the key: the same question against a tenant's
+// Postgres vs MS SQL connection maps to different schemas AND dialects, so a
+// key without it returns the other connection's SQL (cross-connection cache
+// poisoning). Folding it into the hash keeps the tenantId_questionHash unique
+// constraint intact (no schema change) while separating connections.
+export function hashQuestion(question: string, tenantId: string, connectionId: string): string {
   const normalized = normalizeQuestion(question);
-  return sha256Hex(`${tenantId}::${normalized}`);
+  return sha256Hex(`${tenantId}::${connectionId}::${normalized}`);
 }
 
 export async function lookupCache(
   tenantId: string,
   question: string,
+  connectionId: string,
 ): Promise<CacheLookupResult> {
-  const questionHash = hashQuestion(question, tenantId);
+  const questionHash = hashQuestion(question, tenantId, connectionId);
 
   const row = await prisma.queryCache.findUnique({
     where: { tenantId_questionHash: { tenantId, questionHash } },
@@ -69,8 +75,9 @@ export async function writeCache(
   tenantId: string,
   question: string,
   sqlQuery: string,
+  connectionId: string,
 ): Promise<string> {
-  const questionHash = hashQuestion(question, tenantId);
+  const questionHash = hashQuestion(question, tenantId, connectionId);
 
   const row = await prisma.queryCache.upsert({
     where: { tenantId_questionHash: { tenantId, questionHash } },
@@ -112,13 +119,14 @@ export async function recordSuccess(opts: {
   tenantId: string;
   question: string;
   sqlQuery: string;
+  connectionId: string;
 }): Promise<string | undefined> {
   if (opts.cacheHit && opts.cacheId) {
     await recordOutcome(opts.cacheId, true);
     return opts.cacheId;
   }
   if (!opts.cacheHit) {
-    return await writeCache(opts.tenantId, opts.question, opts.sqlQuery);
+    return await writeCache(opts.tenantId, opts.question, opts.sqlQuery, opts.connectionId);
   }
   return opts.cacheId;
 }

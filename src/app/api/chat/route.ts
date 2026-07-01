@@ -106,7 +106,7 @@ export async function POST(req: Request) {
   let ambiguity: string | null = null;
 
   try {
-    const cached = await lookupCache(tenantId, question);
+    const cached = await lookupCache(tenantId, question, connectionId);
 
     if (cached.hit && cached.sqlQuery) {
       sql = cached.sqlQuery;
@@ -240,7 +240,7 @@ ${schema}`;
     const columns = extractColumns(rows);
     const latencyMs = Date.now() - t0;
 
-    cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql });
+    cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql, connectionId });
 
     const sid = await ensureChatSession(sessionId, tenantId, session.user.id);
     const { assistantMessageId } = await persistChatExchange({

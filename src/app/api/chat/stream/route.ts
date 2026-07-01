@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       };
 
       try {
-        const cached = await lookupCache(tenantId, question);
+        const cached = await lookupCache(tenantId, question, connectionId);
         let sql: string;
         let cacheId: string | undefined;
         let cacheHit = false;
@@ -151,7 +151,7 @@ ${schema}`;
         const columns = extractColumns(rows);
         const latencyMs = Date.now() - t0;
 
-        cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql });
+        cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql, connectionId });
 
         const sid = await ensureChatSession(sessionId, tenantId, session.user.id);
         await persistChatExchange({ sessionId: sid, question, sql, rowCount: rows.length, latencyMs });
