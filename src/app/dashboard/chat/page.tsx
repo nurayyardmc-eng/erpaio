@@ -545,6 +545,7 @@ export default function ChatPage() {
           cacheHit: data.cacheHit,
           feedback: null,
           question,
+          chartHint: data.chartHint,
         },
       ]);
     } catch (err) {

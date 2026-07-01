@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth/dual";
 import { prisma } from "@/lib/db/prisma";
 import { lookupCache, recordOutcome, recordSuccess } from "@/lib/cache/queryCache";
 import { extractColumns } from "@/lib/chat/extractColumns";
+import { detectChartHint } from "@/lib/charts/detect";
 import { ensureChatSession } from "@/lib/chat/ensureChatSession";
 import { persistChatExchange } from "@/lib/chat/persistChatExchange";
 import { buildChatPromptContext } from "@/lib/chat/buildPromptContext";
@@ -257,6 +258,10 @@ ${schema}`;
     );
 
     const t = truncateRows(rows);
+    // Chart hint over the rows the client will render — the MiniChart UI was
+    // already built + wired on the client but the API never returned this, so
+    // charts never appeared. Coerces numeric strings (pg aggregates) internally.
+    const chartHint = detectChartHint(t.results, columns);
 
     return Response.json({
       sql,
@@ -270,6 +275,7 @@ ${schema}`;
       messageId: assistantMessageId,
       cacheHit,
       cacheId,
+      chartHint,
     });
 
   } catch (e: unknown) {

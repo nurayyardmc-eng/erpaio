@@ -114,4 +114,18 @@ describe("charts/detect", () => {
     const r = detectChartHint(rows, ["a", "b"]);
     expect(r.type).toBe("none");
   });
+
+  it("treats pg string-serialized numbers as numeric (COUNT/SUM come back as strings)", () => {
+    // pg returns bigint/numeric aggregates as strings; they must chart as a
+    // metric, not be misread as a category label.
+    const rows = [
+      { marka: "Nike", ciro: "1240" },
+      { marka: "Adidas", ciro: "980" },
+      { marka: "Puma", ciro: "610" },
+    ];
+    const r = detectChartHint(rows, ["marka", "ciro"]);
+    expect(r.type).toBe("bar");
+    expect(r.xColumn).toBe("marka");
+    expect(r.yColumns).toEqual(["ciro"]);
+  });
 });

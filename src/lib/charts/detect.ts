@@ -16,15 +16,26 @@ export function detectChartHint(
   if (rows.length < 2) return { type: "none", yColumns: [], reason: "yetersiz veri" };
   if (rows.length > 500) return { type: "none", yColumns: [], reason: "çok fazla satır (>500)" };
 
+  // A value is "numeric" if it's a JS number OR a plain numeric string — the
+  // pg driver serializes bigint/numeric aggregates (COUNT/SUM/AVG) as strings,
+  // which would otherwise be misread as category labels and never charted.
+  const NUM_RX = /^-?\d+(\.\d+)?$/;
+  const isNum = (v: unknown): boolean =>
+    typeof v === "number" ? Number.isFinite(v) : typeof v === "string" && NUM_RX.test(v.trim());
+
   const sample = rows[0];
-  const cols = columns.map((c) => ({
-    name: c,
-    isNumeric: typeof sample[c] === "number",
-    isDateLike:
-      sample[c] instanceof Date ||
-      (typeof sample[c] === "string" && DATE_RX.test(sample[c] as string)),
-    isString: typeof sample[c] === "string",
-  }));
+  const cols = columns.map((c) => {
+    const v = sample[c];
+    const numeric = isNum(v);
+    return {
+      name: c,
+      isNumeric: numeric,
+      isDateLike:
+        v instanceof Date || (typeof v === "string" && DATE_RX.test(v)),
+      // a numeric string is a metric, not a category label
+      isString: typeof v === "string" && !numeric,
+    };
+  });
 
   const numericCols = cols.filter((c) => c.isNumeric);
   const dateCol = cols.find((c) => c.isDateLike);
