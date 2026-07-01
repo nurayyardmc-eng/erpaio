@@ -26,6 +26,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
 import { truncateRows } from "@/lib/chat/rowLimit";
 import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
+import { pickDialect, dialectRules } from "@/lib/ai/dialect";
 import { withCircuitBreaker } from "@/lib/ai/circuitBreaker";
 
 export const maxDuration = 60;
@@ -100,8 +101,16 @@ export async function POST(req: Request) {
           const { schema, profileContext, sampleContext, annotationsContext, erpName } =
             await buildChatPromptContext(connectionId, erpProfile, tenantId);
 
-          const systemText = `Sen bir SQL Server uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL'e çevir.
-Sadece SELECT/WITH, başka komut yasak. NVARCHAR + N'...' Türkçe için.
+          // Dialect-aware (DDDDD): the non-stream route uses pickDialect;
+          // this route hardcoded "SQL Server" + NVARCHAR, so Postgres
+          // connections were told to emit T-SQL (TOP/ISNULL/[brackets]) and
+          // produced invalid SQL. Mirror the main route's dialect handling.
+          const { name: dialectName, isPostgres } = pickDialect(conn.erpType, conn.erpProfile);
+          const dialectRulesText = dialectRules(isPostgres);
+
+          const systemText = `Sen bir ${dialectName} uzmanısın. ${erpName} veritabanına Türkçe doğal dil sorularını SQL'e çevir.
+Sadece SELECT/WITH, başka komut yasak.
+${dialectRulesText}
 
 ${profileContext}
 
