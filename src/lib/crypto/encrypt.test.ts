@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { encrypt, decrypt } from "./encrypt";
 
 describe("crypto/encrypt", () => {
@@ -70,6 +70,52 @@ describe("crypto/encrypt", () => {
       const [, tag, enc] = c.split(":");
       const wrongIv = "0".repeat(32);
       expect(() => decrypt([wrongIv, tag, enc].join(":"))).toThrow();
+    });
+  });
+
+  describe("split-length guard", () => {
+    it("rejects input that isn't iv:tag:ciphertext with a clear error", () => {
+      expect(() => decrypt("not-encrypted")).toThrow(/format/i);
+      expect(() => decrypt("only:two")).toThrow(/format/i);
+      expect(() => decrypt("a:b:c:d")).toThrow(/format/i);
+    });
+  });
+
+  describe("key rotation fallback", () => {
+    const KEY_A = "a".repeat(64);
+    const KEY_B = "b".repeat(64);
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    });
+
+    it("decrypts ciphertext written with a previous key after rotation", async () => {
+      vi.stubEnv("ENCRYPTION_KEY", KEY_A);
+      vi.stubEnv("ENCRYPTION_KEY_PREVIOUS", "");
+      vi.resetModules();
+      const ct = (await import("./encrypt")).encrypt("rotate-me");
+
+      // Rotate: B becomes current, A moves to the previous-key window.
+      vi.stubEnv("ENCRYPTION_KEY", KEY_B);
+      vi.stubEnv("ENCRYPTION_KEY_PREVIOUS", KEY_A);
+      vi.resetModules();
+      const mod = await import("./encrypt");
+      expect(mod.decrypt(ct)).toBe("rotate-me");
+      // fresh data uses the new current key and still round-trips
+      expect(mod.decrypt(mod.encrypt("new"))).toBe("new");
+    });
+
+    it("without the previous key, old ciphertext fails with a rotation hint", async () => {
+      vi.stubEnv("ENCRYPTION_KEY", KEY_A);
+      vi.resetModules();
+      const ct = (await import("./encrypt")).encrypt("rotate-me");
+
+      vi.stubEnv("ENCRYPTION_KEY", KEY_B);
+      vi.stubEnv("ENCRYPTION_KEY_PREVIOUS", "");
+      vi.resetModules();
+      const mod = await import("./encrypt");
+      expect(() => mod.decrypt(ct)).toThrow(/denendi|rotasyon/i);
     });
   });
 });
