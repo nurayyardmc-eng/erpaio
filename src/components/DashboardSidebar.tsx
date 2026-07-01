@@ -120,6 +120,7 @@ export default function DashboardSidebar() {
                 <Link
                   key={href}
                   href={href}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => setMobileOpen(false)}
                   onMouseEnter={() => setHoveredHref(href)}
                   onMouseLeave={() => setHoveredHref(null)}

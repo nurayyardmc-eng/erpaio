@@ -1048,7 +1048,7 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <div style={{ maxWidth: "85%", width: "100%" }}>
-                  {msg.status === "loading" && <div style={{ color: "#94A3B8", fontSize: 12 }}>{t.chat.sqlGenerating}</div>}
+                  {msg.status === "loading" && <div role="status" aria-live="polite" style={{ color: "#94A3B8", fontSize: 12 }}>{t.chat.sqlGenerating}</div>}
                   {msg.status === "error" && (
                     <div style={{ background: "#FEE2E2", border: "1px solid #EF444430", borderRadius: 8, padding: "10px 14px", color: "#EF4444", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
                       <AlertCircle size={16} /> {msg.content}

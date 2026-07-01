@@ -34,16 +34,21 @@ export default function Toaster() {
   }, []);
 
   return (
-    <div style={{
-      position: "fixed",
-      top: 16,
-      right: 16,
-      zIndex: 9999,
-      display: "flex",
-      flexDirection: "column",
-      gap: 8,
-      pointerEvents: "none",
-    }}>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="false"
+      style={{
+        position: "fixed",
+        top: 16,
+        right: 16,
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        pointerEvents: "none",
+      }}
+    >
       {toasts.map((t) => (
         <ToastCard key={t.id} toast={t} onClose={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))} />
       ))}
