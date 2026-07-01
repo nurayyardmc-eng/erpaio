@@ -6,6 +6,10 @@ import { verifyCode } from "@/lib/auth/totp";
 import { consumeRecoveryCode, looksLikeRecoveryCode } from "@/lib/auth/recovery";
 import { nextLockoutState } from "@/lib/auth/lockout";
 
+// Re-verify a session's role against the DB at most this often (bounds how long
+// a demoted/promoted user keeps their old role from the JWT).
+const ROLE_REFRESH_MS = 5 * 60_000;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
   providers: [
@@ -77,11 +81,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.tenantId = user.tenantId;
         token.role = user.role;
+        token.roleCheckedAt = Date.now();
+        return token;
+      }
+      // Re-read the role from the DB on a short interval so role changes
+      // (e.g. an owner demoting an admin) take effect within ~5 min instead of
+      // at the 24h JWT expiry. All authz gates read session.user.role, so this
+      // one refresh fixes staleness everywhere without touching call sites.
+      const uid = typeof token.id === "string" ? token.id : token.sub;
+      const checkedAt = typeof token.roleCheckedAt === "number" ? token.roleCheckedAt : 0;
+      if (uid && Date.now() - checkedAt > ROLE_REFRESH_MS) {
+        const fresh = await prisma.user.findUnique({ where: { id: uid }, select: { role: true } });
+        if (fresh) token.role = fresh.role;
+        token.roleCheckedAt = Date.now();
       }
       return token;
     },
