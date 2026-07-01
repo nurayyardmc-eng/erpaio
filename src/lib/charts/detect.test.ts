@@ -116,13 +116,15 @@ describe("charts/detect", () => {
   });
 
   it("excludes id-like columns from the Y-axis metric (bigint ids serialize as strings)", () => {
-    // customer_id is numeric-looking but must NOT be the charted metric; ciro is.
+    // marka=category (x), customer_id=numeric-looking id (must be ignored), ciro=metric (y)
     const rows = [
-      { customer_id: "1001", ciro: "500" },
-      { customer_id: "1002", ciro: "800" },
-      { customer_id: "1003", ciro: "300" },
+      { marka: "Nike", customer_id: "1001", ciro: "500" },
+      { marka: "Adidas", customer_id: "1002", ciro: "800" },
+      { marka: "Puma", customer_id: "1003", ciro: "300" },
     ];
-    const r = detectChartHint(rows, ["customer_id", "ciro"]);
+    const r = detectChartHint(rows, ["marka", "customer_id", "ciro"]);
+    expect(r.type).toBe("bar");
+    expect(r.xColumn).toBe("marka");
     expect(r.yColumns).toEqual(["ciro"]);
     expect(r.yColumns).not.toContain("customer_id");
   });
