@@ -169,7 +169,10 @@ export async function runAnomalyDetectionForTenant(
           // Push body — locale-aware via renderAnomalyMessage when available.
           const { localizedAlertDescription } = await import("@/lib/anomaly/messages");
           const pushBody = localizedAlertDescription(evidence, alert.description ?? null, locale) || alert.title;
-          sendPushToTenant(tenantId, {
+          // await — a void'd promise can be dropped when the serverless cron
+          // freezes before the fetch resolves (the .catch keeps a failure from
+          // breaking the per-metric loop).
+          await sendPushToTenant(tenantId, {
             category: "anomaly",
             title: `${anomaly.severity.toUpperCase()} · ${alert.title}`,
             body: pushBody,
@@ -177,7 +180,7 @@ export async function runAnomalyDetectionForTenant(
           }).catch(() => {});
 
           if (tenant.emailEnabled && tenant.emailTo) {
-            sendEmail({
+            await sendEmail({
               to: tenant.emailTo,
               subject: `[ERPAIO ${anomaly.severity.toUpperCase()}] ${alert.title}`,
               html: alertEmailHtml({

@@ -45,18 +45,22 @@ export async function GET(req: NextRequest) {
       if (firstNumeric === null) continue;
 
       const hit = compareThreshold(w.thresholdOp, firstNumeric, w.thresholdVal);
+      // Edge-trigger: only NOTIFY on a NEW crossing. A stateless level check
+      // re-fired the alert + email + push every hour while the condition stayed
+      // true (~24×/day), flooding inboxes and training users to ignore alerts.
+      // wasHit reconstructs the previous run's state from lastValue.
+      const wasHit =
+        w.lastValue !== null && compareThreshold(w.thresholdOp, w.lastValue, w.thresholdVal);
+      const newCrossing = hit && !wasHit;
 
       await prisma.watchlist.update({
         where: { id: w.id },
-        data: { lastRunAt: new Date(), lastValue: firstNumeric, triggeredAt: hit ? new Date() : w.triggeredAt },
+        data: { lastRunAt: new Date(), lastValue: firstNumeric, triggeredAt: newCrossing ? new Date() : w.triggeredAt },
       });
 
+      // Trigger history stays per-hit (Track NNNN — "how often does it hit");
+      // only the alert + notifications are edge-gated.
       if (hit) {
-        triggered++;
-        const msg = `${w.name}: ${firstNumeric} ${w.thresholdOp} ${w.thresholdVal} ✓`;
-
-        // Track NNNN — trigger history. Watchlist.triggeredAt overwrite
-        // ediliyor zaten; bu kayıt "ne sıklıkta hit ediyor" sorusu için.
         // Threshold op/val snapshot edilir — user sonra threshold değiştirir
         // ama eski tetiklenmeleri o anki eşikle yorumlayabilelim.
         await prisma.watchlistTrigger.create({
@@ -68,6 +72,11 @@ export async function GET(req: NextRequest) {
             thresholdVal: w.thresholdVal,
           },
         });
+      }
+
+      if (newCrossing) {
+        triggered++;
+        const msg = `${w.name}: ${firstNumeric} ${w.thresholdOp} ${w.thresholdVal} ✓`;
 
         await prisma.alert.create({
           data: {
@@ -81,20 +90,20 @@ export async function GET(req: NextRequest) {
           },
         });
 
-        if (w.emailTo) {
-          void sendEmail({
-            to: w.emailTo,
-            subject: `[ERPAIO WATCH] ${w.name}`,
-            html: `<p>${msg}</p>`,
-          });
-        }
-
-        void sendPushToTenant(w.tenantId, {
-          category: "watchlists",
-          title: `Watch: ${w.name}`,
-          body: msg,
-          data: { watchlistId: w.id },
-        });
+        // Await delivery — void'd fire-and-forget promises can be dropped when
+        // the serverless function freezes before the fetch resolves.
+        // allSettled so one channel's failure never fails the watchlist loop.
+        await Promise.allSettled([
+          w.emailTo
+            ? sendEmail({ to: w.emailTo, subject: `[ERPAIO WATCH] ${w.name}`, html: `<p>${msg}</p>` })
+            : Promise.resolve(),
+          sendPushToTenant(w.tenantId, {
+            category: "watchlists",
+            title: `Watch: ${w.name}`,
+            body: msg,
+            data: { watchlistId: w.id },
+          }),
+        ]);
       }
     } catch (err) {
       failed++;
