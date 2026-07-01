@@ -21,6 +21,10 @@ export interface ChatExchangeInput {
   sql: string;
   rowCount: number;
   latencyMs: number;
+  /** Truncated result snapshot restored on session reload (see ChatMessage.resultJson). */
+  results?: Record<string, unknown>[];
+  columns?: string[];
+  total?: number;
 }
 
 /**
@@ -44,6 +48,9 @@ export async function persistChatExchange(
         rowCount: input.rowCount,
         latencyMs: input.latencyMs,
         success: true,
+        resultJson: input.results
+          ? JSON.stringify({ results: input.results, columns: input.columns ?? [], total: input.total ?? input.rowCount })
+          : null,
       },
     ],
   });

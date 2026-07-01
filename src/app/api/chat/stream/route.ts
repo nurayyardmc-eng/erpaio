@@ -155,13 +155,16 @@ ${schema}`;
         const rows = await queryERP(connectionId, sql);
         const columns = extractColumns(rows);
         const latencyMs = Date.now() - t0;
+        const t = truncateRows(rows);
 
         cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql, connectionId });
 
         const sid = await ensureChatSession(sessionId, tenantId, session.user.id);
-        await persistChatExchange({ sessionId: sid, question, sql, rowCount: rows.length, latencyMs });
+        await persistChatExchange({
+          sessionId: sid, question, sql, rowCount: rows.length, latencyMs,
+          results: t.results, columns, total: t.total,
+        });
 
-        const t = truncateRows(rows);
         send("result", {
           sql,
           results: t.results,

@@ -34,6 +34,7 @@ export async function GET(req: Request, ctx: RouteContext<"/api/chat/sessions/[i
       latencyMs: m.latencyMs,
       success: m.success,
       feedback: m.feedback,
+      resultJson: m.resultJson,
       createdAt: m.createdAt,
     })),
   });

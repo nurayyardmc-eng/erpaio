@@ -240,6 +240,7 @@ ${schema}`;
     const rows = await queryERP(connectionId, sql);
     const columns = extractColumns(rows);
     const latencyMs = Date.now() - t0;
+    const t = truncateRows(rows);
 
     cacheId = await recordSuccess({ cacheId, cacheHit, tenantId, question, sqlQuery: sql, connectionId });
 
@@ -250,6 +251,10 @@ ${schema}`;
       sql,
       rowCount: rows.length,
       latencyMs,
+      // Persist the truncated snapshot so reloading the session restores the table.
+      results: t.results,
+      columns,
+      total: t.total,
     });
 
     log.info(
@@ -257,7 +262,6 @@ ${schema}`;
       "Chat query succeeded",
     );
 
-    const t = truncateRows(rows);
     // Chart hint over the rows the client will render — the MiniChart UI was
     // already built + wired on the client but the API never returned this, so
     // charts never appeared. Coerces numeric strings (pg aggregates) internally.

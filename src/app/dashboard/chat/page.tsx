@@ -294,20 +294,36 @@ export default function ChatPage() {
     const data = await r.json();
     setSessionId(id);
     const restored: Msg[] = [];
-    for (const m of data.messages) {
+    for (let i = 0; i < data.messages.length; i++) {
+      const m = data.messages[i];
       if (m.role === "user") {
         restored.push({ role: "user", content: m.content });
       } else if (m.role === "assistant" && m.success && m.sqlQuery) {
+        // Restore the persisted result snapshot so the table + export/explain/
+        // watch actions come back (instead of showing SQL only).
+        let results: Record<string, unknown>[] = [];
+        let columns: string[] = [];
+        let total = m.rowCount ?? 0;
+        if (m.resultJson) {
+          try {
+            const snap = JSON.parse(m.resultJson) as { results?: Record<string, unknown>[]; columns?: string[]; total?: number };
+            results = snap.results ?? [];
+            columns = snap.columns ?? [];
+            total = snap.total ?? total;
+          } catch { /* corrupt snapshot → SQL-only fallback */ }
+        }
+        const prev = data.messages[i - 1];
         restored.push({
           role: "assistant",
           status: "success",
           sql: m.sqlQuery,
-          results: [],
-          columns: [],
-          total: m.rowCount ?? 0,
+          results,
+          columns,
+          total,
           latencyMs: m.latencyMs ?? 0,
           messageId: m.id,
           feedback: m.feedback as 1 | -1 | null,
+          question: prev?.role === "user" ? prev.content : undefined,
         });
       }
     }

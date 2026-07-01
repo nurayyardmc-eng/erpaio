@@ -253,6 +253,9 @@ model ChatMessage {
   latencyMs Int?
   success   Boolean     @default(true)
   feedback  Int?
+  /// Truncated result snapshot ({results, columns, total}) so a reloaded
+  /// session restores the table + its actions instead of showing SQL only.
+  resultJson String?
   createdAt DateTime    @default(now())
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
