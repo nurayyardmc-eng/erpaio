@@ -157,7 +157,7 @@ export async function runAnomalyDetectionForTenant(
                 description: alert.description,
                 evidence,
               }, locale);
-              await sendWhatsApp(text, { to: tenant.whatsappTo ?? undefined });
+              await sendWhatsApp(text, { to: tenant.whatsappTo ?? undefined, tenantId, alertId: alert.id });
             } catch (waErr) {
               log.error({ err: waErr, severity: anomaly.severity }, "WhatsApp send failed");
               Sentry.captureException(waErr, {
@@ -183,6 +183,8 @@ export async function runAnomalyDetectionForTenant(
           if (tenant.emailEnabled && tenant.emailTo) {
             await sendEmail({
               to: tenant.emailTo,
+              tenantId,
+              alertId: alert.id,
               subject: `[ERPAIO ${anomaly.severity.toUpperCase()}] ${alert.title}`,
               html: alertEmailHtml({
                 severity: anomaly.severity,

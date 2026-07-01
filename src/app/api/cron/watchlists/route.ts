@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
         // allSettled so one channel's failure never fails the watchlist loop.
         await Promise.allSettled([
           w.emailTo
-            ? sendEmail({ to: w.emailTo, subject: `[ERPAIO WATCH] ${w.name}`, html: `<p>${msg}</p>` })
+            ? sendEmail({ to: w.emailTo, subject: `[ERPAIO WATCH] ${w.name}`, html: `<p>${msg}</p>`, tenantId: w.tenantId, alertId: alert.id })
             : Promise.resolve(),
           sendPushToTenant(w.tenantId, {
             category: "watchlists",
