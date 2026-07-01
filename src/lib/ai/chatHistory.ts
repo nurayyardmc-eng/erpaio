@@ -12,6 +12,12 @@
  *  - Assistant messages with sqlQuery get a summary line "<sql>\n\n(N satır
  *    döndü)" instead of the raw content (more compact prompt + signals
  *    successful execution).
+ *  - The result NEVER leads with an assistant turn. Anthropic rejects a
+ *    messages[] whose first entry is role:"assistant" (400). This can happen
+ *    when the opening user message was a dropped failure or the history window
+ *    starts mid-conversation, so leading assistant turns are trimmed. The
+ *    caller appends the current user question after this history, so trimming
+ *    is always safe.
  */
 export interface ChatMessageRow {
   role: string;
@@ -28,7 +34,7 @@ export type AiHistoryMessage =
 export function formatChatHistoryForAi(
   rowsNewestFirst: ChatMessageRow[],
 ): AiHistoryMessage[] {
-  return [...rowsNewestFirst]
+  const mapped = [...rowsNewestFirst]
     .reverse()
     .filter((m) => m.success)
     .map((m): AiHistoryMessage => {
@@ -40,4 +46,10 @@ export function formatChatHistoryForAi(
         : m.content;
       return { role: "assistant", content: summary };
     });
+
+  // Anthropic requires the first turn to be role:"user" — drop leading
+  // assistant turns so the conversation never opens with an assistant reply.
+  let start = 0;
+  while (start < mapped.length && mapped[start].role === "assistant") start++;
+  return mapped.slice(start);
 }
