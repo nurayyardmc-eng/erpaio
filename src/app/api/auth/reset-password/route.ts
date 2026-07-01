@@ -38,7 +38,13 @@ export async function POST(req: Request) {
   const passwordHash = await hashPassword(password);
 
   await prisma.$transaction([
-    prisma.user.update({ where: { id: row.userId }, data: { passwordHash } }),
+    // Clear any lockout — a user who forgot their password is often the same
+    // one who got locked out trying to guess it; otherwise a successful reset
+    // still leaves them blocked for the 15-min window.
+    prisma.user.update({
+      where: { id: row.userId },
+      data: { passwordHash, failedLoginCount: 0, lockedUntil: null },
+    }),
     prisma.passwordResetToken.update({ where: { id: row.id }, data: { usedAt: new Date() } }),
     prisma.apiToken.updateMany({ where: { userId: row.userId, revoked: false }, data: { revoked: true } }),
   ]);
