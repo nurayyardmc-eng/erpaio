@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db/prisma";
-import { getPool } from "@/lib/db/connector";
+import { queryERP } from "@/lib/db/connector";
 import {
   detectZScore, detectMovingAverage, detectThreshold,
   type AnomalyResult,
@@ -204,13 +204,17 @@ export async function runAnomalyDetectionForTenant(
   return result;
 }
 
-async function executeMetricQuery(
+// Exported for test (transport regression). Uses queryERP — the dialect-aware
+// entry point that handles mssql + postgres + on-prem agent connections —
+// NOT getPool, which throws for anything that is not mssql. The prior getPool
+// path silently killed all anomaly + custom-metric detection for every
+// Postgres tenant and every agent-mode tenant (errors swallowed per-metric).
+export async function executeMetricQuery(
   connectionId: string,
   query: MetricQuery,
 ): Promise<number> {
-  const pool = await getPool(connectionId);
-  const result = await pool.request().query(query.sql);
-  const row = result.recordset?.[0];
+  const rows = await queryERP(connectionId, query.sql);
+  const row = rows[0];
 
   const r = extractMetricValue(row);
   if (!r.ok) {
