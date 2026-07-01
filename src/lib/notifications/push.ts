@@ -148,6 +148,19 @@ export async function sendExpoBatch(
     body: JSON.stringify(messages),
   });
 
+  // A 5xx / rate-limit from Expo often returns an HTML or empty body; parsing
+  // that as JSON throws and gets misreported as a generic chunk failure. Check
+  // the status first and surface the real HTTP error.
+  if (!res.ok) {
+    const bodyText = await res.text().catch(() => "");
+    return {
+      sent: 0,
+      failed: tokens.length,
+      invalidTokens: [],
+      errors: [`Expo HTTP ${res.status}: ${bodyText.slice(0, 200)}`],
+    };
+  }
+
   const json = (await res.json()) as ExpoPushResponse;
 
   if (json.errors && json.errors.length > 0) {

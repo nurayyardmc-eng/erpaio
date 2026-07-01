@@ -53,9 +53,26 @@ export async function sendWhatsApp(message: string, options: SendOptions = {}): 
     return { ok: false };
   }
 
+  // Misconfigured sender → skip cleanly instead of sending `from: undefined`,
+  // which only fails opaquely at the Twilio API.
+  const from = process.env.TWILIO_WHATSAPP_FROM;
+  if (!from) {
+    log.warn("TWILIO_WHATSAPP_FROM not configured — skipping WhatsApp send");
+    if (options.tenantId) {
+      void recordNotification({
+        tenantId: options.tenantId,
+        alertId: options.alertId,
+        channel: "whatsapp",
+        status: "skipped",
+        error: "Sender not configured",
+      });
+    }
+    return { ok: false };
+  }
+
   try {
     await client.messages.create({
-      from: process.env.TWILIO_WHATSAPP_FROM!,
+      from,
       to: toNumber,
       body: message,
     });
