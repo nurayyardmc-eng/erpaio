@@ -19,8 +19,11 @@
 export interface AnthropicUsageShape {
   input_tokens: number;
   output_tokens: number;
-  cache_creation_input_tokens?: number;
-  cache_read_input_tokens?: number;
+  // The Anthropic SDK types these as `number | null` (null when the model
+  // didn't touch the cache that turn). Both consumers below coalesce, so accept
+  // null directly — callers no longer need a type assertion.
+  cache_creation_input_tokens?: number | null;
+  cache_read_input_tokens?: number | null;
 }
 
 export function calculateBillableTokens(usage: AnthropicUsageShape): number {

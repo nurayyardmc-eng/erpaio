@@ -131,4 +131,19 @@ describe("ai/tokenUsage/isPromptCacheHit", () => {
       }),
     ).toBe(false);
   });
+
+  it("handles SDK null cache fields (not just undefined)", () => {
+    // The Anthropic SDK emits null when the model didn't touch the cache.
+    expect(
+      calculateBillableTokens({
+        input_tokens: 10,
+        output_tokens: 5,
+        cache_creation_input_tokens: null,
+        cache_read_input_tokens: null,
+      }),
+    ).toBe(15);
+    expect(
+      isPromptCacheHit({ input_tokens: 1, output_tokens: 1, cache_read_input_tokens: null }),
+    ).toBe(false);
+  });
 });

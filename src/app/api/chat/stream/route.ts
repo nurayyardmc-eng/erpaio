@@ -26,6 +26,7 @@ import { jsonError } from "@/lib/i18n/server";
 import { sseFrame } from "@/lib/http/sse";
 import { truncateRows } from "@/lib/chat/rowLimit";
 import { MODEL_SONNET, anthropicClient } from "@/lib/ai/models";
+import { calculateBillableTokens } from "@/lib/ai/tokenUsage";
 import { pickDialect, dialectRules } from "@/lib/ai/dialect";
 import { withCircuitBreaker } from "@/lib/ai/circuitBreaker";
 
@@ -88,6 +89,7 @@ export async function POST(req: Request) {
         let sql: string;
         let cacheId: string | undefined;
         let cacheHit = false;
+        let billableTokens = 0;
 
         if (cached.hit && cached.sqlQuery) {
           sql = cached.sqlQuery;
@@ -124,7 +126,7 @@ ${schema}`;
           let buffer = "";
           // P26 — circuit breaker around the streaming call; finalMessage()
           // is the awaited promise the breaker keys success/failure on.
-          await withCircuitBreaker(() =>
+          const finalMsg = await withCircuitBreaker(() =>
             anthropicClient.messages
               .stream({
                 model: MODEL_SONNET,
@@ -139,6 +141,9 @@ ${schema}`;
               .finalMessage(),
           );
 
+          // Meter the REAL cache-aware usage (was a flat 5000, which drifted
+          // billing vs the non-stream route in both directions).
+          billableTokens = calculateBillableTokens(finalMsg.usage);
           sql = buffer.trim();
           send("sql_done", { sql });
         }
@@ -169,9 +174,9 @@ ${schema}`;
         });
 
         log.info({ event: "stream_ok", cacheHit, latencyMs, rows: rows.length }, "Chat stream completed");
-        if (!cacheHit) {
-          void recordUsage(tenantId, 5000);
-          void recordDailyTokens(tenantId, 5000);
+        if (!cacheHit && billableTokens > 0) {
+          void recordUsage(tenantId, billableTokens);
+          void recordDailyTokens(tenantId, billableTokens);
         }
       } catch (err) {
         const e = err as { name?: string; message?: string };
