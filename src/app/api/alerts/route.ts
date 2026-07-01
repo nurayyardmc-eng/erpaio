@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
+import { dispatchAlert } from "@/lib/notifications/integrations";
 import { childLogger } from "@/lib/observability/logger";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { jsonError } from "@/lib/i18n/server";
@@ -134,6 +135,9 @@ export async function POST(req: Request) {
         });
       });
     }
+
+    // Slack / Teams / generic-webhook integrations (self-gated by enabled).
+    void dispatchAlert(session.user.tenantId, alertForNotify).catch(() => {});
   }
 
   return Response.json(alert);

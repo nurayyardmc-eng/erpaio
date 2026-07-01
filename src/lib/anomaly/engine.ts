@@ -10,6 +10,7 @@ import { getTenantCustomMetrics } from "./customMetrics";
 import { sendWhatsApp, formatAlert, shouldNotify } from "@/lib/notifications/whatsapp";
 import { sendPushToTenant } from "@/lib/notifications/push";
 import { sendEmail, alertEmailHtml } from "@/lib/notifications/email";
+import { dispatchAlert } from "@/lib/notifications/integrations";
 import { childLogger } from "@/lib/observability/logger";
 import { errorMessage } from "@/lib/errors/errorMessage";
 import { daysAgo } from "@/lib/time/units";
@@ -191,6 +192,10 @@ export async function runAnomalyDetectionForTenant(
               }, locale),
             }).catch(() => {});
           }
+
+          // Slack / Teams / generic-webhook integrations. Self-gated by each
+          // integration's enabled flag; was defined but never called anywhere.
+          await dispatchAlert(tenantId, alert).catch(() => {});
         }
       }
     } catch (err) {

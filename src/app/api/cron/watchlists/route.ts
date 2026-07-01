@@ -7,6 +7,7 @@ import { deriveCronFinalStatus } from "@/lib/cron/finalStatus";
 import { queryERP } from "@/lib/db/connector";
 import { sendEmail } from "@/lib/notifications/email";
 import { sendPushToTenant } from "@/lib/notifications/push";
+import { dispatchAlert } from "@/lib/notifications/integrations";
 import { childLogger } from "@/lib/observability/logger";
 import { compareThreshold, extractFirstNumeric } from "@/lib/threshold/compare";
 import { findLastSqlForQuestion } from "@/lib/chat/findLastSqlForQuestion";
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
         triggered++;
         const msg = `${w.name}: ${firstNumeric} ${w.thresholdOp} ${w.thresholdVal} ✓`;
 
-        await prisma.alert.create({
+        const alert = await prisma.alert.create({
           data: {
             tenantId: w.tenantId,
             type: "watchlist",
@@ -103,6 +104,8 @@ export async function GET(req: NextRequest) {
             body: msg,
             data: { watchlistId: w.id },
           }),
+          // Slack / Teams / generic-webhook integrations (self-gated by enabled).
+          dispatchAlert(w.tenantId, alert),
         ]);
       }
     } catch (err) {
