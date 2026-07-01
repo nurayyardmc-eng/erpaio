@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
 import { verifyCode } from "@/lib/auth/totp";
 import { consumeRecoveryCode, looksLikeRecoveryCode } from "@/lib/auth/recovery";
+import { nextLockoutState } from "@/lib/auth/lockout";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
@@ -29,26 +30,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           credentials.password as string,
           user.passwordHash,
         );
-        if (!valid) {
-          const nextCount = (user.failedLoginCount ?? 0) + 1;
-          const shouldLock = nextCount >= 5;
-          await prisma.user.update({
+        // Shared lockout increment for ANY failed factor (password or MFA).
+        const registerFailure = () =>
+          prisma.user.update({
             where: { id: user.id },
-            data: {
-              failedLoginCount: nextCount,
-              lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60_000) : null,
-            },
+            data: nextLockoutState(user.failedLoginCount, Date.now()),
           });
+
+        if (!valid) {
+          await registerFailure();
           return null;
         }
 
         if (user.totpEnabled && user.totpSecretEnc) {
           const code = (credentials.totpCode as string | undefined) ?? "";
           // Recovery code path: XXXX-XXXX format — bypasses TOTP, consumes the code.
+          // A wrong TOTP OR a bad recovery code counts toward lockout too —
+          // otherwise the second factor has no brute-force protection.
           if (looksLikeRecoveryCode(code)) {
             const ok = await consumeRecoveryCode(user.id, code);
-            if (!ok) throw new Error("MFA_REQUIRED");
+            if (!ok) {
+              await registerFailure();
+              throw new Error("MFA_REQUIRED");
+            }
           } else if (!verifyCode(user.totpSecretEnc, code)) {
+            await registerFailure();
             throw new Error("MFA_REQUIRED");
           }
         }
