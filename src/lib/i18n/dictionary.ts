@@ -55,6 +55,7 @@ export interface Dictionary {
     navAnnotations: string;
     navWatchlists: string;
     navCustomMetrics: string;
+    navIntegrations: string;
     navInsights: string;
     navReports: string;
     navAudit: string;
@@ -888,6 +889,30 @@ export interface Dictionary {
     disableBtn: string;
     enabledToast: string;
     disabledToast: string;
+  };
+  integrations: {
+    title: string;
+    description: string;
+    newTitle: string;
+    fieldKind: string;
+    fieldEndpoint: string;
+    fieldSecret: string;
+    secretPlaceholder: string;
+    saveBtn: string;
+    testBtn: string;
+    formHint: string;
+    listTitle: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    disabledBadge: string;
+    lastSuccessPrefix: string;
+    lastErrorPrefix: string;
+    never: string;
+    savedToast: string;
+    deletedToast: string;
+    testSentToast: string;
+    deleteConfirmTitle: string;
+    deleteConfirmSuffix: string;
   };
   nps: {
     header: string;

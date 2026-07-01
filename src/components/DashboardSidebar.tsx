@@ -17,6 +17,7 @@ import {
   Send,
   Eye,
   Activity,
+  Webhook,
   Plus,
   X,
 } from "lucide-react";
@@ -49,6 +50,7 @@ export default function DashboardSidebar() {
         { href: "/dashboard/annotations", label: t.sidebar.navAnnotations, Icon: FileText },
         { href: "/dashboard/watchlists", label: t.sidebar.navWatchlists, Icon: Eye },
         { href: "/dashboard/custom-metrics", label: t.sidebar.navCustomMetrics, Icon: Activity },
+        { href: "/dashboard/integrations", label: t.sidebar.navIntegrations, Icon: Webhook },
       ],
     },
     {
