@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { verifyCode } from "@/lib/auth/totp";
 import { consumeRecoveryCode, looksLikeRecoveryCode } from "@/lib/auth/recovery";
 import { nextLockoutState } from "@/lib/auth/lockout";
+import { recordActivity } from "@/lib/audit/activity";
 
 // Re-verify a session's role against the DB at most this often (bounds how long
 // a demoted/promoted user keeps their old role from the JWT).
@@ -34,15 +35,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           credentials.password as string,
           user.passwordHash,
         );
-        // Shared lockout increment for ANY failed factor (password or MFA).
-        const registerFailure = () =>
-          prisma.user.update({
-            where: { id: user.id },
-            data: nextLockoutState(user.failedLoginCount, Date.now()),
-          });
+        // Shared lockout increment + audit for ANY failed factor (password/MFA).
+        const registerFailure = async (
+          action: "auth.login_failed" | "auth.mfa_failed",
+        ) => {
+          const state = nextLockoutState(user.failedLoginCount, Date.now());
+          await prisma.user.update({ where: { id: user.id }, data: state });
+          const actor = { userId: user.id, tenantId: user.tenantId, email: user.email };
+          await recordActivity({ ...actor, action });
+          if (state.lockedUntil) await recordActivity({ ...actor, action: "auth.locked" });
+        };
 
         if (!valid) {
-          await registerFailure();
+          await registerFailure("auth.login_failed");
           return null;
         }
 
@@ -54,11 +59,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (looksLikeRecoveryCode(code)) {
             const ok = await consumeRecoveryCode(user.id, code);
             if (!ok) {
-              await registerFailure();
+              await registerFailure("auth.mfa_failed");
               throw new Error("MFA_REQUIRED");
             }
           } else if (!verifyCode(user.totpSecretEnc, code)) {
-            await registerFailure();
+            await registerFailure("auth.mfa_failed");
             throw new Error("MFA_REQUIRED");
           }
         }
@@ -69,6 +74,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             data: { failedLoginCount: 0, lockedUntil: null },
           });
         }
+
+        await recordActivity({
+          userId: user.id,
+          tenantId: user.tenantId,
+          email: user.email,
+          action: "auth.login",
+        });
 
         return {
           id: user.id,

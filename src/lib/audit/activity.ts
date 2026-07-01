@@ -39,7 +39,11 @@ export type ActivityAction =
   | "email.change.request"
   | "email.change.complete"
   | "tenant.export"
-  | "retention.help_sent";
+  | "retention.help_sent"
+  | "auth.login"
+  | "auth.login_failed"
+  | "auth.mfa_failed"
+  | "auth.locked";
 
 export interface RecordActivityInput {
   userId?: string | null;

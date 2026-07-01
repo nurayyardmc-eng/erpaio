@@ -5,6 +5,7 @@ import { createMobileApiToken } from "@/lib/auth/createMobileApiToken";
 import { verifyCode } from "@/lib/auth/totp";
 import { consumeRecoveryCode, looksLikeRecoveryCode } from "@/lib/auth/recovery";
 import { nextLockoutState } from "@/lib/auth/lockout";
+import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity";
 import { rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
@@ -48,12 +49,19 @@ export async function POST(req: Request) {
     return jsonError(req, "auth.accountLocked", 403);
   }
 
+  const actor = {
+    userId: user.id,
+    tenantId: user.tenantId,
+    email: user.email,
+    ...activityContextFromRequest(req),
+  };
+
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: nextLockoutState(user.failedLoginCount, Date.now()),
-    });
+    const state = nextLockoutState(user.failedLoginCount, Date.now());
+    await prisma.user.update({ where: { id: user.id }, data: state });
+    await recordActivity({ ...actor, action: "auth.login_failed" });
+    if (state.lockedUntil) await recordActivity({ ...actor, action: "auth.locked" });
     log.info({ event: "login_failed", reason: "bad_password" }, "Login failed");
     return jsonError(req, "auth.invalidCredentials", 401);
   }
@@ -66,10 +74,10 @@ export async function POST(req: Request) {
       ? await consumeRecoveryCode(user.id, code)
       : verifyCode(user.totpSecretEnc, code);
     if (!mfaOk) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: nextLockoutState(user.failedLoginCount, Date.now()),
-      });
+      const state = nextLockoutState(user.failedLoginCount, Date.now());
+      await prisma.user.update({ where: { id: user.id }, data: state });
+      await recordActivity({ ...actor, action: "auth.mfa_failed" });
+      if (state.lockedUntil) await recordActivity({ ...actor, action: "auth.locked" });
       log.info({ event: "login_failed", reason: "mfa" }, "Login failed");
       return jsonError(req, "auth.mfaRequired", 401);
     }
@@ -89,6 +97,7 @@ export async function POST(req: Request) {
     deviceName ?? "mobile",
   );
 
+  await recordActivity({ ...actor, action: "auth.login" });
   log.info({ event: "login_ok", userId: user.id }, "Mobile login");
 
   return Response.json({
