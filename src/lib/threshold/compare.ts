@@ -35,7 +35,8 @@ export function thresholdOpSymbol(op: ThresholdOp): string {
  *
  * Watchlist users phrase the question naturally, so the SQL projection may
  * include a label column ("Marka", "Tarih") before the metric. We scan
- * columns in object-key order and return the first number-typed value.
+ * columns in object-key order and return the first numeric value — either a
+ * JS number or a numeric string (pg serializes bigint/numeric as strings).
  *
  * Returns null if no numeric column exists — caller maps this to a 422
  * "could not extract a numeric value" response.
@@ -46,6 +47,18 @@ export function extractFirstNumeric(row: Record<string, unknown> | undefined | n
   if (!row) return null;
   for (const v of Object.values(row)) {
     if (typeof v === "number" && Number.isFinite(v)) return v;
+    // pg returns bigint / numeric / decimal columns as STRINGS (to avoid
+    // precision loss) — so COUNT(*), SUM(...), AVG(...) arrive as "800",
+    // "1234.56" etc. Parse plain numeric strings so those (the most common
+    // watchlist metrics) are extractable. The strict pattern avoids treating
+    // dates, codes or text labels ("2026-05-04", "SKU-12", "Nike") as numbers.
+    if (typeof v === "string") {
+      const s = v.trim();
+      if (/^-?\d+(\.\d+)?$/.test(s)) {
+        const n = Number(s);
+        if (Number.isFinite(n)) return n;
+      }
+    }
   }
   return null;
 }

@@ -120,8 +120,20 @@ describe("threshold/compare/extractFirstNumeric", () => {
     expect(extractFirstNumeric({ a: 10, b: 20, c: 30 })).toBe(10);
   });
 
-  it("ignores string-like numbers", () => {
-    expect(extractFirstNumeric({ price: "100" })).toBeNull();
+  it("parses numeric strings (pg serializes bigint/numeric/COUNT as strings)", () => {
+    expect(extractFirstNumeric({ toplam_musteri: "800" })).toBe(800);
+    expect(extractFirstNumeric({ ciro: "1234.56" })).toBe(1234.56);
+    expect(extractFirstNumeric({ delta: "-42" })).toBe(-42);
+  });
+
+  it("skips text label string, parses the numeric-string metric", () => {
+    expect(extractFirstNumeric({ marka: "Nike", total: "150" })).toBe(150);
+  });
+
+  it("ignores non-numeric strings (dates, codes, labels)", () => {
+    expect(extractFirstNumeric({ label: "Nike" })).toBeNull();
+    expect(extractFirstNumeric({ d: "2026-05-04", total: 3 })).toBe(3);
+    expect(extractFirstNumeric({ sku: "SKU-12", adet: "9" })).toBe(9);
   });
 
   it("ignores booleans (typeof boolean !== number)", () => {
