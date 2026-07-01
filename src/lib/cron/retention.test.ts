@@ -47,8 +47,8 @@ describe("cron/retention RETENTION policy table", () => {
   });
 
   describe("structural invariants", () => {
-    it("table has 9 retention keys (no accidental drop / dup)", () => {
-      expect(Object.keys(RETENTION)).toHaveLength(9);
+    it("table has 10 retention keys (no accidental drop / dup)", () => {
+      expect(Object.keys(RETENTION)).toHaveLength(10);
     });
 
     it("all keys end with 'Days' suffix (unit signal)", () => {
