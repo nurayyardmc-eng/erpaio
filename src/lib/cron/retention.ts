@@ -43,6 +43,8 @@ export const RETENTION = {
   anomalyBaselineDays: 90,
   /** Watchlist trigger 90 gün — detay sayfası son 50 tetiklenmeyi gösterir. */
   watchlistTriggerDays: 90,
+  /** Terminal agent jobs hold real ERP result data (resultJson) — short window. */
+  agentQueryJobDays: 7,
 } as const satisfies Record<string, number>;
 
 export type RetentionKey = keyof typeof RETENTION;

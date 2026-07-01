@@ -131,6 +131,28 @@ export async function GET(req: NextRequest) {
       results.watchlistTrigger = r.count;
       totalDeleted += r.count;
     }
+
+    // AgentQueryJob reap — a crashed/offline on-prem agent leaves pending/running
+    // jobs stuck forever. Jobs run in seconds; anything in-flight >15 min is dead.
+    {
+      const staleBefore = new Date(now - 15 * 60_000);
+      const r = await prisma.agentQueryJob.updateMany({
+        where: { status: { in: ["pending", "running"] }, createdAt: { lt: staleBefore } },
+        data: { status: "error", errorMessage: "reaped: stale in-flight job (agent offline)", completedAt: new Date(now) },
+      });
+      results.agentQueryJobReaped = r.count;
+    }
+
+    // AgentQueryJob prune — terminal jobs hold real ERP result data (resultJson);
+    // they were never deleted (unbounded growth + sensitive data retained forever).
+    {
+      const before = retentionCutoff(RETENTION.agentQueryJobDays, now);
+      const r = await prisma.agentQueryJob.deleteMany({
+        where: { status: { in: ["done", "error"] }, createdAt: { lt: before } },
+      });
+      results.agentQueryJob = r.count;
+      totalDeleted += r.count;
+    }
   } catch (err) {
     errors++;
     log.error({ err, partial: results }, "Cleanup failed mid-run");
