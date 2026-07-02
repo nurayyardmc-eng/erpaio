@@ -1665,10 +1665,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  const toggle = () => onChange(!checked);
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", fontSize: 14, color: colors.text }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 14, color: colors.text }}>
       <span
-        onClick={() => onChange(!checked)}
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        tabIndex={0}
+        onClick={toggle}
+        onKeyDown={(e) => {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            toggle();
+          }
+        }}
         style={{
           width: 36,
           height: 20,
@@ -1676,6 +1687,9 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
           background: checked ? colors.brand : colors.borderStrong,
           position: "relative",
           transition: "all 0.15s",
+          cursor: "pointer",
+          display: "inline-block",
+          flexShrink: 0,
         }}
       >
         <span style={{
@@ -1690,8 +1704,8 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
           boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.1)",
         }} />
       </span>
-      <span>{label}</span>
-    </label>
+      <span onClick={toggle} style={{ cursor: "pointer" }}>{label}</span>
+    </div>
   );
 }
 
