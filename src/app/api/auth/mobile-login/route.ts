@@ -9,7 +9,7 @@ import { recordActivity, activityContextFromRequest } from "@/lib/audit/activity
 import { rateLimit, rateLimited429 } from "@/lib/rateLimit";
 import { checkBodySize } from "@/lib/http/bodyLimit";
 import { childLogger } from "@/lib/observability/logger";
-import { jsonError } from "@/lib/i18n/server";
+import { jsonError, serverMessages } from "@/lib/i18n/server";
 import { parseJsonBody } from "@/lib/http/searchParams";
 import { extractClientIp } from "@/lib/http/clientIp";
 
@@ -79,7 +79,12 @@ export async function POST(req: Request) {
       await recordActivity({ ...actor, action: "auth.mfa_failed" });
       if (state.lockedUntil) await recordActivity({ ...actor, action: "auth.locked" });
       log.info({ event: "login_failed", reason: "mfa" }, "Login failed");
-      return jsonError(req, "auth.mfaRequired", 401);
+      // Machine-readable discriminator so the mobile client can tell "needs a
+      // TOTP code" apart from "bad password" (both are 401) and prompt for it.
+      return Response.json(
+        { error: serverMessages(req).auth.mfaRequired, mfaRequired: true },
+        { status: 401 },
+      );
     }
   }
 
