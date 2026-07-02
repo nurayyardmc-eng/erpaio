@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId, cloneElement, isValidElement } from "react";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -1651,15 +1651,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const fieldId = useId();
   return (
     <div>
-      <div style={{
+      <label htmlFor={fieldId} style={{
+        display: "block",
         color: colors.text,
         fontSize: 13,
         fontWeight: 500,
         marginBottom: 6,
-      }}>{label}</div>
-      {children}
+      }}>{label}</label>
+      {isValidElement(children) ? cloneElement(children as React.ReactElement<{ id?: string }>, { id: fieldId }) : children}
     </div>
   );
 }

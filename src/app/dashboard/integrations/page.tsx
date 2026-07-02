@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useState } from "react";
 import EmptyState from "@/components/EmptyState";
 import { confirmDialog } from "@/components/Confirm";
 import { showToast } from "@/components/Toaster";
@@ -194,10 +194,11 @@ export default function IntegrationsPage() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const fieldId = useId();
   return (
     <div>
-      <label style={{ color: colors.textMuted, fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 }}>{label}</label>
-      {children}
+      <label htmlFor={fieldId} style={{ color: colors.textMuted, fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 }}>{label}</label>
+      {isValidElement(children) ? cloneElement(children as React.ReactElement<{ id?: string }>, { id: fieldId }) : children}
     </div>
   );
 }

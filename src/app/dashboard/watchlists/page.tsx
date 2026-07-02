@@ -1,6 +1,6 @@
 "use client";
 import { confirmDialog } from "@/components/Confirm";
-import { useEffect, useMemo, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useMemo, useState } from "react";
 import { Eye } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/lib/i18n/context";
@@ -480,10 +480,11 @@ function TriggerSparkline({
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const fieldId = useId();
   return (
     <div style={{ marginBottom: 10 }}>
-      <label style={{ color: "#94A3B8", fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 }}>{label}</label>
-      {children}
+      <label htmlFor={fieldId} style={{ color: "#94A3B8", fontSize: 9, letterSpacing: 1, display: "block", marginBottom: 4 }}>{label}</label>
+      {isValidElement(children) ? cloneElement(children as React.ReactElement<{ id?: string }>, { id: fieldId }) : children}
     </div>
   );
 }

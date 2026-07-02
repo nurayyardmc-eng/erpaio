@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useState } from "react";
 import { FileText } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/ErrorState";
@@ -197,12 +197,13 @@ export default function AnnotationsPage() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const fieldId = useId();
   return (
     <div style={{ marginBottom: 12 }}>
-      <label style={{ color: "#94A3B8", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4, textTransform: "uppercase" }}>
+      <label htmlFor={fieldId} style={{ color: "#94A3B8", fontSize: 10, letterSpacing: 1, display: "block", marginBottom: 4, textTransform: "uppercase" }}>
         {label}
       </label>
-      {children}
+      {isValidElement(children) ? cloneElement(children as React.ReactElement<{ id?: string }>, { id: fieldId }) : children}
     </div>
   );
 }

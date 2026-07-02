@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId, cloneElement, isValidElement } from "react";
 import Link from "next/link";
 import { Database, Server, ShieldCheck, CheckCircle2, XCircle, Copy, Mail } from "lucide-react";
 import { showToast } from "@/components/Toaster";
@@ -964,16 +964,17 @@ export default function ConnectionsPage() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const fieldId = useId();
   return (
     <div style={{ marginBottom: 12 }}>
-      <label style={{
+      <label htmlFor={fieldId} style={{
         display: "block",
         fontSize: 12,
         color: colors.textMuted,
         fontWeight: 500,
         marginBottom: 4,
       }}>{label}</label>
-      {children}
+      {isValidElement(children) ? cloneElement(children as React.ReactElement<{ id?: string }>, { id: fieldId }) : children}
     </div>
   );
 }
